@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Add some basic styling for the board and tiles */
+    .container {
+      display: flex;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      grid-template-rows: repeat(8, 80px);
+      gap: 2px;
+      margin-right: 20px;
+    }
+    .cell {
+      width: 80px;
+      height: 80px;
+      border: 1px solid black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .tile-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+    }
+    .placed-tile {
+      position: absolute;
+      z-index: 999;
+    }
+    .tile {
+      left: 10px;
+      top: 10px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin: 5px;
+      cursor: pointer;
+      z-index: 999;
+
+    }
+    .tile.black {
+      background-color: black;
+    }
+    .tile.white {
+      background-color: rgb(218, 205, 205);
+    }
+    .valid-move {
+    background-color: lightgreen !important;
+    background-image: none !important;
+    z-index: 999;
+}
+
+    #turn-indicator {
+      margin-bottom: 10px;
+    }
+    #dice-value {
+      margin-bottom: 10px;
+    }
+    .hidden-background {
+      background: none !important;
+    }
+  </style>
+  <title>Royal Game of Ur</title>
+</head>
+<body>
+  <div id="turn-indicator"></div>
+  <div id="dice-value"></div>
+  <button onclick="rollDiceAndUpdateUI()">Roll Dice</button>
+  <button onclick="resetGame()">Reset Board</button>
+  <div class="container">
+    <div class="board" id="board"></div>
+    <div class="tile-container">
+      <div class="tile-container" id="tiles"></div>
+      <div class="player-tiles" id="player1-tiles"></div>
+      <div class="player-tiles" id="player2-tiles"></div>
+    </div>
+  </div>
+
+<script>
+  
+
+/*     const boardLayout = [
+      [[13, 'w'], [12], [13, 'b']],
+      [[14, 'w'], [11], [14, 'b']],
+      [[15, 'w'], [10], [15, 'b']],
+      [[0, 'w'], [9], [0, 'b']],
+      [[1, 'w'], [8], [1, 'b']],
+      [[2, 'w'], [7], [2, 'b']],
+      [[3, 'w'], [6], [3, 'b']],
+      [[4, 'w'], [5], [4, 'b']]
+    ]; */
+
+    // Function to create the game board
+function createBoard() {
+    color = 'w'
+    middleRow = 13; 
+    for (let i = 0; i < 8; i++) {
+      middleRow--;
+      cellNum = 12 + i;
+      if (i>2){cellNum = i-4;}
+      cellNum++;
+      for (let j = 0; j < 3; j++) {
+        if (j === 2){color = 'b';}
+        else if (j === 0){color = 'w';}
+        else if (j === 1){color = '';}
+        else{alert("error #1");}
+        // Exclude specific cells
+        if (!((j === 0 && (i === 2 || i === 3)) || (j === 2 && (i === 2 || i === 3)))) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          cell.dataset.row = i;
+          cell.dataset.col = j;
+          if (!(j === 1)){
+            cell.dataset.num = cellNum;
+            cell.dataset.color = color;
+          }
+          else{
+            cell.dataset.num = middleRow
+            cell.dataset.color = color;
+          }
+          //cell.addEventListener('click', handleCellClick);
+          applyCellBackground(cell, i, j);
+          board.appendChild(cell);
+        } else {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          cell.dataset.row = i;
+          cell.dataset.col = j;
+          cell.dataset.num = cellNum;
+          cell.dataset.color = color;
+          applyCellBackground(cell, i, j);
+          board.appendChild(cell);
+        }
+      }
+    }displayBoardData();
+  }
+
+function displayBoardData() {
+  const cells = document.querySelectorAll('.cell');
+
+  
+  cells.forEach((cell) => {
+    const rowData = cell.dataset.row;
+    const colData = cell.dataset.col;
+    const numData = cell.dataset.num;
+    const colorData = cell.dataset.color;
+    cell.onclick = function () {
+        // Check if the clicked cell is a valid move
+        console.log("clicked cell: " + cell.dataset.num)
+        if (cell.classList.contains('valid-move')) {
+            // Place the tile on the board
+            const selectedCell = {
+                row: parseInt(cell.dataset.row),
+                col: parseInt(cell.dataset.col)
+            };
+            console.log("selected cell: " + selectedCell)
+            placeTile(selectedCell,numData);
+
+            // Reset the selection and highlighted moves
+            clearHighlightedMoves();
+            console.log("You have placed syour tile at " + JSON.stringify(selectedCell));
+
+            selectedTile = null;
+
+            // Update the game state or perform other actions
+            updateGameState();
+        } else {
+            alert('Invalid move. Please choose a valid cell.');
+        }
+    };
+    
+
+
+    console.log(`Cell at Row: ${rowData}, Col: ${colData}, Number: ${numData}, Color: ${colorData}`);
+  });
+     
+}
+
+function selectTile(tile, tileid, tileposition) {
+  // Reset previous selection
+  // Set the new selection
+  let result = 0;
+  selectedTile = tile;
+  selectedCell = 0;
+  console.log("Selected Tile Positon: " + tileposition + " tile id: " + tileid);
+
+  if (selectedTile) {
+    selectedTile.classList.remove('valid-move');
+  }
+
+  possiblemove = (Number(tileposition) + Number(diceValue)) % 15;
+  console.log("current position is: " + tileposition + " die roll is: " + diceValue + " possible move is: " + possiblemove);
+  const { row, col } = getRowAndColFromNum(possiblemove);
+  console.log("corresponding to row: " + row + "/column: " +col)
+  highlightValidMoves(row,col);
+    // Attach a click event to the cells to handle placing the tile
+
+    // Update the game state (adjust this part based on your game logic)
+    // For example, you might want to update the internal state of the game
+    // or trigger further game actions.
+    //updateGameState();
+
+    // Clear highlighted moves after placing the tile
+    //clearHighlightedMoves();
+ // } else {
+    // The selected move is not legal, you may want to handle this case
+  //  alert('Illegal move. Please choose a valid cell.');
+ // }
+}
+
+// Function to highlight valid moves
+function highlightValidMoves(row,col) {
+  // Clear previous highlighting
+  clearHighlightedMoves();
+
+  // Highlight new valid moves
+  console.log("row: " + row + " column: " + col);
+
+  // Collect numData values in an array
+  const targetCell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+  if (targetCell) {
+    targetCell.classList.add('valid-move');
+    console.log("cell found@: " + targetCell.dataset.num + targetCell.dataset.color);
+    console.log("Cell class names: " + targetCell.className); // Log class names for debugging
+  } else {
+    alert("no cell found");
+  }
+
+  
+}
+    
+  // Function to remove highlighting from all cells
+function clearHighlightedMoves() {
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+      cell.classList.remove('valid-move');
+    });
+  }
+
+    // Function to move a piece to a new location
+function movePiece(piece, newRow, newCol) {
+  const currentCell = board.querySelector(`[data-row="${piece.row}"][data-col="${piece.col}"]`);
+  currentCell.innerHTML = ''; // Clear the current cell
+  currentCell.classList.remove(`player-${piece.player}`); // Remove player class from the current cell
+
+  const newCell = board.querySelector(`[data-row="${newRow}"][data-col="${newCol}"]`);
+  newCell.classList.add(`player-${piece.player}`); // Add player class to the new cell
+
+  // Update the piece's position
+  piece.row = newRow;
+  piece.col = newCol;
+
+  // Check for capturing opponent's piece
+  const capturedPiece = getPieceInCell(newRow, newCol);
+  if (capturedPiece && capturedPiece.player !== piece.player) {
+    capturePiece(capturedPiece);
+  }
+}
+
+// Function to get the tile in a specific cell
+function getTileInCell(row, col) {
+  const tileContainer = document.getElementById('tiles'); // or adjust the container ID accordingly
+  const tileId = `tile-${playerTurn}-${row}-${col}`;
+  return tileContainer.querySelector(`#${tileId}`);
+}
+
+// Function to get the background color of a tile
+function getTileColor(tile) {
+  return tile.classList.contains('black') ? 'black' : 'rgb(218, 205, 205)';
+}
+
+    // Function to capture an opponent's piece
+function capturePiece(piece) {
+      // Implement your capturing logic here
+      // For simplicity, let's just remove the captured piece from the board
+      const capturedCell = board.querySelector(`[data-row="${piece.row}"][data-col="${piece.col}"]`);
+      capturedCell.innerHTML = '';
+    }
+
+    // Function to get the piece in a specific cell
+function getPieceInCell(row, col) {
+    const cell = board.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+    if (cell.innerHTML === 'X') {
+      const piecePlayer = cell.classList.contains(`player-${playerTurn}`); // Check if the cell belongs to the current player
+      if (piecePlayer) {
+        return { player: playerTurn, row: row, col: col };
+      }
+    }
+    return null;
+  }
+
+    // Function to update the UI to show whose turn it is
+function updateTurnIndicator() {
+    const turnIndicator = document.getElementById('turn-indicator');
+    turnIndicator.textContent = `Player ${playerTurn}'s Turn`;
+}
+
+    // Function to switch turns between players
+function switchTurn() {
+      playerTurn = 3 - playerTurn; // Toggle between 1 and 2
+      updateTurnIndicator();
+}
+
+    // Function to check for a win
+function checkForWin() {
+    // Implement your win condition logic here
+    // For simplicity, let's assume a win when a piece reaches the last row
+    if (selectedPiece && selectedPiece.row === 7) {
+      alert(`Player ${playerTurn} wins!`);
+      resetGame();
+    }
+  }
+
+    // Function to reset the game
+function resetGame() {
+    board.innerHTML = ''; // Clear the board
+    createBoard(); // Recreate the board
+    playerTurn = 1; // Reset the player turn
+    updateTurnIndicator(); // Reset turn indicator
+    updateDiceValue(); // Reset dice value display
+  }
+
+  // Function to update the UI with the dice value
+function updateDiceValue() {
+    const diceValueDisplay = document.getElementById('dice-value');
+    diceValueDisplay.textContent = `Dice Roll: ${diceValue}`;
+  }
+
+    // Function to simulate a dice roll and update the UI
+function rollDiceAndUpdateUI() {
+      diceValue = Math.floor(Math.random() * 5) + 0;
+
+      if (diceValue === 0) {
+        alert('Oops! You rolled a 0. You cannot move this turn.');
+        updateDiceValue();
+        switchTurn();
+      } else {
+        updateDiceValue();
+        switchTurn();
+      }
+    }
+
+    // Function to apply background image to cells based on location
+function applyCellBackground(cell, row, col) {
+
+
+      const images = [
+
+      'start.png','dots.png','start.png',
+      'flower.png','eyes.png','flower.png',
+      null,'cer.png',null,
+      null,'dots.png',null,
+      'eyes.png','flower.png','eyes.png',
+      'dots.png','cer.png','dots.png',
+      'eyes.png','dots.png','eyes.png',
+      'flower.png','eyes.png','flower.png',
+      ];
+      const imageIndex = row * 3 + col;
+      const imageUrl = images[imageIndex];
+      if (imageUrl) {
+        cell.style.background = `url('${imageUrl}')`;
+        cell.style.zIndex = 1; // Set z-index to -1
+      }
+    }
+
+    // Function to create tiles for a player
+function createTiles(player, numTiles) {
+      
+      const tileContainer = document.getElementById(`player${player}-tiles`);
+      alert(tileContainer);
+      for (let i = 0; i < numTiles; i++) {
+        const tile = document.createElement('div');
+        const tileId = `tile-${player}-${i}`; // Unique ID for each tile
+        tile.textContent = player + i;
+        tile.style.zIndex = -1;
+        // attachPieceClickListener(i)
+        // Set the initial position using the data-position attribute
+        tile.dataset.position = 0;
+        
+        tile.classList.add('tile', player === 1 ? 'black' : 'white');
+        
+/*         tile.onclick = function () {
+          console.log("tile position: " + tile.dataset.position); // Access the position using dataset
+          selectTile(tile,tile.id,tile.dataset.position);
+        }; */
+        
+        tileContainer.appendChild(tile);
+        // Attach the click event listener to the tile
+
+      }
+    }
+
+function attachPieceClickListener(player) {
+  const tilesContainer = document.querySelector(`.tile-container #player${player}-tiles`);
+  console.log(`tilesContainer for player ${player}:`, tilesContainer);
+
+  if (!tilesContainer) {
+    console.error(`Error: tilesContainer for player ${player} not found.`);
+    return;
+  }
+
+  const tiles = tilesContainer.querySelectorAll('.tile');
+
+  if (!tiles.length) {
+    console.error(`Error: No tiles found for player ${player}.`);
+    return;
+  }
+
+  tiles.forEach((tile) => {
+    tile.onclick = function () {
+      console.log(`Player ${player}: tile position - ${tile.dataset.position}`);
+      selectTile(tile, tile.id, tile.dataset.position);
+    };
+  });
+}
+
+    // Initialize the game board
+function updateGameState() {
+    // Add your logic to update the game state.
+    // This might include checking for win conditions, updating the turn, etc.
+    // For simplicity, let's switch turns after placing a tile.
+    //checkForWin()
+    switchTurn();
+  }
+
+  // Function to update the position of a tile
+function updateTilePosition(tileId, newPosition) {
+    const tile = document.getElementById(tileId);
+    if (tile) {
+      tile.dataset.position = newPosition;
+    }
+  }
+
+function placeTile(selectedCell,position) {
+  const cell = board.querySelector(`[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`);
+  // Create a new tile element
+  const placedTile = document.createElement('div');
+  placedTile.id = selectedTile.id;
+  placedTile.dataset.position = position;
+  console.log("Selected Cell position: "+  position);
+  placedTile.textContent = selectedTile.textContent;
+  placedTile.classList.add('tile', `player-${playerTurn}`);
+
+  // Copy the color from the selected tile to the placed tile
+  placedTile.classList.add(selectedTile.classList.contains('black') ? 'black' : 'white');
+
+  // Set the position and z-index
+  placedTile.style.position = 'absolute';
+  placedTile.style.top = cell.offsetTop + 'px';
+  placedTile.style.left = cell.offsetLeft + 'px';
+  placedTile.style.zIndex = '999';
+
+    // Add click event handler to the placed tile
+    placedTile.onclick = function () {
+          console.log("placed tile position: " + placedTile.dataset.position); // Access the position using dataset
+          alert(placedTile,placedTile.id,placedTile.dataset.position);
+          selectTile(placedTile,placedTile.id,placedTile.dataset.position);
+        };
+
+  // Append the tile to the board
+  board.appendChild(placedTile);
+
+  // Remove the selected tile from its original position
+  selectedTile.remove();
+}
+
+function getRowAndColFromNum(num) {
+  const cells = document.querySelectorAll('.cell');
+  let result = { row: null, col: null };
+
+  cells.forEach((cell) => {
+    const cellNum = Number(cell.dataset.num);
+    if (cellNum === num) {
+      result.row = Number(cell.dataset.row);
+      result.col = Number(cell.dataset.col);
+    }
+  });
+
+  return result;
+}
+    
+
+
+
+  // Game state
+    // Constants
+    const START = 0;
+    const FINISH = 15;
+    const SHARED_FIELDS = new Set([5, 6, 7, 8, 9, 10, 11, 12]);
+    const REROLL_FIELDS = new Set([4, 8, 14]);
+    const SAFE_SHARED_FIELDS = new Set([...REROLL_FIELDS].filter(field => SHARED_FIELDS.has(field)));
+    const MULTI_FIELDS = new Set([START, FINISH]);
+
+    const boardLayout = [
+    [[4,  'w'], [5],  [4,  'b']],
+    [[3,  'w'], [6],  [3,  'b']],
+    [[2,  'w'], [7],  [2,  'b']],
+    [[1,  'w'], [8],  [1,  'b']],
+    [[0,  'w'], [9],  [0,  'b']],
+    [[15, 'w'], [10], [15, 'b']],
+    [[14, 'w'], [11], [14, 'b']],
+    [[13, 'w'], [12], [13, 'b']],
+];
+
+    // Game state
+    const board = document.getElementById('board');
+    const tiles = document.getElementById('tiles');
+    const totalPlayers = 2; // Adjust the number of players as needed
+
+    let playerTurn = 1; // Player 1 starts
+    let diceValue = 0; // Current dice value
+    let selectedTile = null; // Track the selected tile
+
+    createBoard();
+
+    for (let i = 1; i <= totalPlayers; i++) {
+      createTiles(i, 7);
+      attachPieceClickListener(i);
+    }
+    updateTurnIndicator();
+
+</script>
+
+</body>
+</html>
