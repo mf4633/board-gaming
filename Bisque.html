@@ -5,11 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BISQUE — Battle for the Bay</title>
 <style>
-@keyframes wave {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
 @keyframes diceRoll {
   0% { transform: rotateX(0deg) rotateY(0deg) scale(0.5); opacity: 0; }
   50% { transform: rotateX(180deg) rotateY(180deg) scale(1.2); opacity: 1; }
@@ -122,49 +117,7 @@ body {
   border-radius: 12px;
   border: 2px solid #2A4050;
   overflow: hidden;
-  /* Stylized Peconic Bay map background */
-  background:
-    /* Shelter Island - main mass */
-    radial-gradient(ellipse 55px 40px at 54% 46%, #A89870 0%, #9A8A62 80%, transparent 100%),
-    /* Shelter Island - southern lobe */
-    radial-gradient(ellipse 35px 28px at 56% 52%, #9A8A62 0%, #8E7E56 80%, transparent 100%),
-    /* North Fork - Greenport area bulge */
-    radial-gradient(ellipse 50px 25px at 48% 12%, #B8A078 0%, #B8A078 70%, transparent 100%),
-    /* North Fork - main peninsula strip */
-    linear-gradient(180deg, #B8A078 0%, #B8A078 18%, transparent 18%),
-    /* North Fork - tapered eastern tip near Orient */
-    radial-gradient(ellipse 80px 18px at 60% 10%, #B8A078 0%, #B8A078 70%, transparent 100%),
-    /* South Fork - Montauk tip */
-    radial-gradient(ellipse 50px 22px at 88% 85%, #B0986C 0%, #B0986C 70%, transparent 100%),
-    /* South Fork - East Hampton/Amagansett area */
-    radial-gradient(ellipse 80px 30px at 75% 80%, #B8A078 0%, #B8A078 70%, transparent 100%),
-    /* South Fork - main body */
-    linear-gradient(0deg, #B8A078 0%, #B8A078 20%, transparent 20%),
-    /* South Fork - Sag Harbor bump northward */
-    radial-gradient(ellipse 40px 35px at 52% 72%, #B0986C 0%, #B0986C 60%, transparent 100%),
-    /* South Fork - Southampton wider area */
-    radial-gradient(ellipse 70px 35px at 25% 82%, #B8A078 0%, #B8A078 70%, transparent 100%),
-    /* Gardiners Island */
-    radial-gradient(ellipse 25px 30px at 85% 50%, #A89870 0%, #A89870 70%, transparent 100%),
-    /* Plum Island */
-    radial-gradient(ellipse 18px 12px at 67% 8%, #A89870 0%, #A89870 70%, transparent 100%),
-    /* Robins Island */
-    radial-gradient(ellipse 16px 14px at 10% 44%, #A89870 0%, #A89870 70%, transparent 100%),
-    /* Western mainland hint (left edge) */
-    radial-gradient(ellipse 40px 200px at -2% 50%, #988860 0%, #988860 60%, transparent 100%),
-    /* Shallow water glow - Peconic Bay */
-    radial-gradient(ellipse 120px 80px at 28% 48%, rgba(30,80,100,0.5) 0%, transparent 70%),
-    /* Shallow water glow - Little Peconic */
-    radial-gradient(ellipse 80px 50px at 22% 60%, rgba(30,80,100,0.4) 0%, transparent 70%),
-    /* Shallow water glow - Gardiners Bay */
-    radial-gradient(ellipse 100px 70px at 72% 38%, rgba(25,75,95,0.4) 0%, transparent 70%),
-    /* Deep water gradient */
-    radial-gradient(ellipse at 30% 40%, rgba(20,60,80,0.4) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 60%, rgba(20,60,80,0.3) 0%, transparent 50%),
-    /* Base ocean */
-    #1A3040;
-  animation: wave 8s ease-in-out infinite;
-  background-size: 200% 200%;
+  background: #0E1820;
 }
 .water-label {
   position: absolute;
@@ -410,6 +363,77 @@ body {
 <div id="deployInfo"></div>
 
 <div id="mapWrap">
+  <!-- 11 geographic regions of eastern Long Island -->
+  <svg id="regionBg" viewBox="0 0 750 480" preserveAspectRatio="none"
+       style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;">
+    <!-- WATER REGIONS (drawn first, land overlaps) -->
+
+    <!-- 1. Gardiners Bay — large eastern water, drawn first as base -->
+    <path d="M250,110 L300,100 L340,95 L380,88 L420,82 L460,78 L500,76 L540,74 L560,72
+             L750,72 L750,398
+             L720,398 L700,392 L660,388 L620,382 L580,374 L540,366 L500,356 L460,345
+             L462,210 L250,210 Z"
+          fill="#182E42" stroke="#1E3850" stroke-width="0.5"/>
+
+    <!-- 2. Noyack Bay — south of Shelter Island -->
+    <path d="M250,210 L462,210
+             L460,345 L420,332 L390,324 L370,316 L355,312 L330,322 L280,318 L250,322 Z"
+          fill="#1C3642" stroke="#224050" stroke-width="0.5"/>
+
+    <!-- 3. Great Peconic Bay — upper western water -->
+    <path d="M0,152 L60,148 L120,140 L180,128 L240,112 L250,110
+             L250,225
+             L240,224 L180,226 L120,228 L60,229 L0,230 Z"
+          fill="#1E3B4C" stroke="#245060" stroke-width="0.5"/>
+
+    <!-- 4. Little Peconic Bay — lower western water -->
+    <path d="M0,230 L60,229 L120,228 L180,226 L240,224 L250,225
+             L250,322 L220,326 L160,320 L100,316 L60,312 L0,310 Z"
+          fill="#1A3545" stroke="#204050" stroke-width="0.5"/>
+
+    <!-- 5. Long Island Sound — above North Fork -->
+    <path d="M0,0 L750,0 L750,72 L560,72
+             L540,65 L500,56 L460,42 L420,25 L380,12 L340,5 L300,5
+             L240,10 L180,18 L120,28 L60,40 L0,55 Z"
+          fill="#14283A" stroke="#1A3248" stroke-width="0.5"/>
+
+    <!-- LAND REGIONS (drawn on top of water) -->
+
+    <!-- 6. North Fork — diagonal peninsula, upper-left to Orient Point -->
+    <path d="M0,55 L60,40 L120,28 L180,18 L240,10 L300,5 L340,5
+             L380,12 L420,25 L460,42 L500,56 L540,65 L560,72
+             L540,74 L500,76 L460,78 L420,82 L380,88 L340,95
+             L300,100 L240,112 L180,128 L120,140 L60,148 L0,152 Z"
+          fill="#C8B088" stroke="#A89060" stroke-width="1"/>
+
+    <!-- 7. South Fork — wider lower peninsula to Montauk -->
+    <path d="M0,310 L60,312 L100,316 L160,320 L220,326 L280,318
+             L330,322 L355,312 L370,316 L390,324 L420,332 L460,345
+             L500,356 L540,366 L580,374 L620,382 L660,388 L700,392 L720,398
+             L710,415 L700,425 L660,432 L620,438 L580,442 L540,445
+             L500,446 L460,446 L420,445 L380,444 L340,442 L300,440
+             L260,438 L220,435 L180,432 L140,428 L100,424 L60,420 L0,415 Z"
+          fill="#B8A078" stroke="#9A7A50" stroke-width="1"/>
+
+    <!-- 8. Shelter Island — between the forks -->
+    <path d="M340,175 L365,165 L395,160 L425,162 L450,172 L462,188
+             L466,208 L462,228 L450,242 L428,252 L398,258 L368,255
+             L345,248 L332,235 L326,215 L328,195 Z"
+          fill="#C0B890" stroke="#A09050" stroke-width="1"/>
+
+    <!-- 9. Gardiners Island — in Gardiners Bay -->
+    <path d="M605,212 L622,202 L640,208 L648,228 L644,252
+             L632,268 L616,274 L602,265 L595,245 L598,225 Z"
+          fill="#A89870" stroke="#907840" stroke-width="1"/>
+
+    <!-- 10. Plum Island — in Long Island Sound, NE of Orient Point -->
+    <path d="M468,18 L486,10 L504,16 L510,28 L504,40 L488,46 L472,40 L466,28 Z"
+          fill="#A89870" stroke="#907840" stroke-width="1"/>
+
+    <!-- 11. Robins Island — in Great Peconic Bay -->
+    <path d="M35,190 L52,182 L66,190 L70,206 L64,220 L50,226 L36,220 L32,206 Z"
+          fill="#A89870" stroke="#907840" stroke-width="1"/>
+  </svg>
   <svg id="mapSvg"></svg>
 </div>
 
@@ -701,9 +725,11 @@ function createMap() {
 
   /* Add water body labels */
   var waterLabels = [
-    { text: 'Peconic Bay', x: 100, y: 165, size: '0.85em', rotate: -5 },
-    { text: 'Gardiners Bay', x: 530, y: 120, size: '0.8em', rotate: 3 },
-    { text: 'Block Island Sound', x: 480, y: 440, size: '0.72em', rotate: 0 }
+    { text: 'Peconic Bay', x: 80, y: 175, size: '0.8em', rotate: -8 },
+    { text: 'Little Peconic', x: 80, y: 265, size: '0.72em', rotate: -5 },
+    { text: 'Noyack Bay', x: 310, y: 285, size: '0.72em', rotate: 0 },
+    { text: 'Gardiners Bay', x: 540, y: 140, size: '0.82em', rotate: 3 },
+    { text: 'Long Island Sound', x: 160, y: 14, size: '0.7em', rotate: 0 }
   ];
   for (var wl = 0; wl < waterLabels.length; wl++) {
     var lbl = waterLabels[wl];
