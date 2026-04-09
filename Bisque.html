@@ -434,6 +434,11 @@ body {
     <path d="M35,190 L52,182 L66,190 L70,206 L64,220 L50,226 L36,220 L32,206 Z"
           fill="#A89870" stroke="#907840" stroke-width="1"/>
 
+    <!-- 12. Riverhead — mainland connecting the two forks -->
+    <path d="M0,152 L45,165 L58,190 L62,220 L58,250 L45,275 L0,310
+             L0,290 L20,260 L28,230 L28,210 L20,180 L0,160 Z"
+          fill="#B0986C" stroke="#9A7A50" stroke-width="1"/>
+
     <!-- Ram Island — NE of Shelter Island -->
     <path d="M448,158 L460,152 L470,158 L468,170 L458,175 L448,170 Z"
           fill="#A89870" stroke="#907840" stroke-width="1"/>
@@ -472,7 +477,8 @@ body {
 <script>
 /* ===== DATA ===== */
 var TERRITORIES = [
-  /* North Fork (7) — west to east */
+  /* North Fork (8) — Riverhead + west to east */
+  { id: 'riverhead',        name: 'Riverhead',        group: 'northfork',   x: 2,   y: 195, water: false },
   { id: 'cutchogue',        name: 'Cutchogue',        group: 'northfork',   x: 10,  y: 90,  water: false },
   { id: 'mattituck',        name: 'Mattituck',        group: 'northfork',   x: 78,  y: 76,  water: false },
   { id: 'peconic',          name: 'Peconic',          group: 'northfork',   x: 140, y: 64,  water: false },
@@ -538,7 +544,8 @@ var GROUPS = {
 
 var ADJACENCY = {
   /* North Fork */
-  cutchogue:        ['mattituck', 'flandersBay', 'greatPeconicBay'],
+  riverhead:        ['cutchogue', 'southampton', 'flandersBay'],
+  cutchogue:        ['riverhead', 'mattituck', 'flandersBay', 'greatPeconicBay'],
   mattituck:        ['cutchogue', 'peconic', 'greatPeconicBay'],
   peconic:          ['mattituck', 'southold', 'greatPeconicBay', 'littlePeconicBay'],
   southold:         ['peconic', 'greenport', 'littlePeconicBay'],
@@ -547,7 +554,7 @@ var ADJACENCY = {
   orient:           ['eastMarion', 'gardinersBay', 'greatGullIsland', 'plumIsland'],
 
   /* South Fork West */
-  southampton:      ['waterMill', 'flandersBay', 'littlePeconicBay'],
+  southampton:      ['riverhead', 'waterMill', 'flandersBay', 'littlePeconicBay'],
   waterMill:        ['southampton', 'bridgehampton', 'northHaven'],
   bridgehampton:    ['waterMill', 'sagaponack'],
   sagaponack:       ['bridgehampton', 'wainscott'],
@@ -574,7 +581,7 @@ var ADJACENCY = {
   robinsIsland:     ['greatPeconicBay', 'littlePeconicBay'],
 
   /* Inner Bays */
-  flandersBay:      ['cutchogue', 'southampton', 'greatPeconicBay'],
+  flandersBay:      ['riverhead', 'cutchogue', 'southampton', 'greatPeconicBay'],
   greatPeconicBay:  ['flandersBay', 'cutchogue', 'mattituck', 'peconic', 'littlePeconicBay', 'robinsIsland'],
   littlePeconicBay: ['greatPeconicBay', 'peconic', 'southold', 'southampton', 'noyackBay', 'robinsIsland'],
   noyackBay:        ['littlePeconicBay', 'northHaven', 'deringHarbor', 'sagHarbor', 'northwestHarbor'],
