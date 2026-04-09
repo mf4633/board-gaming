@@ -381,14 +381,14 @@ body {
           fill="#1C3642" stroke="#224050" stroke-width="0.5"/>
 
     <!-- 3. Great Peconic Bay — upper western water -->
-    <path d="M0,152 L60,148 L120,140 L180,128 L240,112 L250,110
+    <path d="M65,148 L120,140 L180,128 L240,112 L250,110
              L250,225
-             L240,224 L180,226 L120,228 L60,229 L0,230 Z"
+             L240,224 L180,226 L120,228 L65,229 Z"
           fill="#1E3B4C" stroke="#245060" stroke-width="0.5"/>
 
     <!-- 4. Little Peconic Bay — lower western water -->
-    <path d="M0,230 L60,229 L120,228 L180,226 L240,224 L250,225
-             L250,322 L220,326 L160,320 L100,316 L60,312 L0,310 Z"
+    <path d="M65,229 L120,228 L180,226 L240,224 L250,225
+             L250,322 L220,326 L160,320 L100,316 L65,312 Z"
           fill="#1A3545" stroke="#204050" stroke-width="0.5"/>
 
     <!-- 5. Long Island Sound — above North Fork -->
@@ -435,20 +435,11 @@ body {
           fill="#A89870" stroke="#907840" stroke-width="1"/>
 
     <!-- 12. Riverhead — mainland connecting the two forks -->
-    <path d="M0,152 L45,165 L58,190 L62,220 L58,250 L45,275 L0,310
-             L0,290 L20,260 L28,230 L28,210 L20,180 L0,160 Z"
+    <path d="M0,148 L55,158 L72,192 L75,230 L72,268 L55,298 L0,314 Z"
           fill="#B0986C" stroke="#9A7A50" stroke-width="1"/>
-
-    <!-- Ram Island — NE of Shelter Island -->
-    <path d="M448,158 L460,152 L470,158 L468,170 L458,175 L448,170 Z"
-          fill="#A89870" stroke="#907840" stroke-width="1"/>
 
     <!-- Fisher's Island — in Long Island Sound, far NE -->
     <path d="M655,38 L672,32 L698,30 L712,36 L714,48 L700,54 L674,56 L658,50 Z"
-          fill="#A89870" stroke="#907840" stroke-width="1"/>
-
-    <!-- Great Gull Island — in the Sound near Orient Point -->
-    <path d="M542,34 L554,28 L566,32 L564,44 L554,48 L542,42 Z"
           fill="#A89870" stroke="#907840" stroke-width="1"/>
   </svg>
   <svg id="mapSvg"></svg>
@@ -477,126 +468,108 @@ body {
 <script>
 /* ===== DATA ===== */
 var TERRITORIES = [
-  /* North Fork (8) — Riverhead + west to east */
+  /* North Fork (6) */
   { id: 'riverhead',        name: 'Riverhead',        group: 'northfork',   x: 2,   y: 195, water: false },
   { id: 'cutchogue',        name: 'Cutchogue',        group: 'northfork',   x: 10,  y: 90,  water: false },
-  { id: 'mattituck',        name: 'Mattituck',        group: 'northfork',   x: 78,  y: 76,  water: false },
-  { id: 'peconic',          name: 'Peconic',          group: 'northfork',   x: 140, y: 64,  water: false },
-  { id: 'southold',         name: 'Southold',         group: 'northfork',   x: 205, y: 52,  water: false },
-  { id: 'greenport',        name: 'Greenport',        group: 'northfork',   x: 275, y: 42,  water: false },
-  { id: 'eastMarion',       name: 'East Marion',      group: 'northfork',   x: 348, y: 30,  water: false },
+  { id: 'mattituck',        name: 'Mattituck',        group: 'northfork',   x: 100, y: 72,  water: false },
+  { id: 'southold',         name: 'Southold',         group: 'northfork',   x: 195, y: 52,  water: false },
+  { id: 'greenport',        name: 'Greenport',        group: 'northfork',   x: 300, y: 38,  water: false },
   { id: 'orient',           name: 'Orient',           group: 'northfork',   x: 422, y: 22,  water: false },
 
-  /* South Fork West (7) */
+  /* South Fork West (6) */
   { id: 'southampton',      name: 'Southampton',      group: 'sfwest',      x: 35,  y: 375, water: false },
   { id: 'waterMill',        name: 'Water Mill',       group: 'sfwest',      x: 110, y: 368, water: false },
   { id: 'bridgehampton',    name: 'Bridgehampton',    group: 'sfwest',      x: 180, y: 362, water: false },
   { id: 'sagaponack',       name: 'Sagaponack',       group: 'sfwest',      x: 248, y: 368, water: false },
   { id: 'northHaven',       name: 'North Haven',      group: 'sfwest',      x: 280, y: 310, water: false },
-  { id: 'wainscott',        name: 'Wainscott',        group: 'sfwest',      x: 320, y: 358, water: false },
   { id: 'springs',          name: 'Springs',          group: 'sfwest',      x: 382, y: 332, water: false },
 
-  /* South Fork East (7) */
+  /* South Fork East (6) */
   { id: 'sagHarbor',        name: 'Sag Harbor',       group: 'sfeast',      x: 355, y: 312, water: false },
   { id: 'eastHampton',      name: 'East Hampton',     group: 'sfeast',      x: 440, y: 348, water: false },
   { id: 'amagansett',       name: 'Amagansett',       group: 'sfeast',      x: 505, y: 365, water: false },
-  { id: 'napeague',         name: 'Napeague',         group: 'sfeast',      x: 555, y: 380, water: false },
-  { id: 'hitherHills',      name: 'Hither Hills',     group: 'sfeast',      x: 545, y: 402, water: false },
+  { id: 'napeague',         name: 'Napeague',         group: 'sfeast',      x: 558, y: 378, water: false },
   { id: 'montauk',          name: 'Montauk',          group: 'sfeast',      x: 630, y: 388, water: false },
   { id: 'ditchPlains',      name: 'Ditch Plains',     group: 'sfeast',      x: 615, y: 414, water: false },
 
-  /* The Islands (7) */
+  /* The Islands (5) */
   { id: 'shelterHeights',   name: 'S.I. Heights',     group: 'islands',     x: 370, y: 170, water: false },
   { id: 'mashomack',        name: 'Mashomack',        group: 'islands',     x: 425, y: 225, water: false },
-  { id: 'deringHarbor',     name: 'Dering Harbor',    group: 'islands',     x: 338, y: 235, water: false },
-  { id: 'ramIsland',        name: 'Ram Island',       group: 'islands',     x: 452, y: 172, water: false },
   { id: 'gardinersIsland',  name: 'Gardiners Is.',    group: 'islands',     x: 610, y: 238, water: false },
   { id: 'plumIsland',       name: 'Plum Island',      group: 'islands',     x: 473, y: 26,  water: false },
   { id: 'robinsIsland',     name: 'Robins Island',    group: 'islands',     x: 40,  y: 198, water: false },
 
-  /* Inner Bays (7) — water territories */
-  { id: 'flandersBay',      name: 'Flanders Bay',     group: 'innerBays',   x: 20,  y: 240, water: true },
+  /* Inner Bays (5) */
   { id: 'greatPeconicBay',  name: 'Peconic Bay',      group: 'innerBays',   x: 115, y: 185, water: true },
   { id: 'littlePeconicBay', name: 'Little Peconic',   group: 'innerBays',   x: 115, y: 270, water: true },
   { id: 'noyackBay',        name: 'Noyack Bay',       group: 'innerBays',   x: 292, y: 290, water: true },
   { id: 'siSound',          name: 'S.I. Sound',       group: 'innerBays',   x: 375, y: 130, water: true },
-  { id: 'coeclesHarbor',    name: 'Coecles Hbr',      group: 'innerBays',   x: 478, y: 252, water: true },
   { id: 'northwestHarbor',  name: 'NW Harbor',        group: 'innerBays',   x: 462, y: 315, water: true },
 
-  /* Outer Waters (7) */
+  /* Outer Waters (6) */
   { id: 'gardinersBay',     name: 'Gardiners Bay',    group: 'outerWaters', x: 555, y: 158, water: true },
   { id: 'fortPondBay',      name: 'Fort Pond Bay',    group: 'outerWaters', x: 590, y: 360, water: true },
   { id: 'blockIslandSound', name: 'Block Is. Snd',    group: 'outerWaters', x: 672, y: 265, water: true },
   { id: 'threeMileHarbor',  name: '3-Mile Hbr',       group: 'outerWaters', x: 488, y: 340, water: true },
   { id: 'montaukHarbor',    name: 'Montauk Hbr',      group: 'outerWaters', x: 662, y: 378, water: true },
-  { id: 'fishersIsland',    name: 'Fishers Is.',      group: 'outerWaters', x: 672, y: 42,  water: false },
-  { id: 'greatGullIsland',  name: 'Great Gull Is.',   group: 'outerWaters', x: 548, y: 40,  water: false }
+  { id: 'fishersIsland',    name: 'Fishers Is.',      group: 'outerWaters', x: 672, y: 42,  water: false }
 ];
 
 var GROUPS = {
-  northfork:   { name: 'North Fork',       bonus: 5, color: '#C8B088', border: '#B89858' },
-  sfwest:      { name: 'South Fork West',  bonus: 5, color: '#B8A078', border: '#A08858' },
-  sfeast:      { name: 'South Fork East',  bonus: 5, color: '#C0A880', border: '#A89058' },
-  islands:     { name: 'The Islands',      bonus: 4, color: '#C0B890', border: '#A8A068' },
-  innerBays:   { name: 'Inner Bays',       bonus: 4, color: '#2A5068', border: '#3A6888' },
-  outerWaters: { name: 'Outer Waters',     bonus: 3, color: '#1E3B4C', border: '#2A5570' }
+  northfork:   { name: 'North Fork',       bonus: 4, color: '#C8B088', border: '#B89858' },
+  sfwest:      { name: 'South Fork West',  bonus: 4, color: '#B8A078', border: '#A08858' },
+  sfeast:      { name: 'South Fork East',  bonus: 4, color: '#C0A880', border: '#A89058' },
+  islands:     { name: 'The Islands',      bonus: 3, color: '#C0B890', border: '#A8A068' },
+  innerBays:   { name: 'Inner Bays',       bonus: 3, color: '#2A5068', border: '#3A6888' },
+  outerWaters: { name: 'Outer Waters',     bonus: 2, color: '#1E3B4C', border: '#2A5570' }
 };
 
 var ADJACENCY = {
-  /* North Fork */
-  riverhead:        ['cutchogue', 'southampton', 'flandersBay'],
-  cutchogue:        ['riverhead', 'mattituck', 'flandersBay', 'greatPeconicBay'],
-  mattituck:        ['cutchogue', 'peconic', 'greatPeconicBay'],
-  peconic:          ['mattituck', 'southold', 'greatPeconicBay', 'littlePeconicBay'],
-  southold:         ['peconic', 'greenport', 'littlePeconicBay'],
-  greenport:        ['southold', 'eastMarion', 'siSound', 'shelterHeights'],
-  eastMarion:       ['greenport', 'orient', 'siSound'],
-  orient:           ['eastMarion', 'gardinersBay', 'greatGullIsland', 'plumIsland'],
+  /* North Fork — linear chain + bay access */
+  riverhead:        ['cutchogue', 'southampton', 'greatPeconicBay'],
+  cutchogue:        ['riverhead', 'mattituck'],
+  mattituck:        ['cutchogue', 'southold'],
+  southold:         ['mattituck', 'greenport'],
+  greenport:        ['southold', 'orient', 'siSound'],
+  orient:           ['greenport', 'plumIsland'],
 
   /* South Fork West */
-  southampton:      ['riverhead', 'waterMill', 'flandersBay', 'littlePeconicBay'],
+  southampton:      ['riverhead', 'waterMill', 'littlePeconicBay'],
   waterMill:        ['southampton', 'bridgehampton', 'northHaven'],
   bridgehampton:    ['waterMill', 'sagaponack'],
-  sagaponack:       ['bridgehampton', 'wainscott'],
-  northHaven:       ['waterMill', 'wainscott', 'springs', 'noyackBay', 'deringHarbor'],
-  wainscott:        ['sagaponack', 'northHaven', 'springs', 'eastHampton'],
-  springs:          ['northHaven', 'wainscott', 'sagHarbor', 'northwestHarbor'],
+  sagaponack:       ['bridgehampton', 'springs', 'eastHampton'],
+  northHaven:       ['waterMill', 'springs'],
+  springs:          ['northHaven', 'sagaponack', 'sagHarbor'],
 
   /* South Fork East */
-  sagHarbor:        ['springs', 'eastHampton', 'noyackBay', 'northwestHarbor'],
-  eastHampton:      ['wainscott', 'sagHarbor', 'amagansett', 'threeMileHarbor', 'northwestHarbor'],
+  sagHarbor:        ['springs', 'noyackBay', 'northwestHarbor'],
+  eastHampton:      ['sagaponack', 'amagansett', 'threeMileHarbor'],
   amagansett:       ['eastHampton', 'napeague', 'threeMileHarbor'],
-  napeague:         ['amagansett', 'hitherHills', 'fortPondBay'],
-  hitherHills:      ['napeague', 'montauk', 'ditchPlains', 'fortPondBay'],
-  montauk:          ['hitherHills', 'ditchPlains', 'montaukHarbor', 'blockIslandSound'],
-  ditchPlains:      ['hitherHills', 'montauk', 'montaukHarbor'],
+  napeague:         ['amagansett', 'montauk', 'fortPondBay'],
+  montauk:          ['napeague', 'ditchPlains', 'montaukHarbor'],
+  ditchPlains:      ['montauk', 'montaukHarbor'],
 
-  /* The Islands */
-  shelterHeights:   ['mashomack', 'deringHarbor', 'ramIsland', 'greenport', 'siSound'],
-  mashomack:        ['shelterHeights', 'deringHarbor', 'ramIsland', 'coeclesHarbor', 'gardinersBay'],
-  deringHarbor:     ['shelterHeights', 'mashomack', 'noyackBay', 'northHaven'],
-  ramIsland:        ['shelterHeights', 'mashomack', 'coeclesHarbor'],
-  gardinersIsland:  ['gardinersBay', 'blockIslandSound', 'coeclesHarbor'],
-  plumIsland:       ['orient', 'gardinersBay', 'greatGullIsland'],
+  /* The Islands — all at 2 connections */
+  shelterHeights:   ['mashomack', 'siSound', 'noyackBay'],
+  mashomack:        ['shelterHeights', 'northwestHarbor'],
+  gardinersIsland:  ['gardinersBay', 'fishersIsland'],
+  plumIsland:       ['orient', 'gardinersBay'],
   robinsIsland:     ['greatPeconicBay', 'littlePeconicBay'],
 
   /* Inner Bays */
-  flandersBay:      ['riverhead', 'cutchogue', 'southampton', 'greatPeconicBay'],
-  greatPeconicBay:  ['flandersBay', 'cutchogue', 'mattituck', 'peconic', 'littlePeconicBay', 'robinsIsland'],
-  littlePeconicBay: ['greatPeconicBay', 'peconic', 'southold', 'southampton', 'noyackBay', 'robinsIsland'],
-  noyackBay:        ['littlePeconicBay', 'northHaven', 'deringHarbor', 'sagHarbor', 'northwestHarbor'],
-  siSound:          ['greenport', 'eastMarion', 'shelterHeights', 'gardinersBay', 'coeclesHarbor'],
-  coeclesHarbor:    ['siSound', 'mashomack', 'ramIsland', 'gardinersIsland', 'northwestHarbor', 'gardinersBay'],
-  northwestHarbor:  ['noyackBay', 'coeclesHarbor', 'springs', 'sagHarbor', 'eastHampton', 'threeMileHarbor'],
+  greatPeconicBay:  ['riverhead', 'littlePeconicBay', 'robinsIsland'],
+  littlePeconicBay: ['greatPeconicBay', 'southampton', 'noyackBay', 'robinsIsland'],
+  noyackBay:        ['littlePeconicBay', 'shelterHeights', 'northwestHarbor', 'sagHarbor'],
+  siSound:          ['greenport', 'shelterHeights', 'gardinersBay'],
+  northwestHarbor:  ['noyackBay', 'mashomack', 'sagHarbor'],
 
   /* Outer Waters */
-  gardinersBay:     ['orient', 'siSound', 'mashomack', 'coeclesHarbor', 'gardinersIsland', 'plumIsland', 'blockIslandSound', 'fishersIsland', 'fortPondBay', 'threeMileHarbor', 'greatGullIsland'],
-  fortPondBay:      ['napeague', 'hitherHills', 'gardinersBay', 'montaukHarbor', 'blockIslandSound'],
-  blockIslandSound: ['montauk', 'gardinersBay', 'gardinersIsland', 'fortPondBay', 'montaukHarbor', 'fishersIsland'],
-  threeMileHarbor:  ['eastHampton', 'amagansett', 'northwestHarbor', 'gardinersBay'],
-  montaukHarbor:    ['montauk', 'ditchPlains', 'fortPondBay', 'blockIslandSound'],
-  fishersIsland:    ['gardinersBay', 'blockIslandSound', 'greatGullIsland'],
-  greatGullIsland:  ['orient', 'plumIsland', 'fishersIsland', 'gardinersBay']
+  gardinersBay:     ['siSound', 'gardinersIsland', 'plumIsland', 'blockIslandSound'],
+  fortPondBay:      ['napeague', 'blockIslandSound'],
+  blockIslandSound: ['gardinersBay', 'fishersIsland', 'fortPondBay'],
+  threeMileHarbor:  ['eastHampton', 'amagansett'],
+  montaukHarbor:    ['montauk', 'ditchPlains'],
+  fishersIsland:    ['blockIslandSound', 'gardinersIsland']
 };
 
 var PLAYER_COLORS = {
@@ -689,17 +662,17 @@ function resetGame() {
   initState();
 
   /* Determine active players and neutral */
-  var totalTerritories = TERRITORIES.length; /* 42 */
+  var totalTerritories = TERRITORIES.length; /* 34 */
   var hasNeutral = false;
   var neutralCount = 0;
   var perPlayer = 0;
 
   if (playerCount === 2) {
-    perPlayer = 18;
+    perPlayer = 14;
     neutralCount = totalTerritories - (perPlayer * 2);
     hasNeutral = true;
   } else if (playerCount === 3) {
-    perPlayer = 12;
+    perPlayer = 10;
     neutralCount = totalTerritories - (perPlayer * 3);
     hasNeutral = true;
   } else {
@@ -756,7 +729,7 @@ function resetGame() {
   }
 
   /* Distribute bonus starting traps to human/AI players (not neutral) */
-  var startTrapsPerPlayer = 30;
+  var startTrapsPerPlayer = 25;
   for (var sp = 1; sp <= playerCount; sp++) {
     var ownedByP = ids.filter(function(tid) { return state.territories[tid].owner === sp; });
     var alreadyPlaced = ownedByP.length; /* 1 per territory */
