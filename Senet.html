@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Senet</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: #2D1F14;
+      color: #E8D5C0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 1.7em;
+      color: #D4A574;
+      margin-bottom: 4px;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+      letter-spacing: 0.1em;
+    }
+
+    .subtitle {
+      font-size: 0.8em;
+      color: #8A7060;
+      margin-bottom: 14px;
+      font-style: italic;
+    }
+
+    .mode-selector {
+      display: flex;
+      gap: 0;
+      margin-bottom: 14px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 2px solid #7A3828;
+    }
+
+    .mode-btn {
+      padding: 6px 18px;
+      font-size: 0.95em;
+      font-family: 'Georgia', serif;
+      cursor: pointer;
+      border: none;
+      background: #3D2418;
+      color: #8A7060;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .mode-btn:not(:last-child) { border-right: 1px solid #7A3828; }
+
+    .mode-btn.active {
+      background: #7A3828;
+      color: #E8D5C0;
+      cursor: default;
+    }
+
+    .mode-btn:hover:not(.active) { background: #4A2E1C; color: #D4A574; }
+
+    .game-info { text-align: center; margin-bottom: 10px; }
+
+    #turn-indicator { font-size: 1.15em; font-weight: bold; margin-bottom: 6px; }
+
+    .sticks-container {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin: 8px 0;
+      min-height: 20px;
+    }
+
+    .stick {
+      width: 48px;
+      height: 14px;
+      border-radius: 7px;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+    }
+
+    .stick.painted {
+      background: linear-gradient(180deg, #E8C890, #C49A5C);
+      border: 1px solid #B08850;
+    }
+
+    .stick.plain {
+      background: linear-gradient(180deg, #5A3E28, #3A2518);
+      border: 1px solid #2E1C10;
+    }
+
+    #roll-total { font-size: 1.1em; margin-bottom: 4px; }
+
+    #message {
+      font-size: 1em;
+      color: #D4A574;
+      min-height: 1.4em;
+      margin-bottom: 8px;
+    }
+
+    .buttons { margin-bottom: 15px; }
+
+    button {
+      padding: 8px 22px;
+      font-size: 1em;
+      font-family: 'Georgia', serif;
+      cursor: pointer;
+      margin: 0 5px;
+      border: 2px solid #7A3828;
+      border-radius: 6px;
+      background: #4A2E1C;
+      color: #E8D5C0;
+      transition: background 0.2s;
+    }
+
+    button:hover:not(:disabled) { background: #5C3A22; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .container {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 60px;
+      padding-top: 10px;
+    }
+
+    .side-panel h3 {
+      font-size: 0.8em;
+      margin-bottom: 8px;
+      color: #8A7060;
+    }
+
+    .scored-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      justify-content: center;
+      max-width: 70px;
+    }
+
+    .scored-piece {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      opacity: 0.5;
+    }
+
+    .scored-piece.amber { background: #B08030; }
+    .scored-piece.slate { background: #3A3A3A; }
+
+    /* ---- Board ---- */
+    .board {
+      background: #983828;
+      display: grid;
+      grid-template-columns: repeat(10, 58px);
+      grid-template-rows: repeat(3, 58px);
+      gap: 6px;
+      padding: 14px;
+      border-radius: 8px;
+      border: 4px solid #6D2818;
+      box-shadow:
+        2px 4px 14px rgba(0,0,0,0.6),
+        inset 0 0 20px rgba(0,0,0,0.15);
+    }
+
+    .cell {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #8A3425, #6E2A1C);
+      box-shadow:
+        inset 2px 2px 6px rgba(0,0,0,0.55),
+        inset -1px -1px 4px rgba(220,170,120,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+
+    .cell:hover { box-shadow: inset 2px 2px 6px rgba(0,0,0,0.55), inset -1px -1px 4px rgba(220,170,120,0.12), 0 0 8px rgba(212,165,116,0.25); }
+
+    .cell.special { box-shadow: inset 2px 2px 6px rgba(0,0,0,0.55), inset -1px -1px 4px rgba(220,170,120,0.12), inset 0 0 6px rgba(212,165,116,0.2); }
+
+    .cell.water-cell { box-shadow: inset 2px 2px 6px rgba(0,0,0,0.55), inset -1px -1px 4px rgba(80,140,180,0.2), inset 0 0 8px rgba(60,120,180,0.25); }
+
+    .sq-symbol {
+      position: absolute;
+      font-size: 1.3em;
+      color: #D4A574;
+      opacity: 0.55;
+      pointer-events: none;
+      z-index: 1;
+      text-shadow: 0 0 4px rgba(0,0,0,0.4);
+    }
+
+    .sq-num {
+      position: absolute;
+      font-size: 0.55em;
+      color: #D4A574;
+      opacity: 0;
+      bottom: 1px;
+      right: 6px;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .cell:hover .sq-num { opacity: 0.4; }
+
+    /* ---- Pieces ---- */
+    .piece {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: default;
+      z-index: 10;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-shadow: 1px 2px 4px rgba(0,0,0,0.4);
+    }
+
+    .piece.amber {
+      background: radial-gradient(circle at 35% 30%, #F0C060, #B07820);
+      border-color: rgba(160,100,30,0.4);
+    }
+
+    .piece.slate {
+      background: radial-gradient(circle at 35% 30%, #6A6A6A, #2A2A2A);
+      border-color: rgba(60,60,60,0.4);
+    }
+
+    .piece.selectable {
+      cursor: pointer;
+      border-color: #D4A574 !important;
+      box-shadow: 0 0 12px #D4A574, 1px 2px 4px rgba(0,0,0,0.4);
+      animation: glow 1s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 8px #D4A574, 1px 2px 4px rgba(0,0,0,0.4); }
+      50% { box-shadow: 0 0 18px #D4A574, 1px 2px 4px rgba(0,0,0,0.4); }
+    }
+
+    /* ---- Path Arrow ---- */
+    .path-arrows {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 0.7em;
+      color: #6A5040;
+    }
+
+    .path-arrows span { opacity: 0.6; }
+
+    /* ---- Rules ---- */
+    .rules {
+      margin-top: 20px;
+      max-width: 640px;
+      font-size: 0.78em;
+      color: #8A7060;
+      line-height: 1.5;
+    }
+
+    .rules h3 { color: #B08A60; margin-bottom: 6px; }
+    .rules ul { padding-left: 18px; }
+    .rules li { margin-bottom: 3px; }
+    .rules .sym { color: #D4A574; }
+  </style>
+</head>
+<body>
+  <h1>SENET</h1>
+  <div class="subtitle">The Ancient Egyptian Game of Passing</div>
+  <div class="mode-selector">
+    <button class="mode-btn active" id="mode-1p" onclick="setMode(true)">1 Player</button>
+    <button class="mode-btn" id="mode-2p" onclick="setMode(false)">2 Players</button>
+  </div>
+  <div class="game-info">
+    <div id="turn-indicator"></div>
+    <div class="sticks-container" id="sticks-container"></div>
+    <div id="roll-total"></div>
+    <div id="message"></div>
+  </div>
+  <div class="buttons">
+    <button id="roll-btn" onclick="throwSticks()">Throw Sticks</button>
+    <button onclick="resetGame()">Reset Game</button>
+  </div>
+  <div class="container">
+    <div class="side-panel">
+      <h3>Amber</h3>
+      <h3>Scored</h3>
+      <div class="scored-area" id="p1-scored"></div>
+    </div>
+    <div class="board" id="board"></div>
+    <div class="side-panel">
+      <h3 id="p2-label">Slate (AI)</h3>
+      <h3>Scored</h3>
+      <div class="scored-area" id="p2-scored"></div>
+    </div>
+  </div>
+  <div class="path-arrows">
+    <span>Row 1: &rarr;&rarr;&rarr;</span>
+    <span>Row 2: &larr;&larr;&larr;</span>
+    <span>Row 3: &rarr;&rarr;&rarr; &rArr; off</span>
+  </div>
+  <div class="rules">
+    <h3>Rules</h3>
+    <ul>
+      <li>Each player has 5 pieces starting on alternating squares 1-10. Race them off the board.</li>
+      <li>Throw 4 sticks (painted side = 1, plain = 0). Total 0 painted = move 6. Rolls of <b>1, 4, or 6 grant an extra turn</b>.</li>
+      <li>Path snakes across 3 rows: right along row 1, left along row 2, right along row 3, then off.</li>
+      <li>Land on an unprotected opponent to <b>swap positions</b>. A piece is <b>protected</b> if a friendly piece is on an adjacent square.</li>
+      <li>Three or more consecutive opponent pieces form a <b>blockade</b> you cannot jump over.</li>
+      <li><span class="sym">&#9765;</span> Sq 15 &mdash; <b>House of Rebirth</b>: safe square. Captured pieces return here.</li>
+      <li><span class="sym">&#10047;</span> Sq 26 &mdash; <b>House of Beauty</b>: safe; all pieces must stop here before proceeding.</li>
+      <li><span class="sym">&asymp;</span> Sq 27 &mdash; <b>House of Water</b>: piece is sent back to the House of Rebirth!</li>
+      <li><span class="sym">&#9776;</span> Sq 28 / <span class="sym">&#9728;</span> Sq 29 / <span class="sym">&#9673;</span> Sq 30 &mdash; must roll exactly <b>3 / 2 / 1</b> to bear off.</li>
+      <li>First player to bear off all 5 pieces wins!</li>
+    </ul>
+  </div>
+
+<script>
+  // =============================================
+  //  Constants
+  // =============================================
+  var NUM_PIECES   = 5;
+  var BEAR_OFF     = 31;
+  var WATER        = 27;
+  var REBIRTH      = 15;
+  var BEAUTY       = 26;
+  var SAFE_SQUARES = new Set([15, 26, 28, 29, 30]);
+  var EXTRA_ROLLS  = new Set([1, 4, 6]);
+
+  var SQ_SYMBOLS = {};
+  SQ_SYMBOLS[15] = '\u2625';
+  SQ_SYMBOLS[26] = '\u273F';
+  SQ_SYMBOLS[27] = '\u2248';
+  SQ_SYMBOLS[28] = '\u2630';
+  SQ_SYMBOLS[29] = '\u2600';
+  SQ_SYMBOLS[30] = '\u25C9';
+
+  /*  Board layout (3 rows x 10 columns, boustrophedon path):
+
+      Col:  0   1   2   3   4   5   6   7   8   9
+      R0:   1   2   3   4   5   6   7   8   9  10  -->
+      R1:  20  19  18  17  16  15  14  13  12  11  <--
+      R2:  21  22  23  24  25  26  27  28  29  30  -->  off
+
+      Initial: P1 (amber) on 1,3,5,7,9 -- P2 (slate) on 2,4,6,8,10
+  */
+
+  function sqToGrid(sq) {
+    if (sq <= 10) return [0, sq - 1];
+    if (sq <= 20) return [1, 20 - sq];
+    return [2, sq - 21];
+  }
+
+  function gridToSq(r, c) {
+    if (r === 0) return c + 1;
+    if (r === 1) return 20 - c;
+    return c + 21;
+  }
+
+  // =============================================
+  //  Game State
+  // =============================================
+  var pieces     = { 1: [1,3,5,7,9], 2: [2,4,6,8,10] };
+  var playerTurn = 1;
+  var rollValue  = 0;
+  var stickRolls = [];
+  var phase      = 'roll';
+  var gameOver   = false;
+  var aiMode     = true;
+  var aiTimeout  = null;
+
+  var boardEl = document.getElementById('board');
+  var rollBtn = document.getElementById('roll-btn');
+
+  // =============================================
+  //  Mode
+  // =============================================
+  function setMode(isAi) {
+    if (aiMode === isAi) return;
+    aiMode = isAi;
+    document.getElementById('mode-1p').classList.toggle('active', isAi);
+    document.getElementById('mode-2p').classList.toggle('active', !isAi);
+    document.getElementById('p2-label').textContent = isAi ? 'Slate (AI)' : 'Slate (P2)';
+    resetGame();
+  }
+
+  // =============================================
+  //  Board Creation
+  // =============================================
+  function createBoard() {
+    boardEl.innerHTML = '';
+    for (var r = 0; r < 3; r++) {
+      for (var c = 0; c < 10; c++) {
+        var sq = gridToSq(r, c);
+        var cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.row = r;
+        cell.dataset.col = c;
+        cell.dataset.sq = sq;
+
+        if (SAFE_SQUARES.has(sq)) cell.classList.add('special');
+        if (sq === WATER) cell.classList.add('water-cell');
+
+        if (SQ_SYMBOLS[sq]) {
+          var sym = document.createElement('span');
+          sym.classList.add('sq-symbol');
+          sym.textContent = SQ_SYMBOLS[sq];
+          cell.appendChild(sym);
+        }
+
+        var num = document.createElement('span');
+        num.classList.add('sq-num');
+        num.textContent = sq;
+        cell.appendChild(num);
+
+        (function(square) {
+          cell.addEventListener('click', function() { handleCellClick(square); });
+        })(sq);
+
+        boardEl.appendChild(cell);
+      }
+    }
+  }
+
+  // =============================================
+  //  Helpers
+  // =============================================
+  function getOccupant(sq) {
+    if (pieces[1].indexOf(sq) !== -1) return 1;
+    if (pieces[2].indexOf(sq) !== -1) return 2;
+    return 0;
+  }
+
+  function isProtected(sq) {
+    if (SAFE_SQUARES.has(sq)) return true;
+    var occ = getOccupant(sq);
+    if (!occ) return false;
+    if (sq > 1 && getOccupant(sq - 1) === occ) return true;
+    if (sq < 30 && getOccupant(sq + 1) === occ) return true;
+    return false;
+  }
+
+  function hasBlockade(player, from, to) {
+    var end = (to === BEAR_OFF) ? 31 : to;
+    var opp = 3 - player;
+    var run = 0;
+    for (var sq = from + 1; sq < end && sq <= 30; sq++) {
+      if (getOccupant(sq) === opp) { run++; if (run >= 3) return true; }
+      else { run = 0; }
+    }
+    return false;
+  }
+
+  function findRebirthSquare() {
+    if (getOccupant(REBIRTH) === 0) return REBIRTH;
+    for (var sq = REBIRTH - 1; sq >= 1; sq--) {
+      if (getOccupant(sq) === 0) return sq;
+    }
+    for (var sq = REBIRTH + 1; sq <= 26; sq++) {
+      if (sq === WATER) continue;
+      if (getOccupant(sq) === 0) return sq;
+    }
+    return REBIRTH;
+  }
+
+  function getCellBySq(sq) {
+    return boardEl.querySelector('.cell[data-sq="' + sq + '"]');
+  }
+
+  function playerName(p) { return p === 1 ? 'Amber' : 'Slate'; }
+  function playerClass(p) { return p === 1 ? 'amber' : 'slate'; }
+  function isAiTurn() { return aiMode && playerTurn === 2; }
+
+  // =============================================
+  //  Rendering
+  // =============================================
+  function render() {
+    boardEl.querySelectorAll('.piece').forEach(function(p) { p.remove(); });
+
+    for (var pl = 1; pl <= 2; pl++) {
+      for (var i = 0; i < NUM_PIECES; i++) {
+        var sq = pieces[pl][i];
+        if (sq >= 1 && sq <= 30) {
+          var cell = getCellBySq(sq);
+          if (cell) {
+            var el = document.createElement('div');
+            el.classList.add('piece', playerClass(pl));
+            el.dataset.player = pl;
+            el.dataset.index = i;
+            cell.appendChild(el);
+          }
+        }
+      }
+    }
+
+    renderScored(1);
+    renderScored(2);
+    highlightSelectable();
+    updateUI();
+    scheduleAi();
+  }
+
+  function renderScored(player) {
+    var container = document.getElementById('p' + player + '-scored');
+    container.innerHTML = '';
+    for (var i = 0; i < NUM_PIECES; i++) {
+      if (pieces[player][i] === BEAR_OFF) {
+        var el = document.createElement('div');
+        el.classList.add('scored-piece', playerClass(player));
+        container.appendChild(el);
+      }
+    }
+  }
+
+  function highlightSelectable() {
+    document.querySelectorAll('.selectable').forEach(function(el) { el.classList.remove('selectable'); });
+    if (phase !== 'move' || gameOver || isAiTurn()) return;
+
+    var moves = getValidMoves(playerTurn, rollValue);
+    var movableSqs = new Set();
+    moves.forEach(function(m) { movableSqs.add(m.from); });
+
+    movableSqs.forEach(function(sq) {
+      var cell = getCellBySq(sq);
+      if (cell) {
+        var pe = cell.querySelector('.piece[data-player="' + playerTurn + '"]');
+        if (pe) pe.classList.add('selectable');
+      }
+    });
+  }
+
+  function updateUI() {
+    var name = playerName(playerTurn);
+    var suffix = isAiTurn() ? ' (AI thinking...)' : "'s Turn";
+    document.getElementById('turn-indicator').textContent = name + suffix;
+    rollBtn.disabled = phase !== 'roll' || gameOver || isAiTurn();
+  }
+
+  function setMessage(msg) { document.getElementById('message').textContent = msg; }
+
+  // =============================================
+  //  Throwing Sticks
+  // =============================================
+  function throwSticks() {
+    if (phase !== 'roll' || gameOver || isAiTurn()) return;
+    doThrow();
+  }
+
+  function doThrow() {
+    if (phase !== 'roll' || gameOver) return;
+    setMessage('');
+
+    stickRolls = [];
+    var painted = 0;
+    for (var i = 0; i < 4; i++) {
+      var s = Math.random() < 0.5 ? 1 : 0;
+      stickRolls.push(s);
+      painted += s;
+    }
+    rollValue = painted === 0 ? 6 : painted;
+
+    var sc = document.getElementById('sticks-container');
+    sc.innerHTML = '';
+    for (var j = 0; j < 4; j++) {
+      var st = document.createElement('div');
+      st.classList.add('stick', stickRolls[j] ? 'painted' : 'plain');
+      sc.appendChild(st);
+    }
+    document.getElementById('roll-total').textContent = 'Move: ' + rollValue + (EXTRA_ROLLS.has(rollValue) ? ' (+extra turn)' : '');
+
+    var moves = getValidMoves(playerTurn, rollValue);
+
+    if (moves.length === 0) {
+      setMessage('No valid moves \u2014 turn passes.');
+      setTimeout(function() { switchTurn(); render(); }, 1200);
+    } else {
+      phase = 'move';
+      setMessage(isAiTurn() ? '' : 'Select a piece to move.');
+      render();
+    }
+  }
+
+  // =============================================
+  //  Move Validation
+  // =============================================
+  function getValidMoves(player, roll) {
+    if (roll === 0) return [];
+    var moves = [];
+    var seen = {};
+
+    for (var i = 0; i < NUM_PIECES; i++) {
+      var cur = pieces[player][i];
+      if (cur === BEAR_OFF) continue;
+
+      var nxt;
+
+      if (cur >= 28) {
+        var needed = 31 - cur;
+        if (roll !== needed) continue;
+        nxt = BEAR_OFF;
+      } else {
+        nxt = cur + roll;
+        if (cur < BEAUTY && nxt > BEAUTY) nxt = BEAUTY;
+        if (nxt > 30) nxt = BEAR_OFF;
+      }
+
+      var key = cur + '>' + nxt;
+      if (seen[key]) continue;
+      seen[key] = true;
+
+      if (nxt === BEAR_OFF) {
+        if (!hasBlockade(player, cur, BEAR_OFF)) {
+          moves.push({ pieceIndex: i, from: cur, to: BEAR_OFF });
+        }
+        continue;
+      }
+
+      if (pieces[player].indexOf(nxt) !== -1) continue;
+      if (hasBlockade(player, cur, nxt)) continue;
+
+      var opp = 3 - player;
+      if (pieces[opp].indexOf(nxt) !== -1) {
+        if (isProtected(nxt)) continue;
+        moves.push({ pieceIndex: i, from: cur, to: nxt, captures: true });
+      } else {
+        moves.push({ pieceIndex: i, from: cur, to: nxt });
+      }
+    }
+    return moves;
+  }
+
+  // =============================================
+  //  Actions
+  // =============================================
+  function handleCellClick(sq) {
+    if (phase !== 'move' || gameOver || isAiTurn()) return;
+
+    var cell = getCellBySq(sq);
+    if (!cell) return;
+    var pe = cell.querySelector('.piece.selectable[data-player="' + playerTurn + '"]');
+    if (!pe) return;
+
+    var idx = parseInt(pe.dataset.index);
+    var moves = getValidMoves(playerTurn, rollValue);
+    var move = null;
+    for (var i = 0; i < moves.length; i++) {
+      if (moves[i].from === sq) { move = moves[i]; break; }
+    }
+    if (!move) return;
+
+    executeMove(playerTurn, idx, move.to, move.captures);
+  }
+
+  function executeMove(player, idx, nxt, isCapture) {
+    var cur = pieces[player][idx];
+    var opp = 3 - player;
+    var msg = '';
+
+    if (isCapture && nxt !== BEAR_OFF) {
+      var oppIdx = pieces[opp].indexOf(nxt);
+      if (oppIdx !== -1) {
+        pieces[opp][oppIdx] = cur;
+        msg = 'Swapped! ' + playerName(opp) + ' piece sent to square ' + cur + '.';
+      }
+    }
+
+    pieces[player][idx] = nxt;
+
+    if (nxt === WATER) {
+      var rebirth = findRebirthSquare();
+      pieces[player][idx] = rebirth;
+      msg = 'Fell in the Water! Sent back to square ' + rebirth + '.';
+    }
+
+    if (nxt === BEAR_OFF) {
+      msg = msg || 'Piece bears off!';
+    }
+
+    if (pieces[player].every(function(p) { return p === BEAR_OFF; })) {
+      gameOver = true;
+      phase = 'roll';
+      render();
+      var w = playerName(player);
+      if (aiMode && player === 2) w = 'Slate (AI)';
+      setMessage(w + ' wins!');
+      return;
+    }
+
+    if (EXTRA_ROLLS.has(rollValue)) {
+      msg = (msg ? msg + ' ' : '') + 'Extra turn!';
+      setMessage(msg);
+      phase = 'roll';
+      render();
+      return;
+    }
+
+    setMessage(msg);
+    phase = 'roll';
+    switchTurn();
+    render();
+  }
+
+  function switchTurn() {
+    playerTurn = 3 - playerTurn;
+    rollValue = 0;
+    stickRolls = [];
+    document.getElementById('sticks-container').innerHTML = '';
+    document.getElementById('roll-total').textContent = '';
+  }
+
+  function resetGame() {
+    if (aiTimeout) { clearTimeout(aiTimeout); aiTimeout = null; }
+    pieces = { 1: [1,3,5,7,9], 2: [2,4,6,8,10] };
+    playerTurn = 1;
+    rollValue = 0;
+    stickRolls = [];
+    phase = 'roll';
+    gameOver = false;
+    document.getElementById('sticks-container').innerHTML = '';
+    document.getElementById('roll-total').textContent = '';
+    setMessage('');
+    render();
+  }
+
+  // =============================================
+  //  AI
+  // =============================================
+  function scheduleAi() {
+    if (!aiMode || playerTurn !== 2 || gameOver) return;
+    if (aiTimeout) { clearTimeout(aiTimeout); aiTimeout = null; }
+    if (phase === 'roll') {
+      aiTimeout = setTimeout(function() { aiTimeout = null; doThrow(); }, 800);
+    } else if (phase === 'move') {
+      aiTimeout = setTimeout(function() { aiTimeout = null; aiDoMove(); }, 700);
+    }
+  }
+
+  function aiDoMove() {
+    var moves = getValidMoves(2, rollValue);
+    if (moves.length === 0) return;
+    var best = aiBestMove(moves);
+    executeMove(2, best.pieceIndex, best.to, best.captures);
+  }
+
+  function aiBestMove(moves) {
+    var bestScore = -Infinity;
+    var bestMove = moves[0];
+    for (var i = 0; i < moves.length; i++) {
+      var s = aiScoreMove(moves[i]);
+      if (s > bestScore) { bestScore = s; bestMove = moves[i]; }
+    }
+    return bestMove;
+  }
+
+  function aiScoreMove(move) {
+    var score = 0;
+
+    if (move.to === BEAR_OFF) return 1000;
+    if (move.to === WATER) return -800;
+
+    if (move.captures) {
+      score += 450;
+      score += move.to * 3;
+    }
+
+    if (SAFE_SQUARES.has(move.to)) score += 180;
+    if (aiWillBeProtected(move)) score += 110;
+
+    if (!isProtected(move.from) && aiCanBeReached(1, move.from)) score += 90;
+
+    score += move.to * 2;
+
+    if (move.to >= 28) score -= 15;
+
+    if (!SAFE_SQUARES.has(move.to) && !aiWillBeProtected(move)) {
+      if (aiCanBeReached(1, move.to)) score -= 120;
+    }
+
+    if (aiFormsBlockade(move)) score += 130;
+
+    return score;
+  }
+
+  function aiWillBeProtected(move) {
+    var nxt = move.to;
+    if (SAFE_SQUARES.has(nxt)) return true;
+    for (var i = 0; i < NUM_PIECES; i++) {
+      if (i === move.pieceIndex) continue;
+      var p = pieces[2][i];
+      if (p === BEAR_OFF) continue;
+      if (p === nxt - 1 || p === nxt + 1) return true;
+    }
+    return false;
+  }
+
+  function aiCanBeReached(player, targetSq) {
+    var rolls = [1, 2, 3, 4, 6];
+    for (var i = 0; i < NUM_PIECES; i++) {
+      var p = pieces[player][i];
+      if (p === BEAR_OFF) continue;
+      for (var j = 0; j < rolls.length; j++) {
+        var dest = p + rolls[j];
+        if (p < BEAUTY && dest > BEAUTY) dest = BEAUTY;
+        if (dest === targetSq) return true;
+      }
+    }
+    return false;
+  }
+
+  function aiFormsBlockade(move) {
+    var tempPositions = [];
+    for (var i = 0; i < NUM_PIECES; i++) {
+      var p = (i === move.pieceIndex) ? move.to : pieces[2][i];
+      if (p !== BEAR_OFF) tempPositions.push(p);
+    }
+    tempPositions.sort(function(a, b) { return a - b; });
+    var run = 1;
+    for (var i = 1; i < tempPositions.length; i++) {
+      if (tempPositions[i] === tempPositions[i-1] + 1) {
+        run++;
+        if (run >= 3) return true;
+      } else {
+        run = 1;
+      }
+    }
+    return false;
+  }
+
+  // =============================================
+  //  Initialize
+  // =============================================
+  createBoard();
+  render();
+</script>
+</body>
+</html>
