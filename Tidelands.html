@@ -455,8 +455,11 @@
     }
 
     .rules.show { display: block; }
-    .rules h4 { color: #60C0B0; margin: 8px 0 4px; }
+    .rules h4 { color: #60C0B0; margin: 10px 0 4px; }
     .rules h4:first-child { margin-top: 0; }
+    .rules ul { margin: 4px 0 6px 18px; padding: 0; }
+    .rules li { margin: 2px 0; }
+    .rules b { color: #A0D0C8; }
 
     /* End game overlay */
     .overlay {
@@ -584,32 +587,152 @@
   <div class="board-container" id="board-container"></div>
 
   <button class="rules-toggle" onclick="toggleRules()">Rules</button>
+  <button class="rules-toggle" onclick="toggleStrategy()">Strategy</button>
   <div class="rules" id="rules-panel">
     <h4>Overview</h4>
-    Sail the wine-dark sea of Homer's epic. Poseidon's wrath causes the waters to rise and fall, drowning islands and revealing new ones bearing treasures from shipwrecks and gifts of the gods. Hermes' merchant ship drifts between the islands. Establish camps, raise temples, and launch triremes to harvest resources and trade your way to glory.
+    Sail the wine-dark sea of Homer's epic. Poseidon's wrath causes the waters to rise and fall, drowning islands and revealing new ones bearing treasures from shipwrecks and gifts of the gods. Hermes' merchant ship drifts between the islands. Establish camps, raise temples, and launch triremes to harvest resources and trade your way to 15 Victory Points.
 
-    <h4>Poseidon's Wrath</h4>
-    Each turn Poseidon's fury shifts one step: 1-2-3-4-5-4-3-2-1-2... Islands are swallowed when the wrath reaches their elevation. Submerged hexes lose resources and camps are temporarily lost beneath the waves.
+    <h4>The Map</h4>
+    Hexagonal islands form an archipelago. Each hex has an elevation from 1 (shoreline) to 5 (highland). The board scales with player count: 37 hexes for 2&ndash;3 players, 61 for 4, 91 for 5&ndash;6.
+
+    <h4>Poseidon's Wrath (the Tide)</h4>
+    The tide level cycles each round: 1&rarr;2&rarr;3&rarr;4&rarr;5&rarr;4&rarr;3&rarr;2&rarr;1&rarr;2... Any hex whose elevation is &le; the current tide is <b>flooded</b>. Flooded hexes:
+    <ul>
+      <li>Lose all uncollected resources.</li>
+      <li>Cannot harvest, host trade, or be built on.</li>
+      <li>Camps on them are <i>dormant</i> &mdash; they reappear when the hex emerges again.</li>
+      <li>Temples are immune (see below).</li>
+    </ul>
 
     <h4>Resources</h4>
-    When islands emerge, treasures wash ashore: Timber (common), Olives, Wine, Bronze, Ambrosia (rare, food of the gods). Resources decay after 2 turns if not collected. Harvest automatically from hexes adjacent to your camps.
+    When islands emerge from the sea, treasures wash ashore:
+    <ul>
+      <li>&#x1FAB5; <b>Timber</b> &mdash; common, the cornerstone of building.</li>
+      <li>&#x1F33F; <b>Olives</b> &mdash; needed for camps.</li>
+      <li>&#x1F377; <b>Wine</b> &mdash; needed for temples.</li>
+      <li>&#x2694; <b>Bronze</b> &mdash; needed for triremes.</li>
+      <li>&#x2728; <b>Ambrosia</b> &mdash; rarest; food of the gods, fuels Hermes' redirection.</li>
+    </ul>
+    Resources decay after a few turns if uncollected. You harvest <i>automatically</i> at the start of your turn from every non-flooded hex within 1 step of one of your camps (the camp's hex itself plus its 6 neighbors).
 
     <h4>Structures</h4>
-    <b>Camp</b> (2 Timber + 1 Olives): Establish a beachhead to harvest from this island and its neighbors. 1 VP.<br>
-    <b>Temple</b> (1 Stone + 2 Wine): Raise a temple to appease the gods &mdash; protects the island from Poseidon's wrath. 1 VP.<br>
-    <b>Trireme</b> (1 Timber + 1 Bronze): Launch a warship connecting two islands even across open sea. 2 VP.
+    <b>Camp</b> (2 Timber + 1 Olives) &mdash; <b>1 VP</b><br>
+    Beachhead for harvesting. Must be built on a non-flooded hex adjacent to one of your existing camps, temples, or triremes (your starting camp seeds your first build). When the hex floods, the camp is dormant; it returns automatically when the hex re-emerges.<br><br>
 
-    <h4>Hermes' Ship</h4>
-    The golden merchant vessel of Hermes drifts each turn. If your camps and triremes form a connected chain to Hermes' Ship, you may trade. Prices: Timber 1, Olives 2, Wine 2, Bronze 3, Ambrosia 6.
+    <b>Temple</b> (1 Stone + 2 Wine) &mdash; <b>1 VP</b><br>
+    A divine refuge. Built on a non-highland hex (elevation 1&ndash;4) that you own or that is adjacent to one of your structures. Temples <b>permanently protect</b> their hex from Poseidon's wrath &mdash; flooding skips it forever. Temples also count as connection points for trade with Hermes.<br><br>
 
-    <h4>Actions</h4>
-    Each turn the active player gets 2 actions: Build a structure, Trade with Hermes, or Redirect Hermes' Ship (costs 1 Ambrosia).
+    <b>Trireme</b> (1 Timber + 1 Bronze) &mdash; <b>2 VP</b><br>
+    A warship-bridge linking two adjacent hexes (including across water). One end must touch one of your existing structures. Triremes extend your <b>network</b>: a hex linked by your trireme counts as adjacent for camp-building and trade-routing, even if you don't own it.
 
-    <h4>Special Building Phase</h4>
-    After the active player finishes, each other player (in clockwise order) gets one chance to build a structure (camp, temple, or trireme) using their own resources, or pass.
+    <h4>Hermes' Ship &mdash; Trade &amp; Movement</h4>
+    The golden merchant vessel of Hermes is shown on one hex of the board.<br><br>
+
+    <b>Drifting:</b> Between rounds, Hermes drifts on his own to a random adjacent non-flooded hex. You cannot predict where he'll go.<br><br>
+
+    <b>Trading:</b> On your turn, if your network of camps + temples + triremes forms an unbroken chain leading to Hermes' hex, you may spend an action to trade. Sell any of your resources at fixed prices:
+    <ul>
+      <li>Timber = 1 coin</li>
+      <li>Olives = 2 coins</li>
+      <li>Wine = 2 coins</li>
+      <li>Bronze = 3 coins</li>
+      <li>Ambrosia = 6 coins</li>
+    </ul>
+    Coins convert to VP at <b>5 coins = 1 VP</b> at game end.<br><br>
+
+    <b>Move Hermes (Redirect):</b> Spend 1 Ambrosia and 1 action to <b>push Hermes onto an adjacent non-flooded hex</b>. This is how you bring him to your network when he drifts away &mdash; or how you yank him out from under an opponent who is mid-trade. Movement is one hex at a time; you cannot teleport him across the map.
+
+    <h4>Turn Structure</h4>
+    Each round has two phases for every player:<br>
+    <b>1. Active Phase</b> &mdash; The current player takes <b>2 actions</b>. An action is one of: Build Camp, Build Temple, Build Trireme, Trade with Hermes, or Move Hermes.<br>
+    <b>2. Special Build Phase</b> &mdash; After the active player finishes, every other player (in clockwise order) gets <b>one optional structure build</b> (camp, temple, or trireme) if they have the resources. They cannot trade or move Hermes during this phase.<br><br>
+    Then the next player becomes active and the round continues. Tide shifts at the start of each new round.
 
     <h4>Victory</h4>
-    First to 15 VP reaches Ithaca and wins. Camp/Temple=1 VP, Trireme=2 VP, every 5 coins=1 VP, largest connected network=3 VP bonus.
+    First player to <b>15 VP</b> reaches Ithaca and wins. VP sources:
+    <ul>
+      <li>Camps &amp; Temples: 1 VP each</li>
+      <li>Triremes: 2 VP each</li>
+      <li>Coins: 1 VP per 5 coins</li>
+      <li>Largest connected network: 3 VP bonus</li>
+    </ul>
+  </div>
+
+  <div class="rules" id="strategy-panel">
+    <h4>Opening (Rounds 1&ndash;3)</h4>
+    <ul>
+      <li>Your starting camp is on a highland hex &mdash; it survives even max tide. Use that safety to bank resources.</li>
+      <li>Spend your first round building <b>one more camp</b> on a hex with a different terrain type. Two camps roughly doubles your harvest area.</li>
+      <li>Don't build temples yet &mdash; you have nothing worth protecting.</li>
+      <li>Note where Hermes starts. If he's nearby (within 2 hexes of your camps), prioritize a camp or trireme that connects you.</li>
+    </ul>
+
+    <h4>Resource Priorities</h4>
+    <ul>
+      <li><b>Timber is your lifeblood.</b> Camps need 2, triremes need 1. If you ever stockpile less than 3 Timber, your build pace stalls.</li>
+      <li><b>Hoard Ambrosia.</b> It sells for 6 coins (best ratio) AND moves Hermes. Even one Ambrosia per game is a swing piece.</li>
+      <li>Olives are camp-only; don't over-collect. Wine is temple-only; only useful once you have something worth protecting.</li>
+      <li>Bronze is the cheapest path to trireme expansion &mdash; chase it when you want to extend your network.</li>
+    </ul>
+
+    <h4>Camps: Quantity Over Position</h4>
+    <ul>
+      <li>Each camp harvests its own hex + 6 neighbors = up to <b>7 hexes</b> of yield. Two well-placed camps can cover ~10&ndash;12 unique hexes.</li>
+      <li>Cluster camps where elevations are <b>3 or higher</b>. Low-elevation camps drown half the time and waste actions.</li>
+      <li>Camps on hexes adjacent to <b>different terrain types</b> (Shore/Bog/Stone/Grove) maximize resource variety.</li>
+    </ul>
+
+    <h4>Temples: When and Where</h4>
+    <ul>
+      <li>Temples are <b>permanent flood protection</b> &mdash; they're worth most on a hex you'd lose otherwise.</li>
+      <li>Best use: protect a <b>low-elevation hex (1&ndash;2)</b> that sits next to several of your camps. It both saves the hex AND keeps your harvest network alive at high tide.</li>
+      <li>Don't temple a highland hex (elevation 5) &mdash; it never floods anyway, and the rules forbid it.</li>
+      <li>Temples also serve as <b>permanent trade-network anchors</b>. A temple on a hex next to Hermes' typical drift path is gold.</li>
+    </ul>
+
+    <h4>Triremes: The Network Game</h4>
+    <ul>
+      <li>Triremes are 2 VP each &mdash; the best per-action VP in the game. Build them when you can.</li>
+      <li>Think of triremes as <b>roads</b>. They let you skip flooded hexes, cross open water, and reach distant resource pockets.</li>
+      <li>The <b>Largest Network Bonus</b> (3 VP) is decided by total connected structures. Triremes count and they're cheap to chain &mdash; one well-placed trireme can tip the bonus your way.</li>
+      <li>Build triremes <i>toward Hermes</i> when he drifts somewhere productive. A 2-hex trireme bridge can re-open trade in a single turn.</li>
+    </ul>
+
+    <h4>Hermes Strategy</h4>
+    <ul>
+      <li><b>Stay connected.</b> Every round you can't trade is a round of opponents catching up. If Hermes drifts away, immediately ask: "Can I trireme to him, or move him back?"</li>
+      <li><b>Move Hermes offensively.</b> If an opponent is connected and you're not, spending 1 Ambrosia to drag Hermes one hex away from them can deny a critical trade.</li>
+      <li><b>Hermes loves edges.</b> When he drifts onto a hex bordered by only 1&ndash;2 non-flooded neighbors, his next drift is predictable. Camp on those neighbors.</li>
+    </ul>
+
+    <h4>The Tide Cycle</h4>
+    <ul>
+      <li>The tide cycle is 1&rarr;5&rarr;1, 8 turns total. Plan in 4-turn arcs.</li>
+      <li>At <b>tide 4&ndash;5</b>, only elevation 5 hexes remain dry &mdash; this is when temples shine and dormant camps are most painful.</li>
+      <li>At <b>tide 1&ndash;2</b>, freshly emerged hexes drop new resources. Sweep them up before they decay.</li>
+      <li>Your second camp should be on a hex of elevation 3+ so it survives most of the cycle.</li>
+    </ul>
+
+    <h4>Special Build Phase: Free Tempo</h4>
+    <ul>
+      <li>Don't waste it. Even passing on a turn where you could build is a quiet loss &mdash; on average each special build is 1.5 VP "free."</li>
+      <li>Save 1 spare Timber + 1 Bronze at all times so you can <b>special-build a trireme</b> on every opponent's turn. With 5 opponents that's potentially 5 extra triremes per round.</li>
+      <li>If you can't afford anything, prioritize trades on your active turn that leave you with build-ready inventory.</li>
+    </ul>
+
+    <h4>Endgame (12+ VP)</h4>
+    <ul>
+      <li>Count to 15. Once you can see the win, switch from VP-per-action math to <b>defense</b>: deny opponents trireme links, redirect Hermes away from rivals.</li>
+      <li>Coins are slow VP (5:1) but they're <b>uncontested</b>. If you have a big trade network, just keep selling Ambrosia.</li>
+      <li>The largest-network 3 VP bonus often decides close games. In a tied 14-vs-14 race, a single extra trireme wins.</li>
+    </ul>
+
+    <h4>Multiplayer Dynamics (4&ndash;6 players)</h4>
+    <ul>
+      <li>The leader gets attacked &mdash; stay second until turn 4 of the tide cycle, then sprint.</li>
+      <li>Hermes is a shared resource. With 4+ players, expect him to be contested every round.</li>
+      <li>In 6-player games the board is huge but actions are scarce per round. <b>Network reach</b> beats raw VP.</li>
+    </ul>
   </div>
 
   <div class="overlay" id="overlay">
@@ -2298,6 +2421,15 @@
 
     function toggleRules() {
       var el = document.getElementById('rules-panel');
+      var strat = document.getElementById('strategy-panel');
+      if (strat) strat.classList.remove('show');
+      el.classList.toggle('show');
+    }
+
+    function toggleStrategy() {
+      var el = document.getElementById('strategy-panel');
+      var rules = document.getElementById('rules-panel');
+      if (rules) rules.classList.remove('show');
       el.classList.toggle('show');
     }
 
