@@ -288,6 +288,42 @@ body {
 }
 .legend-group .lg-name { font-weight: bold; }
 .legend-group .lg-bonus { color: #C05030; }
+.bisque-toggle {
+  margin: 4px 4px 0 4px;
+  padding: 5px 16px;
+  font-size: 0.82em;
+  font-family: Georgia, serif;
+  cursor: pointer;
+  border: 1px solid #806040;
+  border-radius: 5px;
+  background: #1A2028;
+  color: #C0A878;
+}
+.bisque-toggle:hover { background: #2A2E38; }
+.bisque-doc {
+  display: none;
+  max-width: 540px;
+  background: #0E1820;
+  border: 1px solid #2A4050;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px auto;
+  font-size: 0.78em;
+  color: #B8C0C8;
+  line-height: 1.55;
+  text-align: left;
+  font-family: Georgia, serif;
+}
+.bisque-doc.show { display: block; }
+.bisque-doc h4 {
+  color: #C05030;
+  margin: 10px 0 4px;
+  letter-spacing: 1px;
+}
+.bisque-doc h4:first-child { margin-top: 0; }
+.bisque-doc ul { margin: 4px 0 6px 18px; padding: 0; }
+.bisque-doc li { margin: 2px 0; }
+.bisque-doc b { color: #E0C898; }
 #overlay {
   display: none;
   position: fixed;
@@ -502,6 +538,114 @@ body {
 <div id="messageArea"></div>
 
 <div id="legend"></div>
+
+<div style="text-align:center; margin-top:8px;">
+  <button class="bisque-toggle" onclick="toggleBisqueRules()">Rules</button>
+  <button class="bisque-toggle" onclick="toggleBisqueStrategy()">Strategy</button>
+</div>
+
+<div class="bisque-doc" id="bisque-rules">
+  <h4>Overview</h4>
+  Bisque is a Risk-style territory control game set in the Peconic Bay region of eastern Long Island. Players are lobster captains ("Captains") competing to dominate the bay by planting traps across 26 territories &mdash; towns, islands, and water bodies. The first captain to wipe out all rivals (or, in solo mode, the surviving human) wins.
+
+  <h4>The Map</h4>
+  26 territories grouped into 6 regions:
+  <ul>
+    <li><b>North Fork</b> (6) &mdash; Riverhead, Cutchogue, Mattituck, Southold, Greenport, Orient. Bonus +4.</li>
+    <li><b>South Fork West</b> (3) &mdash; Southampton, Bridgehampton, North Haven. Bonus +3.</li>
+    <li><b>South Fork East</b> (4) &mdash; Sag Harbor, East Hampton, Amagansett, Montauk. Bonus +3.</li>
+    <li><b>The Islands</b> (5) &mdash; S.I. Heights, Mashomack, Gardiners Is., Plum Island, Robins Island. Bonus +3.</li>
+    <li><b>Inner Bays</b> (5) &mdash; Peconic Bay, Little Peconic, Noyack Bay, S.I. Sound, NW Harbor. Bonus +3.</li>
+    <li><b>Outer Waters</b> (3) &mdash; Gardiners Bay, Block Island Sound, Fishers Is. Bonus +2.</li>
+  </ul>
+  Adjacencies follow real geography. Most nodes connect to 2&ndash;3 neighbors; a couple of bay hubs connect to 4. The small islands (Gardiners Is., Plum, Robins, Fishers) each have exactly 2 connections.
+
+  <h4>Setup</h4>
+  Choose <b>2 Captains</b>, <b>3 Captains</b>, or <b>4 Captains</b>, and either <b>1 Player vs AI</b> or <b>All Human (hotseat)</b>. Territories are randomly distributed:
+  <ul>
+    <li><b>2 captains:</b> 11 territories each, 4 neutral.</li>
+    <li><b>3 captains:</b> 8 each, 2 neutral.</li>
+    <li><b>4 captains:</b> 6 each, 2 neutral.</li>
+  </ul>
+  Each captain starts with 20 traps total &mdash; 1 placed automatically on each owned territory at setup, the rest distributed randomly across their holdings. Neutral territories start with 2 traps each and never reinforce or attack.
+
+  <h4>Each Turn (3 phases)</h4>
+  <b>1. Deploy</b> &mdash; You receive new traps to place on territories you already own. Reinforcement count = max(3, owned&divide;3) plus a <b>full-region bonus</b> if you own every territory in a group (+4 for North Fork, +3 for SF West/East/Islands/Inner Bays, +2 for Outer Waters). Click your territories to drop traps one at a time.<br><br>
+  <b>2. Hauling (Attack)</b> &mdash; Click one of your territories with at least 2 traps to select it as the source, then click an adjacent enemy or neutral territory to attack. Combat is dice-based:
+  <ul>
+    <li>Attacker rolls up to <b>3 dice</b> (= min(3, source traps &minus; 1)).</li>
+    <li>Defender rolls up to <b>2 dice</b> (= min(2, defender traps)).</li>
+    <li>Highest die vs. highest die, second-highest vs. second-highest. Defender wins ties.</li>
+    <li>Each loss removes one trap from that side.</li>
+  </ul>
+  If the defender is reduced to 0 traps, the attacker conquers the territory and moves up to (attacker dice rolled) traps in. You can attack as many times as you like, switching sources, until you click <b>End Hauling</b>.<br><br>
+  <b>3. Fortify</b> &mdash; Once per turn you may move traps from one of your territories (with &ge;2 traps) to a single adjacent friendly territory. Half (rounded down, minimum 1) of the source's traps move over. Click <b>Skip Fortify</b> to pass, or fortify and your turn ends automatically.
+
+  <h4>Eliminating Captains and Winning</h4>
+  When a captain loses their last territory they are <b>eliminated</b> and out for the rest of the game. The last captain standing wins. In 1 Player mode, you win if you eliminate every AI rival; you lose if you are eliminated yourself.
+</div>
+
+<div class="bisque-doc" id="bisque-strategy">
+  <h4>Opening (First 1&ndash;2 Turns)</h4>
+  <ul>
+    <li>Look at the random territory distribution. Identify the <b>group with the fewest territories owned by enemies</b> &mdash; that's your first conquest target. Outer Waters (3 territories), South Fork West (3), and South Fork East (4) are the cheapest groups to lock down.</li>
+    <li>Don't spread your initial deployments evenly. <b>Stack 4&ndash;5 traps on a single border territory</b> in your target region so you can attack on turn 1.</li>
+    <li>If you start with several connected territories, prioritize defending the chokepoints (the territories with only 1&ndash;2 enemy neighbors).</li>
+  </ul>
+
+  <h4>Reinforcement Math</h4>
+  <ul>
+    <li>Base reinforcements = max(3, territories&divide;3). Below 9 territories you're stuck at the 3 minimum &mdash; <b>get to 9+ as fast as possible</b> for the first marginal increase.</li>
+    <li>Region bonuses are huge: holding all 6 North Fork towns gives <b>+4 traps every turn forever</b>. The bonus pays for itself within 2&ndash;3 turns.</li>
+    <li>Compare a 3-territory grab in Outer Waters (+2 bonus) vs. a 6-territory North Fork sweep (+4): Outer Waters is faster and worth almost as much per turn.</li>
+  </ul>
+
+  <h4>Region Priorities</h4>
+  <ul>
+    <li><b>Outer Waters (+2)</b>: only 3 territories, all connected, easy to defend &mdash; the fastest first bonus. Grab this if you start with even one of: Gardiners Bay, Block Is. Sound, Fishers Is.</li>
+    <li><b>South Fork West (+3)</b>: 3 territories on a single linear chain. Easy to hold but only 2 chokepoint borders. A great second bonus.</li>
+    <li><b>The Islands (+3)</b>: 5 territories, but two of them (Plum, Robins) are isolated dead-ends and only have 2 connections. Hard to lose if you camp Mashomack and S.I. Heights.</li>
+    <li><b>North Fork (+4)</b>: highest bonus but 6 territories along a linear chain &mdash; 5 borders to defend. Worth it only if you can secure both ends.</li>
+    <li><b>SF East (+3)</b>: 4 territories ending at Montauk, but Montauk has the Block Is. Sound link &mdash; an attack vector you have to babysit.</li>
+    <li><b>Inner Bays (+3)</b>: 5 water territories, the most connected region &mdash; <b>lots of borders</b>. Avoid trying to hold this whole group; pick off pieces instead.</li>
+  </ul>
+
+  <h4>Combat Math</h4>
+  <ul>
+    <li>3 attacker vs. 2 defender dice slightly favors the attacker. Don't attack with fewer dice unless you have to &mdash; <b>always try to roll 3 attacker dice</b> (need 4+ traps in source).</li>
+    <li>The defender wins ties. A 2-defender stack is roughly even with a 3-attacker stack. Stacks of 3+ defenders are very hard to dislodge.</li>
+    <li>If you must attack a 3+ defender, build your source up to 6&ndash;7 traps first.</li>
+    <li>Long attack chains lose traps to attrition. Plan your conquest order so each successive attack starts with at least 4 traps after the previous move-in.</li>
+  </ul>
+
+  <h4>Chokepoints &amp; Defense</h4>
+  <ul>
+    <li>The dead-end islands (Plum, Robins, Fishers, Gardiners Is.) are <b>perfect anchors</b> &mdash; only 2 neighbors each, easy to wall off with a small garrison.</li>
+    <li>Riverhead is the only land bridge connecting North Fork to South Fork. Hold it and you split the entire western map.</li>
+    <li>Stack big defensive piles on territories with the most enemy neighbors (e.g., Noyack Bay touches 4 things). Leave the safe interior at 1&ndash;2 traps.</li>
+  </ul>
+
+  <h4>Fortify Smart</h4>
+  <ul>
+    <li>Fortify is your only way to move traps without combat &mdash; spend it on the territory you'll attack from <b>next turn</b>.</li>
+    <li>Half-move means it pays to stockpile big stacks before fortifying. Moving from a 9-stack gives you 4 traps; from a 3-stack only 1.</li>
+    <li>Don't fortify out of safe interior territories you might need to defend later (e.g., a flank against the AI).</li>
+  </ul>
+
+  <h4>Multiplayer Dynamics (3&ndash;4 captains)</h4>
+  <ul>
+    <li>The leader gets piled on. Stay <b>second or third</b> in territory count until you can knock someone out in a single turn.</li>
+    <li>Eliminating a captain in one turn is huge: you absorb their position and deny them future reinforcement.</li>
+    <li>Don't leave a wounded enemy alive across two turns &mdash; a captain with 1&ndash;2 territories will be obliterated by whoever attacks first, but if you don't finish them, the opponent gets the territory.</li>
+  </ul>
+
+  <h4>Endgame</h4>
+  <ul>
+    <li>Once you control 2+ full regions, your reinforcement income compounds. Switch from expansion to <b>methodical elimination</b>.</li>
+    <li>Save fortify moves to consolidate giant stacks (12+) and walk them across the map to crush the last enemy stronghold.</li>
+    <li>Watch for "kingmaker" situations &mdash; if two opponents are both close to elimination, attack the one whose territories you actually want.</li>
+  </ul>
+</div>
 
 <div id="overlay">
   <div id="overlayBox">
@@ -1416,6 +1560,20 @@ function showVictory(player) {
 function closeOverlay() {
   document.getElementById('overlay').classList.remove('show');
   resetGame();
+}
+
+function toggleBisqueRules() {
+  var r = document.getElementById('bisque-rules');
+  var s = document.getElementById('bisque-strategy');
+  if (s) s.classList.remove('show');
+  r.classList.toggle('show');
+}
+
+function toggleBisqueStrategy() {
+  var s = document.getElementById('bisque-strategy');
+  var r = document.getElementById('bisque-rules');
+  if (r) r.classList.remove('show');
+  s.classList.toggle('show');
 }
 
 /* ===== AI ===== */
