@@ -596,7 +596,7 @@
     Hexagonal islands form an archipelago. Each hex has an elevation from 1 (shoreline) to 5 (highland). The board scales with player count: 37 hexes for 2&ndash;3 players, 61 for 4, 91 for 5&ndash;6.
 
     <h4>Poseidon's Wrath (the Tide)</h4>
-    The tide level cycles each round: 1&rarr;2&rarr;3&rarr;4&rarr;5&rarr;4&rarr;3&rarr;2&rarr;1&rarr;2... Any hex whose elevation is &le; the current tide is <b>flooded</b>. Flooded hexes:
+    The tide level cycles each round: 1&rarr;2&rarr;3&rarr;4&rarr;5&rarr;4&rarr;3&rarr;2&rarr;1&rarr;2... A hex is <b>flooded</b> when the tide rises strictly above its elevation (elevation &lt; tide level). So at tide 1 nothing floods; at tide 5 only highland (elevation 5) hexes remain dry. Flooded hexes:
     <ul>
       <li>Lose all uncollected resources.</li>
       <li>Cannot harvest, host trade, or be built on.</li>
@@ -708,7 +708,7 @@
     <h4>The Tide Cycle</h4>
     <ul>
       <li>The tide cycle is 1&rarr;5&rarr;1, 8 turns total. Plan in 4-turn arcs.</li>
-      <li>At <b>tide 4&ndash;5</b>, only elevation 5 hexes remain dry &mdash; this is when temples shine and dormant camps are most painful.</li>
+      <li>At <b>tide 5</b>, only highland (elevation 5) hexes remain dry. At <b>tide 4</b>, elevation 4&ndash;5 hexes survive. This is when temples shine and dormant camps are most painful.</li>
       <li>At <b>tide 1&ndash;2</b>, freshly emerged hexes drop new resources. Sweep them up before they decay.</li>
       <li>Your second camp should be on a hex of elevation 3+ so it survives most of the cycle.</li>
     </ul>
@@ -748,7 +748,7 @@
     var RESOURCE_NAMES = ['Timber', 'Olives', 'Wine', 'Bronze', 'Ambrosia'];
     var RESOURCE_ICONS = { Timber: '\u{1FAB5}', Olives: '\uD83C\uDF3F', Wine: '\uD83C\uDF77', Bronze: '\u2694', Ambrosia: '\u2728', Stone: '\uD83E\uDEA8' };
     var TERRAIN_TYPES = ['Shore', 'Bog', 'Stone', 'Grove'];
-    var PRICES = { Timber: 1, Shell: 2, Kelp: 2, Salt: 3, Pearl: 6 };
+    var PRICES = { Timber: 1, Olives: 2, Wine: 2, Bronze: 3, Ambrosia: 6 };
     var PLAYER_COLORS = ['#E8C840', '#60C0B0', '#D06040', '#9070D0', '#50B050', '#E080A0'];
     var PLAYER_LABELS = ['Gold', 'Teal', 'Coral', 'Violet', 'Jade', 'Rose'];
     var PLAYER_NAMES = ['Odysseus', 'Circe', 'Achilles', 'Athena', 'Ajax', 'Penelope'];
@@ -941,7 +941,7 @@
       players = [];
       for (var i = 0; i < numPlayers; i++) {
         players.push({
-          resources: { Timber: 3, Shell: 1, Kelp: 1, Salt: 0, Pearl: 0, Rock: 0 },
+          resources: { Timber: 3, Olives: 1, Wine: 1, Bronze: 0, Ambrosia: 0, Stone: 0 },
           coins: 0,
           structures: []
         });
@@ -1282,17 +1282,17 @@
     /* ===== BUILDING ===== */
     function canBuild(playerIdx, type) {
       var r = players[playerIdx].resources;
-      if (type === 'camp') return r.Timber >= 2 && r.Shell >= 1;
-      if (type === 'temple') return r.Rock >= 1 && r.Kelp >= 2;
-      if (type === 'trireme') return r.Timber >= 1 && r.Salt >= 1;
+      if (type === 'camp') return (r.Timber || 0) >= 2 && (r.Olives || 0) >= 1;
+      if (type === 'temple') return (r.Stone || 0) >= 1 && (r.Wine || 0) >= 2;
+      if (type === 'trireme') return (r.Timber || 0) >= 1 && (r.Bronze || 0) >= 1;
       return false;
     }
 
     function payBuildCost(playerIdx, type) {
       var r = players[playerIdx].resources;
-      if (type === 'camp') { r.Timber -= 2; r.Shell -= 1; }
-      if (type === 'temple') { r.Rock -= 1; r.Kelp -= 2; }
-      if (type === 'trireme') { r.Timber -= 1; r.Salt -= 1; }
+      if (type === 'camp') { r.Timber -= 2; r.Olives -= 1; }
+      if (type === 'temple') { r.Stone -= 1; r.Wine -= 2; }
+      if (type === 'trireme') { r.Timber -= 1; r.Bronze -= 1; }
     }
 
     function validCampHexes(playerIdx) {
@@ -1638,7 +1638,7 @@
 
       // Trade and move market: only during active phase
       document.getElementById('btn-trade').disabled = !(canAct && isConnectedToHermes(currentPlayer));
-      document.getElementById('btn-move-market').disabled = !(canAct && (players[currentPlayer].resources.Pearl || 0) >= 1);
+      document.getElementById('btn-move-market').disabled = !(canAct && (players[currentPlayer].resources.Ambrosia || 0) >= 1);
 
       // End actions: only during active phase
       document.getElementById('btn-end').disabled = !(isActive && isHuman);
@@ -1775,13 +1775,13 @@
 
       if (action === 'camp') {
         highlightedHexes = validCampHexes(actingPlayer);
-        setMessage('Click a highlighted hex to build a Camp. (2 Timber + 1 Shell)');
+        setMessage('Click a highlighted hex to build a Camp. (2 Timber + 1 Olives)');
       } else if (action === 'temple') {
         highlightedHexes = validTempleHexes(actingPlayer);
-        setMessage('Click a highlighted hex to build a Temple. (1 Rock + 2 Kelp)');
+        setMessage('Click a highlighted hex to build a Temple. (1 Stone + 2 Wine)');
       } else if (action === 'trireme') {
         highlightedHexes = validTriremeStartHexes(actingPlayer);
-        setMessage('Click your structure to start a trireme from. (1 Timber + 1 Salt)');
+        setMessage('Click your structure to start a trireme from. (1 Timber + 1 Bronze)');
       } else if (action === 'trade') {
         openTrade();
         return;
@@ -1791,7 +1791,7 @@
         for (var i = 0; i < adj.length; i++) {
           if (!hexes[adj[i]].flooded) highlightedHexes.push(adj[i]);
         }
-        setMessage('Click an adjacent hex to move Hermes\' Ship. (Costs 1 Pearl)');
+        setMessage('Click an adjacent hex to move Hermes\' Ship. (Costs 1 Ambrosia)');
       }
 
       render();
@@ -1895,7 +1895,7 @@
         // Not allowed in special build
         if (isSpecialPhase) return;
         if (highlightedHexes.indexOf(idx) < 0) return;
-        players[actingPlayer].resources.Pearl--;
+        players[actingPlayer].resources.Ambrosia--;
         marketHex = idx;
         actionsLeft--;
         setMessage(playerName(actingPlayer) + ' moved Hermes\' Ship! ' + actionsLeft + ' actions left.');
@@ -2207,8 +2207,8 @@
         }
       }
 
-      // Priority 5: Move market closer if have Pearl
-      if (!didAction && (players[p].resources.Pearl || 0) >= 1) {
+      // Priority 5: Move market closer if have Ambrosia
+      if (!didAction && (players[p].resources.Ambrosia || 0) >= 1) {
         var adj = hexNeighbors[marketHex];
         var bestTarget = -1;
         var bestScore = -1;
@@ -2227,7 +2227,7 @@
           }
         }
         if (bestTarget >= 0) {
-          players[p].resources.Pearl--;
+          players[p].resources.Ambrosia--;
           marketHex = bestTarget;
           actionsLeft--;
           didAction = true;
