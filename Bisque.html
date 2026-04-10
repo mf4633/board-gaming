@@ -481,7 +481,7 @@ body {
           fill="#B0986C" stroke="#9A7A50" stroke-width="1"/>
 
     <!-- 11. Robins Island — in Great Peconic Bay (drawn after Riverhead) -->
-    <path d="M96,195 L112,187 L128,195 L132,207 L128,221 L112,228 L96,221 L92,207 Z"
+    <path d="M148,194 L164,188 L182,196 L186,210 L180,224 L162,228 L146,222 L142,208 Z"
           fill="#A89870" stroke="#907840" stroke-width="1"/>
 
     <!-- Fisher's Island — in Long Island Sound, far NE -->
@@ -522,11 +522,10 @@ var TERRITORIES = [
   { id: 'greenport',        name: 'Greenport',        group: 'northfork',   x: 285, y: 35,  water: false },
   { id: 'orient',           name: 'Orient',           group: 'northfork',   x: 405, y: 60,  water: false },
 
-  /* South Fork West (4) */
+  /* South Fork West (3) */
   { id: 'southampton',      name: 'Southampton',      group: 'sfwest',      x: 30,  y: 380, water: false },
   { id: 'bridgehampton',    name: 'Bridgehampton',    group: 'sfwest',      x: 175, y: 372, water: false },
   { id: 'northHaven',       name: 'North Haven',      group: 'sfwest',      x: 250, y: 320, water: false },
-  { id: 'springs',          name: 'Springs',          group: 'sfwest',      x: 425, y: 320, water: false },
 
   /* South Fork East (4) */
   { id: 'sagHarbor',        name: 'Sag Harbor',       group: 'sfeast',      x: 340, y: 320, water: false },
@@ -539,11 +538,11 @@ var TERRITORIES = [
   { id: 'mashomack',        name: 'Mashomack',        group: 'islands',     x: 425, y: 222, water: false },
   { id: 'gardinersIsland',  name: 'Gardiners Is.',    group: 'islands',     x: 595, y: 230, water: false },
   { id: 'plumIsland',       name: 'Plum Island',      group: 'islands',     x: 478, y: 12,  water: false },
-  { id: 'robinsIsland',     name: 'Robins Island',    group: 'islands',     x: 90,  y: 232, water: false },
+  { id: 'robinsIsland',     name: 'Robins Island',    group: 'islands',     x: 140, y: 195, water: false },
 
   /* Inner Bays (5) */
-  { id: 'greatPeconicBay',  name: 'Peconic Bay',      group: 'innerBays',   x: 165, y: 178, water: true },
-  { id: 'littlePeconicBay', name: 'Little Peconic',   group: 'innerBays',   x: 165, y: 270, water: true },
+  { id: 'greatPeconicBay',  name: 'Peconic Bay',      group: 'innerBays',   x: 215, y: 175, water: true },
+  { id: 'littlePeconicBay', name: 'Little Peconic',   group: 'innerBays',   x: 75,  y: 270, water: true },
   { id: 'noyackBay',        name: 'Noyack Bay',       group: 'innerBays',   x: 295, y: 268, water: true },
   { id: 'siSound',          name: 'S.I. Sound',       group: 'innerBays',   x: 295, y: 128, water: true },
   { id: 'northwestHarbor',  name: 'NW Harbor',        group: 'innerBays',   x: 478, y: 280, water: true },
@@ -574,12 +573,11 @@ var ADJACENCY = {
 
   /* South Fork West */
   southampton:      ['riverhead', 'bridgehampton', 'littlePeconicBay'],
-  bridgehampton:    ['southampton', 'northHaven', 'springs'],
-  northHaven:       ['bridgehampton', 'springs'],
-  springs:          ['northHaven', 'bridgehampton', 'sagHarbor'],
+  bridgehampton:    ['southampton', 'northHaven'],
+  northHaven:       ['bridgehampton', 'sagHarbor'],
 
   /* South Fork East */
-  sagHarbor:        ['springs', 'eastHampton', 'noyackBay'],
+  sagHarbor:        ['northHaven', 'eastHampton', 'noyackBay'],
   eastHampton:      ['sagHarbor', 'amagansett'],
   amagansett:       ['eastHampton', 'montauk'],
   montauk:          ['amagansett', 'blockIslandSound'],
@@ -694,7 +692,7 @@ function resetGame() {
   initState();
 
   /* Determine active players and neutral */
-  var totalTerritories = TERRITORIES.length; /* 27 */
+  var totalTerritories = TERRITORIES.length; /* 26 */
   var hasNeutral = false;
   var neutralCount = 0;
   var perPlayer = 0;
