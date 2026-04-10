@@ -607,6 +607,7 @@
     <button class="act-btn" id="btn-trade" onclick="selectAction('trade')" disabled>Trade Hermes</button>
     <button class="act-btn" id="btn-trade-player" onclick="selectAction('tradeplayer')" disabled>Trade Player</button>
     <button class="act-btn" id="btn-move-market" onclick="selectAction('movemarket')" disabled>Move Hermes</button>
+    <button class="act-btn" id="btn-appease" onclick="selectAction('appease')" disabled>Appease Poseidon</button>
     <button class="act-btn" id="btn-end" onclick="endActionPhase()" disabled>End Actions</button>
     <button class="act-btn pass-btn" id="btn-pass" onclick="passSpecialBuild()" style="display:none">Pass</button>
   </div>
@@ -702,6 +703,9 @@
 
     <b>Move Hermes (Redirect):</b> Spend 1 Ambrosia and 1 action to <b>push Hermes onto an adjacent non-flooded hex</b>. This is how you bring him to your network when he drifts away &mdash; or how you yank him out from under an opponent who is mid-trade. Movement is one hex at a time; you cannot teleport him across the map.
 
+    <h4>Appeasing Poseidon</h4>
+    Once per round, the active player may spend <b>1 action + 1 Ambrosia + 2 Wine</b> to offer libations to Poseidon. The next tide change is skipped &mdash; the tide level holds at its current value for one round before the cycle resumes (the direction is preserved). At most one player per round may appease; the first to act gets it. Use this when low-elevation camps are about to drown and you can't build temples in time.
+
     <h4>Player-to-Player Trade</h4>
     On your turn you may propose a barter trade with another player, but <b>only if you are physically connected to them</b> in one of two ways:
     <ul>
@@ -712,7 +716,7 @@
 
     <h4>Turn Structure</h4>
     Each round has two phases for every player:<br>
-    <b>1. Active Phase</b> &mdash; The current player takes <b>2 actions</b>. An action is one of: Build Camp, Build Temple, Build Trireme, Trade with Hermes, Trade with another Player, or Move Hermes.<br>
+    <b>1. Active Phase</b> &mdash; The current player takes <b>2 actions</b>. An action is one of: Build Camp, Build Temple, Build Trireme, Trade with Hermes, Trade with another Player, Move Hermes, or Appease Poseidon.<br>
     <b>2. Special Build Phase</b> &mdash; After the active player finishes, every other player (in clockwise order) gets <b>one optional structure build</b> (camp, temple, or trireme) if they have the resources. They cannot trade or move Hermes during this phase.<br><br>
     Then the next player becomes active and the round continues. Tide shifts at the start of each new round.
 
@@ -790,6 +794,17 @@
       <li>At <b>tide 5</b>, only highland (elevation 5) hexes remain dry. At <b>tide 4</b>, elevation 4&ndash;5 hexes survive. This is when temples shine and dormant camps are most painful.</li>
       <li>At <b>tide 1&ndash;2</b>, freshly emerged hexes drop new resources. Sweep them up before they decay.</li>
       <li>Your second camp should be on a hex of elevation 3+ so it survives most of the cycle.</li>
+    </ul>
+
+    <h4>Appeasing Poseidon</h4>
+    <ul>
+      <li>Cost is <b>1 action + 1 Ambrosia + 2 Wine</b> &mdash; about 10 coins of value plus a turn slot. Don't burn it lightly.</li>
+      <li>Best moment: <b>tide 4 about to hit 5</b>, with 2+ camps on elevation 4 hexes you can't afford to lose. Appeasement buys you a full extra round of harvest from those camps.</li>
+      <li>Worst moment: tide already low or already at peak. Appeasing at tide 1 just delays harvests; appeasing at tide 5 doesn't save anything.</li>
+      <li>If you have only ONE threatened camp, build a temple instead &mdash; cheaper and permanent.</li>
+      <li>Watch the resource trade-off. Spending 1 Ambrosia means you can't move Hermes that turn either.</li>
+      <li>Multiplayer note: only the <b>first</b> player to appease in a round gets it. If you're the leader and others might race you, spend early in your turn rather than saving it.</li>
+      <li>Defensive play: appeasing also denies opponents the use of low-tide windows. If a rival has lots of low-elevation camps and is hoarding harvest, holding the tide high hurts them more than it hurts you.</li>
     </ul>
 
     <h4>Special Build Phase: Free Tempo</h4>
@@ -880,6 +895,7 @@
     var gameStarted = false;
     var aiTimer = null;
     var preturnTimer = null;
+    var tideHeldThisRound = false;
     var specialBuildPlayer = -1; // index of player doing special build
     var specialBuildUsed = false; // did the current special build player use their action
 
@@ -1116,6 +1132,11 @@
 
     /* ===== TIDE ===== */
     function advanceWrath() {
+      // If a player appeased Poseidon last round, the tide is held — skip the change
+      if (tideHeldThisRound) {
+        tideHeldThisRound = false;
+        return;
+      }
       tideLevel += tideDirection;
       if (tideLevel >= 5) {
         tideLevel = 5;
@@ -1696,7 +1717,8 @@
       marker.style.left = (pct - 5) + '%';
       marker.textContent = tideLevel;
       var dirText = tideDirection > 0 ? 'Gathering \u2191' : 'Subsiding \u2193';
-      document.getElementById('tide-label').innerHTML = 'Poseidon\u2019s Wrath: ' + tideLevel + ' / 5 &mdash; ' + dirText + ' &mdash; Turn ' + turnNumber;
+      var heldText = tideHeldThisRound ? ' &mdash; <span style="color:#D4A860">Appeased!</span>' : '';
+      document.getElementById('tide-label').innerHTML = 'Poseidon\u2019s Wrath: ' + tideLevel + ' / 5 &mdash; ' + dirText + ' &mdash; Turn ' + turnNumber + heldText;
 
       // Update buttons
       updateButtons();
@@ -1808,6 +1830,7 @@
       document.getElementById('btn-trade').disabled = !(canAct && isConnectedToHermes(currentPlayer));
       document.getElementById('btn-trade-player').disabled = !(canAct && landConnectedPlayers(currentPlayer).length > 0);
       document.getElementById('btn-move-market').disabled = !(canAct && (players[currentPlayer].resources.Ambrosia || 0) >= 1);
+      document.getElementById('btn-appease').disabled = !(canAct && canAppease(currentPlayer));
 
       // End actions: only during active phase
       document.getElementById('btn-end').disabled = !(isActive && isHuman);
@@ -1822,8 +1845,8 @@
       }
 
       // Highlight selected action button
-      var btns = ['btn-build-camp', 'btn-build-temple', 'btn-build-trireme', 'btn-trade', 'btn-trade-player', 'btn-move-market'];
-      var actionNames = ['camp', 'temple', 'trireme', 'trade', 'tradeplayer', 'movemarket'];
+      var btns = ['btn-build-camp', 'btn-build-temple', 'btn-build-trireme', 'btn-trade', 'btn-trade-player', 'btn-move-market', 'btn-appease'];
+      var actionNames = ['camp', 'temple', 'trireme', 'trade', 'tradeplayer', 'movemarket', 'appease'];
       for (var i = 0; i < btns.length; i++) {
         var el = document.getElementById(btns[i]);
         if (selectedAction === actionNames[i]) {
@@ -1947,7 +1970,7 @@
         if (specialBuildUsed) return;
         if (!isHumanPlayer(actingPlayer)) return;
         // Special build: only building allowed
-        if (action === 'trade' || action === 'movemarket' || action === 'tradeplayer') return;
+        if (action === 'trade' || action === 'movemarket' || action === 'tradeplayer' || action === 'appease') return;
       } else {
         return;
       }
@@ -1978,6 +2001,9 @@
           if (!hexes[adj[i]].flooded) highlightedHexes.push(adj[i]);
         }
         setMessage('Click an adjacent hex to move Hermes\' Ship. (Costs 1 Ambrosia)');
+      } else if (action === 'appease') {
+        appeasePoseidon(actingPlayer);
+        return;
       }
 
       render();
@@ -2354,6 +2380,32 @@
       if (actionsLeft <= 0 && !gameOver) finishActivePlayerTurn();
     }
 
+    /* ===== APPEASE POSEIDON ===== */
+    function canAppease(playerIdx) {
+      var r = players[playerIdx].resources;
+      return (r.Ambrosia || 0) >= 1 && (r.Wine || 0) >= 2 && !tideHeldThisRound;
+    }
+
+    function appeasePoseidon(playerIdx) {
+      if (!canAppease(playerIdx)) {
+        if (tideHeldThisRound) setMessage('Poseidon has already been appeased this round.');
+        else setMessage('You need 1 Ambrosia and 2 Wine to appease Poseidon.');
+        selectedAction = null;
+        render();
+        return;
+      }
+      players[playerIdx].resources.Ambrosia--;
+      players[playerIdx].resources.Wine -= 2;
+      tideHeldThisRound = true;
+      actionsLeft--;
+      selectedAction = null;
+      highlightedHexes = [];
+      setMessage(playerName(playerIdx) + ' offered libations to Poseidon. The tide will hold next round. ' + actionsLeft + ' actions left.');
+      checkWin();
+      render();
+      if (actionsLeft <= 0 && !gameOver) finishActivePlayerTurn();
+    }
+
     function computeTradeValue(map) {
       var v = 0;
       var rkeys = ['Timber', 'Olives', 'Wine', 'Bronze', 'Ambrosia', 'Stone'];
@@ -2537,6 +2589,27 @@
 
       var p = currentPlayer;
       var didAction = false;
+
+      // Priority 0: Appease Poseidon if rising tide is about to drown 2+ live camps
+      if (!didAction && canAppease(p) && tideDirection > 0 && tideLevel < 5) {
+        var nextTide = tideLevel + 1;
+        var threatened = 0;
+        for (var i = 0; i < players[p].structures.length; i++) {
+          var s = players[p].structures[i];
+          if (s.type !== 'camp') continue;
+          var h = hexes[s.hex];
+          if (h.temple) continue;
+          if (!h.flooded && h.elevation < nextTide) threatened++;
+        }
+        if (threatened >= 2) {
+          players[p].resources.Ambrosia--;
+          players[p].resources.Wine -= 2;
+          tideHeldThisRound = true;
+          actionsLeft--;
+          didAction = true;
+          setMessage(playerName(p) + ' offered libations to Poseidon. The tide will hold.');
+        }
+      }
 
       // Priority 1: Trade if connected to market and have valuable resources
       if (!didAction && isConnectedToHermes(p)) {
@@ -2815,6 +2888,7 @@
       if (preturnTimer) { clearTimeout(preturnTimer); preturnTimer = null; }
       gameOver = false;
       gameStarted = false;
+      tideHeldThisRound = false;
       phase = 'preturn';
       tideLevel = 1;
       tideDirection = 1;
