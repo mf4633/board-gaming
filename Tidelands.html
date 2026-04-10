@@ -618,7 +618,7 @@
 
   <div class="trade-panel" id="player-trade-panel">
     <div style="font-weight:bold; color:#D4A860; margin-bottom:6px;">Propose Trade with Another Player</div>
-    <div style="font-size:0.78em; color:#8AB0B0; margin-bottom:6px;">Only land-connected players are listed. Triremes do not count.</div>
+    <div style="font-size:0.78em; color:#8AB0B0; margin-bottom:6px;">Only players whose structures are adjacent to yours, or bridged by a trireme, are listed.</div>
     <div id="player-trade-target-row" style="margin-bottom:8px;"></div>
     <div style="display:flex; gap:14px; justify-content:center; margin-bottom:8px;">
       <div>
@@ -702,8 +702,12 @@
     <b>Move Hermes (Redirect):</b> Spend 1 Ambrosia and 1 action to <b>push Hermes onto an adjacent non-flooded hex</b>. This is how you bring him to your network when he drifts away &mdash; or how you yank him out from under an opponent who is mid-trade. Movement is one hex at a time; you cannot teleport him across the map.
 
     <h4>Player-to-Player Trade</h4>
-    On your turn you may also propose a barter trade with another player &mdash; <b>but only if your camps/temples are land-connected to theirs</b>. The connectivity walks adjacent non-flooded hexes (or temple-protected hexes) between any of your camps/temples and any of theirs. <b>Triremes do not count for this</b> &mdash; you cannot barter across open sea, only along an unbroken chain of dry ground.<br><br>
-    Pick a target player, choose any quantity of resources to give and to ask for, and send the offer. AI players evaluate by Hermes' coin prices &mdash; they accept if what they receive is at least as valuable as what they give. Human targets get an Accept/Reject prompt. Either way, proposing a trade costs <b>1 action</b> whether or not it's accepted.
+    On your turn you may propose a barter trade with another player, but <b>only if you are physically connected to them</b> in one of two ways:
+    <ul>
+      <li><b>Adjacency</b> &mdash; one of your camps/temples sits on a hex directly bordering one of their camps/temples.</li>
+      <li><b>Trireme bridge</b> &mdash; one of your triremes (or one of theirs) starts on a hex with your structure and ends on a hex with their structure.</li>
+    </ul>
+    No more "we share an island so we can trade" &mdash; you have to actually meet at a border or sail a trireme to their port. Pick a target player, choose any quantity of resources to give and to ask for, and send the offer. AI players evaluate by Hermes' coin prices &mdash; they accept if what they receive is at least as valuable as what they give. Human targets get an Accept/Reject prompt. Either way, proposing a trade costs <b>1 action</b> whether or not it's accepted.
 
     <h4>Turn Structure</h4>
     Each round has two phases for every player:<br>
@@ -763,11 +767,13 @@
 
     <h4>Player-to-Player Trade</h4>
     <ul>
-      <li>You can only trade with players whose camps/temples share a <b>land</b> path with yours. Triremes don't bridge for trade &mdash; if you're on a separate island, no deal.</li>
-      <li>This means <b>building a camp on a neighbor's island</b> isn't just expansion &mdash; it unlocks barter that bypasses Hermes' fixed prices.</li>
+      <li>You can only trade with players whose structures are <b>directly adjacent</b> to yours, or <b>bridged by a trireme</b>. Sharing an island isn't enough &mdash; you have to actually touch.</li>
+      <li>This makes triremes <b>diplomatic infrastructure</b>, not just resource pipelines. A 2-VP trireme that lands on a rich neighbor's hex can pay for itself within two trades.</li>
+      <li>Building a camp on a hex bordering a known trading partner is one of the highest-value plays in the game &mdash; you spend 2 Timber + 1 Olives and unlock unlimited barter that bypasses Hermes' fixed prices.</li>
       <li>Trade rare resources (Wine, Bronze, Ambrosia) you can't use for resources another player is hoarding. AI players value resources at Hermes prices, so offering equal-value trades will usually go through.</li>
-      <li>If you're stuck without Stone, look for a coastal partner who has surplus &mdash; you can offer 2 Timber for 1 Stone and unlock a temple build immediately.</li>
+      <li>If you're stuck without Stone, look for a partner who has surplus &mdash; offer 2 Timber for 1 Stone and unlock a temple build immediately.</li>
       <li>Conversely: if a rival is one resource away from a critical build, <b>refuse</b> their offers. Trades cost the proposer an action whether or not they succeed.</li>
+      <li><b>Build triremes toward opponents, not just toward Hermes.</b> A trireme to a wealthy neighbor is worth a turn-by-turn supply line.</li>
     </ul>
 
     <h4>Hermes Strategy</h4>
@@ -1270,55 +1276,62 @@
     }
 
     /* ===== PLAYER LAND CONNECTIVITY ===== */
-    /* Returns true if p1 and p2 each have at least one camp/temple
-       on hexes that share a connected non-flooded land path. Triremes
-       do not count -- this is strictly a land walk. Temples count even
-       if their hex elevation would otherwise be flooded. */
+    /* Returns true if any of p1's camps/temples is either:
+       (a) on a hex adjacent to a p2 camp/temple, OR
+       (b) on a hex that has one of p1's triremes connecting to a p2 hex,
+       OR vice versa via p2's triremes.
+       Flooded hexes (without a temple) don't count for either side. */
     function playersLandConnected(p1, p2) {
       if (p1 === p2) return false;
-      var p1Hexes = [];
-      for (var i = 0; i < players[p1].structures.length; i++) {
-        var s = players[p1].structures[i];
-        if (s.type === 'trireme') continue;
-        if (!hexes[s.hex].flooded || hexes[s.hex].temple) p1Hexes.push(s.hex);
-      }
-      if (p1Hexes.length === 0) return false;
 
-      var p2Hexes = {};
-      var anyP2 = false;
-      for (var i = 0; i < players[p2].structures.length; i++) {
-        var s = players[p2].structures[i];
-        if (s.type === 'trireme') continue;
-        if (!hexes[s.hex].flooded || hexes[s.hex].temple) {
-          p2Hexes[s.hex] = true;
-          anyP2 = true;
+      // Build sets of "live" structure hexes for each player (camps/temples that aren't flooded, or are temple-protected)
+      function liveStructHexes(pIdx) {
+        var set = {};
+        for (var i = 0; i < players[pIdx].structures.length; i++) {
+          var s = players[pIdx].structures[i];
+          if (s.type === 'trireme') continue;
+          if (!hexes[s.hex].flooded || hexes[s.hex].temple) set[s.hex] = true;
         }
+        return set;
       }
-      if (!anyP2) return false;
+      var p1Set = liveStructHexes(p1);
+      var p2Set = liveStructHexes(p2);
 
-      var visited = {};
-      var queue = [];
-      for (var i = 0; i < p1Hexes.length; i++) {
-        visited[p1Hexes[i]] = true;
-        queue.push(p1Hexes[i]);
-      }
-      while (queue.length > 0) {
-        var cur = queue.shift();
-        if (p2Hexes[cur]) return true;
-        var neighbors = hexNeighbors[cur];
+      // (a) Adjacency: any p1 hex with a neighbor in p2 set
+      for (var hStr in p1Set) {
+        var h = parseInt(hStr, 10);
+        var neighbors = hexNeighbors[h];
         for (var n = 0; n < neighbors.length; n++) {
-          var ni = neighbors[n];
-          if (visited[ni]) continue;
-          // Walk only through non-flooded hexes (or temple hexes which are protected)
-          if (hexes[ni].flooded && !hexes[ni].temple) continue;
-          visited[ni] = true;
-          queue.push(ni);
+          if (p2Set[neighbors[n]]) return true;
         }
       }
+
+      // (b) Trireme bridges: a p1-owned trireme that touches both a p1 hex and a p2 hex
+      // (the trireme itself only needs one end to be on a p1 structure to be valid;
+      //  by spec the other end can be any adjacent hex). For trade we need that other end
+      //  to be ON a p2 structure (or vice-versa for p2's triremes).
+      function triremeBridgesToOpponent(ownerPlayer, ownerSet, oppSet) {
+        for (var i = 0; i < players[ownerPlayer].structures.length; i++) {
+          var s = players[ownerPlayer].structures[i];
+          if (s.type !== 'trireme') continue;
+          var fromHex = s.hex, toHex = s.to;
+          // Trireme is "live" if either endpoint hex is non-flooded (or temple-protected)
+          var fromLive = !hexes[fromHex].flooded || hexes[fromHex].temple;
+          var toLive   = !hexes[toHex].flooded   || hexes[toHex].temple;
+          if (!fromLive && !toLive) continue;
+          // Connection counts if one end is on an owner structure and the other is on an opponent structure
+          if (ownerSet[fromHex] && oppSet[toHex]) return true;
+          if (ownerSet[toHex]   && oppSet[fromHex]) return true;
+        }
+        return false;
+      }
+      if (triremeBridgesToOpponent(p1, p1Set, p2Set)) return true;
+      if (triremeBridgesToOpponent(p2, p2Set, p1Set)) return true;
+
       return false;
     }
 
-    /* List indices of players land-connected to playerIdx */
+    /* List indices of players connected to playerIdx for trading */
     function landConnectedPlayers(playerIdx) {
       var list = [];
       for (var p = 0; p < numPlayers; p++) {
@@ -2103,7 +2116,7 @@
       if (phase !== 'active') return;
       var connected = landConnectedPlayers(currentPlayer);
       if (connected.length === 0) {
-        setMessage('No other players are land-connected to you.');
+        setMessage('No other player is adjacent to or bridged with your structures.');
         selectedAction = null;
         render();
         return;
