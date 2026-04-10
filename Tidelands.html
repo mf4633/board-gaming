@@ -456,9 +456,41 @@
     }
 
     .overlay-box button:hover { background: #2A5858; }
+    /* Mobile game nav */
+    #mobileNav { display: none; }
+    @media (max-width: 768px) {
+      #mobileNav { display: block; position: sticky; top: 0; z-index: 9999; background: #1A2030; border-bottom: 1px solid #2A4050; font-family: Georgia, serif; }
+      #mobileNav .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; }
+      #mobileNav .nav-title { color: #D8D0C0; font-size: 0.9em; letter-spacing: 1px; }
+      #mobileNav .nav-toggle { background: none; border: 1px solid #3A5060; color: #D8D0C0; font-size: 1.2em; padding: 2px 8px; border-radius: 4px; cursor: pointer; }
+      #mobileNav .nav-menu { display: none; background: #141C28; border-top: 1px solid #2A4050; }
+      #mobileNav .nav-menu.open { display: block; }
+      #mobileNav .nav-menu a { display: block; padding: 10px 18px; color: #8098A8; text-decoration: none; font-size: 0.85em; border-bottom: 1px solid #1E2838; }
+      #mobileNav .nav-menu a:hover { background: #1E2838; color: #D8D0C0; }
+      #mobileNav .nav-menu a.current { color: #D8D0C0; font-weight: bold; }
+    }
   </style>
 </head>
 <body>
+<div id="mobileNav">
+  <div class="nav-bar">
+    <span class="nav-title">Tidelands</span>
+    <button class="nav-toggle" onclick="document.querySelector('#mobileNav .nav-menu').classList.toggle('open')">&#9776;</button>
+  </div>
+  <div class="nav-menu">
+    <a href="Agora.html" class="">Agora</a>
+    <a href="Backgammon.html" class="">Backgammon</a>
+    <a href="Bisque.html" class="">Bisque</a>
+    <a href="Chess.html" class="">Chess</a>
+    <a href="Convergence.html" class="">Convergence</a>
+    <a href="Go.html" class="">Go</a>
+    <a href="Odyssey.html" class="">Odyssey</a>
+    <a href="PenteGrammai.html" class="">Pente Grammai</a>
+    <a href="Senet.html" class="">Senet</a>
+    <a href="Tidelands.html" class="current">Tidelands</a>
+    <a href="Ur.html" class="">Ur</a>
+  </div>
+</div>
   <h1>ODYSSEY</h1>
   <div class="subtitle">Upon the Wine-Dark Sea</div>
 
