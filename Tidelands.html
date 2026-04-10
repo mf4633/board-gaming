@@ -92,6 +92,39 @@
     .player-count-btn:not(:last-child) { border-right: 1px solid #2A6868; }
     .player-count-btn.active { background: #1A4848; color: #B8D0D0; cursor: default; }
     .player-count-btn:hover:not(.active) { background: #142E2E; color: #60C0B0; }
+    .player-type-selector {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      margin: 6px 0 8px 0;
+    }
+    .player-type-row {
+      display: flex;
+      align-items: center;
+      background: #0E2828;
+      border: 1px solid #2A6868;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.72em;
+    }
+    .player-type-row .pt-name { margin-right: 4px; font-weight: bold; }
+    .player-type-row button {
+      background: transparent;
+      border: 1px solid #2A6868;
+      color: #4A8888;
+      font-size: 0.85em;
+      padding: 1px 6px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .player-type-row button.active {
+      background: #1A4848;
+      color: #B8D0D0;
+      cursor: default;
+    }
+    .player-type-row button:hover:not(.active) { background: #142E2E; color: #60C0B0; }
+    .player-type-row .pt-h { margin-right: 2px; }
 
     /* Wrath Bar */
     .tide-bar-wrap {
@@ -508,11 +541,6 @@
   <h1>ODYSSEY</h1>
   <div class="subtitle">Upon the Wine-Dark Sea</div>
 
-  <div class="mode-selector">
-    <button class="mode-btn active" onclick="setMode(1)">Solo (vs AI)</button>
-    <button class="mode-btn" onclick="setMode(2)">Hotseat</button>
-  </div>
-
   <div class="player-count-selector" id="player-count-selector">
     <span style="font-size:0.75em;color:#4A8888;margin-right:6px;">Players:</span>
     <button class="player-count-btn active" onclick="setPlayerCount(2)">2</button>
@@ -521,6 +549,8 @@
     <button class="player-count-btn" onclick="setPlayerCount(5)">5</button>
     <button class="player-count-btn" onclick="setPlayerCount(6)">6</button>
   </div>
+
+  <div class="player-type-selector" id="player-type-selector"></div>
 
   <div class="tide-bar-wrap">
     <div class="tide-label" id="tide-label">Poseidon's Wrath: 1 / 5 &mdash; Gathering</div>
@@ -629,7 +659,8 @@
     }
 
     /* ===== STATE ===== */
-    var mode = 1;
+    /* playerTypes[i] = 'human' or 'ai'. Defaults: player 0 human, rest AI */
+    var playerTypes = ['human', 'ai'];
     var hexes = [];
     var tideLevel = 1;
     var tideDirection = 1; // 1 = rising, -1 = falling
@@ -1220,8 +1251,7 @@
 
     /* ===== HELPER: is player human? ===== */
     function isHumanPlayer(pIdx) {
-      if (mode === 2) return true; // hotseat: all human
-      return pIdx === 0; // 1P: only player 0 is human
+      return playerTypes[pIdx] === 'human';
     }
 
     /* ===== RENDER ===== */
@@ -1418,7 +1448,7 @@
         var h3 = document.createElement('h3');
         h3.className = 'p' + (p + 1) + '-color';
         var nameStr = PLAYER_NAMES[p];
-        if (mode === 1 && p > 0) nameStr += ' (AI)';
+        if (!isHumanPlayer(p)) nameStr += ' (AI)';
         h3.textContent = nameStr;
         panel.appendChild(h3);
 
@@ -2185,17 +2215,6 @@
       return Math.sqrt(dx * dx + dy * dy);
     }
 
-    /* ===== MODE ===== */
-    function setMode(m) {
-      mode = m;
-      var btns = document.querySelectorAll('.mode-btn');
-      for (var i = 0; i < btns.length; i++) {
-        btns[i].classList.remove('active');
-      }
-      btns[m - 1].classList.add('active');
-      resetGame();
-    }
-
     /* ===== PLAYER COUNT ===== */
     function setPlayerCount(n) {
       numPlayers = n;
@@ -2204,7 +2223,47 @@
         btns[i].classList.remove('active');
       }
       btns[n - 2].classList.add('active');
+      // Resize playerTypes array, preserving existing choices and defaulting new slots to AI
+      while (playerTypes.length < n) playerTypes.push('ai');
+      playerTypes = playerTypes.slice(0, n);
+      renderPlayerTypes();
       resetGame();
+    }
+
+    /* ===== PER-PLAYER HUMAN/AI TOGGLE ===== */
+    function setPlayerType(pIdx, type) {
+      playerTypes[pIdx] = type;
+      renderPlayerTypes();
+      resetGame();
+    }
+
+    function renderPlayerTypes() {
+      var sel = document.getElementById('player-type-selector');
+      if (!sel) return;
+      sel.innerHTML = '';
+      for (var i = 0; i < numPlayers; i++) {
+        var row = document.createElement('div');
+        row.className = 'player-type-row';
+        row.style.borderColor = PLAYER_COLORS[i];
+        var nameSpan = document.createElement('span');
+        nameSpan.className = 'pt-name';
+        nameSpan.style.color = PLAYER_COLORS[i];
+        nameSpan.textContent = PLAYER_LABELS[i];
+        row.appendChild(nameSpan);
+        var hBtn = document.createElement('button');
+        hBtn.className = 'pt-h' + (playerTypes[i] === 'human' ? ' active' : '');
+        hBtn.textContent = 'H';
+        hBtn.title = 'Human';
+        hBtn.onclick = (function(idx) { return function() { setPlayerType(idx, 'human'); }; })(i);
+        row.appendChild(hBtn);
+        var aBtn = document.createElement('button');
+        aBtn.className = playerTypes[i] === 'ai' ? 'active' : '';
+        aBtn.textContent = 'AI';
+        aBtn.title = 'AI';
+        aBtn.onclick = (function(idx) { return function() { setPlayerType(idx, 'ai'); }; })(i);
+        row.appendChild(aBtn);
+        sel.appendChild(row);
+      }
     }
 
     /* ===== RESET ===== */
@@ -2243,6 +2302,7 @@
     }
 
     /* ===== INIT ===== */
+    renderPlayerTypes();
     resetGame();
   </script>
 </body>
