@@ -425,6 +425,37 @@
     .trade-sell-btn:hover:not(:disabled) { background: #2A4040; }
     .trade-sell-btn:disabled { opacity: 0.3; cursor: default; }
 
+    .ptp-res-row {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 0.78em; padding: 2px 0;
+    }
+    .ptp-res-row .ptp-res-name { min-width: 56px; text-align: left; }
+    .ptp-res-row .ptp-amt { min-width: 18px; text-align: center; color: #D4A860; font-weight: bold; }
+    .ptp-step {
+      width: 20px; height: 20px;
+      border: 1px solid #2A6868;
+      background: #0E2424;
+      color: #6AA8A0;
+      cursor: pointer;
+      border-radius: 3px;
+      font-size: 0.85em;
+      padding: 0; line-height: 18px;
+    }
+    .ptp-step:hover:not(:disabled) { background: #1A3838; }
+    .ptp-step:disabled { opacity: 0.3; cursor: default; }
+    .ptp-target-btn {
+      padding: 3px 10px;
+      font-size: 0.78em;
+      margin: 0 3px;
+      border: 1px solid #2A6868;
+      background: #0E2828;
+      color: #6AA8A0;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .ptp-target-btn.selected { background: #1A4848; color: #B8D0D0; }
+    .ptp-target-btn:hover:not(.selected) { background: #142E2E; }
+
     /* Rules toggle */
     .rules-toggle {
       margin-top: 8px;
@@ -572,7 +603,8 @@
     <button class="act-btn" id="btn-build-camp" onclick="selectAction('camp')" disabled>Build Camp</button>
     <button class="act-btn" id="btn-build-temple" onclick="selectAction('temple')" disabled>Build Temple</button>
     <button class="act-btn" id="btn-build-trireme" onclick="selectAction('trireme')" disabled>Build Trireme</button>
-    <button class="act-btn" id="btn-trade" onclick="selectAction('trade')" disabled>Trade</button>
+    <button class="act-btn" id="btn-trade" onclick="selectAction('trade')" disabled>Trade Hermes</button>
+    <button class="act-btn" id="btn-trade-player" onclick="selectAction('tradeplayer')" disabled>Trade Player</button>
     <button class="act-btn" id="btn-move-market" onclick="selectAction('movemarket')" disabled>Move Hermes</button>
     <button class="act-btn" id="btn-end" onclick="endActionPhase()" disabled>End Actions</button>
     <button class="act-btn pass-btn" id="btn-pass" onclick="passSpecialBuild()" style="display:none">Pass</button>
@@ -582,6 +614,33 @@
     <div style="font-weight:bold; color:#D4A860; margin-bottom:6px;">Hermes' Ship</div>
     <div id="trade-rows"></div>
     <button class="act-btn" style="margin-top:8px;" onclick="closeTrade()">Done Trading</button>
+  </div>
+
+  <div class="trade-panel" id="player-trade-panel">
+    <div style="font-weight:bold; color:#D4A860; margin-bottom:6px;">Propose Trade with Another Player</div>
+    <div style="font-size:0.78em; color:#8AB0B0; margin-bottom:6px;">Only land-connected players are listed. Triremes do not count.</div>
+    <div id="player-trade-target-row" style="margin-bottom:8px;"></div>
+    <div style="display:flex; gap:14px; justify-content:center; margin-bottom:8px;">
+      <div>
+        <div style="font-weight:bold; color:#A0D0C8; font-size:0.82em; margin-bottom:4px;">You Give</div>
+        <div id="ptp-give-rows"></div>
+      </div>
+      <div>
+        <div style="font-weight:bold; color:#A0D0C8; font-size:0.82em; margin-bottom:4px;">You Get</div>
+        <div id="ptp-get-rows"></div>
+      </div>
+    </div>
+    <button class="act-btn" id="ptp-send-btn" onclick="submitPlayerTrade()" disabled>Send Offer</button>
+    <button class="act-btn" onclick="closePlayerTrade()">Cancel</button>
+  </div>
+
+  <div class="overlay" id="trade-offer-overlay">
+    <div class="overlay-box">
+      <h2 id="tofr-title">Trade Offer</h2>
+      <p id="tofr-text"></p>
+      <button onclick="respondToTradeOffer(true)">Accept</button>
+      <button onclick="respondToTradeOffer(false)">Reject</button>
+    </div>
   </div>
 
   <div class="board-container" id="board-container"></div>
@@ -642,9 +701,13 @@
 
     <b>Move Hermes (Redirect):</b> Spend 1 Ambrosia and 1 action to <b>push Hermes onto an adjacent non-flooded hex</b>. This is how you bring him to your network when he drifts away &mdash; or how you yank him out from under an opponent who is mid-trade. Movement is one hex at a time; you cannot teleport him across the map.
 
+    <h4>Player-to-Player Trade</h4>
+    On your turn you may also propose a barter trade with another player &mdash; <b>but only if your camps/temples are land-connected to theirs</b>. The connectivity walks adjacent non-flooded hexes (or temple-protected hexes) between any of your camps/temples and any of theirs. <b>Triremes do not count for this</b> &mdash; you cannot barter across open sea, only along an unbroken chain of dry ground.<br><br>
+    Pick a target player, choose any quantity of resources to give and to ask for, and send the offer. AI players evaluate by Hermes' coin prices &mdash; they accept if what they receive is at least as valuable as what they give. Human targets get an Accept/Reject prompt. Either way, proposing a trade costs <b>1 action</b> whether or not it's accepted.
+
     <h4>Turn Structure</h4>
     Each round has two phases for every player:<br>
-    <b>1. Active Phase</b> &mdash; The current player takes <b>2 actions</b>. An action is one of: Build Camp, Build Temple, Build Trireme, Trade with Hermes, or Move Hermes.<br>
+    <b>1. Active Phase</b> &mdash; The current player takes <b>2 actions</b>. An action is one of: Build Camp, Build Temple, Build Trireme, Trade with Hermes, Trade with another Player, or Move Hermes.<br>
     <b>2. Special Build Phase</b> &mdash; After the active player finishes, every other player (in clockwise order) gets <b>one optional structure build</b> (camp, temple, or trireme) if they have the resources. They cannot trade or move Hermes during this phase.<br><br>
     Then the next player becomes active and the round continues. Tide shifts at the start of each new round.
 
@@ -696,6 +759,15 @@
       <li>Think of triremes as <b>roads</b>. They let you skip flooded hexes, cross open water, and reach distant resource pockets.</li>
       <li>The <b>Largest Network Bonus</b> (3 VP) is decided by total connected structures. Triremes count and they're cheap to chain &mdash; one well-placed trireme can tip the bonus your way.</li>
       <li>Build triremes <i>toward Hermes</i> when he drifts somewhere productive. A 2-hex trireme bridge can re-open trade in a single turn.</li>
+    </ul>
+
+    <h4>Player-to-Player Trade</h4>
+    <ul>
+      <li>You can only trade with players whose camps/temples share a <b>land</b> path with yours. Triremes don't bridge for trade &mdash; if you're on a separate island, no deal.</li>
+      <li>This means <b>building a camp on a neighbor's island</b> isn't just expansion &mdash; it unlocks barter that bypasses Hermes' fixed prices.</li>
+      <li>Trade rare resources (Wine, Bronze, Ambrosia) you can't use for resources another player is hoarding. AI players value resources at Hermes prices, so offering equal-value trades will usually go through.</li>
+      <li>If you're stuck without Stone, look for a coastal partner who has surplus &mdash; you can offer 2 Timber for 1 Stone and unlock a temple build immediately.</li>
+      <li>Conversely: if a rival is one resource away from a critical build, <b>refuse</b> their offers. Trades cost the proposer an action whether or not they succeed.</li>
     </ul>
 
     <h4>Hermes Strategy</h4>
@@ -1197,6 +1269,65 @@
       return false;
     }
 
+    /* ===== PLAYER LAND CONNECTIVITY ===== */
+    /* Returns true if p1 and p2 each have at least one camp/temple
+       on hexes that share a connected non-flooded land path. Triremes
+       do not count -- this is strictly a land walk. Temples count even
+       if their hex elevation would otherwise be flooded. */
+    function playersLandConnected(p1, p2) {
+      if (p1 === p2) return false;
+      var p1Hexes = [];
+      for (var i = 0; i < players[p1].structures.length; i++) {
+        var s = players[p1].structures[i];
+        if (s.type === 'trireme') continue;
+        if (!hexes[s.hex].flooded || hexes[s.hex].temple) p1Hexes.push(s.hex);
+      }
+      if (p1Hexes.length === 0) return false;
+
+      var p2Hexes = {};
+      var anyP2 = false;
+      for (var i = 0; i < players[p2].structures.length; i++) {
+        var s = players[p2].structures[i];
+        if (s.type === 'trireme') continue;
+        if (!hexes[s.hex].flooded || hexes[s.hex].temple) {
+          p2Hexes[s.hex] = true;
+          anyP2 = true;
+        }
+      }
+      if (!anyP2) return false;
+
+      var visited = {};
+      var queue = [];
+      for (var i = 0; i < p1Hexes.length; i++) {
+        visited[p1Hexes[i]] = true;
+        queue.push(p1Hexes[i]);
+      }
+      while (queue.length > 0) {
+        var cur = queue.shift();
+        if (p2Hexes[cur]) return true;
+        var neighbors = hexNeighbors[cur];
+        for (var n = 0; n < neighbors.length; n++) {
+          var ni = neighbors[n];
+          if (visited[ni]) continue;
+          // Walk only through non-flooded hexes (or temple hexes which are protected)
+          if (hexes[ni].flooded && !hexes[ni].temple) continue;
+          visited[ni] = true;
+          queue.push(ni);
+        }
+      }
+      return false;
+    }
+
+    /* List indices of players land-connected to playerIdx */
+    function landConnectedPlayers(playerIdx) {
+      var list = [];
+      for (var p = 0; p < numPlayers; p++) {
+        if (p === playerIdx) continue;
+        if (playersLandConnected(playerIdx, p)) list.push(p);
+      }
+      return list;
+    }
+
     function largestNetwork(playerIdx) {
       var structHexes = [];
       for (var i = 0; i < players[playerIdx].structures.length; i++) {
@@ -1638,6 +1769,7 @@
 
       // Trade and move market: only during active phase
       document.getElementById('btn-trade').disabled = !(canAct && isConnectedToHermes(currentPlayer));
+      document.getElementById('btn-trade-player').disabled = !(canAct && landConnectedPlayers(currentPlayer).length > 0);
       document.getElementById('btn-move-market').disabled = !(canAct && (players[currentPlayer].resources.Ambrosia || 0) >= 1);
 
       // End actions: only during active phase
@@ -1653,8 +1785,8 @@
       }
 
       // Highlight selected action button
-      var btns = ['btn-build-camp', 'btn-build-temple', 'btn-build-trireme', 'btn-trade', 'btn-move-market'];
-      var actionNames = ['camp', 'temple', 'trireme', 'trade', 'movemarket'];
+      var btns = ['btn-build-camp', 'btn-build-temple', 'btn-build-trireme', 'btn-trade', 'btn-trade-player', 'btn-move-market'];
+      var actionNames = ['camp', 'temple', 'trireme', 'trade', 'tradeplayer', 'movemarket'];
       for (var i = 0; i < btns.length; i++) {
         var el = document.getElementById(btns[i]);
         if (selectedAction === actionNames[i]) {
@@ -1764,7 +1896,7 @@
         if (specialBuildUsed) return;
         if (!isHumanPlayer(actingPlayer)) return;
         // Special build: only building allowed
-        if (action === 'trade' || action === 'movemarket') return;
+        if (action === 'trade' || action === 'movemarket' || action === 'tradeplayer') return;
       } else {
         return;
       }
@@ -1784,6 +1916,9 @@
         setMessage('Click your structure to start a trireme from. (1 Timber + 1 Bronze)');
       } else if (action === 'trade') {
         openTrade();
+        return;
+      } else if (action === 'tradeplayer') {
+        openPlayerTrade();
         return;
       } else if (action === 'movemarket') {
         var adj = hexNeighbors[marketHex];
@@ -1959,6 +2094,235 @@
       checkWin();
       render();
       if (actionsLeft <= 0 && !gameOver) finishActivePlayerTurn();
+    }
+
+    /* ===== PLAYER-TO-PLAYER TRADE ===== */
+    var ptpState = null; // { proposer, target, give:{}, get:{}, pending:false }
+
+    function openPlayerTrade() {
+      if (phase !== 'active') return;
+      var connected = landConnectedPlayers(currentPlayer);
+      if (connected.length === 0) {
+        setMessage('No other players are land-connected to you.');
+        selectedAction = null;
+        render();
+        return;
+      }
+      ptpState = {
+        proposer: currentPlayer,
+        target: connected[0],
+        give: { Timber:0, Olives:0, Wine:0, Bronze:0, Ambrosia:0, Stone:0 },
+        get:  { Timber:0, Olives:0, Wine:0, Bronze:0, Ambrosia:0, Stone:0 }
+      };
+      document.getElementById('player-trade-panel').classList.add('visible');
+      renderPlayerTradePanel();
+      setMessage('Propose a trade. Pick a player and adjust resources.');
+      highlightedHexes = [];
+      render();
+    }
+
+    function renderPlayerTradePanel() {
+      if (!ptpState) return;
+      var rkeys = ['Timber', 'Olives', 'Wine', 'Bronze', 'Ambrosia', 'Stone'];
+      var connected = landConnectedPlayers(ptpState.proposer);
+
+      // Target row
+      var tRow = document.getElementById('player-trade-target-row');
+      tRow.innerHTML = '<span style="font-size:0.78em; color:#8AB0B0; margin-right:6px;">Trade with:</span>';
+      for (var i = 0; i < connected.length; i++) {
+        var p = connected[i];
+        var btn = document.createElement('button');
+        btn.className = 'ptp-target-btn' + (p === ptpState.target ? ' selected' : '');
+        btn.style.borderColor = PLAYER_COLORS[p];
+        btn.style.color = (p === ptpState.target) ? '#B8D0D0' : PLAYER_COLORS[p];
+        btn.textContent = PLAYER_LABELS[p] + (isHumanPlayer(p) ? '' : ' (AI)');
+        btn.onclick = (function(idx) { return function() { ptpState.target = idx; renderPlayerTradePanel(); }; })(p);
+        tRow.appendChild(btn);
+      }
+
+      var giveBox = document.getElementById('ptp-give-rows');
+      var getBox = document.getElementById('ptp-get-rows');
+      giveBox.innerHTML = '';
+      getBox.innerHTML = '';
+
+      for (var i = 0; i < rkeys.length; i++) {
+        var rk = rkeys[i];
+        giveBox.appendChild(buildResRow(rk, 'give'));
+        getBox.appendChild(buildResRow(rk, 'get'));
+      }
+
+      // Send button enabled only if both sides have at least 1 item
+      var totalGive = 0, totalGet = 0;
+      for (var i = 0; i < rkeys.length; i++) {
+        totalGive += ptpState.give[rkeys[i]];
+        totalGet += ptpState.get[rkeys[i]];
+      }
+      document.getElementById('ptp-send-btn').disabled = !(totalGive > 0 && totalGet > 0);
+    }
+
+    function buildResRow(rk, side) {
+      var row = document.createElement('div');
+      row.className = 'ptp-res-row';
+      var name = document.createElement('span');
+      name.className = 'ptp-res-name';
+      name.innerHTML = (RESOURCE_ICONS[rk] || '') + ' ' + rk;
+      row.appendChild(name);
+
+      var minus = document.createElement('button');
+      minus.className = 'ptp-step';
+      minus.textContent = '-';
+      minus.onclick = (function(r, s) { return function() { stepPtp(r, s, -1); }; })(rk, side);
+      row.appendChild(minus);
+
+      var amt = document.createElement('span');
+      amt.className = 'ptp-amt';
+      amt.textContent = ptpState[side][rk];
+      row.appendChild(amt);
+
+      var plus = document.createElement('button');
+      plus.className = 'ptp-step';
+      plus.textContent = '+';
+      plus.onclick = (function(r, s) { return function() { stepPtp(r, s, 1); }; })(rk, side);
+      row.appendChild(plus);
+
+      // Disable based on inventory: give cannot exceed proposer's stock
+      if (side === 'give') {
+        var have = players[ptpState.proposer].resources[rk] || 0;
+        if (ptpState.give[rk] >= have) plus.disabled = true;
+      }
+      if (ptpState[side][rk] <= 0) minus.disabled = true;
+
+      return row;
+    }
+
+    function stepPtp(rk, side, delta) {
+      ptpState[side][rk] += delta;
+      if (ptpState[side][rk] < 0) ptpState[side][rk] = 0;
+      var have = players[ptpState.proposer].resources[rk] || 0;
+      if (side === 'give' && ptpState.give[rk] > have) ptpState.give[rk] = have;
+      renderPlayerTradePanel();
+    }
+
+    function closePlayerTrade() {
+      document.getElementById('player-trade-panel').classList.remove('visible');
+      ptpState = null;
+      selectedAction = null;
+      render();
+    }
+
+    /* Pending offer awaiting human accept/reject */
+    var pendingOffer = null;
+
+    function submitPlayerTrade() {
+      if (!ptpState) return;
+      var proposer = ptpState.proposer;
+      var target = ptpState.target;
+      var give = ptpState.give;
+      var get = ptpState.get;
+
+      // Verify proposer has resources
+      var rkeys = ['Timber', 'Olives', 'Wine', 'Bronze', 'Ambrosia', 'Stone'];
+      for (var i = 0; i < rkeys.length; i++) {
+        if ((players[proposer].resources[rkeys[i]] || 0) < give[rkeys[i]]) {
+          setMessage('You do not have enough ' + rkeys[i] + '.');
+          return;
+        }
+      }
+      // Verify target has the requested resources
+      var targetCanFulfill = true;
+      for (var i = 0; i < rkeys.length; i++) {
+        if ((players[target].resources[rkeys[i]] || 0) < get[rkeys[i]]) {
+          targetCanFulfill = false;
+          break;
+        }
+      }
+
+      // Cancel the panel; offer is in flight
+      document.getElementById('player-trade-panel').classList.remove('visible');
+
+      if (!targetCanFulfill) {
+        setMessage(PLAYER_LABELS[target] + ' cannot fulfill your offer (insufficient resources). Action consumed.');
+        consumePlayerTradeAction();
+        return;
+      }
+
+      if (isHumanPlayer(target)) {
+        // Show accept/reject overlay to the human target
+        pendingOffer = { proposer: proposer, target: target, give: give, get: get };
+        var giveStr = formatResMap(give);
+        var getStr = formatResMap(get);
+        document.getElementById('tofr-title').textContent = PLAYER_LABELS[proposer] + ' offers ' + PLAYER_LABELS[target] + ' a trade';
+        document.getElementById('tofr-text').innerHTML =
+          PLAYER_LABELS[proposer] + ' will give: <b>' + giveStr + '</b><br>' +
+          PLAYER_LABELS[target] + ' will give: <b>' + getStr + '</b>';
+        document.getElementById('trade-offer-overlay').classList.add('visible');
+      } else {
+        // AI target evaluates by trade-price value
+        var giveValue = computeTradeValue(give);
+        var getValue = computeTradeValue(get);
+        // AI accepts if what it RECEIVES (=give from proposer's POV) is worth at least 1.0x what it gives up
+        var aiAccepts = (giveValue >= getValue);
+        if (aiAccepts) {
+          executeTrade(proposer, target, give, get);
+          setMessage(PLAYER_LABELS[target] + ' (AI) accepted the trade.');
+        } else {
+          setMessage(PLAYER_LABELS[target] + ' (AI) rejected the offer.');
+        }
+        consumePlayerTradeAction();
+      }
+    }
+
+    function respondToTradeOffer(accept) {
+      document.getElementById('trade-offer-overlay').classList.remove('visible');
+      if (!pendingOffer) return;
+      if (accept) {
+        executeTrade(pendingOffer.proposer, pendingOffer.target, pendingOffer.give, pendingOffer.get);
+        setMessage(PLAYER_LABELS[pendingOffer.target] + ' accepted the trade.');
+      } else {
+        setMessage(PLAYER_LABELS[pendingOffer.target] + ' rejected the trade.');
+      }
+      pendingOffer = null;
+      consumePlayerTradeAction();
+    }
+
+    function executeTrade(proposer, target, give, get) {
+      var rkeys = ['Timber', 'Olives', 'Wine', 'Bronze', 'Ambrosia', 'Stone'];
+      for (var i = 0; i < rkeys.length; i++) {
+        var rk = rkeys[i];
+        players[proposer].resources[rk] = (players[proposer].resources[rk] || 0) - give[rk] + get[rk];
+        players[target].resources[rk]   = (players[target].resources[rk]   || 0) + give[rk] - get[rk];
+      }
+    }
+
+    function consumePlayerTradeAction() {
+      ptpState = null;
+      selectedAction = null;
+      actionsLeft--;
+      checkWin();
+      render();
+      if (actionsLeft <= 0 && !gameOver) finishActivePlayerTurn();
+    }
+
+    function computeTradeValue(map) {
+      var v = 0;
+      var rkeys = ['Timber', 'Olives', 'Wine', 'Bronze', 'Ambrosia', 'Stone'];
+      for (var i = 0; i < rkeys.length; i++) {
+        var rk = rkeys[i];
+        // Stone has no Hermes price, but it's needed for temples; value it at 3 coins
+        var price = (PRICES[rk] !== undefined) ? PRICES[rk] : 3;
+        v += (map[rk] || 0) * price;
+      }
+      return v;
+    }
+
+    function formatResMap(map) {
+      var rkeys = ['Timber', 'Olives', 'Wine', 'Bronze', 'Ambrosia', 'Stone'];
+      var parts = [];
+      for (var i = 0; i < rkeys.length; i++) {
+        var rk = rkeys[i];
+        if (map[rk] > 0) parts.push(map[rk] + ' ' + rk);
+      }
+      return parts.length > 0 ? parts.join(', ') : 'nothing';
     }
 
     function endActionPhase() {
@@ -2409,6 +2773,11 @@
 
       document.getElementById('overlay').classList.remove('show');
       document.getElementById('trade-panel').classList.remove('visible');
+      document.getElementById('player-trade-panel').classList.remove('visible');
+      var tofr = document.getElementById('trade-offer-overlay');
+      if (tofr) tofr.classList.remove('visible');
+      ptpState = null;
+      pendingOffer = null;
 
       createBoard();
       initPlayers();
