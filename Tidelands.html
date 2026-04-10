@@ -599,7 +599,8 @@
   <div id="message">Set sail upon the wine-dark sea. Click "Next Turn" to begin!</div>
 
   <div class="actions" id="actions">
-    <button class="act-btn" id="btn-next" onclick="advanceTurn()">Next Turn</button>
+    <button class="act-btn" id="btn-start" onclick="startGame()">Start Game</button>
+    <button class="act-btn" id="btn-next" onclick="advanceTurn()" style="display:none">Next Turn</button>
     <button class="act-btn" id="btn-build-camp" onclick="selectAction('camp')" disabled>Build Camp</button>
     <button class="act-btn" id="btn-build-temple" onclick="selectAction('temple')" disabled>Build Temple</button>
     <button class="act-btn" id="btn-build-trireme" onclick="selectAction('trireme')" disabled>Build Trireme</button>
@@ -876,9 +877,16 @@
     var players = [];
     var highlightedHexes = [];
     var gameOver = false;
+    var gameStarted = false;
     var aiTimer = null;
+    var preturnTimer = null;
     var specialBuildPlayer = -1; // index of player doing special build
     var specialBuildUsed = false; // did the current special build player use their action
+
+    function allPlayersAI() {
+      for (var i = 0; i < numPlayers; i++) if (playerTypes[i] === 'human') return false;
+      return true;
+    }
 
     /* ===== HEX GEOMETRY ===== */
     function buildHexPositions() {
@@ -1764,7 +1772,23 @@
       // Special build phase: only build actions allowed
       var canSpecialAct = isSpecial && isHumanPlayer(specialBuildPlayer) && !specialBuildUsed;
 
-      document.getElementById('btn-next').disabled = (phase !== 'preturn' || gameOver);
+      // Show Start button until game has started; show Next Turn after, but only for human-included games
+      var startBtn = document.getElementById('btn-start');
+      var nextBtn = document.getElementById('btn-next');
+      if (!gameStarted) {
+        startBtn.style.display = '';
+        startBtn.disabled = false;
+        nextBtn.style.display = 'none';
+      } else {
+        startBtn.style.display = 'none';
+        // If all players are AI, hide Next Turn entirely (game auto-advances)
+        if (allPlayersAI()) {
+          nextBtn.style.display = 'none';
+        } else {
+          nextBtn.style.display = '';
+          nextBtn.disabled = (phase !== 'preturn' || gameOver);
+        }
+      }
 
       // Build buttons: enabled during active (with full conditions) or special build
       document.getElementById('btn-build-camp').disabled = !(
@@ -1820,6 +1844,20 @@
     }
 
     /* ===== TURN FLOW ===== */
+    function startGame() {
+      gameStarted = true;
+      advanceTurn();
+    }
+
+    function maybeAutoAdvance() {
+      // If the game is in preturn and no humans are playing, auto-advance after a short delay
+      if (preturnTimer) { clearTimeout(preturnTimer); preturnTimer = null; }
+      if (!gameStarted || gameOver) return;
+      if (phase !== 'preturn') return;
+      if (!allPlayersAI()) return;
+      preturnTimer = setTimeout(function() { advanceTurn(); }, 800);
+    }
+
     function advanceTurn() {
       if (phase !== 'preturn' || gameOver) return;
 
@@ -2428,8 +2466,13 @@
         activePlayer = 0;
         phase = 'preturn';
         specialBuildPlayer = -1;
-        setMessage('Turn ' + turnNumber + ' complete. Click "Next Turn" to advance Poseidon\'s wrath.');
+        if (allPlayersAI()) {
+          setMessage('Turn ' + turnNumber + ' complete.');
+        } else {
+          setMessage('Turn ' + turnNumber + ' complete. Click "Next Turn" to advance Poseidon\'s wrath.');
+        }
         render();
+        maybeAutoAdvance();
       } else {
         // Next player becomes active
         activePlayer = nextActive;
@@ -2769,7 +2812,9 @@
     /* ===== RESET ===== */
     function resetGame() {
       if (aiTimer) clearTimeout(aiTimer);
+      if (preturnTimer) { clearTimeout(preturnTimer); preturnTimer = null; }
       gameOver = false;
+      gameStarted = false;
       phase = 'preturn';
       tideLevel = 1;
       tideDirection = 1;
@@ -2797,7 +2842,7 @@
       updateFloodState();
       placeStartingCamps();
 
-      setMessage('Set sail upon the wine-dark sea! Click "Next Turn" to begin your odyssey.');
+      setMessage('Set sail upon the wine-dark sea! Choose your captains and click "Start Game".');
       render();
     }
 
