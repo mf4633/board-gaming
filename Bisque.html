@@ -3,6 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+(function() {
+  var ua = navigator.userAgent;
+  var isPhone = /iPhone|iPad|iPod|Android/i.test(ua) || window.innerWidth < 768;
+  if (isPhone) {
+    var meta = document.querySelector('meta[name="viewport"]');
+    if (meta) {
+      var targetWidth = 780;
+      var scale = window.innerWidth / targetWidth;
+      meta.setAttribute('content', 'width=' + targetWidth + ', initial-scale=' + scale + ', maximum-scale=3.0, user-scalable=yes');
+    }
+  }
+})();
+</script>
 <title>BISQUE — Battle for the Bay</title>
 <style>
 @keyframes diceRoll {
@@ -501,43 +515,43 @@ body {
 /* ===== DATA ===== */
 var TERRITORIES = [
   /* North Fork (6) */
-  { id: 'riverhead',        name: 'Riverhead',        group: 'northfork',   x: 2,   y: 195, water: false },
+  { id: 'riverhead',        name: 'Riverhead',        group: 'northfork',   x: 2,   y: 200, water: false },
   { id: 'cutchogue',        name: 'Cutchogue',        group: 'northfork',   x: 10,  y: 90,  water: false },
-  { id: 'mattituck',        name: 'Mattituck',        group: 'northfork',   x: 100, y: 72,  water: false },
-  { id: 'southold',         name: 'Southold',         group: 'northfork',   x: 195, y: 52,  water: false },
-  { id: 'greenport',        name: 'Greenport',        group: 'northfork',   x: 300, y: 38,  water: false },
-  { id: 'orient',           name: 'Orient',           group: 'northfork',   x: 422, y: 22,  water: false },
+  { id: 'mattituck',        name: 'Mattituck',        group: 'northfork',   x: 95,  y: 72,  water: false },
+  { id: 'southold',         name: 'Southold',         group: 'northfork',   x: 185, y: 52,  water: false },
+  { id: 'greenport',        name: 'Greenport',        group: 'northfork',   x: 285, y: 35,  water: false },
+  { id: 'orient',           name: 'Orient',           group: 'northfork',   x: 405, y: 60,  water: false },
 
   /* South Fork West (4) */
-  { id: 'southampton',      name: 'Southampton',      group: 'sfwest',      x: 35,  y: 375, water: false },
-  { id: 'bridgehampton',    name: 'Bridgehampton',    group: 'sfwest',      x: 180, y: 362, water: false },
-  { id: 'northHaven',       name: 'North Haven',      group: 'sfwest',      x: 280, y: 310, water: false },
-  { id: 'springs',          name: 'Springs',          group: 'sfwest',      x: 382, y: 332, water: false },
+  { id: 'southampton',      name: 'Southampton',      group: 'sfwest',      x: 30,  y: 380, water: false },
+  { id: 'bridgehampton',    name: 'Bridgehampton',    group: 'sfwest',      x: 175, y: 372, water: false },
+  { id: 'northHaven',       name: 'North Haven',      group: 'sfwest',      x: 250, y: 320, water: false },
+  { id: 'springs',          name: 'Springs',          group: 'sfwest',      x: 425, y: 320, water: false },
 
   /* South Fork East (4) */
-  { id: 'sagHarbor',        name: 'Sag Harbor',       group: 'sfeast',      x: 355, y: 312, water: false },
-  { id: 'eastHampton',      name: 'East Hampton',     group: 'sfeast',      x: 440, y: 348, water: false },
-  { id: 'amagansett',       name: 'Amagansett',       group: 'sfeast',      x: 530, y: 370, water: false },
-  { id: 'montauk',          name: 'Montauk',          group: 'sfeast',      x: 640, y: 388, water: false },
+  { id: 'sagHarbor',        name: 'Sag Harbor',       group: 'sfeast',      x: 340, y: 320, water: false },
+  { id: 'eastHampton',      name: 'East Hampton',     group: 'sfeast',      x: 465, y: 366, water: false },
+  { id: 'amagansett',       name: 'Amagansett',       group: 'sfeast',      x: 545, y: 378, water: false },
+  { id: 'montauk',          name: 'Montauk',          group: 'sfeast',      x: 645, y: 392, water: false },
 
   /* The Islands (5) */
-  { id: 'shelterHeights',   name: 'S.I. Heights',     group: 'islands',     x: 370, y: 170, water: false },
-  { id: 'mashomack',        name: 'Mashomack',        group: 'islands',     x: 425, y: 225, water: false },
-  { id: 'gardinersIsland',  name: 'Gardiners Is.',    group: 'islands',     x: 610, y: 238, water: false },
-  { id: 'plumIsland',       name: 'Plum Island',      group: 'islands',     x: 473, y: 26,  water: false },
-  { id: 'robinsIsland',     name: 'Robins Island',    group: 'islands',     x: 88,  y: 196, water: false },
+  { id: 'shelterHeights',   name: 'S.I. Heights',     group: 'islands',     x: 365, y: 168, water: false },
+  { id: 'mashomack',        name: 'Mashomack',        group: 'islands',     x: 425, y: 222, water: false },
+  { id: 'gardinersIsland',  name: 'Gardiners Is.',    group: 'islands',     x: 595, y: 230, water: false },
+  { id: 'plumIsland',       name: 'Plum Island',      group: 'islands',     x: 478, y: 12,  water: false },
+  { id: 'robinsIsland',     name: 'Robins Island',    group: 'islands',     x: 90,  y: 232, water: false },
 
   /* Inner Bays (5) */
-  { id: 'greatPeconicBay',  name: 'Peconic Bay',      group: 'innerBays',   x: 150, y: 185, water: true },
-  { id: 'littlePeconicBay', name: 'Little Peconic',   group: 'innerBays',   x: 150, y: 270, water: true },
-  { id: 'noyackBay',        name: 'Noyack Bay',       group: 'innerBays',   x: 292, y: 290, water: true },
-  { id: 'siSound',          name: 'S.I. Sound',       group: 'innerBays',   x: 375, y: 130, water: true },
-  { id: 'northwestHarbor',  name: 'NW Harbor',        group: 'innerBays',   x: 462, y: 315, water: true },
+  { id: 'greatPeconicBay',  name: 'Peconic Bay',      group: 'innerBays',   x: 165, y: 178, water: true },
+  { id: 'littlePeconicBay', name: 'Little Peconic',   group: 'innerBays',   x: 165, y: 270, water: true },
+  { id: 'noyackBay',        name: 'Noyack Bay',       group: 'innerBays',   x: 295, y: 268, water: true },
+  { id: 'siSound',          name: 'S.I. Sound',       group: 'innerBays',   x: 295, y: 128, water: true },
+  { id: 'northwestHarbor',  name: 'NW Harbor',        group: 'innerBays',   x: 478, y: 280, water: true },
 
   /* Outer Waters (3) */
-  { id: 'gardinersBay',     name: 'Gardiners Bay',    group: 'outerWaters', x: 555, y: 158, water: true },
-  { id: 'blockIslandSound', name: 'Block Is. Snd',    group: 'outerWaters', x: 672, y: 265, water: true },
-  { id: 'fishersIsland',    name: 'Fishers Is.',      group: 'outerWaters', x: 672, y: 42,  water: false }
+  { id: 'gardinersBay',     name: 'Gardiners Bay',    group: 'outerWaters', x: 560, y: 155, water: true },
+  { id: 'blockIslandSound', name: 'Block Is. Snd',    group: 'outerWaters', x: 678, y: 295, water: true },
+  { id: 'fishersIsland',    name: 'Fishers Is.',      group: 'outerWaters', x: 660, y: 50,  water: false }
 ];
 
 var GROUPS = {
