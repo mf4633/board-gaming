@@ -199,6 +199,11 @@ body {
 .territory.water {
   border-style: dashed;
 }
+.territory.bonus-active {
+  outline: 2px dashed #FFC864;
+  outline-offset: 2px;
+  box-shadow: 0 0 10px rgba(255,200,100,0.35);
+}
 .p1 { background: rgba(192,80,48,0.35); border-color: rgba(192,80,48,0.7); color: #F0D0C0; }
 .p2 { background: rgba(48,128,176,0.35); border-color: rgba(48,128,176,0.7); color: #C0D8E8; }
 .p3 { background: rgba(64,160,80,0.35); border-color: rgba(64,160,80,0.7); color: #C0E8C8; }
@@ -381,26 +386,29 @@ body {
 .score-p3 { color: #60C070; }
 .score-p4 { color: #D0B050; }
 .score-pN { color: #999; }
-/* Mobile game nav */
-#mobileNav { display: none; }
+/* Game nav (desktop + mobile) */
+#gameNav { display: block; position: sticky; top: 0; z-index: 9999; background: #1A2030; border-bottom: 1px solid #2A4050; font-family: Georgia, serif; width: 100%; }
+#gameNav .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 18px; max-width: 1200px; margin: 0 auto; position: relative; }
+#gameNav .nav-title { color: #D8D0C0; font-size: 0.9em; letter-spacing: 1px; }
+#gameNav .nav-toggle { background: none; border: 1px solid #3A5060; color: #D8D0C0; font-size: 1.1em; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-family: Georgia, serif; }
+#gameNav .nav-toggle:hover { background: #1E2838; }
+#gameNav .nav-menu { display: none; position: absolute; right: 18px; top: 100%; background: #141C28; border: 1px solid #2A4050; border-top: none; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+#gameNav .nav-menu.open { display: block; }
+#gameNav .nav-menu a { display: block; padding: 10px 18px; color: #8098A8; text-decoration: none; font-size: 0.85em; border-bottom: 1px solid #1E2838; }
+#gameNav .nav-menu a:last-child { border-bottom: none; }
+#gameNav .nav-menu a:hover { background: #1E2838; color: #D8D0C0; }
+#gameNav .nav-menu a.current { color: #D8D0C0; font-weight: bold; }
 @media (max-width: 768px) {
-  #mobileNav { display: block; position: sticky; top: 0; z-index: 9999; background: #1A2030; border-bottom: 1px solid #2A4050; font-family: Georgia, serif; }
-  #mobileNav .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; }
-  #mobileNav .nav-title { color: #D8D0C0; font-size: 0.9em; letter-spacing: 1px; }
-  #mobileNav .nav-toggle { background: none; border: 1px solid #3A5060; color: #D8D0C0; font-size: 1.2em; padding: 2px 8px; border-radius: 4px; cursor: pointer; }
-  #mobileNav .nav-menu { display: none; background: #141C28; border-top: 1px solid #2A4050; }
-  #mobileNav .nav-menu.open { display: block; }
-  #mobileNav .nav-menu a { display: block; padding: 10px 18px; color: #8098A8; text-decoration: none; font-size: 0.85em; border-bottom: 1px solid #1E2838; }
-  #mobileNav .nav-menu a:hover { background: #1E2838; color: #D8D0C0; }
-  #mobileNav .nav-menu a.current { color: #D8D0C0; font-weight: bold; }
+  #gameNav .nav-bar { padding: 8px 14px; }
+  #gameNav .nav-menu { position: static; right: auto; min-width: 0; border: none; border-top: 1px solid #2A4050; box-shadow: none; }
 }
 </style>
 </head>
 <body>
-<div id="mobileNav">
+<div id="gameNav">
   <div class="nav-bar">
     <span class="nav-title">Bisque</span>
-    <button class="nav-toggle" onclick="document.querySelector('#mobileNav .nav-menu').classList.toggle('open')">&#9776;</button>
+    <button class="nav-toggle" onclick="document.querySelector('#gameNav .nav-menu').classList.toggle('open')">&#9776;</button>
   </div>
   <div class="nav-menu">
     <a href="Agora.html" class="">Agora</a>
@@ -531,7 +539,7 @@ body {
 
 <div id="actions">
   <button id="btnEndAttacks" onclick="endAttacks()" disabled>End Hauling</button>
-  <button id="btnFortify" onclick="endFortify()" disabled>Skip Fortify</button>
+  <button id="btnFortify" onclick="endFortify()" disabled>End Fortify</button>
   <button id="btnEndTurn" onclick="endTurn()" disabled>End Turn</button>
 </div>
 
@@ -579,7 +587,7 @@ body {
     <li>Each loss removes one trap from that side.</li>
   </ul>
   If the defender is reduced to 0 traps, the attacker conquers the territory and moves up to (attacker dice rolled) traps in. You can attack as many times as you like, switching sources, until you click <b>End Hauling</b>.<br><br>
-  <b>3. Fortify</b> &mdash; Once per turn you may move traps from one of your territories (with &ge;2 traps) to a single adjacent friendly territory. Half (rounded down, minimum 1) of the source's traps move over. Click <b>Skip Fortify</b> to pass, or fortify and your turn ends automatically.
+  <b>3. Fortify</b> &mdash; Move traps from any of your territories (with &ge;2 traps) to an adjacent friendly territory. Half (rounded down, minimum 1) of the source's traps move over. You may repeat this as many times as you like; click <b>End Fortify</b> when you're done.
 
   <h4>Eliminating Captains and Winning</h4>
   When a captain loses their last territory they are <b>eliminated</b> and out for the rest of the game. The last captain standing wins. In 1 Player mode, you win if you eliminate every AI rival; you lose if you are eliminated yourself.
@@ -708,7 +716,7 @@ var GROUPS = {
 
 var ADJACENCY = {
   /* North Fork — linear chain + bay access */
-  riverhead:        ['cutchogue', 'southampton', 'greatPeconicBay'],
+  riverhead:        ['cutchogue', 'southampton', 'robinsIsland'],
   cutchogue:        ['riverhead', 'mattituck'],
   mattituck:        ['cutchogue', 'southold'],
   southold:         ['mattituck', 'greenport'],
@@ -729,21 +737,21 @@ var ADJACENCY = {
   /* The Islands — 2 connections each */
   shelterHeights:   ['mashomack', 'siSound', 'noyackBay'],
   mashomack:        ['shelterHeights', 'northwestHarbor'],
-  gardinersIsland:  ['gardinersBay', 'fishersIsland'],
+  gardinersIsland:  ['gardinersBay', 'northwestHarbor'],
   plumIsland:       ['orient', 'gardinersBay'],
-  robinsIsland:     ['greatPeconicBay', 'littlePeconicBay'],
+  robinsIsland:     ['greatPeconicBay', 'littlePeconicBay', 'riverhead'],
 
   /* Inner Bays */
-  greatPeconicBay:  ['riverhead', 'littlePeconicBay', 'robinsIsland'],
+  greatPeconicBay:  ['littlePeconicBay', 'robinsIsland'],
   littlePeconicBay: ['greatPeconicBay', 'southampton', 'noyackBay', 'robinsIsland'],
   noyackBay:        ['littlePeconicBay', 'shelterHeights', 'northwestHarbor', 'sagHarbor'],
   siSound:          ['greenport', 'shelterHeights', 'gardinersBay'],
-  northwestHarbor:  ['noyackBay', 'mashomack'],
+  northwestHarbor:  ['noyackBay', 'mashomack', 'gardinersIsland'],
 
   /* Outer Waters */
-  gardinersBay:     ['siSound', 'gardinersIsland', 'plumIsland', 'blockIslandSound'],
+  gardinersBay:     ['siSound', 'gardinersIsland', 'plumIsland', 'blockIslandSound', 'fishersIsland'],
   blockIslandSound: ['gardinersBay', 'fishersIsland', 'montauk'],
-  fishersIsland:    ['blockIslandSound', 'gardinersIsland']
+  fishersIsland:    ['blockIslandSound', 'gardinersBay']
 };
 
 var PLAYER_COLORS = {
@@ -1054,6 +1062,21 @@ function buildLegend() {
 
 /* ===== RENDERING ===== */
 function render() {
+  /* Compute which groups are fully held by a single non-neutral owner */
+  var groupBonusOwner = {};
+  var groupKeysR = Object.keys(GROUPS);
+  for (var gi = 0; gi < groupKeysR.length; gi++) {
+    var gk = groupKeysR[gi];
+    var gOwner = null, unified = true;
+    for (var tt = 0; tt < TERRITORIES.length; tt++) {
+      if (TERRITORIES[tt].group !== gk) continue;
+      var o = state.territories[TERRITORIES[tt].id].owner;
+      if (gOwner === null) gOwner = o;
+      else if (o !== gOwner) { unified = false; break; }
+    }
+    if (unified && gOwner !== 0 && gOwner !== null) groupBonusOwner[gk] = gOwner;
+  }
+
   for (var t = 0; t < TERRITORIES.length; t++) {
     var td = TERRITORIES[t];
     var ts = state.territories[td.id];
@@ -1061,7 +1084,7 @@ function render() {
     if (!div || !ts) continue;
 
     /* Player class */
-    div.classList.remove('p1', 'p2', 'p3', 'p4', 'pN', 'selected');
+    div.classList.remove('p1', 'p2', 'p3', 'p4', 'pN', 'selected', 'bonus-active');
     if (ts.owner === 0) {
       div.classList.add('pN');
     } else {
@@ -1080,6 +1103,11 @@ function render() {
     /* Selected highlight */
     if (selectedTerritory === td.id || attackSource === td.id || fortifySource === td.id) {
       div.classList.add('selected');
+    }
+
+    /* Bonus-active halo: this territory is part of a fully-held group */
+    if (groupBonusOwner[td.group] === ts.owner) {
+      div.classList.add('bonus-active');
     }
 
     /* Trap count */
@@ -1416,9 +1444,9 @@ function handleFortify(id) {
     src.traps -= toMove;
     ts.traps += toMove;
 
-    setMessage("Moved " + toMove + " trap" + (toMove > 1 ? "s" : "") + " to " + getTerritoryData(id).name + ".");
+    setMessage("Moved " + toMove + " trap" + (toMove > 1 ? "s" : "") + " to " + getTerritoryData(id).name + ". Fortify again or click End Fortify.");
     fortifySource = null;
-    nextTurn();
+    render();
   }
 }
 
