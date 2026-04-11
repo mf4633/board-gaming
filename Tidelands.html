@@ -746,7 +746,7 @@
     <b>Camp</b> (2 Timber + 1 Olives) &mdash; <b>1 VP</b><br>
     Beachhead for harvesting. Must be built on a non-flooded hex adjacent to one of your existing camps, temples, or triremes (your starting camp seeds your first build). When the hex floods, the camp is dormant; it returns automatically when the hex re-emerges.<br><br>
 
-    <b>Temple</b> (1 Stone + 2 Wine) &mdash; <b>1 VP</b><br>
+    <b>Temple</b> (1 Stone + 2 Wine) &mdash; <b>2 VP</b><br>
     A divine refuge. Built on a non-highland hex (elevation 1&ndash;4) that you own or that is adjacent to one of your structures. Temples <b>permanently protect</b> their hex from Poseidon's wrath &mdash; flooding skips it forever. Temples also count as connection points for trade with Hermes.<br><br>
 
     <b>Trireme</b> (1 Timber + 1 Bronze) &mdash; <b>2 VP</b><br>
@@ -789,8 +789,8 @@
     <h4>Victory</h4>
     First player to <b>15 VP</b> reaches Ithaca and wins. VP sources:
     <ul>
-      <li>Camps &amp; Temples: 1 VP each</li>
-      <li>Triremes: 2 VP each</li>
+      <li>Camps: 1 VP each</li>
+      <li>Temples &amp; Triremes: 2 VP each</li>
       <li>Coins: 1 VP per 5 coins</li>
       <li>Largest connected network: 3 VP bonus</li>
     </ul>
@@ -950,6 +950,8 @@
     var turnNumber = 0;
     var currentPlayer = 0;
     var activePlayer = 0; // the player whose "full turn" it is this round
+    var roundStartPlayer = 0; // who starts the current round; rotates each round
+    var winTriggered = false; // set when any player hits WIN_VP; resolved at end of round
     var phase = 'preturn'; // preturn, active, special, gameover
     var actionsLeft = 0;
     var selectedAction = null;
@@ -1323,9 +1325,16 @@
         used[chosen[i]] = true;
       }
 
-      // Place camps
+      // Place camps — shuffle player-to-slot mapping so P0 doesn't always get chosen[0]
+      var slotOrder = [];
+      for (var i = 0; i < numPlayers; i++) slotOrder.push(i);
+      for (var i = slotOrder.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = slotOrder[i]; slotOrder[i] = slotOrder[j]; slotOrder[j] = tmp;
+      }
       for (var i = 0; i < numPlayers; i++) {
-        var hi = chosen[i] !== undefined ? chosen[i] : (i < highlands.length ? highlands[i].idx : i);
+        var slot = slotOrder[i];
+        var hi = chosen[slot] !== undefined ? chosen[slot] : (slot < highlands.length ? highlands[slot].idx : slot);
         hexes[hi].structure = { type: 'camp', owner: i };
         players[i].structures.push({ type: 'camp', hex: hi });
       }
@@ -1644,8 +1653,9 @@
       var vp = 0;
       for (var i = 0; i < players[playerIdx].structures.length; i++) {
         var s = players[playerIdx].structures[i];
-        if (s.type === 'camp' || s.type === 'temple') vp += 1;
-        if (s.type === 'trireme') vp += 2;
+        if (s.type === 'camp') vp += 1;
+        else if (s.type === 'temple') vp += 2;
+        else if (s.type === 'trireme') vp += 2;
       }
       vp += Math.floor(players[playerIdx].coins / 5);
       return vp;
@@ -1653,15 +1663,18 @@
 
     function calcNetworkBonus(playerIdx) {
       var best = -1;
-      var bestPlayer = -1;
+      var tied = [];
       for (var p = 0; p < numPlayers; p++) {
         var net = largestNetwork(p);
         if (net > best) {
           best = net;
-          bestPlayer = p;
+          tied = [p];
+        } else if (net === best) {
+          tied.push(p);
         }
       }
-      if (bestPlayer === playerIdx && best >= 2) return 3;
+      // Ties share no bonus — must have clear lead AND at least 2 structures
+      if (tied.length === 1 && tied[0] === playerIdx && best >= 2) return 3;
       return 0;
     }
 
@@ -2129,9 +2142,10 @@
       // Drift market
       driftHermes();
 
-      // Harvest for ALL players
+      // Harvest for ALL players, in round-starter rotation so first-pick rotates fairly
       var harvestMsgs = [];
-      for (var p = 0; p < numPlayers; p++) {
+      for (var pi = 0; pi < numPlayers; pi++) {
+        var p = (roundStartPlayer + pi) % numPlayers;
         var h = harvestForPlayer(p);
         var hMsg = formatHarvest(h, p);
         if (hMsg) harvestMsgs.push(hMsg);
@@ -2731,9 +2745,12 @@
       // Advance active player to the next player
       var nextActive = (activePlayer + 1) % numPlayers;
 
-      if (nextActive === 0) {
-        // All players have been active this turn - back to preturn
-        activePlayer = 0;
+      if (nextActive === roundStartPlayer) {
+        // All players have acted this round - resolve any triggered win, then rotate
+        resolveEndOfRoundWin();
+        if (gameOver) return;
+        roundStartPlayer = (roundStartPlayer + 1) % numPlayers;
+        activePlayer = roundStartPlayer;
         phase = 'preturn';
         specialBuildPlayer = -1;
         if (allPlayersAI()) {
@@ -2764,22 +2781,44 @@
     }
 
     function checkWin() {
+      // Mark that the win threshold has been reached, but don't end the game yet.
+      // Final check happens at end of the round (finishRound → resolveEndOfRoundWin).
       for (var p = 0; p < numPlayers; p++) {
         if (totalVP(p) >= WIN_VP) {
-          gameOver = true;
-          phase = 'gameover';
-          var title = playerName(p) + ' Wins!';
-          var parts = [];
-          for (var q = 0; q < numPlayers; q++) {
-            parts.push(PLAYER_LABELS[q] + ' ' + totalVP(q) + ' VP');
-          }
-          var text = 'Final: ' + parts.join(', ') + ' after ' + turnNumber + ' turns.';
-          document.getElementById('overlay-title').textContent = title;
-          document.getElementById('overlay-text').textContent = text;
-          document.getElementById('overlay').classList.add('show');
+          winTriggered = true;
           return;
         }
       }
+    }
+
+    function resolveEndOfRoundWin() {
+      if (!winTriggered) return;
+      // Highest total VP wins; ties broken by coins, then camps, then player index
+      var best = -1;
+      var bestIdx = -1;
+      for (var p = 0; p < numPlayers; p++) {
+        var vp = totalVP(p);
+        if (vp < WIN_VP) continue;
+        if (vp > best) { best = vp; bestIdx = p; }
+        else if (vp === best) {
+          if (players[p].coins > players[bestIdx].coins) bestIdx = p;
+        }
+      }
+      if (bestIdx < 0) { winTriggered = false; return; }
+      gameOver = true;
+      phase = 'gameover';
+      var title = playerName(bestIdx) + ' Wins!';
+      var parts = [];
+      for (var q = 0; q < numPlayers; q++) {
+        parts.push(PLAYER_LABELS[q] + ' ' + totalVP(q) + ' VP');
+      }
+      var text = 'Final: ' + parts.join(', ') + ' after ' + turnNumber + ' turns.';
+      var titleEl = document.getElementById('overlay-title');
+      var textEl = document.getElementById('overlay-text');
+      var ovEl = document.getElementById('overlay');
+      if (titleEl) titleEl.textContent = title;
+      if (textEl) textEl.textContent = text;
+      if (ovEl) ovEl.classList.add('show');
     }
 
     /* ===== AI ===== */
@@ -2829,29 +2868,7 @@
         }
       }
 
-      // Priority 1: Trade if connected to market and have valuable resources
-      if (!didAction && isConnectedToHermes(p)) {
-        var valuableRes = ['Ambrosia', 'Bronze', 'Wine', 'Olives', 'Timber'];
-        var traded = false;
-        for (var v = 0; v < valuableRes.length; v++) {
-          var rk = valuableRes[v];
-          if ((players[p].resources[rk] || 0) > 0) {
-            var keep = rk === 'Timber' ? 2 : (rk === 'Olives' ? 1 : 0);
-            if (players[p].resources[rk] > keep) {
-              players[p].resources[rk]--;
-              players[p].coins += PRICES[rk];
-              traded = true;
-            }
-          }
-        }
-        if (traded) {
-          actionsLeft--;
-          didAction = true;
-          setMessage(playerName(p) + ' traded at Hermes\' Ship.');
-        }
-      }
-
-      // Priority 2: Build camp on high elevation hex
+      // Priority 1: Build camp on high elevation hex
       if (!didAction && canBuild(p, 'camp')) {
         var valid = validCampHexes(p);
         if (valid.length > 0) {
@@ -2873,7 +2890,7 @@
         }
       }
 
-      // Priority 3: Build temple on productive low-elevation hex near camp
+      // Priority 2: Build temple on productive low-elevation hex near camp
       if (!didAction && canBuild(p, 'temple')) {
         var valid = validTempleHexes(p);
         if (valid.length > 0) {
@@ -2892,7 +2909,7 @@
         }
       }
 
-      // Priority 4: Build trireme toward market
+      // Priority 3: Build trireme toward market
       if (!didAction && canBuild(p, 'trireme')) {
         var starts = validTriremeStartHexes(p);
         var bestStart = -1, bestEnd = -1, bestDist = 9999;
@@ -2915,6 +2932,29 @@
           didAction = true;
           setMessage(playerName(p) + ' built a Trireme.');
           checkWin();
+        }
+      }
+
+      // Priority 4: Trade at Hermes only surplus resources (keep build reserves)
+      if (!didAction && isConnectedToHermes(p)) {
+        // Reserves: enough for one of each build type.
+        var keepMap = { Timber: 2, Olives: 1, Wine: 2, Bronze: 1, Ambrosia: 1 };
+        var sellOrder = ['Ambrosia', 'Bronze', 'Wine', 'Olives', 'Timber'];
+        var traded = false;
+        for (var v = 0; v < sellOrder.length; v++) {
+          var rk = sellOrder[v];
+          var have = players[p].resources[rk] || 0;
+          var keep = keepMap[rk] || 0;
+          if (have > keep) {
+            players[p].resources[rk]--;
+            players[p].coins += PRICES[rk];
+            traded = true;
+          }
+        }
+        if (traded) {
+          actionsLeft--;
+          didAction = true;
+          setMessage(playerName(p) + ' traded surplus at Hermes\' Ship.');
         }
       }
 
@@ -3131,13 +3171,15 @@
       if (preturnTimer) { clearTimeout(preturnTimer); preturnTimer = null; }
       gameOver = false;
       gameStarted = false;
+      winTriggered = false;
       tideHeldThisRound = false;
       phase = 'preturn';
       tideLevel = 1;
       tideDirection = 1;
       turnNumber = 0;
       currentPlayer = 0;
-      activePlayer = 0;
+      roundStartPlayer = Math.floor(Math.random() * numPlayers);
+      activePlayer = roundStartPlayer;
       actionsLeft = 0;
       selectedAction = null;
       triremeFirstHex = null;
