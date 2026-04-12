@@ -40,6 +40,10 @@ h1 { font-size: 1.8em; color: #D04030; margin-bottom: 2px; text-shadow: 1px 1px 
 .mode-btn:not(:last-child) { border-right: 1px solid #8A2020; }
 .mode-btn.active { background: #8A2020; color: #E0C8B8; cursor: default; }
 .mode-btn:hover:not(.active) { background: #3A1818; color: #D04030; }
+.pt-box { display: flex; align-items: center; gap: 2px; border: 1px solid #5A2020; border-radius: 4px; padding: 2px 4px; font-size: 0.7em; }
+.pt-box .pt-label { font-weight: bold; margin-right: 2px; }
+.pt-box button { font-family: Georgia, serif; font-size: 0.9em; padding: 1px 6px; border: 1px solid #5A2020; background: #1A0A0A; color: #8A6050; cursor: pointer; border-radius: 3px; }
+.pt-box button.active { background: #8A2020; color: #E0C8B8; }
 
 .game-area { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
 
@@ -162,11 +166,14 @@ svg .port-label { font-family: Georgia, serif; font-size: 8px; fill: #C8A888; te
 <div class="subtitle">Colonize the Red Frontier</div>
 
 <div class="top-bar">
-  <div class="mode-selector">
-    <button class="mode-btn active" onclick="setPlayers(2)">2P</button>
-    <button class="mode-btn" onclick="setPlayers(3)">3P</button>
-    <button class="mode-btn" onclick="setPlayers(4)">4P</button>
+  <div class="mode-selector" id="countSelector">
+    <button class="mode-btn active" onclick="setPlayerCount(2)">2</button>
+    <button class="mode-btn" onclick="setPlayerCount(3)">3</button>
+    <button class="mode-btn" onclick="setPlayerCount(4)">4</button>
+    <button class="mode-btn" onclick="setPlayerCount(5)">5</button>
+    <button class="mode-btn" onclick="setPlayerCount(6)">6</button>
   </div>
+  <div id="playerTypeSelector" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
 </div>
 
 <div id="message">Loading...</div>
@@ -261,8 +268,8 @@ var RES_NAMES = ['Iron', 'Silicon', 'Biomass', 'Water', 'Solar'];
 var RES_ICONS = { Iron: '\u{1F9F1}', Silicon: '\u{1F52E}', Biomass: '\u{1F33F}', Water: '\u{1F4A7}', Solar: '\u2600' };
 var TERRAIN_COLORS = { Iron: '#A04028', Silicon: '#7040A0', Biomass: '#2A7A30', Water: '#2868A0', Solar: '#C0A020', Crater: '#484040' };
 var TERRAIN_RES = { Iron: 'Iron', Silicon: 'Silicon', Biomass: 'Biomass', Water: 'Water', Solar: 'Solar', Crater: null };
-var PLAYER_COLORS = ['#E04040', '#4080E0', '#40C040', '#E0A020'];
-var PLAYER_NAMES = ['Red', 'Blue', 'Green', 'Gold'];
+var PLAYER_COLORS = ['#E04040', '#4080E0', '#40C040', '#E0A020', '#C060C0', '#E08040'];
+var PLAYER_NAMES = ['Red', 'Blue', 'Green', 'Gold', 'Purple', 'Orange'];
 var TERRAIN_COUNTS = ['Iron','Iron','Iron','Silicon','Silicon','Silicon','Biomass','Biomass','Biomass','Biomass','Water','Water','Water','Water','Solar','Solar','Solar','Solar','Crater'];
 var NUMBER_TOKENS = [2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12];
 var DEV_DECK_INIT = [];
@@ -293,6 +300,7 @@ var PORT_DEFS = [
 
 /* ===== STATE ===== */
 var numPlayers = 2;
+var playerTypes = ['human', 'ai']; // per-player human/ai
 var hexes = [];       // [{q, r, terrain, number, hasDust}]
 var vertices = [];    // [{x, y, building: null|{player, type:'habitat'|'dome'}, adjHexes:[], adjVertices:[], adjEdges:[], port:null}]
 var edges = [];       // [{v1, v2, x1, y1, x2, y2, pipeline: null|{player}, adjVertices:[]}]
@@ -760,8 +768,9 @@ function renderPanel() {
   }
   html += '</div>';
 
-  // Show current player info (or human in AI games)
-  var show = isHuman(currentPlayer) ? currentPlayer : 0;
+  // Show current player info (prefer first human, or current if all AI)
+  var show = currentPlayer;
+  for (var pp = 0; pp < numPlayers; pp++) { if (isHuman(pp)) { show = pp; break; } }
   var pl = players[show];
 
   html += '<div class="vp-display">' + PLAYER_NAMES[show] + ': ' + calcVP(show) + ' VP</div>';
@@ -820,10 +829,18 @@ function renderActions() {
 }
 
 /* ===== HUMAN CHECK ===== */
-function isHuman(p) { return p === 0; }
+function isHuman(p) { return playerTypes[p] === 'human'; }
+function allPlayersAI() { for (var i = 0; i < numPlayers; i++) if (playerTypes[i] === 'human') return false; return true; }
+function aiDelay(slow) { return allPlayersAI() ? 0 : (slow || 600); }
 
 /* ===== GAME FLOW ===== */
+var _aiTimerId = null;
+function scheduleAI(fn, delay) {
+  if (_aiTimerId) clearTimeout(_aiTimerId);
+  _aiTimerId = setTimeout(fn, delay);
+}
 function newGame() {
+  if (_aiTimerId) { clearTimeout(_aiTimerId); _aiTimerId = null; }
   gameOver = false;
   longestRoadPlayer = -1;
   largestFleetPlayer = -1;
@@ -853,7 +870,7 @@ function newGame() {
   pendingAction = 'habitat';
   render();
 
-  if (!isHuman(currentPlayer)) setTimeout(aiSetup, 600);
+  if (!isHuman(currentPlayer)) scheduleAI(aiSetup, aiDelay());
 }
 
 var setupLastVertex = -1;
@@ -892,7 +909,7 @@ function placeHabitat(vi) {
     pendingAction = 'pipeline';
     setMessage(PLAYER_NAMES[currentPlayer] + ': place a pipeline.');
     render();
-    if (!isHuman(currentPlayer)) setTimeout(aiSetup, 400);
+    if (!isHuman(currentPlayer)) scheduleAI(aiSetup, aiDelay(400));
   } else {
     pendingAction = null;
     updateLongestRoad();
@@ -935,6 +952,7 @@ function advanceSetup() {
     pendingAction = null;
     setMessage(PLAYER_NAMES[currentPlayer] + ': roll the dice.');
     render();
+    if (!isHuman(currentPlayer)) scheduleAI(aiTurn, aiDelay());
     return;
   }
   currentPlayer = setupOrder[setupRound];
@@ -944,7 +962,7 @@ function advanceSetup() {
   pendingAction = 'habitat';
   setMessage(PLAYER_NAMES[currentPlayer] + ': place a habitat.');
   render();
-  if (!isHuman(currentPlayer)) setTimeout(aiSetup, 600);
+  if (!isHuman(currentPlayer)) scheduleAI(aiSetup, aiDelay());
 }
 
 /* ===== DICE ===== */
@@ -968,6 +986,7 @@ function rollDice() {
     devCardPlayedThisTurn = false;
     setMessage(PLAYER_NAMES[currentPlayer] + ': build, trade, or end turn.');
     render();
+    if (!isHuman(currentPlayer)) scheduleAI(aiMainPhase, aiDelay());
   }
 }
 
@@ -1127,7 +1146,7 @@ function enterMainPhase() {
   devCardPlayedThisTurn = false;
   setMessage(PLAYER_NAMES[currentPlayer] + ': build, trade, or end turn.');
   render();
-  if (!isHuman(currentPlayer)) setTimeout(aiMainPhase, 600);
+  if (!isHuman(currentPlayer)) scheduleAI(aiMainPhase, aiDelay());
 }
 
 /* ===== BUILDING ===== */
@@ -1275,7 +1294,7 @@ function endTurn() {
   document.getElementById('diceArea').innerHTML = '';
   setMessage(PLAYER_NAMES[currentPlayer] + ': roll the dice.');
   render();
-  if (!isHuman(currentPlayer)) setTimeout(aiTurn, 600);
+  if (!isHuman(currentPlayer)) scheduleAI(aiTurn, aiDelay());
 }
 
 /* ===== WIN CHECK ===== */
@@ -1341,7 +1360,7 @@ function aiMainPhase() {
     var verts = validDomeVertices(cp);
     placeDome(verts[0]);
     if (gameOver) return;
-    setTimeout(aiMainPhase, 300);
+    scheduleAI(aiMainPhase, aiDelay(300));
     return;
   }
 
@@ -1363,7 +1382,7 @@ function aiMainPhase() {
       players[cp].resources.Biomass += COST_HABITAT.Biomass; players[cp].resources.Water += COST_HABITAT.Water;
       placeHabitat(best);
       if (gameOver) return;
-      setTimeout(aiMainPhase, 300);
+      scheduleAI(aiMainPhase, aiDelay(300));
       return;
     }
   }
@@ -1376,7 +1395,7 @@ function aiMainPhase() {
       players[cp].resources.Iron += COST_PIPELINE.Iron; players[cp].resources.Solar += COST_PIPELINE.Solar;
       placePipeline(edgeList[Math.floor(Math.random() * edgeList.length)]);
       if (gameOver) return;
-      setTimeout(aiMainPhase, 300);
+      scheduleAI(aiMainPhase, aiDelay(300));
       return;
     }
   }
@@ -1496,14 +1515,45 @@ placePipeline = function(ei) {
 
 /* ===== HELPERS ===== */
 function setMessage(msg) { document.getElementById('message').textContent = msg; }
-function setPlayers(n) {
+function setPlayerCount(n) {
   numPlayers = n;
-  var btns = document.querySelectorAll('.mode-btn');
+  var btns = document.querySelectorAll('#countSelector .mode-btn');
   for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
   btns[n - 2].classList.add('active');
+  while (playerTypes.length < n) playerTypes.push('ai');
+  playerTypes = playerTypes.slice(0, n);
+  renderPlayerTypes();
   newGame();
 }
 
+function setPlayerType(idx, type) {
+  playerTypes[idx] = type;
+  renderPlayerTypes();
+  newGame();
+}
+
+function renderPlayerTypes() {
+  var sel = document.getElementById('playerTypeSelector');
+  sel.innerHTML = '';
+  for (var i = 0; i < numPlayers; i++) {
+    var box = document.createElement('div');
+    box.className = 'pt-box';
+    box.innerHTML = '<span class="pt-label" style="color:' + PLAYER_COLORS[i] + '">' + PLAYER_NAMES[i] + '</span>';
+    var hBtn = document.createElement('button');
+    hBtn.textContent = 'H';
+    hBtn.className = playerTypes[i] === 'human' ? 'active' : '';
+    hBtn.onclick = (function(idx) { return function() { setPlayerType(idx, 'human'); }; })(i);
+    var aBtn = document.createElement('button');
+    aBtn.textContent = 'AI';
+    aBtn.className = playerTypes[i] === 'ai' ? 'active' : '';
+    aBtn.onclick = (function(idx) { return function() { setPlayerType(idx, 'ai'); }; })(i);
+    box.appendChild(hBtn);
+    box.appendChild(aBtn);
+    sel.appendChild(box);
+  }
+}
+
+renderPlayerTypes();
 newGame();
 </script>
 </body>
