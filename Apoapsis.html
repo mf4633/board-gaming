@@ -764,7 +764,7 @@ function renderFlight() {
   var rx = W / 2, ry = H / 2;
   ctx.save();
   ctx.translate(rx, ry);
-  ctx.rotate(-sim.angle);
+  ctx.rotate(sim.angle);
   var partScale = Math.min(zoom * 40, 2);
   if (partScale < 0.3) partScale = 0.3;
   var totalH = 0;
