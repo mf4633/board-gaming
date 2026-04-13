@@ -212,6 +212,8 @@ var timeWarp = 1;
 var lastTime = 0;
 var accumulator = 0;
 var PHYSICS_DT = 0.02;
+var exhaust = []; // particle pool
+var MAX_PARTICLES = 150;
 
 /* ===== PHYSICS ===== */
 function gravity(alt) {
@@ -685,6 +687,33 @@ function showResult(win, title) {
 }
 
 /* ===== FLIGHT RENDERER ===== */
+function spawnExhaust(rx, ry, angle, throttle) {
+  if (exhaust.length >= MAX_PARTICLES) return;
+  var spread = 0.15;
+  var spd = 80 + Math.random() * 120 * throttle;
+  var eAngle = angle + Math.PI + (Math.random() - 0.5) * spread;
+  exhaust.push({
+    x: rx + (Math.random() - 0.5) * 4,
+    y: ry + (Math.random() - 0.5) * 4,
+    vx: Math.sin(eAngle) * spd + sim.vx * 0.01,
+    vy: -Math.cos(eAngle) * spd + sim.vy * 0.01,
+    life: 0, maxLife: 0.5 + Math.random() * 0.8,
+    size: 2 + Math.random() * 3 * throttle,
+    bright: 0.5 + Math.random() * 0.5
+  });
+}
+
+function updateExhaust(dt) {
+  for (var i = exhaust.length - 1; i >= 0; i--) {
+    var p = exhaust[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.life += dt;
+    p.size *= 0.995;
+    if (p.life >= p.maxLife) exhaust.splice(i, 1);
+  }
+}
+
 function renderFlight() {
   var c = document.getElementById('flightCanvas');
   var ctx = c.getContext('2d');
@@ -692,21 +721,36 @@ function renderFlight() {
 
   var alt = Math.max(0, sim.y);
   var atmFrac = Math.min(alt / 120000, 1);
+  var gForce = sim.accel / ENV.g0;
+  var spd = Math.sqrt(sim.vx * sim.vx + sim.vy * sim.vy);
 
-  // Sky
+  // Screen shake based on g-force and thrust
+  var shakeIntensity = sim.thrustN > 0 ? Math.min(gForce * 1.2, 12) : 0;
+  var shakeX = (Math.random() - 0.5) * shakeIntensity;
+  var shakeY = (Math.random() - 0.5) * shakeIntensity;
+
+  ctx.save();
+  ctx.translate(shakeX, shakeY);
+
+  // Sky gradient — deeper colors
   var grad = ctx.createLinearGradient(0, 0, 0, H);
-  var r = Math.round(10 * (1 - atmFrac)), g = Math.round(20 + 60 * (1 - atmFrac) * (1 - atmFrac)), b = Math.round(40 + 160 * (1 - atmFrac));
-  grad.addColorStop(0, 'rgb(' + r + ',' + Math.round(g * 0.3) + ',' + Math.round(b * 0.5) + ')');
-  grad.addColorStop(1, 'rgb(' + Math.round(r * 2) + ',' + g + ',' + b + ')');
+  var sr = Math.round(6 * (1 - atmFrac));
+  var sg = Math.round(15 + 50 * (1 - atmFrac) * (1 - atmFrac));
+  var sb = Math.round(30 + 170 * (1 - atmFrac));
+  grad.addColorStop(0, 'rgb(' + sr + ',' + Math.round(sg * 0.2) + ',' + Math.round(sb * 0.3) + ')');
+  grad.addColorStop(1, 'rgb(' + Math.round(sr * 2) + ',' + sg + ',' + sb + ')');
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(-10, -10, W + 20, H + 20);
 
-  // Stars
-  if (atmFrac > 0.2) {
-    ctx.fillStyle = 'rgba(255,255,255,' + ((atmFrac - 0.2) / 0.8 * 0.8) + ')';
-    for (var i = 0; i < 120; i++) {
-      var sx = (i * 173 + 37) % W, sy = (i * 251 + 89) % (H * 0.7);
-      ctx.fillRect(sx, sy, 1.5, 1.5);
+  // Stars with twinkle
+  if (atmFrac > 0.15) {
+    var starAlpha = (atmFrac - 0.15) / 0.85;
+    for (var i = 0; i < 200; i++) {
+      var sx = (i * 173 + 37) % W, sy = (i * 251 + 89) % (H * 0.75);
+      var twinkle = 0.5 + 0.5 * Math.sin(sim.t * 2 + i * 0.7);
+      var sz = (i % 3 === 0) ? 2 : 1;
+      ctx.fillStyle = 'rgba(255,255,255,' + (starAlpha * twinkle * 0.9) + ')';
+      ctx.fillRect(sx, sy, sz, sz);
     }
   }
 
@@ -717,47 +761,86 @@ function renderFlight() {
   // Ground
   var groundY = H / 2 + (sim.y) * zoom;
   if (groundY < H + 100) {
-    ctx.fillStyle = '#2A3828';
+    var gg = ctx.createLinearGradient(0, groundY, 0, groundY + 200);
+    gg.addColorStop(0, '#3A5038');
+    gg.addColorStop(0.3, '#2A3828');
+    gg.addColorStop(1, '#1A2818');
+    ctx.fillStyle = gg;
     ctx.fillRect(0, groundY, W, H - groundY + 200);
-    ctx.fillStyle = '#1A2818';
-    ctx.fillRect(0, groundY, W, 2);
-    // Launchpad
-    if (zoom > 0.1) {
+    ctx.fillStyle = '#4A6048';
+    ctx.fillRect(0, groundY, W, 1);
+    if (zoom > 0.05) {
       ctx.fillStyle = '#4A4A4A';
-      ctx.fillRect(W / 2 - 15 * zoom, groundY - 2, 30 * zoom, 4);
+      ctx.fillRect(W / 2 - 15 * zoom, groundY - 3, 30 * zoom, 5);
+      ctx.fillStyle = '#666';
+      ctx.fillRect(W / 2 - 2, groundY - 40 * Math.min(zoom, 1), 4, 40 * Math.min(zoom, 1));
     }
   }
 
   // Atmosphere band from space
-  if (atmFrac > 0.5 && groundY > -100 && groundY < H + 500) {
-    var ag = ctx.createLinearGradient(0, groundY - 60 * zoom, 0, groundY);
-    ag.addColorStop(0, 'rgba(80,140,255,0)');
-    ag.addColorStop(0.5, 'rgba(80,140,255,0.15)');
-    ag.addColorStop(1, 'rgba(80,140,255,0)');
+  if (atmFrac > 0.4 && groundY > -200 && groundY < H + 500) {
+    var bandH = Math.max(20, 80 * zoom);
+    var ag = ctx.createLinearGradient(0, groundY - bandH, 0, groundY + 5);
+    ag.addColorStop(0, 'rgba(60,120,255,0)');
+    ag.addColorStop(0.4, 'rgba(80,160,255,0.2)');
+    ag.addColorStop(0.8, 'rgba(120,180,255,0.1)');
+    ag.addColorStop(1, 'rgba(60,120,255,0)');
     ctx.fillStyle = ag;
-    ctx.fillRect(0, groundY - 60 * zoom, W, 60 * zoom);
+    ctx.fillRect(0, groundY - bandH, W, bandH + 10);
+  }
+
+  // Speed lines when fast
+  if (spd > 500 && sim.thrustN > 0) {
+    var lineAlpha = Math.min((spd - 500) / 5000, 0.5);
+    ctx.strokeStyle = 'rgba(180,200,255,' + lineAlpha + ')';
+    ctx.lineWidth = 1;
+    for (var i = 0; i < 20; i++) {
+      var lx = (i * 97 + Math.floor(sim.t * 50)) % W;
+      var ly = (i * 143 + Math.floor(sim.t * 80)) % H;
+      var len = 10 + spd * 0.008;
+      ctx.beginPath();
+      ctx.moveTo(lx, ly);
+      ctx.lineTo(lx - sim.vx * 0.003, ly + sim.vy * 0.003 + len);
+      ctx.stroke();
+    }
   }
 
   // Trail
   if (sim.trail.length > 1) {
-    ctx.strokeStyle = 'rgba(255,200,100,0.3)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (var i = 0; i < sim.trail.length; i++) {
-      var tx = W / 2 + (sim.trail[i].x - sim.x) * zoom;
-      var ty = H / 2 - (sim.trail[i].y - sim.y) * zoom;
-      if (i === 0) ctx.moveTo(tx, ty); else ctx.lineTo(tx, ty);
+    ctx.lineWidth = 1.5;
+    for (var i = 1; i < sim.trail.length; i++) {
+      var age = (sim.trail.length - i) / sim.trail.length;
+      ctx.strokeStyle = 'rgba(255,180,80,' + (0.4 * age) + ')';
+      var tx1 = W / 2 + (sim.trail[i - 1].x - sim.x) * zoom;
+      var ty1 = H / 2 - (sim.trail[i - 1].y - sim.y) * zoom;
+      var tx2 = W / 2 + (sim.trail[i].x - sim.x) * zoom;
+      var ty2 = H / 2 - (sim.trail[i].y - sim.y) * zoom;
+      ctx.beginPath(); ctx.moveTo(tx1, ty1); ctx.lineTo(tx2, ty2); ctx.stroke();
     }
-    ctx.stroke();
   }
 
-  // Jettisoned
+  // Exhaust particles (world space relative to rocket screen pos)
+  for (var i = 0; i < exhaust.length; i++) {
+    var p = exhaust[i];
+    var frac = 1 - p.life / p.maxLife;
+    var pr = Math.round(255 * frac);
+    var pg = Math.round(160 * frac * frac);
+    var pb = Math.round(40 * frac * frac * frac);
+    ctx.fillStyle = 'rgba(' + pr + ',' + pg + ',' + pb + ',' + (frac * p.bright * 0.8) + ')';
+    ctx.beginPath();
+    ctx.arc(W / 2 + p.x, H / 2 + p.y, p.size * frac, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Jettisoned stages
   for (var j = 0; j < sim.jettisoned.length; j++) {
     var jx = W / 2 + (sim.jettisoned[j].x - sim.x) * zoom;
     var jy = H / 2 - (sim.jettisoned[j].y - sim.y) * zoom;
-    var alpha = Math.max(0, 1 - sim.jettisoned[j].t / 15);
-    ctx.fillStyle = 'rgba(128,128,128,' + alpha + ')';
-    ctx.fillRect(jx - 3, jy - 5, 6, 10);
+    var alpha = Math.max(0, 1 - sim.jettisoned[j].t / 12);
+    ctx.fillStyle = 'rgba(120,130,140,' + alpha + ')';
+    ctx.fillRect(jx - 4, jy - 8, 8, 16);
+    ctx.fillStyle = 'rgba(80,90,100,' + alpha * 0.5 + ')';
+    ctx.fillRect(jx - 3, jy - 6, 6, 12);
   }
 
   // Rocket at center
@@ -767,9 +850,10 @@ function renderFlight() {
   ctx.rotate(sim.angle);
   var partScale = Math.min(zoom * 40, 2);
   if (partScale < 0.3) partScale = 0.3;
-  var totalH = 0;
-  for (var i = 0; i < sim.parts.length; i++) totalH += PARTS[sim.parts[i].key].h;
-  var drawY = totalH * partScale / 2;
+  var rocketTotalH = 0;
+  for (var i = 0; i < sim.parts.length; i++) rocketTotalH += PARTS[sim.parts[i].key].h;
+  var drawY = rocketTotalH * partScale / 2;
+
   for (var i = sim.parts.length - 1; i >= 0; i--) {
     var def = PARTS[sim.parts[i].key];
     var ph = def.h * partScale, pw = def.w * partScale;
@@ -782,34 +866,108 @@ function renderFlight() {
       ctx.lineTo(-pw / 2, drawY + ph);
       ctx.closePath();
       ctx.fill();
+      ctx.fillStyle = 'rgba(100,180,255,0.3)';
+      ctx.beginPath();
+      ctx.arc(0, drawY + ph * 0.5, pw * 0.2, 0, Math.PI * 2);
+      ctx.fill();
     } else {
       ctx.fillRect(-pw / 2, drawY, pw, ph);
+      if (def.type === 'decoupler') {
+        ctx.fillStyle = '#FF6030';
+        ctx.fillRect(-pw / 2, drawY, pw, ph);
+      }
     }
     if (def.type === 'tank' && sim.parts[i].fuel !== undefined && def.fuel > 0) {
       var frac = sim.parts[i].fuel / def.fuel;
-      ctx.fillStyle = 'rgba(64,208,128,0.35)';
+      ctx.fillStyle = 'rgba(64,208,128,0.3)';
       ctx.fillRect(-pw / 2 + 1, drawY + ph * (1 - frac), pw - 2, ph * frac);
+      ctx.strokeStyle = 'rgba(64,208,128,0.15)';
+      ctx.strokeRect(-pw / 2, drawY, pw, ph);
+    }
+    if (def.type === 'engine' || def.type === 'srb') {
+      ctx.fillStyle = '#484850';
+      ctx.beginPath();
+      ctx.moveTo(-pw * 0.4, drawY + ph);
+      ctx.lineTo(pw * 0.4, drawY + ph);
+      ctx.lineTo(pw * 0.3, drawY + ph - ph * 0.3);
+      ctx.lineTo(-pw * 0.3, drawY + ph - ph * 0.3);
+      ctx.closePath();
+      ctx.fill();
     }
   }
 
-  // Flame
+  // Enhanced multi-layer flame
   if (sim.thrustN > 0) {
-    var flameH = 15 + 25 * sim.throttle + Math.random() * 10;
-    var flameW = 8 + 6 * sim.throttle;
-    var fy = totalH * partScale / 2;
-    var fg = ctx.createLinearGradient(0, fy, 0, fy + flameH * partScale);
-    fg.addColorStop(0, 'rgba(255,255,200,0.9)');
-    fg.addColorStop(0.3, 'rgba(255,160,40,0.8)');
-    fg.addColorStop(1, 'rgba(255,60,20,0)');
-    ctx.fillStyle = fg;
-    ctx.beginPath();
-    ctx.moveTo(-flameW * partScale / 2, fy);
-    ctx.lineTo(flameW * partScale / 2, fy);
-    ctx.lineTo((Math.random() - 0.5) * 4 * partScale, fy + flameH * partScale);
-    ctx.closePath();
-    ctx.fill();
+    var fy = rocketTotalH * partScale / 2;
+    var intensity = sim.throttle;
+    // Outer flame (red/orange)
+    for (var layer = 0; layer < 3; layer++) {
+      var lScale = 1 - layer * 0.25;
+      var flameH = (20 + 40 * intensity + Math.random() * 15) * lScale;
+      var flameW = (10 + 8 * intensity) * lScale;
+      var fg = ctx.createLinearGradient(0, fy, 0, fy + flameH * partScale);
+      if (layer === 0) {
+        fg.addColorStop(0, 'rgba(255,200,100,0.6)');
+        fg.addColorStop(0.4, 'rgba(255,100,20,0.5)');
+        fg.addColorStop(1, 'rgba(200,30,10,0)');
+      } else if (layer === 1) {
+        fg.addColorStop(0, 'rgba(255,240,200,0.8)');
+        fg.addColorStop(0.3, 'rgba(255,180,60,0.7)');
+        fg.addColorStop(1, 'rgba(255,80,20,0)');
+      } else {
+        fg.addColorStop(0, 'rgba(255,255,255,0.9)');
+        fg.addColorStop(0.2, 'rgba(255,255,200,0.8)');
+        fg.addColorStop(1, 'rgba(255,200,100,0)');
+      }
+      ctx.fillStyle = fg;
+      ctx.beginPath();
+      ctx.moveTo(-flameW * partScale / 2, fy);
+      ctx.lineTo(flameW * partScale / 2, fy);
+      ctx.lineTo((Math.random() - 0.5) * 3 * partScale * lScale, fy + flameH * partScale);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // Flame glow
+    var glowR = 30 + 20 * intensity;
+    var glowG = ctx.createRadialGradient(0, fy, 0, 0, fy, glowR * partScale);
+    glowG.addColorStop(0, 'rgba(255,200,100,' + (0.15 * intensity) + ')');
+    glowG.addColorStop(1, 'rgba(255,100,20,0)');
+    ctx.fillStyle = glowG;
+    ctx.fillRect(-glowR * partScale, fy - glowR * partScale * 0.5, glowR * 2 * partScale, glowR * 2 * partScale);
+
+    // Spawn exhaust particles in rocket-local space, convert to screen-relative
+    for (var sp = 0; sp < Math.ceil(intensity * 4); sp++) {
+      spawnExhaust(
+        (Math.random() - 0.5) * 6,
+        rocketTotalH * partScale / 2 + 5,
+        sim.angle, intensity
+      );
+    }
   }
   ctx.restore();
+
+  // Update exhaust particles
+  updateExhaust(PHYSICS_DT * timeWarp);
+
+  // G-force vignette overlay (post-processing)
+  if (gForce > 2 && sim.thrustN > 0) {
+    var vigIntensity = Math.min((gForce - 2) / 6, 1);
+    // Red tint vignette
+    var vig = ctx.createRadialGradient(W / 2, H / 2, W * 0.2, W / 2, H / 2, W * 0.7);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(0.6, 'rgba(80,0,0,' + (vigIntensity * 0.15) + ')');
+    vig.addColorStop(1, 'rgba(40,0,0,' + (vigIntensity * 0.5) + ')');
+    ctx.fillStyle = vig;
+    ctx.fillRect(-10, -10, W + 20, H + 20);
+  }
+  // Blackout above 8g
+  if (gForce > 8) {
+    var bo = Math.min((gForce - 8) / 4, 0.8);
+    ctx.fillStyle = 'rgba(0,0,0,' + bo + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  ctx.restore(); // undo shake translate
 }
 
 function renderHUD() {
