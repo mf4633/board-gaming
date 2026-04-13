@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apoapsis</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E0; min-height: 100vh; overflow: hidden; user-select: none; }
+
+#gameNav { display: block; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: #0A0A1A; border-bottom: 1px solid #1A2A40; font-family: Georgia, serif; }
+#gameNav .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 18px; max-width: 1200px; margin: 0 auto; position: relative; }
+#gameNav .nav-title { color: #B0C8E0; font-size: 0.9em; letter-spacing: 1px; }
+#gameNav .nav-toggle { background: none; border: 1px solid #1A2A40; color: #B0C8E0; font-size: 1.1em; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-family: Georgia, serif; }
+#gameNav .nav-toggle:hover { background: #0E1428; }
+#gameNav .nav-menu { display: none; position: absolute; right: 18px; top: 100%; background: #0A0A1A; border: 1px solid #1A2A40; border-top: none; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 10000; }
+#gameNav .nav-menu.open { display: block; }
+#gameNav .nav-menu a { display: block; padding: 10px 18px; color: #6080A0; text-decoration: none; font-size: 0.85em; border-bottom: 1px solid #0E1428; }
+#gameNav .nav-menu a:last-child { border-bottom: none; }
+#gameNav .nav-menu a:hover { background: #0E1428; color: #4080D0; }
+#gameNav .nav-menu a.current { color: #B0C8E0; font-weight: bold; }
+@media (max-width: 768px) {
+  #gameNav .nav-bar { padding: 6px 14px; }
+  #gameNav .nav-menu { position: static; right: auto; min-width: 0; border: none; border-top: 1px solid #1A2A40; box-shadow: none; }
+}
+
+.screen { display: none; width: 100vw; height: calc(100vh - 34px); margin-top: 34px; }
+.screen.active { display: flex; }
+
+/* Builder */
+#builderScreen { flex-direction: row; }
+.catalog { width: 220px; background: #0E1428; border-right: 1px solid #1A2A40; overflow-y: auto; padding: 8px; }
+.catalog h3 { color: #4080D0; font-size: 0.85em; margin: 8px 0 4px; border-bottom: 1px solid #1A2A40; padding-bottom: 2px; }
+.cat-part { padding: 5px 6px; margin: 2px 0; background: #121830; border: 1px solid #1A2A40; border-radius: 4px; cursor: pointer; font-size: 0.7em; }
+.cat-part:hover { background: #1A2848; border-color: #4080D0; }
+.cat-part .pname { color: #B0C8E0; font-weight: bold; }
+.cat-part .pstat { color: #6080A0; }
+
+.preview-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+#previewCanvas { background: #060810; border: 1px solid #1A2A40; }
+.preview-info { color: #6080A0; font-size: 0.75em; margin-top: 8px; text-align: center; }
+.preview-info b { color: #4080D0; }
+
+.stage-panel { width: 200px; background: #0E1428; border-left: 1px solid #1A2A40; overflow-y: auto; padding: 8px; }
+.stage-panel h3 { color: #4080D0; font-size: 0.85em; margin-bottom: 4px; }
+.stage-group { margin: 4px 0; padding: 4px; border: 1px solid #1A2A40; border-radius: 4px; background: #0A1020; }
+.stage-group .sg-header { color: #4080D0; font-size: 0.75em; font-weight: bold; margin-bottom: 2px; }
+.stage-group .sg-part { font-size: 0.65em; color: #8098B0; padding: 1px 0; cursor: pointer; }
+.stage-group .sg-part:hover { color: #B0C8E0; }
+.stage-group .sg-part.selected { color: #FFD040; }
+.stage-dv { font-size: 0.7em; color: #40C080; margin-top: 2px; }
+
+.btn { padding: 6px 16px; font-size: 0.85em; font-family: 'Courier New', monospace; cursor: pointer; border: 1px solid #4080D0; border-radius: 4px; background: #0E1428; color: #B0C8E0; margin: 4px; }
+.btn:hover { background: #1A2848; }
+.btn.launch { border-color: #40D080; color: #40D080; font-weight: bold; }
+.btn.launch:hover { background: #0A2818; }
+
+.builder-bar { position: absolute; bottom: 10px; display: flex; gap: 4px; align-items: center; }
+
+/* Flight */
+#flightScreen { position: relative; }
+#flightCanvas { width: 100%; height: 100%; }
+.hud { position: absolute; font-size: 0.75em; pointer-events: none; }
+.hud-tl { top: 8px; left: 8px; }
+.hud-tr { top: 8px; right: 8px; text-align: right; }
+.hud-bl { bottom: 8px; left: 8px; }
+.hud-br { bottom: 8px; right: 8px; text-align: right; }
+.hud b { color: #4080D0; }
+.hud .val { color: #40D080; }
+.hud .warn { color: #D04040; }
+
+.throttle-bar { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 200px; background: #0A1020; border: 1px solid #1A2A40; border-radius: 3px; }
+.throttle-fill { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, #D08020, #40D080); border-radius: 0 0 3px 3px; transition: height 0.1s; }
+
+.controls-hint { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 0.65em; color: #3A5070; pointer-events: none; }
+
+/* Result overlay */
+.result-overlay { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; }
+.result-overlay.show { display: flex; }
+.result-box { background: #0E1428; border: 2px solid #4080D0; border-radius: 10px; padding: 24px 32px; text-align: center; max-width: 400px; }
+.result-box h2 { color: #40D080; font-size: 1.4em; margin-bottom: 10px; }
+.result-box h2.fail { color: #D04040; }
+.result-box p { color: #8098B0; margin: 4px 0; font-size: 0.85em; }
+.result-box p b { color: #B0C8E0; }
+</style>
+</head>
+<body>
+
+<div id="gameNav">
+  <div class="nav-bar">
+    <span class="nav-title">Apoapsis</span>
+    <button class="nav-toggle" onclick="document.querySelector('#gameNav .nav-menu').classList.toggle('open')">&#9776;</button>
+  </div>
+  <div class="nav-menu">
+    <a href="Agora.html">Agora</a>
+    <a href="Apoapsis.html" class="current">Apoapsis</a>
+    <a href="Aresia.html">Aresia</a>
+    <a href="Backgammon.html">Backgammon</a>
+    <a href="Bisque.html">Bisque</a>
+    <a href="Chess.html">Chess</a>
+    <a href="Convergence.html">Convergence</a>
+    <a href="Go.html">Go</a>
+    <a href="Mancala.html">Mancala</a>
+    <a href="Odyssey.html">Odyssey</a>
+    <a href="PenteGrammai.html">Pente Grammai</a>
+    <a href="Senet.html">Senet</a>
+    <a href="Tidelands.html">Tidelands</a>
+    <a href="Ur.html">Ur</a>
+  </div>
+</div>
+
+<!-- BUILDER SCREEN -->
+<div id="builderScreen" class="screen active">
+  <div class="catalog" id="catalog"></div>
+  <div class="preview-area">
+    <canvas id="previewCanvas" width="300" height="500"></canvas>
+    <div class="preview-info" id="previewInfo"></div>
+    <div class="builder-bar">
+      <button class="btn" onclick="loadPreset('sounding')">Sounding</button>
+      <button class="btn" onclick="loadPreset('orbital')">Orbital</button>
+      <button class="btn" onclick="loadPreset('heavy')">Heavy</button>
+      <button class="btn" onclick="clearRocket()">Clear</button>
+      <button class="btn launch" onclick="startFlight()">LAUNCH</button>
+    </div>
+  </div>
+  <div class="stage-panel" id="stagePanel"></div>
+</div>
+
+<!-- FLIGHT SCREEN -->
+<div id="flightScreen" class="screen">
+  <canvas id="flightCanvas"></canvas>
+  <div class="hud hud-tl" id="hudTL"></div>
+  <div class="hud hud-tr" id="hudTR"></div>
+  <div class="hud hud-bl" id="hudBL"></div>
+  <div class="hud hud-br" id="hudBR"></div>
+  <div class="throttle-bar"><div class="throttle-fill" id="throttleFill"></div></div>
+  <div class="controls-hint">W/S: Throttle &nbsp; A/D: Steer &nbsp; SPACE: Stage &nbsp; ,/.: Time Warp &nbsp; ESC: Abort</div>
+  <div class="result-overlay" id="resultOverlay">
+    <div class="result-box" id="resultBox">
+      <h2 id="resultTitle">Orbit Achieved!</h2>
+      <div id="resultStats"></div>
+      <button class="btn" onclick="backToBuilder()" style="margin-top:12px;">Build Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== CONSTANTS ===== */
+var ENV = {
+  R: 6371000, g0: 9.80665, KARMAN: 100000, P0: 101325,
+  T0: 288.15, LAPSE: 0.0065, M_ATM: 0.029, R_GAS: 8.314
+};
+
+var PARTS = {
+  'pod':        { type:'pod',    name:'Command Pod',   mass:1.2, drag:0.2, h:30, w:24, color:'#8090A0' },
+  'tank-sm':    { type:'tank',   name:'Tank S (0.5t)',  mass:0.06, fuel:0.5, h:25, w:24, color:'#C0C8D0' },
+  'tank-md':    { type:'tank',   name:'Tank M (1.0t)',  mass:0.13, fuel:1.0, h:40, w:24, color:'#C0C8D0' },
+  'tank-lg':    { type:'tank',   name:'Tank L (2.0t)',  mass:0.25, fuel:2.0, h:60, w:24, color:'#C0C8D0' },
+  'tank-xl':    { type:'tank',   name:'Tank XL (4.0t)', mass:0.5,  fuel:4.0, h:80, w:28, color:'#C0C8D0' },
+  'eng-sm':     { type:'engine', name:'Terrier (60kN)', mass:0.5,  thrust:60,  isp:345, h:18, w:18, color:'#606870' },
+  'eng-md':     { type:'engine', name:'Reliant (215kN)',mass:1.25, thrust:215, isp:310, h:22, w:24, color:'#606870' },
+  'eng-lg':     { type:'engine', name:'Mainsail (1.5MN)',mass:6.0, thrust:1500,isp:285, h:30, w:30, color:'#606870' },
+  'srb-sm':     { type:'srb',    name:'Flea SRB',      mass:0.45, fuel:3.3, thrust:192, isp:140, h:40, w:18, color:'#8A7050' },
+  'srb-lg':     { type:'srb',    name:'Hammer SRB',    mass:0.75, fuel:7.2, thrust:227, isp:170, h:55, w:20, color:'#8A7050' },
+  'decoupler':  { type:'decoupler',name:'Decoupler',    mass:0.04, h:5, w:26, color:'#D06020' }
+};
+
+var PRESETS = {
+  sounding: [
+    { key:'pod', stage:0 },
+    { key:'tank-sm', stage:0 },
+    { key:'eng-sm', stage:0 }
+  ],
+  orbital: [
+    { key:'pod', stage:0 },
+    { key:'tank-md', stage:0 },
+    { key:'eng-sm', stage:0 },
+    { key:'decoupler', stage:1 },
+    { key:'tank-lg', stage:1 },
+    { key:'eng-md', stage:1 },
+    { key:'decoupler', stage:2 },
+    { key:'tank-xl', stage:2 },
+    { key:'eng-lg', stage:2 }
+  ],
+  heavy: [
+    { key:'pod', stage:0 },
+    { key:'tank-md', stage:0 },
+    { key:'eng-sm', stage:0 },
+    { key:'decoupler', stage:1 },
+    { key:'tank-lg', stage:1 },
+    { key:'eng-md', stage:1 },
+    { key:'decoupler', stage:2 },
+    { key:'tank-xl', stage:2 },
+    { key:'tank-xl', stage:2 },
+    { key:'eng-lg', stage:2 },
+    { key:'decoupler', stage:3 },
+    { key:'srb-lg', stage:3 },
+    { key:'srb-lg', stage:3 }
+  ]
+};
+
+/* ===== STATE ===== */
+var gameState = 'builder';
+var rocket = { parts: [] };
+var selectedPart = -1;
+var partIdCounter = 0;
+
+var sim = null;
+var keys = {};
+var timeWarp = 1;
+var lastTime = 0;
+var accumulator = 0;
+var PHYSICS_DT = 0.02;
+
+/* ===== PHYSICS ===== */
+function gravity(alt) {
+  return ENV.g0 * Math.pow(ENV.R / (ENV.R + Math.max(0, alt)), 2);
+}
+
+function atmDensity(alt) {
+  if (alt > 140000) return 0;
+  if (alt < 0) alt = 0;
+  if (alt < 11000) {
+    var T = ENV.T0 - ENV.LAPSE * alt;
+    var P = ENV.P0 * Math.pow(T / ENV.T0, ENV.g0 * ENV.M_ATM / (ENV.R_GAS * ENV.LAPSE));
+    return P * ENV.M_ATM / (ENV.R_GAS * T);
+  }
+  var T11 = ENV.T0 - ENV.LAPSE * 11000;
+  var P11 = ENV.P0 * Math.pow(T11 / ENV.T0, ENV.g0 * ENV.M_ATM / (ENV.R_GAS * ENV.LAPSE));
+  var rho11 = P11 * ENV.M_ATM / (ENV.R_GAS * T11);
+  return rho11 * Math.exp(-(alt - 11000) / 6500);
+}
+
+function dragForce(vx, vy, alt, Cd, A) {
+  var rho = atmDensity(alt);
+  var v2 = vx * vx + vy * vy;
+  return 0.5 * rho * v2 * Cd * A;
+}
+
+function computeThrust(parts, stage, throttle) {
+  var totalThrust = 0, totalMdot = 0;
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i];
+    if (p.stage !== stage) continue;
+    var def = PARTS[p.key];
+    if (def.type === 'engine') {
+      var hasFuel = stageFuel(parts, stage) > 0;
+      if (hasFuel) {
+        totalThrust += def.thrust * throttle;
+        totalMdot += (def.thrust * throttle) / (def.isp * ENV.g0);
+      }
+    } else if (def.type === 'srb' && p.fuel > 0) {
+      totalThrust += def.thrust;
+      totalMdot += def.thrust / (def.isp * ENV.g0);
+    }
+  }
+  return { thrust: totalThrust * 1000, mdot: totalMdot * 1000 };
+}
+
+function stageFuel(parts, stage) {
+  var f = 0;
+  for (var i = 0; i < parts.length; i++) {
+    if (parts[i].stage === stage && (PARTS[parts[i].key].type === 'tank'))
+      f += parts[i].fuel;
+    if (parts[i].stage === stage && PARTS[parts[i].key].type === 'srb')
+      f += parts[i].fuel;
+  }
+  return f;
+}
+
+function totalMass(parts) {
+  var m = 0;
+  for (var i = 0; i < parts.length; i++) {
+    var def = PARTS[parts[i].key];
+    m += def.mass;
+    if (parts[i].fuel !== undefined) m += parts[i].fuel;
+  }
+  return m * 1000;
+}
+
+function consumeFuel(parts, stage, kgToConsume) {
+  for (var i = 0; i < parts.length; i++) {
+    if (parts[i].stage !== stage) continue;
+    var def = PARTS[parts[i].key];
+    if ((def.type === 'tank' || def.type === 'srb') && parts[i].fuel > 0) {
+      var canTake = Math.min(parts[i].fuel * 1000, kgToConsume);
+      parts[i].fuel -= canTake / 1000;
+      kgToConsume -= canTake;
+      if (kgToConsume <= 0.001) break;
+    }
+  }
+}
+
+function crossSection(parts) {
+  var maxW = 0;
+  for (var i = 0; i < parts.length; i++) {
+    var w = PARTS[parts[i].key].w;
+    if (w > maxW) maxW = w;
+  }
+  var radius = maxW / 2 * 0.04;
+  return Math.PI * radius * radius;
+}
+
+function stageDv(parts, stageNum) {
+  var engines = [], tanks = [];
+  var aboveMass = 0;
+  for (var i = 0; i < parts.length; i++) {
+    var def = PARTS[parts[i].key];
+    if (parts[i].stage < stageNum) {
+      aboveMass += def.mass + (parts[i].fuel || 0);
+    } else if (parts[i].stage === stageNum) {
+      if (def.type === 'engine') engines.push(def);
+      if (def.type === 'srb') { engines.push(def); tanks.push(parts[i]); }
+      if (def.type === 'tank') tanks.push(parts[i]);
+    }
+  }
+  if (engines.length === 0) return 0;
+  var wIsp = 0, wThrust = 0;
+  for (var i = 0; i < engines.length; i++) {
+    wIsp += engines[i].isp * engines[i].thrust;
+    wThrust += engines[i].thrust;
+  }
+  var avgIsp = wThrust > 0 ? wIsp / wThrust : 0;
+  var fuelMass = 0;
+  for (var i = 0; i < tanks.length; i++) fuelMass += tanks[i].fuel || 0;
+  var stageMass = 0;
+  for (var i = 0; i < parts.length; i++) {
+    if (parts[i].stage === stageNum) {
+      stageMass += PARTS[parts[i].key].mass + (parts[i].fuel || 0);
+    }
+  }
+  var wetMass = aboveMass + stageMass;
+  var dryMass = wetMass - fuelMass;
+  if (dryMass <= 0 || wetMass <= 0) return 0;
+  return avgIsp * ENV.g0 * Math.log(wetMass / dryMass);
+}
+
+function totalDv(parts) {
+  var stages = [];
+  for (var i = 0; i < parts.length; i++) {
+    if (stages.indexOf(parts[i].stage) < 0) stages.push(parts[i].stage);
+  }
+  stages.sort(function(a, b) { return b - a; });
+  var dv = 0;
+  for (var i = 0; i < stages.length; i++) dv += stageDv(parts, stages[i]);
+  return dv;
+}
+
+function orbitalVelocity(alt) {
+  return Math.sqrt(ENV.g0 * ENV.R * ENV.R / (ENV.R + alt));
+}
+
+function physicsTick(s) {
+  var g = gravity(s.y);
+  var t = computeThrust(s.parts, s.currentStage, s.throttle);
+  var mass = totalMass(s.parts);
+  if (mass <= 0) mass = 1;
+  var Cd = 0.3, A = crossSection(s.parts);
+  var spd = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
+  var df = dragForce(s.vx, s.vy, s.y, Cd, A);
+
+  var angle = s.angle;
+  var tx = Math.sin(angle) * t.thrust;
+  var ty = Math.cos(angle) * t.thrust;
+  var dx = 0, dy = 0;
+  if (spd > 0.1) { dx = -s.vx / spd * df; dy = -s.vy / spd * df; }
+
+  var ax = (tx + dx) / mass;
+  var ay = (ty + dy) / mass - g;
+
+  s.vx += ax * PHYSICS_DT;
+  s.vy += ay * PHYSICS_DT;
+  s.x += s.vx * PHYSICS_DT;
+  s.y += s.vy * PHYSICS_DT;
+  s.t += PHYSICS_DT;
+
+  if (t.mdot > 0) consumeFuel(s.parts, s.currentStage, t.mdot * PHYSICS_DT);
+
+  s.thrustN = t.thrust;
+  s.dragN = df;
+  s.grav = g;
+  s.mass = mass;
+  s.accel = Math.sqrt(ax * ax + (ay + g) * (ay + g));
+  if (s.y > s.maxAlt) s.maxAlt = s.y;
+  var spd2 = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
+  if (spd2 > s.maxVel) s.maxVel = spd2;
+
+  if (s.y < 0 && s.vy < 0) { s.y = 0; s.vx = 0; s.vy = 0; s.crashed = true; }
+}
+
+/* ===== STAGING ===== */
+function getStages(parts) {
+  var s = [];
+  for (var i = 0; i < parts.length; i++) {
+    if (s.indexOf(parts[i].stage) < 0) s.push(parts[i].stage);
+  }
+  return s.sort(function(a, b) { return b - a; });
+}
+
+function doStage(s) {
+  var stg = s.currentStage;
+  var keep = [], jett = [];
+  for (var i = 0; i < s.parts.length; i++) {
+    if (s.parts[i].stage === stg) jett.push(s.parts[i]);
+    else keep.push(s.parts[i]);
+  }
+  for (var i = 0; i < jett.length; i++) {
+    s.jettisoned.push({ x: s.x + (Math.random() - 0.5) * 5, y: s.y - 10, vx: s.vx + (Math.random() - 0.5) * 3, vy: s.vy - 5, t: 0 });
+  }
+  s.parts = keep;
+  var remaining = getStages(s.parts);
+  if (remaining.length > 0) {
+    s.currentStage = remaining[0];
+  } else {
+    s.currentStage = -1;
+  }
+}
+
+function checkAutoStage(s) {
+  if (s.currentStage < 0) return;
+  if (stageFuel(s.parts, s.currentStage) <= 0.001 && computeThrust(s.parts, s.currentStage, 1).thrust <= 0) {
+    doStage(s);
+  }
+}
+
+/* ===== BUILDER ===== */
+function addPart(key) {
+  var def = PARTS[key];
+  var p = { id: partIdCounter++, key: key, stage: maxStage() };
+  if (def.type === 'tank' || def.type === 'srb') p.fuel = def.fuel;
+  rocket.parts.push(p);
+  renderBuilder();
+}
+
+function removePart(idx) {
+  rocket.parts.splice(idx, 1);
+  selectedPart = -1;
+  renderBuilder();
+}
+
+function maxStage() {
+  var m = 0;
+  for (var i = 0; i < rocket.parts.length; i++) {
+    if (rocket.parts[i].stage > m) m = rocket.parts[i].stage;
+  }
+  return m;
+}
+
+function clearRocket() { rocket.parts = []; selectedPart = -1; renderBuilder(); }
+
+function loadPreset(name) {
+  rocket.parts = [];
+  partIdCounter = 0;
+  var preset = PRESETS[name];
+  for (var i = 0; i < preset.length; i++) {
+    var def = PARTS[preset[i].key];
+    var p = { id: partIdCounter++, key: preset[i].key, stage: preset[i].stage };
+    if (def.type === 'tank' || def.type === 'srb') p.fuel = def.fuel;
+    rocket.parts.push(p);
+  }
+  selectedPart = -1;
+  renderBuilder();
+}
+
+function renderCatalog() {
+  var cat = document.getElementById('catalog');
+  var html = '<h3>&#x1F680; Parts</h3>';
+  var groups = { pod: 'Pods', tank: 'Fuel Tanks', engine: 'Engines', srb: 'Solid Boosters', decoupler: 'Decouplers' };
+  for (var g in groups) {
+    html += '<h3>' + groups[g] + '</h3>';
+    for (var k in PARTS) {
+      if (PARTS[k].type !== g) continue;
+      var p = PARTS[k];
+      var stats = p.mass + 't';
+      if (p.fuel) stats += ' / ' + p.fuel + 't fuel';
+      if (p.thrust) stats += ' / ' + p.thrust + 'kN';
+      if (p.isp) stats += ' / ' + p.isp + 's Isp';
+      html += '<div class="cat-part" onclick="addPart(\'' + k + '\')"><span class="pname">' + p.name + '</span><br><span class="pstat">' + stats + '</span></div>';
+    }
+  }
+  cat.innerHTML = html;
+}
+
+function renderPreview() {
+  var c = document.getElementById('previewCanvas');
+  var ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  var cx = c.width / 2, cy = c.height - 40;
+  var totalH = 0;
+  for (var i = rocket.parts.length - 1; i >= 0; i--) {
+    var def = PARTS[rocket.parts[i].key];
+    totalH += def.h;
+  }
+  var scale = Math.min(2, (c.height - 80) / Math.max(totalH, 1));
+  var y = cy;
+  for (var i = rocket.parts.length - 1; i >= 0; i--) {
+    var def = PARTS[rocket.parts[i].key];
+    var h = def.h * scale, w = def.w * scale;
+    y -= h;
+    var stageColors = ['#4080D0', '#40D080', '#D0A040', '#D04080', '#8040D0'];
+    var bc = stageColors[rocket.parts[i].stage % stageColors.length];
+    ctx.fillStyle = def.color;
+    if (def.type === 'pod') {
+      ctx.beginPath();
+      ctx.moveTo(cx, y);
+      ctx.lineTo(cx + w / 2, y + h);
+      ctx.lineTo(cx - w / 2, y + h);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.fillRect(cx - w / 2, y, w, h);
+    }
+    if (def.type === 'tank' && rocket.parts[i].fuel !== undefined) {
+      var frac = rocket.parts[i].fuel / def.fuel;
+      ctx.fillStyle = 'rgba(64,208,128,0.4)';
+      ctx.fillRect(cx - w / 2 + 1, y + h * (1 - frac), w - 2, h * frac);
+    }
+    if (def.type === 'engine' || def.type === 'srb') {
+      ctx.fillStyle = '#D08020';
+      ctx.beginPath();
+      ctx.moveTo(cx - w * 0.3, y + h);
+      ctx.lineTo(cx + w * 0.3, y + h);
+      ctx.lineTo(cx, y + h + 8 * scale);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.strokeStyle = bc;
+    ctx.lineWidth = i === selectedPart ? 2 : 1;
+    if (def.type === 'pod') {
+      ctx.beginPath();
+      ctx.moveTo(cx, y); ctx.lineTo(cx + w / 2, y + h); ctx.lineTo(cx - w / 2, y + h); ctx.closePath();
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(cx - w / 2, y, w, h);
+    }
+    ctx.fillStyle = '#8098B0';
+    ctx.font = (8 * scale) + 'px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText(def.name, cx, y + h / 2 + 3 * scale);
+  }
+}
+
+function renderStagePanel() {
+  var panel = document.getElementById('stagePanel');
+  var stages = getStages(rocket.parts);
+  stages.sort(function(a, b) { return b - a; });
+  var html = '<h3>Stages (fire order &darr;)</h3>';
+  for (var si = 0; si < stages.length; si++) {
+    var sn = stages[si];
+    var dv = stageDv(rocket.parts, sn);
+    html += '<div class="stage-group"><div class="sg-header">Stage ' + sn + '</div>';
+    for (var i = 0; i < rocket.parts.length; i++) {
+      if (rocket.parts[i].stage !== sn) continue;
+      var def = PARTS[rocket.parts[i].key];
+      html += '<div class="sg-part' + (i === selectedPart ? ' selected' : '') + '" onclick="selectPart(' + i + ')">' + def.name + '</div>';
+    }
+    html += '<div class="stage-dv">&Delta;v: ' + Math.round(dv) + ' m/s</div></div>';
+  }
+  html += '<div style="margin-top:8px;font-size:0.8em;color:#40D080;">Total &Delta;v: <b>' + Math.round(totalDv(rocket.parts)) + '</b> m/s</div>';
+  html += '<div style="font-size:0.7em;color:#6080A0;margin-top:2px;">Need ~9400 m/s for orbit (inc. losses)</div>';
+  var m = 0;
+  for (var i = 0; i < rocket.parts.length; i++) {
+    m += PARTS[rocket.parts[i].key].mass + (rocket.parts[i].fuel || 0);
+  }
+  html += '<div style="font-size:0.75em;color:#8098B0;margin-top:4px;">Mass: ' + m.toFixed(1) + 't</div>';
+  if (selectedPart >= 0) {
+    html += '<div style="margin-top:8px;border-top:1px solid #1A2A40;padding-top:4px;">';
+    html += '<div style="font-size:0.7em;color:#B0C8E0;">Selected: ' + PARTS[rocket.parts[selectedPart].key].name + '</div>';
+    html += '<button class="btn" style="font-size:0.7em;padding:2px 8px;" onclick="removePart(' + selectedPart + ')">Delete</button>';
+    for (var s = 0; s <= maxStage() + 1; s++) {
+      html += '<button class="btn" style="font-size:0.65em;padding:1px 6px;" onclick="assignStage(' + selectedPart + ',' + s + ')">S' + s + '</button>';
+    }
+    html += '</div>';
+  }
+  panel.innerHTML = html;
+}
+
+function selectPart(idx) { selectedPart = idx; renderBuilder(); }
+function assignStage(idx, s) { rocket.parts[idx].stage = s; renderBuilder(); }
+
+function renderBuilder() {
+  renderPreview();
+  renderStagePanel();
+  var info = document.getElementById('previewInfo');
+  info.innerHTML = 'Click catalog to add parts. Click part to select. <b>' + rocket.parts.length + '</b> parts.';
+}
+
+/* ===== FLIGHT ===== */
+function startFlight() {
+  if (rocket.parts.length === 0) return;
+  var parts = [];
+  for (var i = 0; i < rocket.parts.length; i++) {
+    var p = { key: rocket.parts[i].key, stage: rocket.parts[i].stage };
+    if (rocket.parts[i].fuel !== undefined) p.fuel = rocket.parts[i].fuel;
+    parts.push(p);
+  }
+  var stages = getStages(parts);
+  sim = {
+    parts: parts, x: 0, y: 0, vx: 0, vy: 0, t: 0,
+    throttle: 1.0, angle: 0, currentStage: stages[0],
+    thrustN: 0, dragN: 0, grav: 0, mass: 0, accel: 0,
+    maxAlt: 0, maxVel: 0, crashed: false,
+    jettisoned: [], trail: []
+  };
+  gameState = 'flight';
+  timeWarp = 1;
+  accumulator = 0;
+  lastTime = 0;
+  document.getElementById('builderScreen').classList.remove('active');
+  document.getElementById('flightScreen').classList.add('active');
+  document.getElementById('resultOverlay').classList.remove('show');
+  var fc = document.getElementById('flightCanvas');
+  fc.width = fc.parentElement.clientWidth;
+  fc.height = fc.parentElement.clientHeight;
+  requestAnimationFrame(gameLoop);
+}
+
+function backToBuilder() {
+  gameState = 'builder';
+  document.getElementById('flightScreen').classList.remove('active');
+  document.getElementById('builderScreen').classList.add('active');
+  renderBuilder();
+}
+
+function gameLoop(timestamp) {
+  if (gameState !== 'flight') return;
+  if (lastTime === 0) lastTime = timestamp;
+  var frameTime = Math.min((timestamp - lastTime) / 1000, 0.1) * timeWarp;
+  lastTime = timestamp;
+
+  accumulator += frameTime;
+  while (accumulator >= PHYSICS_DT) {
+    handleInput();
+    physicsTick(sim);
+    checkAutoStage(sim);
+    accumulator -= PHYSICS_DT;
+    if (sim.t % 0.5 < PHYSICS_DT) sim.trail.push({ x: sim.x, y: sim.y });
+    if (sim.trail.length > 1000) sim.trail.shift();
+    for (var j = sim.jettisoned.length - 1; j >= 0; j--) {
+      sim.jettisoned[j].y += sim.jettisoned[j].vy * PHYSICS_DT;
+      sim.jettisoned[j].vy -= gravity(sim.jettisoned[j].y) * PHYSICS_DT;
+      sim.jettisoned[j].t += PHYSICS_DT;
+      if (sim.jettisoned[j].y < -100 || sim.jettisoned[j].t > 30) sim.jettisoned.splice(j, 1);
+    }
+    if (checkWinLose()) return;
+  }
+
+  renderFlight();
+  renderHUD();
+  requestAnimationFrame(gameLoop);
+}
+
+function checkWinLose() {
+  var spd = Math.sqrt(sim.vx * sim.vx + sim.vy * sim.vy);
+  var vorb = orbitalVelocity(sim.y);
+  if (sim.y >= ENV.KARMAN && spd >= vorb * 0.95) {
+    showResult(true, 'Orbit Achieved!');
+    return true;
+  }
+  if (sim.crashed) {
+    showResult(false, sim.maxAlt > 1000 ? 'Crashed on Return' : 'Launch Failure');
+    return true;
+  }
+  if (sim.t > 10 && sim.y <= 0 && Math.abs(sim.vy) < 1) {
+    showResult(false, 'No Thrust');
+    return true;
+  }
+  return false;
+}
+
+function showResult(win, title) {
+  gameState = 'result';
+  var el = document.getElementById('resultTitle');
+  el.textContent = title;
+  el.className = win ? '' : 'fail';
+  var spd = Math.sqrt(sim.vx * sim.vx + sim.vy * sim.vy);
+  document.getElementById('resultStats').innerHTML =
+    '<p>Max Altitude: <b>' + fmtAlt(sim.maxAlt) + '</b></p>' +
+    '<p>Max Velocity: <b>' + Math.round(sim.maxVel) + ' m/s</b></p>' +
+    '<p>Final Velocity: <b>' + Math.round(spd) + ' m/s</b></p>' +
+    '<p>Flight Time: <b>' + fmtTime(sim.t) + '</b></p>' +
+    '<p>Orbital V needed: <b>' + Math.round(orbitalVelocity(sim.maxAlt)) + ' m/s</b></p>';
+  document.getElementById('resultOverlay').classList.add('show');
+}
+
+/* ===== FLIGHT RENDERER ===== */
+function renderFlight() {
+  var c = document.getElementById('flightCanvas');
+  var ctx = c.getContext('2d');
+  var W = c.width, H = c.height;
+
+  var alt = Math.max(0, sim.y);
+  var atmFrac = Math.min(alt / 120000, 1);
+
+  // Sky
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
+  var r = Math.round(10 * (1 - atmFrac)), g = Math.round(20 + 60 * (1 - atmFrac) * (1 - atmFrac)), b = Math.round(40 + 160 * (1 - atmFrac));
+  grad.addColorStop(0, 'rgb(' + r + ',' + Math.round(g * 0.3) + ',' + Math.round(b * 0.5) + ')');
+  grad.addColorStop(1, 'rgb(' + Math.round(r * 2) + ',' + g + ',' + b + ')');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Stars
+  if (atmFrac > 0.2) {
+    ctx.fillStyle = 'rgba(255,255,255,' + ((atmFrac - 0.2) / 0.8 * 0.8) + ')';
+    for (var i = 0; i < 120; i++) {
+      var sx = (i * 173 + 37) % W, sy = (i * 251 + 89) % (H * 0.7);
+      ctx.fillRect(sx, sy, 1.5, 1.5);
+    }
+  }
+
+  // Zoom
+  var zoom = Math.min(3, H / (alt * 2.5 + 200));
+  if (zoom < 0.0001) zoom = 0.0001;
+
+  // Ground
+  var groundY = H / 2 + (sim.y) * zoom;
+  if (groundY < H + 100) {
+    ctx.fillStyle = '#2A3828';
+    ctx.fillRect(0, groundY, W, H - groundY + 200);
+    ctx.fillStyle = '#1A2818';
+    ctx.fillRect(0, groundY, W, 2);
+    // Launchpad
+    if (zoom > 0.1) {
+      ctx.fillStyle = '#4A4A4A';
+      ctx.fillRect(W / 2 - 15 * zoom, groundY - 2, 30 * zoom, 4);
+    }
+  }
+
+  // Atmosphere band from space
+  if (atmFrac > 0.5 && groundY > -100 && groundY < H + 500) {
+    var ag = ctx.createLinearGradient(0, groundY - 60 * zoom, 0, groundY);
+    ag.addColorStop(0, 'rgba(80,140,255,0)');
+    ag.addColorStop(0.5, 'rgba(80,140,255,0.15)');
+    ag.addColorStop(1, 'rgba(80,140,255,0)');
+    ctx.fillStyle = ag;
+    ctx.fillRect(0, groundY - 60 * zoom, W, 60 * zoom);
+  }
+
+  // Trail
+  if (sim.trail.length > 1) {
+    ctx.strokeStyle = 'rgba(255,200,100,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (var i = 0; i < sim.trail.length; i++) {
+      var tx = W / 2 + (sim.trail[i].x - sim.x) * zoom;
+      var ty = H / 2 - (sim.trail[i].y - sim.y) * zoom;
+      if (i === 0) ctx.moveTo(tx, ty); else ctx.lineTo(tx, ty);
+    }
+    ctx.stroke();
+  }
+
+  // Jettisoned
+  for (var j = 0; j < sim.jettisoned.length; j++) {
+    var jx = W / 2 + (sim.jettisoned[j].x - sim.x) * zoom;
+    var jy = H / 2 - (sim.jettisoned[j].y - sim.y) * zoom;
+    var alpha = Math.max(0, 1 - sim.jettisoned[j].t / 15);
+    ctx.fillStyle = 'rgba(128,128,128,' + alpha + ')';
+    ctx.fillRect(jx - 3, jy - 5, 6, 10);
+  }
+
+  // Rocket at center
+  var rx = W / 2, ry = H / 2;
+  ctx.save();
+  ctx.translate(rx, ry);
+  ctx.rotate(-sim.angle);
+  var partScale = Math.min(zoom * 40, 2);
+  if (partScale < 0.3) partScale = 0.3;
+  var totalH = 0;
+  for (var i = 0; i < sim.parts.length; i++) totalH += PARTS[sim.parts[i].key].h;
+  var drawY = totalH * partScale / 2;
+  for (var i = sim.parts.length - 1; i >= 0; i--) {
+    var def = PARTS[sim.parts[i].key];
+    var ph = def.h * partScale, pw = def.w * partScale;
+    drawY -= ph;
+    ctx.fillStyle = def.color;
+    if (def.type === 'pod') {
+      ctx.beginPath();
+      ctx.moveTo(0, drawY);
+      ctx.lineTo(pw / 2, drawY + ph);
+      ctx.lineTo(-pw / 2, drawY + ph);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.fillRect(-pw / 2, drawY, pw, ph);
+    }
+    if (def.type === 'tank' && sim.parts[i].fuel !== undefined && def.fuel > 0) {
+      var frac = sim.parts[i].fuel / def.fuel;
+      ctx.fillStyle = 'rgba(64,208,128,0.35)';
+      ctx.fillRect(-pw / 2 + 1, drawY + ph * (1 - frac), pw - 2, ph * frac);
+    }
+  }
+
+  // Flame
+  if (sim.thrustN > 0) {
+    var flameH = 15 + 25 * sim.throttle + Math.random() * 10;
+    var flameW = 8 + 6 * sim.throttle;
+    var fy = totalH * partScale / 2;
+    var fg = ctx.createLinearGradient(0, fy, 0, fy + flameH * partScale);
+    fg.addColorStop(0, 'rgba(255,255,200,0.9)');
+    fg.addColorStop(0.3, 'rgba(255,160,40,0.8)');
+    fg.addColorStop(1, 'rgba(255,60,20,0)');
+    ctx.fillStyle = fg;
+    ctx.beginPath();
+    ctx.moveTo(-flameW * partScale / 2, fy);
+    ctx.lineTo(flameW * partScale / 2, fy);
+    ctx.lineTo((Math.random() - 0.5) * 4 * partScale, fy + flameH * partScale);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function renderHUD() {
+  var spd = Math.sqrt(sim.vx * sim.vx + sim.vy * sim.vy);
+  var vorb = orbitalVelocity(Math.max(0, sim.y));
+  document.getElementById('hudTL').innerHTML =
+    '<b>ALT</b> <span class="val">' + fmtAlt(sim.y) + '</span><br>' +
+    '<b>VEL</b> <span class="val">' + Math.round(spd) + ' m/s</span><br>' +
+    '<b>V-SPD</b> <span class="val">' + (sim.vy >= 0 ? '+' : '') + Math.round(sim.vy) + ' m/s</span>';
+
+  document.getElementById('hudTR').innerHTML =
+    '<b>T+</b> ' + fmtTime(sim.t) + (timeWarp > 1 ? ' <span class="warn">x' + timeWarp + '</span>' : '') + '<br>' +
+    '<b>G</b> ' + sim.grav.toFixed(1) + ' m/s&sup2;<br>' +
+    '<b>ACC</b> ' + (sim.accel / ENV.g0).toFixed(1) + ' g';
+
+  var stgFuel = stageFuel(sim.parts, sim.currentStage);
+  var stgFuelMax = 0;
+  for (var i = 0; i < sim.parts.length; i++) {
+    if (sim.parts[i].stage === sim.currentStage && PARTS[sim.parts[i].key].fuel)
+      stgFuelMax += PARTS[sim.parts[i].key].fuel;
+  }
+  var fuelPct = stgFuelMax > 0 ? Math.round(stgFuel / stgFuelMax * 100) : 0;
+  document.getElementById('hudBL').innerHTML =
+    '<b>STAGE</b> ' + sim.currentStage + '<br>' +
+    '<b>FUEL</b> <span class="' + (fuelPct < 10 ? 'warn' : 'val') + '">' + fuelPct + '%</span><br>' +
+    '<b>&Delta;v</b> ' + Math.round(totalDv(sim.parts)) + ' m/s';
+
+  document.getElementById('hudBR').innerHTML =
+    '<b>ORBIT V</b> ' + Math.round(vorb) + ' m/s<br>' +
+    '<b>PROGRESS</b> <span class="' + (spd >= vorb * 0.95 && sim.y >= ENV.KARMAN ? 'val' : '') + '">' +
+    Math.min(100, Math.round(spd / vorb * 100)) + '%</span><br>' +
+    '<b>ANGLE</b> ' + Math.round(sim.angle * 180 / Math.PI) + '&deg;';
+
+  document.getElementById('throttleFill').style.height = (sim.throttle * 100) + '%';
+}
+
+/* ===== INPUT ===== */
+function handleInput() {
+  if (keys['w'] || keys['arrowup']) sim.throttle = Math.min(1, sim.throttle + 0.02);
+  if (keys['s'] || keys['arrowdown']) sim.throttle = Math.max(0, sim.throttle - 0.02);
+  if (keys['a'] || keys['arrowleft']) sim.angle = Math.max(-Math.PI / 2, sim.angle - 0.01);
+  if (keys['d'] || keys['arrowright']) sim.angle = Math.min(Math.PI / 2, sim.angle + 0.01);
+}
+
+document.addEventListener('keydown', function(e) {
+  keys[e.key.toLowerCase()] = true;
+  if (e.key === ' ' && gameState === 'flight') {
+    e.preventDefault();
+    doStage(sim);
+  }
+  if (e.key === '.' && gameState === 'flight') timeWarp = Math.min(10, timeWarp * 2);
+  if (e.key === ',' && gameState === 'flight') timeWarp = Math.max(1, timeWarp / 2);
+  if (e.key === 'Escape' && gameState === 'flight') backToBuilder();
+});
+document.addEventListener('keyup', function(e) { keys[e.key.toLowerCase()] = false; });
+
+/* ===== HELPERS ===== */
+function fmtAlt(m) {
+  if (m >= 1000) return (m / 1000).toFixed(1) + ' km';
+  return Math.round(m) + ' m';
+}
+function fmtTime(s) {
+  var m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+/* ===== INIT ===== */
+renderCatalog();
+loadPreset('orbital');
+</script>
+</body>
+</html>
