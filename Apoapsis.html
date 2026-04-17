@@ -195,6 +195,13 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 /* ===== CONSTANTS ===== */
 var ENV = { R: 6371000, g0: 9.80665, KARMAN: 100000, P0: 101325, T0: 288.15, LAPSE: 0.0065, M_ATM: 0.029, R_GAS: 8.314 };
 var MU = ENV.g0 * ENV.R * ENV.R;
+
+// Multi-body system. Mun is scaled KSP-like for playable Hohmann transfer times.
+// Earth-centered inertial frame = world. Mun orbits Earth in XZ plane.
+var BODIES = {
+  'earth': { name:'Earth', mu: MU, radius: ENV.R, atm: true, color: 0x1a5533, parent: null, soiRadius: Infinity, orbitR: 0, period: 0, phase: 0 },
+  'mun':   { name:'Mun',   mu: 2.7e10, radius: 300000, atm: false, color: 0x9CA0A5, parent: 'earth', soiRadius: 1500000, orbitR: 10033000, period: 10000, phase: 0 }
+};
 var PARTS = {
   'pod':       { type:'pod',    name:'Command Pod',    mass:1.2,  h:30, w:24, color:'#8090A0' },
   'tank-sm':   { type:'tank',   name:'Tank S (0.5t)',   mass:0.06, fuel:0.5, h:25, w:24, color:'#C0C8D0' },
@@ -232,10 +239,12 @@ var SAS_KEYS = { '0':'off', '1':'stability', '2':'prograde', '3':'retrograde', '
 var audio = { ctx:null, engineGain:null, engineOsc:null, engineFilter:null, noiseSrc:null, plasmaGain:null, plasmaSrc:null, muted:false };
 var mapState = { dist:ENV.R*4, yaw:0.0, pitch:0.35, dragging:false, lx:0, ly:0 };
 var orbitLine = null, peMarker = null, apMarker = null, shipMarker = null, mapCamera = null;
+var nextPatchLine = null, encounterMarker = null, escapeMarker = null;
 
 /* ===== THREE.JS ===== */
 var renderer, scene, camera;
 var earthMesh, atmMesh, rocketGroup, flameLight;
+var munMesh, munOrbitLine, munBodyMarker;
 var exhaustParticles, exhaustPositions, exhaustColors, exhaustSizes, exhaustData = [];
 var trailGeom, trailLine;
 var threeReady = false;
@@ -277,6 +286,28 @@ function initThree() {
   var atmMat = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.08, side: THREE.BackSide });
   atmMesh = new THREE.Mesh(atmGeo, atmMat);
   scene.add(atmMesh);
+
+  // Mun
+  var munGeo = new THREE.SphereGeometry(BODIES.mun.radius, 48, 48);
+  var munMat = new THREE.MeshPhongMaterial({ color: BODIES.mun.color, emissive: 0x1a1a1e, shininess: 2 });
+  munMesh = new THREE.Mesh(munGeo, munMat);
+  scene.add(munMesh);
+
+  // Mun's orbit around Earth (shown in map view)
+  var munOrbitN = 96;
+  var munOrbitPos = new Float32Array(munOrbitN * 3);
+  for (var i = 0; i < munOrbitN; i++) {
+    var a = (i / (munOrbitN - 1)) * Math.PI * 2;
+    munOrbitPos[i*3] = Math.cos(a) * BODIES.mun.orbitR;
+    munOrbitPos[i*3+1] = 0;
+    munOrbitPos[i*3+2] = Math.sin(a) * BODIES.mun.orbitR;
+  }
+  var munOrbitGeom = new THREE.BufferGeometry();
+  munOrbitGeom.setAttribute('position', new THREE.BufferAttribute(munOrbitPos, 3));
+  var munOrbitMat = new THREE.LineBasicMaterial({ color: 0x6070A0, transparent: true, opacity: 0.4 });
+  munOrbitLine = new THREE.Line(munOrbitGeom, munOrbitMat);
+  munOrbitLine.visible = false;
+  scene.add(munOrbitLine);
 
   // Stars
   var starGeo = new THREE.BufferGeometry();
@@ -329,6 +360,26 @@ function initThree() {
   orbitLine.frustumCulled = false;
   scene.add(orbitLine);
 
+  // Next-patch orbit line (patched conic prediction across SOI)
+  var nextGeom = new THREE.BufferGeometry();
+  nextGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(129 * 3), 3));
+  var nextMat = new THREE.LineBasicMaterial({ color: 0xFFD040, transparent: true, opacity: 0.65 });
+  nextPatchLine = new THREE.Line(nextGeom, nextMat);
+  nextPatchLine.visible = false;
+  nextPatchLine.frustumCulled = false;
+  scene.add(nextPatchLine);
+
+  // Encounter / escape markers
+  var encCanvas = makeMarkerCanvas('\u2694', '#FFD040');
+  var escCanvas = makeMarkerCanvas('\u2192', '#D08040');
+  encounterMarker = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(encCanvas), depthTest: false, transparent: true }));
+  escapeMarker = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(escCanvas), depthTest: false, transparent: true }));
+  encounterMarker.scale.set(350000, 350000, 1);
+  escapeMarker.scale.set(350000, 350000, 1);
+  encounterMarker.visible = escapeMarker.visible = false;
+  encounterMarker.renderOrder = escapeMarker.renderOrder = 999;
+  scene.add(encounterMarker); scene.add(escapeMarker);
+
   // Ap/Pe markers (billboarded sprites)
   var peCanvas = makeMarkerCanvas('Pe', '#D04040');
   var apCanvas = makeMarkerCanvas('Ap', '#40C0FF');
@@ -345,6 +396,15 @@ function initThree() {
   peMarker.visible = apMarker.visible = shipMarker.visible = false;
   peMarker.renderOrder = apMarker.renderOrder = shipMarker.renderOrder = 999;
   scene.add(peMarker); scene.add(apMarker); scene.add(shipMarker);
+
+  // Mun body marker (sprite in map view when Mun is small on screen)
+  var munMarkerCanvas = makeMarkerCanvas('Mun', '#9CA0A5');
+  var munMarkerTex = new THREE.CanvasTexture(munMarkerCanvas);
+  munBodyMarker = new THREE.Sprite(new THREE.SpriteMaterial({ map: munMarkerTex, depthTest: false, transparent: true }));
+  munBodyMarker.scale.set(600000, 600000, 1);
+  munBodyMarker.visible = false;
+  munBodyMarker.renderOrder = 998;
+  scene.add(munBodyMarker);
 
   window.addEventListener('resize', function() {
     var c = document.getElementById('threeContainer');
@@ -454,7 +514,7 @@ function crossSection(parts) {
   var r = maxW / 2 * PART_SCALE;
   return Math.PI * r * r;
 }
-function orbitalVelocity(alt) { return Math.sqrt(MU / (ENV.R + alt)); }
+function orbitalVelocity(alt, bodyKey) { var b = BODIES[bodyKey || 'earth']; return Math.sqrt(b.mu / (b.radius + alt)); }
 function stageDv(parts, stageNum) {
   var engines = [], tanks = [], aboveMass = 0;
   for (var i = 0; i < parts.length; i++) {
@@ -486,12 +546,56 @@ function totalDv(parts) {
   return dv;
 }
 
+/* ===== MULTI-BODY ===== */
+function inertialBodyPos(bodyKey, t) {
+  var b = BODIES[bodyKey];
+  if (!b.parent) return new THREE.Vector3(0, 0, 0);
+  var omega = 2 * Math.PI / b.period;
+  var nu = b.phase + omega * t;
+  var parentPos = inertialBodyPos(b.parent, t);
+  return new THREE.Vector3(b.orbitR * Math.cos(nu), 0, b.orbitR * Math.sin(nu)).add(parentPos);
+}
+function inertialBodyVel(bodyKey, t) {
+  var b = BODIES[bodyKey];
+  if (!b.parent) return new THREE.Vector3(0, 0, 0);
+  var omega = 2 * Math.PI / b.period;
+  var nu = b.phase + omega * t;
+  var parentVel = inertialBodyVel(b.parent, t);
+  return new THREE.Vector3(-b.orbitR*omega*Math.sin(nu), 0, b.orbitR*omega*Math.cos(nu)).add(parentVel);
+}
+function inertialPosOf(s) { return s.pos.clone().add(inertialBodyPos(s.parent, s.t)); }
+function inertialVelOf(s) { return s.vel.clone().add(inertialBodyVel(s.parent, s.t)); }
+function transitionSOI(s, newParent, reason) {
+  var iPos = inertialPosOf(s), iVel = inertialVelOf(s);
+  s.parent = newParent;
+  s.pos = iPos.sub(inertialBodyPos(newParent, s.t));
+  s.vel = iVel.sub(inertialBodyVel(newParent, s.t));
+  s.stabilityLock = null;
+  s.soiEvent = { body: newParent, t: s.t, reason: reason };
+}
+function checkSOIChange(s) {
+  var curBody = BODIES[s.parent];
+  if (isFinite(curBody.soiRadius) && s.pos.length() > curBody.soiRadius && curBody.parent) {
+    transitionSOI(s, curBody.parent, 'exit');
+    return;
+  }
+  var iPos = inertialPosOf(s);
+  for (var k in BODIES) {
+    if (k === s.parent) continue;
+    var b = BODIES[k];
+    if (!isFinite(b.soiRadius)) continue;
+    var d = iPos.clone().sub(inertialBodyPos(k, s.t)).length();
+    if (d < b.soiRadius) { transitionSOI(s, k, 'enter'); return; }
+  }
+}
+
 /* ===== 3D PHYSICS ===== */
 function physicsTick3D(s) {
+  var parent = BODIES[s.parent];
   var r = s.pos.length();
-  var alt = r - ENV.R;
+  var alt = r - parent.radius;
   s.altitude = alt;
-  var gMag = gravity(alt);
+  var gMag = parent.mu / (r * r);
   var gravDir = s.pos.clone().normalize().negate();
   var mass = totalMass(s.parts);
   if (mass <= 0) mass = 1;
@@ -500,10 +604,10 @@ function physicsTick3D(s) {
   var forward = new THREE.Vector3(0, 1, 0).applyQuaternion(s.orientation);
   var thrustAcc = forward.clone().multiplyScalar(t.thrust / mass);
   var speed = s.vel.length();
-  var rho = atmDensity(alt);
+  var rho = parent.atm ? atmDensity(alt) : 0;
   var q = 0.5 * rho * speed * speed;
   s.q = q;
-  var dm = dragMag(speed, alt, 0.3, crossSection(s.parts));
+  var dm = rho > 0 ? (0.5 * rho * speed * speed * 0.3 * crossSection(s.parts)) : 0;
   var dragAcc = new THREE.Vector3();
   if (speed > 0.1) dragAcc = s.vel.clone().normalize().negate().multiplyScalar(dm / mass);
   var gravAcc = gravDir.multiplyScalar(gMag);
@@ -534,7 +638,7 @@ function physicsTick3D(s) {
 
   // Reentry heating: high Q AND descending AND in atmosphere
   var descending = s.vel.dot(s.pos.clone().normalize()) < 0;
-  if (alt < ENV.KARMAN && descending && q > 4000) {
+  if (parent.atm && alt < ENV.KARMAN && descending && q > 4000) {
     s.heat = Math.min(1, (q - 4000) / 35000);
   } else {
     s.heat = Math.max(0, s.heat - PHYSICS_DT * 1.5);
@@ -548,11 +652,20 @@ function physicsTick3D(s) {
   if (speed > s.maxVel) s.maxVel = speed;
   if (q > s.maxQ) s.maxQ = q;
   if (alt < 0 && descending) {
-    s.pos.normalize().multiplyScalar(ENV.R);
+    s.pos.normalize().multiplyScalar(parent.radius);
+    var impactSpeed = speed;
     s.vel.set(0, 0, 0);
-    s.crashed = true;
+    if (s.parent === 'mun' && impactSpeed < 12) {
+      s.munLanded = true;
+    } else if (s.parent === 'mun') {
+      s.crashed = true;
+      s.crashBody = 'mun';
+    } else {
+      s.crashed = true;
+    }
   }
   computeOrbitalElements(s);
+  checkSOIChange(s);
 }
 
 function sasTargetDir(s) {
@@ -584,18 +697,19 @@ function setSAS(mode) {
 }
 
 function computeOrbitalElements(s) {
+  var parent = BODIES[s.parent];
+  var mu = parent.mu;
   var r = s.pos.length(), v = s.vel.length();
-  s.orbitalEnergy = v * v / 2 - MU / r;
+  s.orbitalEnergy = v * v / 2 - mu / r;
   var h = new THREE.Vector3().crossVectors(s.pos, s.vel);
-  var hMag = h.length();
   if (s.orbitalEnergy >= 0 || v < 1) { s.periapsis = 0; s.apoapsis = Infinity; s.eccentricity = 1; return; }
-  var a = -MU / (2 * s.orbitalEnergy);
+  var a = -mu / (2 * s.orbitalEnergy);
   var rHat = s.pos.clone().normalize();
-  var eVec = new THREE.Vector3().crossVectors(s.vel, h).divideScalar(MU).sub(rHat);
+  var eVec = new THREE.Vector3().crossVectors(s.vel, h).divideScalar(mu).sub(rHat);
   var e = eVec.length();
   s.eccentricity = e;
-  s.periapsis = a * (1 - e) - ENV.R;
-  s.apoapsis = a * (1 + e) - ENV.R;
+  s.periapsis = a * (1 - e) - parent.radius;
+  s.apoapsis = a * (1 + e) - parent.radius;
 }
 
 /* ===== STAGING ===== */
@@ -759,6 +873,7 @@ function startFlight() {
   var stages = getStages(parts);
   sim = {
     parts: parts,
+    parent: 'earth',
     pos: new THREE.Vector3(0, ENV.R, 0),
     vel: new THREE.Vector3(0, 0, 0),
     orientation: new THREE.Quaternion(),
@@ -766,10 +881,11 @@ function startFlight() {
     currentStage: stages[0],
     altitude: 0, speed: 0, thrustN: 0, grav: 0, mass: 0, accel: 0,
     maxAlt: 0, maxVel: 0, maxQ: 0, q: 0, heat: 0,
-    crashed: false,
+    crashed: false, munLanded: false, crashBody: null,
     periapsis: 0, apoapsis: 0, eccentricity: 1, orbitalEnergy: 0,
     trail: [],
-    stabilityLock: null
+    stabilityLock: null,
+    soiEvent: null
   };
   buildRocketMeshes(sim.parts);
   exhaustData = [];
@@ -804,9 +920,15 @@ function gameLoop(timestamp) {
     physicsTick3D(sim);
     checkAutoStage(sim);
     accumulator -= PHYSICS_DT;
-    if (sim.t % 1 < PHYSICS_DT && sim.thrustN > 0) sim.trail.push(sim.pos.clone());
+    if (sim.t % 1 < PHYSICS_DT && sim.thrustN > 0) sim.trail.push(inertialPosOf(sim));
     if (sim.trail.length > 500) sim.trail.shift();
     if (checkWinLose()) return;
+  }
+  if (sim.soiEvent) {
+    var ev = sim.soiEvent; sim.soiEvent = null;
+    var bName = BODIES[ev.body].name;
+    showToast((ev.reason === 'enter' ? 'Entered ' : 'Exited to ') + bName + ' SOI');
+    playStageSound();
   }
   if (viewMode === 'map') renderMapView();
   else renderFlight3D();
@@ -821,13 +943,33 @@ function updatePlasmaOverlay(s) {
 }
 
 function checkWinLose() {
-  if (sim.periapsis > 70000 && sim.orbitalEnergy < 0 && sim.eccentricity < 1) {
-    showResult(true, 'Orbit Achieved!');
+  if (sim.munLanded) { showResult(true, 'Mun Landing!'); return true; }
+  if (sim.parent === 'earth' && sim.periapsis > 70000 && sim.orbitalEnergy < 0 && sim.eccentricity < 1 && !sim.orbitAchieved) {
+    sim.orbitAchieved = true; // tag but keep flying
+    showToast('Orbit achieved! Keep going to Mun &rarr;');
+    return false;
+  }
+  if (sim.crashed) {
+    var title = sim.crashBody === 'mun' ? 'Crashed on Mun' : (sim.maxAlt > 1000 ? 'Crashed on Return' : 'Launch Failure');
+    showResult(false, title);
     return true;
   }
-  if (sim.crashed) { showResult(false, sim.maxAlt > 1000 ? 'Crashed on Return' : 'Launch Failure'); return true; }
-  if (sim.t > 10 && sim.altitude <= 0 && sim.speed < 1) { showResult(false, 'No Thrust'); return true; }
+  if (sim.t > 10 && sim.altitude <= 0 && sim.speed < 1 && sim.maxAlt < 10) { showResult(false, 'No Thrust'); return true; }
   return false;
+}
+
+function showToast(html) {
+  var el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,40,20,0.9);border:2px solid #40D080;color:#B0C8E0;padding:16px 28px;border-radius:8px;font-family:\'Courier New\',monospace;font-size:1em;z-index:50;pointer-events:none;opacity:0;transition:opacity 0.4s;';
+    document.getElementById('flightScreen').appendChild(el);
+  }
+  el.innerHTML = html;
+  el.style.opacity = '1';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(function() { el.style.opacity = '0'; }, 3000);
 }
 
 function showResult(win, title) {
@@ -846,9 +988,14 @@ function showResult(win, title) {
 
 /* ===== 3D RENDERER ===== */
 function renderFlight3D() {
-  rocketGroup.position.copy(sim.pos);
+  var shipInertialPos = inertialPosOf(sim);
+  rocketGroup.position.copy(shipInertialPos);
   // sim.orientation is in world/inertial frame; model's +Y = nose
   rocketGroup.quaternion.copy(sim.orientation);
+
+  // Update Mun position
+  munMesh.position.copy(inertialBodyPos('mun', sim.t));
+  munMesh.visible = true;
 
   // Flame light
   flameLight.intensity = sim.thrustN > 0 ? sim.throttle * 3 : 0;
@@ -903,7 +1050,7 @@ function renderFlight3D() {
   var camDist = 30 + Math.log10(Math.max(1, sim.altitude)) * 20;
   var behind = new THREE.Vector3(0, -1, 0).applyQuaternion(rocketGroup.quaternion).multiplyScalar(camDist);
   var up = sim.pos.clone().normalize();
-  var camTarget = sim.pos.clone().add(behind).add(up.clone().multiplyScalar(camDist * 0.3));
+  var camTarget = shipInertialPos.clone().add(behind).add(up.clone().multiplyScalar(camDist * 0.3));
 
   // Screen shake
   var gForce = sim.accel / ENV.g0;
@@ -913,10 +1060,10 @@ function renderFlight3D() {
   }
 
   camera.position.lerp(camTarget, 0.06);
-  camera.lookAt(sim.pos);
+  camera.lookAt(shipInertialPos);
   camera.up.copy(up);
   camera.near = Math.max(0.5, sim.altitude * 0.0005);
-  camera.far = 25000000;
+  camera.far = 50000000;
   camera.updateProjectionMatrix();
 
   // G-force vignette
@@ -956,11 +1103,20 @@ function renderHUD() {
     '<b>FUEL</b> <span class="' + (fp < 10 ? 'warn' : 'val') + '">' + fp + '%</span><br>' +
     '<b>TWR</b> <span class="' + twrClass + '">' + twr.toFixed(2) + '</span><br>' +
     '<b>&Delta;v</b> ' + Math.round(totalDv(sim.parts)) + ' m/s';
-  var vorb = orbitalVelocity(Math.max(0, sim.altitude));
+  var vorb = orbitalVelocity(Math.max(0, sim.altitude), sim.parent);
+  var parent = BODIES[sim.parent];
+  var dMunInfo = '';
+  if (sim.parent === 'earth') {
+    var iPos = inertialPosOf(sim);
+    var munPos = inertialBodyPos('mun', sim.t);
+    var dMun = iPos.sub(munPos).length() - BODIES.mun.radius;
+    dMunInfo = '<br><b>MUN</b> ' + fmtAlt(dMun);
+  }
   document.getElementById('hudBR').innerHTML =
+    '<b>SOI</b> <span class="val">' + parent.name + '</span><br>' +
     '<b>ORBIT V</b> ' + Math.round(vorb) + ' m/s<br>' +
     '<b>PROGRESS</b> ' + Math.min(100, Math.round(sim.speed / vorb * 100)) + '%<br>' +
-    '<b>ECC</b> ' + (sim.eccentricity < 10 ? sim.eccentricity.toFixed(3) : '---');
+    '<b>ECC</b> ' + (sim.eccentricity < 10 ? sim.eccentricity.toFixed(3) : '---') + dMunInfo;
   document.getElementById('throttleFill').style.height = (sim.throttle * 100) + '%';
 }
 
@@ -976,19 +1132,22 @@ function stageTWR(parts, stage, alt) {
     if (parts[i].stage <= stage) m += PARTS[parts[i].key].mass + (parts[i].fuel || 0);
   }
   if (m <= 0) return 0;
-  var gLocal = gravity(Math.max(0, alt || 0));
+  var parent = sim ? BODIES[sim.parent] : BODIES.earth;
+  var r = parent.radius + Math.max(0, alt || 0);
+  var gLocal = parent.mu / (r * r);
   return (thr * 1000) / (m * 1000 * gLocal);
 }
 
 /* ===== MAP VIEW + ORBIT PREDICTION ===== */
-function keplerianFromState(pos, vel) {
+function keplerianFromState(pos, vel, mu) {
+  if (!mu) mu = MU;
   var r = pos.length(), v = vel.length();
   if (r < 1 || v < 0.01) return null;
-  var eps = v*v/2 - MU/r;
+  var eps = v*v/2 - mu/r;
   var h = new THREE.Vector3().crossVectors(pos, vel);
   var hMag = h.length();
   if (hMag < 1) return null;
-  var eVec = new THREE.Vector3().crossVectors(vel, h).divideScalar(MU).sub(pos.clone().divideScalar(r));
+  var eVec = new THREE.Vector3().crossVectors(vel, h).divideScalar(mu).sub(pos.clone().divideScalar(r));
   var e = eVec.length();
   var hHat = h.clone().normalize();
   var eHat;
@@ -998,37 +1157,200 @@ function keplerianFromState(pos, vel) {
     eHat.sub(hHat.clone().multiplyScalar(hHat.dot(eHat))).normalize();
   }
   var bHat = new THREE.Vector3().crossVectors(hHat, eHat);
-  var p = hMag*hMag/MU;
-  var a = (eps < 0 && e < 1) ? -MU/(2*eps) : 0;
-  return { a:a, e:e, p:p, eHat:eHat, bHat:bHat, hHat:hHat, energy:eps, bound:(eps<0 && e<1) };
+  var p = hMag*hMag/mu;
+  var a = (eps < 0 && e < 1) ? -mu/(2*eps) : 0;
+  return { a:a, e:e, p:p, eHat:eHat, bHat:bHat, hHat:hHat, energy:eps, bound:(eps<0 && e<1), mu:mu };
+}
+
+function trueAnomalyFromState(pos, vel, kep) {
+  var r = pos.length();
+  if (kep.e < 1e-6) {
+    var cosNu = kep.eHat.dot(pos) / r;
+    cosNu = Math.max(-1, Math.min(1, cosNu));
+    var nu0 = Math.acos(cosNu);
+    var sinSign = kep.bHat.dot(pos) >= 0 ? 1 : -1;
+    return sinSign > 0 ? nu0 : (2*Math.PI - nu0);
+  }
+  var cosNu = kep.eHat.dot(pos) / r;
+  cosNu = Math.max(-1, Math.min(1, cosNu));
+  var nu = Math.acos(cosNu);
+  if (pos.dot(vel) < 0) nu = 2*Math.PI - nu;
+  return nu;
+}
+function solveKepler(M, e) {
+  M = ((M % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+  var E = M;
+  for (var i = 0; i < 8; i++) {
+    var d = (E - e*Math.sin(E) - M) / (1 - e*Math.cos(E));
+    E -= d;
+    if (Math.abs(d) < 1e-9) break;
+  }
+  return E;
+}
+function posVelFromKepler(kep, nu, mu) {
+  var rN = kep.p / (1 + kep.e * Math.cos(nu));
+  var pos = kep.eHat.clone().multiplyScalar(rN*Math.cos(nu)).add(kep.bHat.clone().multiplyScalar(rN*Math.sin(nu)));
+  var h = Math.sqrt(mu * kep.p);
+  var vr = (mu / h) * kep.e * Math.sin(nu);
+  var vp = (mu / h) * (1 + kep.e * Math.cos(nu));
+  var rHat = pos.clone().normalize();
+  var tHat = new THREE.Vector3().crossVectors(kep.hHat, rHat).normalize();
+  var vel = rHat.clone().multiplyScalar(vr).add(tHat.multiplyScalar(vp));
+  return { pos: pos, vel: vel };
+}
+
+// Sample a bounded elliptical orbit forward in time, detecting SOI events.
+function sampleBoundPatch(cur, kep, maxLookAhead) {
+  var parent = BODIES[cur.parent];
+  var n = Math.sqrt(parent.mu / (kep.a*kep.a*kep.a));
+  var period = 2 * Math.PI / n;
+  var lookSec = Math.min(period * 1.05, maxLookAhead);
+  var steps = 96, dt = lookSec / steps;
+  var nu0 = trueAnomalyFromState(cur.pos, cur.vel, kep);
+  var E0 = 2*Math.atan2(Math.sqrt(1-kep.e)*Math.sin(nu0/2), Math.sqrt(1+kep.e)*Math.cos(nu0/2));
+  var M0 = E0 - kep.e*Math.sin(E0);
+  var points = [], event = null;
+  for (var i = 0; i <= steps; i++) {
+    var dti = i * dt;
+    var M = M0 + n * dti;
+    var E = solveKepler(M, kep.e);
+    var nu = 2*Math.atan2(Math.sqrt(1+kep.e)*Math.sin(E/2), Math.sqrt(1-kep.e)*Math.cos(E/2));
+    var pv = posVelFromKepler(kep, nu, parent.mu);
+    var tSample = cur.t + dti;
+    var parentInertial = inertialBodyPos(cur.parent, tSample);
+    var ptInertial = pv.pos.clone().add(parentInertial);
+    points.push(ptInertial);
+    event = soiEventAt(cur.parent, pv, parentInertial, ptInertial, tSample);
+    if (event) break;
+  }
+  return { parent: cur.parent, points: points, kep: kep, event: event };
+}
+
+// Sample a hyperbolic/unbound orbit by true anomaly forward, clipped to SOI.
+function sampleHyperbolicPatch(cur, kep, maxLookAhead) {
+  var parent = BODIES[cur.parent];
+  var nu0 = trueAnomalyFromState(cur.pos, cur.vel, kep);
+  if (nu0 > Math.PI) nu0 -= 2*Math.PI;
+  var nuMax = kep.e > 1 ? Math.acos(-1/kep.e) - 0.01 : nu0 + Math.PI; // hyperbolic asymptote
+  var steps = 64;
+  var points = [], event = null;
+  for (var i = 0; i <= steps; i++) {
+    var nu = nu0 + (nuMax - nu0) * (i/steps);
+    var rN = kep.p / (1 + kep.e * Math.cos(nu));
+    if (rN < 0 || !isFinite(rN)) break;
+    if (isFinite(parent.soiRadius) && rN > parent.soiRadius * 1.02) break;
+    var pv = posVelFromKepler(kep, nu, parent.mu);
+    // Approximate time: use mean motion-like; just use nu for SOI check
+    var tSample = cur.t; // inaccurate time, body positions treated as current
+    var parentInertial = inertialBodyPos(cur.parent, tSample);
+    var ptInertial = pv.pos.clone().add(parentInertial);
+    points.push(ptInertial);
+    // Only flag SOI escape once we're past periapsis
+    if (isFinite(parent.soiRadius) && parent.parent && pv.pos.length() > parent.soiRadius) {
+      event = soiEventAt(cur.parent, pv, parentInertial, ptInertial, tSample);
+      if (event) break;
+    }
+  }
+  return { parent: cur.parent, points: points, kep: kep, event: event };
+}
+
+// Detect SOI entry/exit at a sampled state. pv has pos/vel in cur.parent frame.
+function soiEventAt(curParentKey, pv, parentInertial, ptInertial, tSample) {
+  var parent = BODIES[curParentKey];
+  if (isFinite(parent.soiRadius) && parent.parent && pv.pos.length() > parent.soiRadius) {
+    var newParent = parent.parent;
+    var velInertial = pv.vel.clone().add(inertialBodyVel(curParentKey, tSample));
+    var npInertial = inertialBodyPos(newParent, tSample);
+    var npVelInertial = inertialBodyVel(newParent, tSample);
+    return { kind: 'escape', newParent: newParent, pos: ptInertial.clone().sub(npInertial), vel: velInertial.clone().sub(npVelInertial), t: tSample, inertialPos: ptInertial.clone() };
+  }
+  for (var bk in BODIES) {
+    if (bk === curParentKey) continue;
+    var b = BODIES[bk];
+    if (!isFinite(b.soiRadius)) continue;
+    var bPos = inertialBodyPos(bk, tSample);
+    var d = ptInertial.clone().sub(bPos).length();
+    if (d < b.soiRadius) {
+      var velInertial = pv.vel.clone().add(inertialBodyVel(curParentKey, tSample));
+      var bVel = inertialBodyVel(bk, tSample);
+      return { kind: 'encounter', newParent: bk, pos: ptInertial.clone().sub(bPos), vel: velInertial.clone().sub(bVel), t: tSample, inertialPos: ptInertial.clone() };
+    }
+  }
+  return null;
+}
+
+// Returns array of patches. Up to 2 patches (current + one after SOI transition).
+function predictTrajectory(s, maxLookAhead) {
+  var patches = [];
+  var cur = { pos: s.pos.clone(), vel: s.vel.clone(), parent: s.parent, t: s.t };
+  var timeUsed = 0;
+  for (var patch = 0; patch < 2; patch++) {
+    var parent = BODIES[cur.parent];
+    var kep = keplerianFromState(cur.pos, cur.vel, parent.mu);
+    if (!kep) break;
+    var p = kep.bound ? sampleBoundPatch(cur, kep, maxLookAhead - timeUsed) : sampleHyperbolicPatch(cur, kep, maxLookAhead - timeUsed);
+    patches.push(p);
+    if (!p.event) break;
+    timeUsed += (p.event.t - cur.t);
+    if (timeUsed >= maxLookAhead) break;
+    cur = { pos: p.event.pos, vel: p.event.vel, parent: p.event.newParent, t: p.event.t };
+  }
+  return patches;
+}
+
+function fillLineFromPoints(line, pts) {
+  var arr = line.geometry.attributes.position.array;
+  var cap = Math.floor(arr.length / 3);
+  var nn = Math.min(pts.length, cap);
+  for (var i = 0; i < nn; i++) {
+    arr[i*3] = pts[i].x; arr[i*3+1] = pts[i].y; arr[i*3+2] = pts[i].z;
+  }
+  var lastIdx = nn > 0 ? nn - 1 : 0;
+  for (var i = nn; i < cap; i++) {
+    arr[i*3] = pts[lastIdx] ? pts[lastIdx].x : 0;
+    arr[i*3+1] = pts[lastIdx] ? pts[lastIdx].y : 0;
+    arr[i*3+2] = pts[lastIdx] ? pts[lastIdx].z : 0;
+  }
+  line.geometry.attributes.position.needsUpdate = true;
+  line.geometry.computeBoundingSphere();
+  line.visible = nn > 1;
 }
 
 function updateOrbitLine() {
-  var kep = keplerianFromState(sim.pos, sim.vel);
-  if (!kep || !kep.bound) {
+  var parent = BODIES[sim.parent];
+  var parentInertial = inertialBodyPos(sim.parent, sim.t);
+  var kep = keplerianFromState(sim.pos, sim.vel, parent.mu);
+  if (!kep) {
     orbitLine.visible = false;
     peMarker.visible = false;
     apMarker.visible = false;
+    nextPatchLine.visible = false;
+    encounterMarker.visible = false;
+    escapeMarker.visible = false;
     return;
   }
-  var N = 128;
-  var arr = orbitLine.geometry.attributes.position.array;
-  for (var i = 0; i <= N; i++) {
-    var nu = (i/N) * Math.PI * 2;
-    var rN = kep.p / (1 + kep.e * Math.cos(nu));
-    var x = kep.eHat.x*rN*Math.cos(nu) + kep.bHat.x*rN*Math.sin(nu);
-    var y = kep.eHat.y*rN*Math.cos(nu) + kep.bHat.y*rN*Math.sin(nu);
-    var z = kep.eHat.z*rN*Math.cos(nu) + kep.bHat.z*rN*Math.sin(nu);
-    arr[i*3] = x; arr[i*3+1] = y; arr[i*3+2] = z;
+  var patches = predictTrajectory(sim, BODIES.mun.period * 2);
+  if (patches.length > 0) fillLineFromPoints(orbitLine, patches[0].points);
+  else orbitLine.visible = false;
+
+  // Pe/Ap markers only for bound orbits
+  if (kep.bound) {
+    peMarker.position.copy(kep.eHat).multiplyScalar(kep.a * (1 - kep.e)).add(parentInertial);
+    apMarker.position.copy(kep.eHat).multiplyScalar(-kep.a * (1 + kep.e)).add(parentInertial);
+    peMarker.visible = apMarker.visible = true;
+  } else {
+    peMarker.visible = apMarker.visible = false;
   }
-  orbitLine.geometry.attributes.position.needsUpdate = true;
-  orbitLine.geometry.computeBoundingSphere();
-  orbitLine.visible = true;
-  var peR = kep.a * (1 - kep.e);
-  var apR = kep.a * (1 + kep.e);
-  peMarker.position.copy(kep.eHat).multiplyScalar(peR);
-  apMarker.position.copy(kep.eHat).multiplyScalar(-apR);
-  peMarker.visible = apMarker.visible = true;
+
+  encounterMarker.visible = false;
+  escapeMarker.visible = false;
+  nextPatchLine.visible = false;
+  if (patches.length > 0 && patches[0].event) {
+    var ev = patches[0].event;
+    if (ev.kind === 'encounter') { encounterMarker.position.copy(ev.inertialPos); encounterMarker.visible = true; }
+    else { escapeMarker.position.copy(ev.inertialPos); escapeMarker.visible = true; }
+    if (patches.length > 1) fillLineFromPoints(nextPatchLine, patches[1].points);
+  }
 }
 
 function setView(mode) {
@@ -1044,28 +1366,50 @@ function setView(mode) {
   document.getElementById('hudTL').style.display = hudDisp;
   document.getElementById('hudBL').style.display = hudDisp;
   document.getElementById('hudBR').style.display = hudDisp;
-  if (!mapOnly && peMarker) { peMarker.visible = false; apMarker.visible = false; shipMarker.visible = false; orbitLine.visible = false; }
+  if (!mapOnly && peMarker) {
+    peMarker.visible = false; apMarker.visible = false; shipMarker.visible = false; orbitLine.visible = false;
+    if (munBodyMarker) munBodyMarker.visible = false;
+    if (munOrbitLine) munOrbitLine.visible = false;
+    if (nextPatchLine) nextPatchLine.visible = false;
+    if (encounterMarker) encounterMarker.visible = false;
+    if (escapeMarker) escapeMarker.visible = false;
+  }
 }
 
 function renderMapView() {
   updateOrbitLine();
-  shipMarker.position.copy(sim.pos);
+  var shipInertialPos = inertialPosOf(sim);
+  shipMarker.position.copy(shipInertialPos);
   shipMarker.visible = true;
+  // Update Mun position + marker + orbit line
+  var munPos = inertialBodyPos('mun', sim.t);
+  munMesh.position.copy(munPos);
+  munMesh.visible = true;
+  munBodyMarker.position.copy(munPos);
+  munBodyMarker.visible = true;
+  munOrbitLine.visible = true;
   // Hide rocket mesh in map (too small anyway; ship sprite replaces it)
   rocketGroup.visible = false;
+  // Center map camera on current parent body
+  var focus = inertialBodyPos(sim.parent, sim.t);
   var d = mapState.dist;
   var cp = Math.cos(mapState.pitch), sp = Math.sin(mapState.pitch);
   var cy = Math.cos(mapState.yaw), sy = Math.sin(mapState.yaw);
-  mapCamera.position.set(d*cp*sy, d*sp, d*cp*cy);
+  mapCamera.position.set(focus.x + d*cp*sy, focus.y + d*sp, focus.z + d*cp*cy);
   mapCamera.up.set(0, 1, 0);
-  mapCamera.lookAt(0, 0, 0);
+  mapCamera.lookAt(focus);
   renderer.render(scene, mapCamera);
   // Update map info HUD
-  var kep = keplerianFromState(sim.pos, sim.vel);
-  var info = '<b>PE</b> ' + fmtAlt(sim.periapsis) + '<br><b>AP</b> ' + fmtAlt(sim.apoapsis) + '<br><b>ECC</b> ' + (kep ? kep.e.toFixed(4) : '---') + '<br><b>ZOOM</b> ' + (mapState.dist/ENV.R).toFixed(1) + 'R';
+  var parent = BODIES[sim.parent];
+  var kep = keplerianFromState(sim.pos, sim.vel, parent.mu);
+  var info = '<b>SOI</b> ' + parent.name + '<br><b>PE</b> ' + fmtAlt(sim.periapsis) + '<br><b>AP</b> ' + fmtAlt(sim.apoapsis) + '<br><b>ECC</b> ' + (kep ? kep.e.toFixed(4) : '---') + '<br><b>ZOOM</b> ' + (mapState.dist/parent.radius).toFixed(1) + 'R';
   if (kep && kep.bound) {
-    var period = 2 * Math.PI * Math.sqrt(kep.a * kep.a * kep.a / MU);
+    var period = 2 * Math.PI * Math.sqrt(kep.a * kep.a * kep.a / parent.mu);
     info += '<br><b>PERIOD</b> ' + fmtTime(period);
+  }
+  if (sim.parent === 'earth') {
+    var dMun = shipInertialPos.clone().sub(munPos).length();
+    info += '<br><b>MUN D</b> ' + fmtAlt(dMun - BODIES.mun.radius);
   }
   document.getElementById('mapInfoTL').innerHTML = info;
   // After map render, un-hide rocket so flight view next frame works
