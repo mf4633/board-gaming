@@ -107,6 +107,19 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 
 .map-hud { position: absolute; padding: 6px 10px; font-size: 0.75em; pointer-events: none; font-family: 'Courier New', monospace; z-index: 11; }
 .map-hud b { color: #4080D0; }
+.maneuver-panel { position: absolute; bottom: 30px; left: 10px; width: 280px; background: rgba(20,10,40,0.88); border: 1px solid #8040D0; border-radius: 6px; padding: 8px 10px; z-index: 12; font-family: 'Courier New', monospace; font-size: 0.75em; color: #C0A0E0; display: none; }
+.maneuver-panel.active { display: block; }
+.maneuver-panel h4 { color: #B080FF; font-size: 0.85em; margin-bottom: 6px; text-align: center; font-family: Georgia, serif; letter-spacing: 2px; }
+.man-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+.man-row label { width: 72px; color: #A080D0; }
+.man-row input[type=range] { flex: 1; accent-color: #B080FF; }
+.man-row .man-val { width: 64px; text-align: right; color: #FFD040; }
+.man-btn { padding: 3px 10px; margin: 3px 2px 0 0; font-size: 0.75em; font-family: 'Courier New', monospace; background: #1A1030; color: #C0A0E0; border: 1px solid #8040D0; border-radius: 3px; cursor: pointer; }
+.man-btn:hover { background: #2A1850; }
+.man-btn.go { border-color: #40D080; color: #40D080; }
+.man-btn.clear { border-color: #D04080; color: #D04080; }
+.man-info { font-size: 0.7em; color: #8070A0; margin-top: 4px; }
+.man-info b { color: #FFD040; }
 .map-legend { position: absolute; bottom: 30px; right: 10px; background: rgba(10,20,40,0.7); border: 1px solid #1A2A40; padding: 6px 10px; font-size: 0.65em; color: #8098B0; border-radius: 4px; z-index: 11; font-family: 'Courier New', monospace; }
 .map-legend span.sw { display: inline-block; width: 18px; height: 2px; vertical-align: middle; margin-right: 4px; }
 </style>
@@ -177,10 +190,21 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
     <button class="sas-btn" data-sas="radial-in" onclick="setSAS('radial-in')">RADIAL-<span class="sas-key">5</span></button>
     <button class="sas-btn" data-sas="normal" onclick="setSAS('normal')">NORMAL+<span class="sas-key">6</span></button>
     <button class="sas-btn" data-sas="antinormal" onclick="setSAS('antinormal')">NORMAL-<span class="sas-key">7</span></button>
+    <button class="sas-btn" data-sas="maneuver" onclick="setSAS('maneuver')">MANEUVER<span class="sas-key">8</span></button>
+  </div>
+  <div class="maneuver-panel" id="maneuverPanel">
+    <h4>&#9733; MANEUVER NODE</h4>
+    <div class="man-row"><label>T+</label><input type="range" id="manTime" min="0" max="14400" step="10" value="0"><span class="man-val" id="manTimeVal">+0s</span></div>
+    <div class="man-row"><label>Prograde</label><input type="range" id="manPro" min="-3000" max="3000" step="5" value="0"><span class="man-val" id="manProVal">0</span></div>
+    <div class="man-row"><label>Normal</label><input type="range" id="manNorm" min="-1500" max="1500" step="5" value="0"><span class="man-val" id="manNormVal">0</span></div>
+    <div class="man-row"><label>Radial</label><input type="range" id="manRad" min="-1500" max="1500" step="5" value="0"><span class="man-val" id="manRadVal">0</span></div>
+    <div class="man-info" id="manInfo"></div>
+    <button class="man-btn go" onclick="alignToNode()">Align SAS</button>
+    <button class="man-btn clear" onclick="clearNode()">Clear</button>
   </div>
   <div class="map-hud" id="mapInfoTL" style="top:78px;left:8px;color:#B0C8E0;display:none;"></div>
   <div class="map-legend" id="mapLegend" style="display:none;"><b style="color:#4080D0;">MAP LEGEND</b><br><span class="sw" style="background:#40D080;"></span>Orbit<br><span class="sw" style="background:#D04040;"></span>Periapsis<br><span class="sw" style="background:#40C0FF;"></span>Apoapsis<br><span class="sw" style="background:#FFD040;"></span>Ship<br><br>Drag: rotate &nbsp; Wheel: zoom</div>
-  <div class="controls-hint">W/S: Throttle &nbsp; A/D: Pitch &nbsp; Q/E: Yaw &nbsp; SPACE: Stage &nbsp; 0-7: SAS &nbsp; M: Map &nbsp; ,/.: Warp &nbsp; ESC: Abort</div>
+  <div class="controls-hint">W/S: Throttle &nbsp; A/D: Pitch &nbsp; Q/E: Yaw &nbsp; SPACE: Stage &nbsp; 0-8: SAS &nbsp; M: Map &nbsp; N: Node &nbsp; ,/.: Warp &nbsp; ESC: Abort</div>
   <div class="result-overlay" id="resultOverlay">
     <div class="result-box" id="resultBox">
       <h2 id="resultTitle">Orbit Achieved!</h2>
@@ -235,7 +259,9 @@ var accumulator = 0;
 var PHYSICS_DT = 0.02;
 var viewMode = 'flight';
 var sasMode = 'off';
-var SAS_KEYS = { '0':'off', '1':'stability', '2':'prograde', '3':'retrograde', '4':'radial-out', '5':'radial-in', '6':'normal', '7':'antinormal' };
+var SAS_KEYS = { '0':'off', '1':'stability', '2':'prograde', '3':'retrograde', '4':'radial-out', '5':'radial-in', '6':'normal', '7':'antinormal', '8':'maneuver' };
+var maneuverNode = null; // { dt: seconds from NOW, dvPro, dvNorm, dvRad }
+var plannedOrbitLine = null, manNodeMarker = null;
 var audio = { ctx:null, engineGain:null, engineOsc:null, engineFilter:null, noiseSrc:null, plasmaGain:null, plasmaSrc:null, muted:false };
 var mapState = { dist:ENV.R*4, yaw:0.0, pitch:0.35, dragging:false, lx:0, ly:0 };
 var orbitLine = null, peMarker = null, apMarker = null, shipMarker = null, mapCamera = null;
@@ -368,6 +394,23 @@ function initThree() {
   nextPatchLine.visible = false;
   nextPatchLine.frustumCulled = false;
   scene.add(nextPatchLine);
+
+  // Planned maneuver orbit (post-burn)
+  var plannedGeom = new THREE.BufferGeometry();
+  plannedGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(129 * 3), 3));
+  var plannedMat = new THREE.LineBasicMaterial({ color: 0xB080FF, transparent: true, opacity: 0.8 });
+  plannedOrbitLine = new THREE.Line(plannedGeom, plannedMat);
+  plannedOrbitLine.visible = false;
+  plannedOrbitLine.frustumCulled = false;
+  scene.add(plannedOrbitLine);
+
+  // Maneuver node marker
+  var manCanvas = makeMarkerCanvas('\u2606', '#B080FF');
+  manNodeMarker = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(manCanvas), depthTest: false, transparent: true }));
+  manNodeMarker.scale.set(400000, 400000, 1);
+  manNodeMarker.visible = false;
+  manNodeMarker.renderOrder = 1000;
+  scene.add(manNodeMarker);
 
   // Encounter / escape markers
   var encCanvas = makeMarkerCanvas('\u2694', '#FFD040');
@@ -685,6 +728,14 @@ function sasTargetDir(s) {
     case 'stability':
       if (!s.stabilityLock) s.stabilityLock = new THREE.Vector3(0, 1, 0).applyQuaternion(s.orientation);
       return s.stabilityLock.clone();
+    case 'maneuver': {
+      if (!maneuverNode) return null;
+      var bs = burnStateAtNode();
+      if (!bs) return null;
+      var burnVec = maneuverBurnVector(bs);
+      if (burnVec.lengthSq() < 1) return null;
+      return burnVec.normalize();
+    }
   }
   return null;
 }
@@ -891,6 +942,8 @@ function startFlight() {
   exhaustData = [];
   gameState = 'flight';
   timeWarp = 1;
+  maneuverNode = null;
+  if (document.getElementById('maneuverPanel')) document.getElementById('maneuverPanel').classList.remove('active');
   setSAS('off');
   setView('flight');
   accumulator = 0;
@@ -1353,6 +1406,125 @@ function updateOrbitLine() {
   }
 }
 
+/* ===== MANEUVER NODES ===== */
+// Propagate the current state forward by dt within the current SOI (no SOI crossing).
+// Returns { pos, vel, parent } at t + dt. Works for elliptic; falls back for others.
+function propagateKeplerFromSim(dt) {
+  var parent = BODIES[sim.parent];
+  var kep = keplerianFromState(sim.pos, sim.vel, parent.mu);
+  if (!kep || !kep.bound) return { pos: sim.pos.clone(), vel: sim.vel.clone(), parent: sim.parent };
+  var n = Math.sqrt(parent.mu / (kep.a*kep.a*kep.a));
+  var nu0 = trueAnomalyFromState(sim.pos, sim.vel, kep);
+  var E0 = 2*Math.atan2(Math.sqrt(1-kep.e)*Math.sin(nu0/2), Math.sqrt(1+kep.e)*Math.cos(nu0/2));
+  var M = E0 - kep.e*Math.sin(E0) + n*dt;
+  var E = solveKepler(M, kep.e);
+  var nu = 2*Math.atan2(Math.sqrt(1+kep.e)*Math.sin(E/2), Math.sqrt(1-kep.e)*Math.cos(E/2));
+  var pv = posVelFromKepler(kep, nu, parent.mu);
+  return { pos: pv.pos, vel: pv.vel, parent: sim.parent };
+}
+
+function burnStateAtNode() {
+  if (!maneuverNode) return null;
+  return propagateKeplerFromSim(maneuverNode.dt);
+}
+
+// Returns the world-space direction the craft should point to execute the planned burn.
+function maneuverBurnVector(burnState) {
+  var parent = BODIES[burnState.parent];
+  var prograde = burnState.vel.clone().normalize();
+  var radial = burnState.pos.clone().normalize();
+  var normal = new THREE.Vector3().crossVectors(burnState.pos, burnState.vel);
+  if (normal.lengthSq() > 0) normal.normalize();
+  return prograde.clone().multiplyScalar(maneuverNode.dvPro)
+    .add(normal.multiplyScalar(maneuverNode.dvNorm))
+    .add(radial.multiplyScalar(maneuverNode.dvRad));
+}
+
+function createNode() {
+  // Default: 1/4 period forward, no ΔV
+  var parent = BODIES[sim.parent];
+  var kep = keplerianFromState(sim.pos, sim.vel, parent.mu);
+  var defaultDt = 60;
+  if (kep && kep.bound) {
+    var period = 2 * Math.PI * Math.sqrt(kep.a*kep.a*kep.a / parent.mu);
+    defaultDt = Math.min(period * 0.25, 3600);
+  }
+  maneuverNode = { dt: defaultDt, dvPro: 0, dvNorm: 0, dvRad: 0 };
+  document.getElementById('maneuverPanel').classList.add('active');
+  document.getElementById('manTime').value = Math.round(defaultDt);
+  document.getElementById('manPro').value = 0;
+  document.getElementById('manNorm').value = 0;
+  document.getElementById('manRad').value = 0;
+  updateManeuverUI();
+}
+
+function clearNode() {
+  maneuverNode = null;
+  document.getElementById('maneuverPanel').classList.remove('active');
+  if (plannedOrbitLine) plannedOrbitLine.visible = false;
+  if (manNodeMarker) manNodeMarker.visible = false;
+  if (sasMode === 'maneuver') setSAS('off');
+}
+
+function alignToNode() {
+  if (!maneuverNode) return;
+  setSAS('maneuver');
+  setView('flight');
+}
+
+function updateManeuverUI() {
+  if (!maneuverNode) return;
+  maneuverNode.dt = parseFloat(document.getElementById('manTime').value);
+  maneuverNode.dvPro = parseFloat(document.getElementById('manPro').value);
+  maneuverNode.dvNorm = parseFloat(document.getElementById('manNorm').value);
+  maneuverNode.dvRad = parseFloat(document.getElementById('manRad').value);
+  document.getElementById('manTimeVal').textContent = (maneuverNode.dt >= 0 ? '+' : '') + Math.round(maneuverNode.dt) + 's';
+  document.getElementById('manProVal').textContent = maneuverNode.dvPro.toFixed(0);
+  document.getElementById('manNormVal').textContent = maneuverNode.dvNorm.toFixed(0);
+  document.getElementById('manRadVal').textContent = maneuverNode.dvRad.toFixed(0);
+  var total = Math.sqrt(maneuverNode.dvPro*maneuverNode.dvPro + maneuverNode.dvNorm*maneuverNode.dvNorm + maneuverNode.dvRad*maneuverNode.dvRad);
+  var bs = burnStateAtNode();
+  var info = '<b>&Delta;v</b> ' + total.toFixed(0) + ' m/s';
+  if (bs) {
+    var parent = BODIES[bs.parent];
+    var postVel = bs.vel.clone().add(maneuverBurnVector(bs));
+    var postKep = keplerianFromState(bs.pos, postVel, parent.mu);
+    if (postKep && postKep.bound) {
+      info += ' &nbsp; <b>PE</b> ' + fmtAlt(postKep.a*(1-postKep.e) - parent.radius) + ' &nbsp; <b>AP</b> ' + fmtAlt(postKep.a*(1+postKep.e) - parent.radius);
+    } else if (postKep) {
+      info += ' &nbsp; <span style="color:#FFD040;">Escape trajectory</span>';
+    }
+    // Burn time estimate
+    if (total > 0 && sim.thrustN > 0) {
+      var tBurn = sim.mass * total / sim.thrustN;
+      info += '<br><b>Burn</b> ' + tBurn.toFixed(1) + 's';
+    }
+  }
+  document.getElementById('manInfo').innerHTML = info;
+}
+
+function updatePlannedOrbitLine() {
+  if (!maneuverNode) {
+    if (plannedOrbitLine) plannedOrbitLine.visible = false;
+    if (manNodeMarker) manNodeMarker.visible = false;
+    return;
+  }
+  var bs = burnStateAtNode();
+  if (!bs) return;
+  var parent = BODIES[bs.parent];
+  var parentInertial = inertialBodyPos(bs.parent, sim.t + maneuverNode.dt);
+  manNodeMarker.position.copy(bs.pos).add(parentInertial);
+  manNodeMarker.visible = true;
+  // Post-burn state
+  var postVel = bs.vel.clone().add(maneuverBurnVector(bs));
+  var postKep = keplerianFromState(bs.pos, postVel, parent.mu);
+  if (!postKep) { plannedOrbitLine.visible = false; return; }
+  // Synthesize a predictTrajectory-style patch for the planned orbit
+  var fakeSim = { pos: bs.pos, vel: postVel, parent: bs.parent, t: sim.t + maneuverNode.dt };
+  var patches = predictTrajectory(fakeSim, BODIES.mun.period * 2);
+  if (patches.length > 0) fillLineFromPoints(plannedOrbitLine, patches[0].points);
+}
+
 function setView(mode) {
   viewMode = mode;
   document.getElementById('vtFlight').classList.toggle('active', mode === 'flight');
@@ -1373,11 +1545,14 @@ function setView(mode) {
     if (nextPatchLine) nextPatchLine.visible = false;
     if (encounterMarker) encounterMarker.visible = false;
     if (escapeMarker) escapeMarker.visible = false;
+    if (plannedOrbitLine) plannedOrbitLine.visible = false;
+    if (manNodeMarker) manNodeMarker.visible = false;
   }
 }
 
 function renderMapView() {
   updateOrbitLine();
+  updatePlannedOrbitLine();
   var shipInertialPos = inertialPosOf(sim);
   shipMarker.position.copy(shipInertialPos);
   shipMarker.visible = true;
@@ -1492,14 +1667,20 @@ document.addEventListener('keydown', function(e) {
   if (e.key === '.') timeWarp = Math.min(10, timeWarp * 2);
   if (e.key === ',') timeWarp = Math.max(1, timeWarp / 2);
   if (e.key.toLowerCase() === 'm') setView(viewMode === 'flight' ? 'map' : 'flight');
+  if (e.key.toLowerCase() === 'n') { if (maneuverNode) clearNode(); else createNode(); }
   if (SAS_KYS_HANDLED.indexOf(e.key) >= 0) setSAS(SAS_KEYS[e.key]);
   if (e.key === 'Escape') backToBuilder();
 });
-var SAS_KYS_HANDLED = ['0','1','2','3','4','5','6','7'];
+var SAS_KYS_HANDLED = ['0','1','2','3','4','5','6','7','8'];
+
+// Wire up maneuver node sliders
+['manTime','manPro','manNorm','manRad'].forEach(function(id) {
+  document.addEventListener('input', function(e) { if (e.target && e.target.id === id) updateManeuverUI(); });
+});
 document.addEventListener('keyup', function(e) { keys[e.key.toLowerCase()] = false; });
 
 /* ===== HELPERS ===== */
-function fmtAlt(m) { if (!isFinite(m)) return '---'; if (Math.abs(m) >= 1000) return (m / 1000).toFixed(1) + ' km'; return Math.round(m) + ' m'; }
+function fmtAlt(m) { if (!isFinite(m)) return '---'; if (Math.abs(m) >= 1e6) return (m/1000).toFixed(0) + ' km'; if (Math.abs(m) >= 1000) return (m/1000).toFixed(1) + ' km'; return Math.round(m) + ' m'; }
 function fmtTime(s) { var m = Math.floor(s / 60), sec = Math.floor(s % 60); return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec; }
 
 /* ===== INIT ===== */
