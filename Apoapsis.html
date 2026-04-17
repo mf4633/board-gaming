@@ -85,6 +85,30 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 
 .rules-toggle { background: none; border: 1px solid #1A2A40; color: #6080A0; padding: 3px 10px; font-size: 0.7em; font-family: 'Courier New', monospace; border-radius: 4px; cursor: pointer; position: absolute; bottom: 40px; right: 10px; z-index: 10; }
 .rules-toggle:hover { background: #0E1428; }
+
+.sas-panel { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 120px; background: rgba(10,20,40,0.8); border: 1px solid #1A2A40; border-radius: 6px; padding: 6px; z-index: 10; }
+.sas-panel h4 { color: #4080D0; font-size: 0.7em; margin-bottom: 4px; text-align: center; font-family: Georgia, serif; letter-spacing: 1px; }
+.sas-btn { display: block; width: 100%; padding: 3px 5px; margin: 2px 0; font-size: 0.65em; font-family: 'Courier New', monospace; background: #0A1020; color: #6080A0; border: 1px solid #1A2A40; border-radius: 3px; cursor: pointer; text-align: left; }
+.sas-btn .sas-key { color: #3A5070; float: right; }
+.sas-btn:hover { background: #122040; color: #B0C8E0; }
+.sas-btn.active { background: #1A3860; color: #FFD040; border-color: #FFD040; }
+.sas-btn.active .sas-key { color: #FFD040; }
+
+.view-toggle { position: absolute; top: 42px; left: 50%; transform: translateX(-50%); z-index: 15; display: flex; gap: 4px; }
+.view-toggle .vt-btn { background: #0E1428; border: 1px solid #4080D0; color: #B0C8E0; padding: 4px 14px; font-family: 'Courier New', monospace; font-size: 0.75em; cursor: pointer; border-radius: 4px; }
+.view-toggle .vt-btn:hover { background: #1A2848; }
+.view-toggle .vt-btn.active { background: #1A3860; color: #FFD040; border-color: #FFD040; }
+
+.q-warn { color: #D04040; font-weight: bold; }
+.plasma-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 4; transition: opacity 0.3s; opacity: 0; background: radial-gradient(ellipse at 50% 100%, rgba(255,120,40,0.55) 0%, rgba(255,60,0,0.25) 40%, transparent 75%); }
+
+.sound-toggle { position: absolute; top: 42px; right: 10px; z-index: 15; background: #0E1428; border: 1px solid #1A2A40; color: #6080A0; padding: 3px 8px; font-size: 0.7em; font-family: 'Courier New', monospace; border-radius: 3px; cursor: pointer; }
+.sound-toggle:hover { background: #1A2848; }
+
+.map-hud { position: absolute; padding: 6px 10px; font-size: 0.75em; pointer-events: none; font-family: 'Courier New', monospace; z-index: 11; }
+.map-hud b { color: #4080D0; }
+.map-legend { position: absolute; bottom: 30px; right: 10px; background: rgba(10,20,40,0.7); border: 1px solid #1A2A40; padding: 6px 10px; font-size: 0.65em; color: #8098B0; border-radius: 4px; z-index: 11; font-family: 'Courier New', monospace; }
+.map-legend span.sw { display: inline-block; width: 18px; height: 2px; vertical-align: middle; margin-right: 4px; }
 </style>
 </head>
 <body>
@@ -131,13 +155,32 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 
 <div id="flightScreen" class="screen">
   <div id="threeContainer"></div>
+  <div class="plasma-overlay" id="plasmaOverlay"></div>
   <div class="g-vignette" id="gVignette"></div>
+  <div class="view-toggle">
+    <button class="vt-btn active" id="vtFlight" onclick="setView('flight')">FLIGHT</button>
+    <button class="vt-btn" id="vtMap" onclick="setView('map')">MAP</button>
+  </div>
+  <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">&#x1F50A; ON</button>
   <div class="hud hud-tl" id="hudTL"></div>
   <div class="hud hud-tr" id="hudTR"></div>
   <div class="hud hud-bl" id="hudBL"></div>
   <div class="hud hud-br" id="hudBR"></div>
-  <div class="throttle-bar"><div class="throttle-fill" id="throttleFill"></div></div>
-  <div class="controls-hint">W/S: Throttle &nbsp; A/D: Pitch &nbsp; Q/E: Yaw &nbsp; SPACE: Stage &nbsp; T: Prograde Hold &nbsp; ,/.: Warp &nbsp; ESC: Abort</div>
+  <div class="throttle-bar" id="throttleBar"><div class="throttle-fill" id="throttleFill"></div></div>
+  <div class="sas-panel" id="sasPanel">
+    <h4>SAS</h4>
+    <button class="sas-btn active" data-sas="off" onclick="setSAS('off')">OFF<span class="sas-key">0</span></button>
+    <button class="sas-btn" data-sas="stability" onclick="setSAS('stability')">STABILITY<span class="sas-key">1</span></button>
+    <button class="sas-btn" data-sas="prograde" onclick="setSAS('prograde')">PROGRADE<span class="sas-key">2</span></button>
+    <button class="sas-btn" data-sas="retrograde" onclick="setSAS('retrograde')">RETROGRADE<span class="sas-key">3</span></button>
+    <button class="sas-btn" data-sas="radial-out" onclick="setSAS('radial-out')">RADIAL+<span class="sas-key">4</span></button>
+    <button class="sas-btn" data-sas="radial-in" onclick="setSAS('radial-in')">RADIAL-<span class="sas-key">5</span></button>
+    <button class="sas-btn" data-sas="normal" onclick="setSAS('normal')">NORMAL+<span class="sas-key">6</span></button>
+    <button class="sas-btn" data-sas="antinormal" onclick="setSAS('antinormal')">NORMAL-<span class="sas-key">7</span></button>
+  </div>
+  <div class="map-hud" id="mapInfoTL" style="top:78px;left:8px;color:#B0C8E0;display:none;"></div>
+  <div class="map-legend" id="mapLegend" style="display:none;"><b style="color:#4080D0;">MAP LEGEND</b><br><span class="sw" style="background:#40D080;"></span>Orbit<br><span class="sw" style="background:#D04040;"></span>Periapsis<br><span class="sw" style="background:#40C0FF;"></span>Apoapsis<br><span class="sw" style="background:#FFD040;"></span>Ship<br><br>Drag: rotate &nbsp; Wheel: zoom</div>
+  <div class="controls-hint">W/S: Throttle &nbsp; A/D: Pitch &nbsp; Q/E: Yaw &nbsp; SPACE: Stage &nbsp; 0-7: SAS &nbsp; M: Map &nbsp; ,/.: Warp &nbsp; ESC: Abort</div>
   <div class="result-overlay" id="resultOverlay">
     <div class="result-box" id="resultBox">
       <h2 id="resultTitle">Orbit Achieved!</h2>
@@ -183,7 +226,12 @@ var timeWarp = 1;
 var lastTime = 0;
 var accumulator = 0;
 var PHYSICS_DT = 0.02;
-var progradeHold = false;
+var viewMode = 'flight';
+var sasMode = 'off';
+var SAS_KEYS = { '0':'off', '1':'stability', '2':'prograde', '3':'retrograde', '4':'radial-out', '5':'radial-in', '6':'normal', '7':'antinormal' };
+var audio = { ctx:null, engineGain:null, engineOsc:null, engineFilter:null, noiseSrc:null, plasmaGain:null, plasmaSrc:null, muted:false };
+var mapState = { dist:ENV.R*4, yaw:0.0, pitch:0.35, dragging:false, lx:0, ly:0 };
+var orbitLine = null, peMarker = null, apMarker = null, shipMarker = null, mapCamera = null;
 
 /* ===== THREE.JS ===== */
 var renderer, scene, camera;
@@ -204,6 +252,7 @@ function initThree() {
   scene.background = new THREE.Color(0x000005);
 
   camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 1, 30000000);
+  mapCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 10000, 200000000);
 
   var amb = new THREE.AmbientLight(0x334455, 0.6);
   scene.add(amb);
@@ -271,14 +320,76 @@ function initThree() {
   trailLine = new THREE.Line(trailGeom, trailMat);
   scene.add(trailLine);
 
+  // Orbit prediction line (map view)
+  var orbitGeom = new THREE.BufferGeometry();
+  orbitGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(129 * 3), 3));
+  var orbitMat = new THREE.LineBasicMaterial({ color: 0x40D080, transparent: true, opacity: 0.75 });
+  orbitLine = new THREE.Line(orbitGeom, orbitMat);
+  orbitLine.visible = false;
+  orbitLine.frustumCulled = false;
+  scene.add(orbitLine);
+
+  // Ap/Pe markers (billboarded sprites)
+  var peCanvas = makeMarkerCanvas('Pe', '#D04040');
+  var apCanvas = makeMarkerCanvas('Ap', '#40C0FF');
+  var shipCanvas = makeMarkerCanvas('\u25B2', '#FFD040');
+  var peTex = new THREE.CanvasTexture(peCanvas);
+  var apTex = new THREE.CanvasTexture(apCanvas);
+  var shipTex = new THREE.CanvasTexture(shipCanvas);
+  peMarker = new THREE.Sprite(new THREE.SpriteMaterial({ map: peTex, depthTest: false, transparent: true }));
+  apMarker = new THREE.Sprite(new THREE.SpriteMaterial({ map: apTex, depthTest: false, transparent: true }));
+  shipMarker = new THREE.Sprite(new THREE.SpriteMaterial({ map: shipTex, depthTest: false, transparent: true }));
+  peMarker.scale.set(400000, 400000, 1);
+  apMarker.scale.set(400000, 400000, 1);
+  shipMarker.scale.set(350000, 350000, 1);
+  peMarker.visible = apMarker.visible = shipMarker.visible = false;
+  peMarker.renderOrder = apMarker.renderOrder = shipMarker.renderOrder = 999;
+  scene.add(peMarker); scene.add(apMarker); scene.add(shipMarker);
+
   window.addEventListener('resize', function() {
     var c = document.getElementById('threeContainer');
     camera.aspect = c.clientWidth / c.clientHeight;
     camera.updateProjectionMatrix();
+    mapCamera.aspect = c.clientWidth / c.clientHeight;
+    mapCamera.updateProjectionMatrix();
     renderer.setSize(c.clientWidth, c.clientHeight);
   });
 
+  // Map view mouse handling
+  var cv = renderer.domElement;
+  cv.addEventListener('mousedown', function(e) { if (viewMode !== 'map') return; mapState.dragging = true; mapState.lx = e.clientX; mapState.ly = e.clientY; });
+  window.addEventListener('mouseup', function() { mapState.dragging = false; });
+  window.addEventListener('mousemove', function(e) {
+    if (viewMode !== 'map' || !mapState.dragging) return;
+    var dx = e.clientX - mapState.lx, dy = e.clientY - mapState.ly;
+    mapState.lx = e.clientX; mapState.ly = e.clientY;
+    mapState.yaw -= dx * 0.005;
+    mapState.pitch = Math.max(-1.4, Math.min(1.4, mapState.pitch + dy * 0.005));
+  });
+  cv.addEventListener('wheel', function(e) {
+    if (viewMode !== 'map') return;
+    e.preventDefault();
+    var f = Math.pow(1.1, e.deltaY > 0 ? 1 : -1);
+    mapState.dist = Math.max(ENV.R * 1.3, Math.min(ENV.R * 200, mapState.dist * f));
+  }, { passive: false });
+
   threeReady = true;
+}
+
+function makeMarkerCanvas(label, color) {
+  var c = document.createElement('canvas');
+  c.width = 64; c.height = 64;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(32, 32, 10, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(32, 32, 16, 0, Math.PI*2); ctx.stroke();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 14px Courier New';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(label, 32, 50);
+  return c;
 }
 
 /* ===== PHYSICS ===== */
@@ -389,6 +500,9 @@ function physicsTick3D(s) {
   var forward = new THREE.Vector3(0, 1, 0).applyQuaternion(s.orientation);
   var thrustAcc = forward.clone().multiplyScalar(t.thrust / mass);
   var speed = s.vel.length();
+  var rho = atmDensity(alt);
+  var q = 0.5 * rho * speed * speed;
+  s.q = q;
   var dm = dragMag(speed, alt, 0.3, crossSection(s.parts));
   var dragAcc = new THREE.Vector3();
   if (speed > 0.1) dragAcc = s.vel.clone().normalize().negate().multiplyScalar(dm / mass);
@@ -399,13 +513,11 @@ function physicsTick3D(s) {
   s.t += PHYSICS_DT;
   if (t.mdot > 0) consumeFuel(s.parts, s.currentStage, t.mdot * PHYSICS_DT);
 
-  // Player rotation inputs
-  if (progradeHold && speed > 10) {
-    var prograde = s.vel.clone().normalize();
-    var up = new THREE.Vector3(0, 1, 0);
-    var mat = new THREE.Matrix4().lookAt(new THREE.Vector3(), prograde, s.pos.clone().normalize());
-    var targetQ = new THREE.Quaternion().setFromRotationMatrix(mat);
-    s.orientation.slerp(targetQ, 0.05);
+  // Attitude control: SAS auto-align OR manual pitch/yaw
+  var sasTarget = sasTargetDir(s);
+  if (sasTarget) {
+    var targetQ = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), sasTarget);
+    s.orientation.slerp(targetQ, 0.08);
   } else {
     var localRight = new THREE.Vector3(1, 0, 0).applyQuaternion(s.orientation);
     var localUp = new THREE.Vector3(0, 0, 1).applyQuaternion(s.orientation);
@@ -420,18 +532,55 @@ function physicsTick3D(s) {
   }
   s.orientation.normalize();
 
+  // Reentry heating: high Q AND descending AND in atmosphere
+  var descending = s.vel.dot(s.pos.clone().normalize()) < 0;
+  if (alt < ENV.KARMAN && descending && q > 4000) {
+    s.heat = Math.min(1, (q - 4000) / 35000);
+  } else {
+    s.heat = Math.max(0, s.heat - PHYSICS_DT * 1.5);
+  }
+
   s.mass = mass;
   s.grav = gMag;
   s.accel = thrustAcc.length() + dm / mass;
   s.speed = speed;
   if (alt > s.maxAlt) s.maxAlt = alt;
   if (speed > s.maxVel) s.maxVel = speed;
-  if (alt < 0 && s.vel.dot(s.pos.clone().normalize()) < 0) {
+  if (q > s.maxQ) s.maxQ = q;
+  if (alt < 0 && descending) {
     s.pos.normalize().multiplyScalar(ENV.R);
     s.vel.set(0, 0, 0);
     s.crashed = true;
   }
   computeOrbitalElements(s);
+}
+
+function sasTargetDir(s) {
+  switch (sasMode) {
+    case 'prograde': return s.speed > 0.5 ? s.vel.clone().normalize() : null;
+    case 'retrograde': return s.speed > 0.5 ? s.vel.clone().normalize().negate() : null;
+    case 'radial-out': return s.pos.clone().normalize();
+    case 'radial-in': return s.pos.clone().normalize().negate();
+    case 'normal': {
+      var n = new THREE.Vector3().crossVectors(s.pos, s.vel);
+      return n.lengthSq() > 1 ? n.normalize() : null;
+    }
+    case 'antinormal': {
+      var n = new THREE.Vector3().crossVectors(s.pos, s.vel);
+      return n.lengthSq() > 1 ? n.normalize().negate() : null;
+    }
+    case 'stability':
+      if (!s.stabilityLock) s.stabilityLock = new THREE.Vector3(0, 1, 0).applyQuaternion(s.orientation);
+      return s.stabilityLock.clone();
+  }
+  return null;
+}
+
+function setSAS(mode) {
+  sasMode = mode;
+  if (sim) sim.stabilityLock = null;
+  var btns = document.querySelectorAll('.sas-btn');
+  btns.forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-sas') === mode); });
 }
 
 function computeOrbitalElements(s) {
@@ -465,6 +614,7 @@ function doStage(s) {
   var remaining = getStages(s.parts);
   s.currentStage = remaining.length > 0 ? remaining[0] : -1;
   buildRocketMeshes(s.parts);
+  playStageSound();
 }
 function checkAutoStage(s) {
   if (s.currentStage < 0) return;
@@ -615,17 +765,21 @@ function startFlight() {
     t: 0, throttle: 1.0, pitchRate: 0, yawRate: 0,
     currentStage: stages[0],
     altitude: 0, speed: 0, thrustN: 0, grav: 0, mass: 0, accel: 0,
-    maxAlt: 0, maxVel: 0, crashed: false,
+    maxAlt: 0, maxVel: 0, maxQ: 0, q: 0, heat: 0,
+    crashed: false,
     periapsis: 0, apoapsis: 0, eccentricity: 1, orbitalEnergy: 0,
-    trail: []
+    trail: [],
+    stabilityLock: null
   };
   buildRocketMeshes(sim.parts);
   exhaustData = [];
   gameState = 'flight';
   timeWarp = 1;
-  progradeHold = false;
+  setSAS('off');
+  setView('flight');
   accumulator = 0;
   lastTime = 0;
+  initAudio();
   document.getElementById('builderScreen').classList.remove('active');
   document.getElementById('flightScreen').classList.add('active');
   document.getElementById('resultOverlay').classList.remove('show');
@@ -654,9 +808,16 @@ function gameLoop(timestamp) {
     if (sim.trail.length > 500) sim.trail.shift();
     if (checkWinLose()) return;
   }
-  renderFlight3D();
+  if (viewMode === 'map') renderMapView();
+  else renderFlight3D();
   renderHUD();
+  updateAudio(sim);
+  updatePlasmaOverlay(sim);
   requestAnimationFrame(gameLoop);
+}
+
+function updatePlasmaOverlay(s) {
+  document.getElementById('plasmaOverlay').style.opacity = (s.heat || 0).toFixed(2);
 }
 
 function checkWinLose() {
@@ -686,11 +847,8 @@ function showResult(win, title) {
 /* ===== 3D RENDERER ===== */
 function renderFlight3D() {
   rocketGroup.position.copy(sim.pos);
+  // sim.orientation is in world/inertial frame; model's +Y = nose
   rocketGroup.quaternion.copy(sim.orientation);
-  // Orient rocket so "up" in model space aligns with radial direction
-  var radial = sim.pos.clone().normalize();
-  var baseQ = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), radial);
-  rocketGroup.quaternion.copy(baseQ).multiply(sim.orientation);
 
   // Flame light
   flameLight.intensity = sim.thrustN > 0 ? sim.throttle * 3 : 0;
@@ -779,24 +937,197 @@ function renderHUD() {
     '<b>VEL</b> <span class="val">' + Math.round(sim.speed) + ' m/s</span><br>' +
     '<b>PE</b> <span class="' + (sim.periapsis > 70000 ? 'val' : '') + '">' + fmtAlt(sim.periapsis) + '</span><br>' +
     '<b>AP</b> <span class="val">' + fmtAlt(sim.apoapsis) + '</span>';
+  var qKPa = (sim.q || 0) / 1000;
+  var qClass = qKPa > 40 ? 'q-warn' : qKPa > 15 ? 'warn' : 'val';
   document.getElementById('hudTR').innerHTML =
     '<b>T+</b> ' + fmtTime(sim.t) + (timeWarp > 1 ? ' <span class="warn">x' + timeWarp + '</span>' : '') + '<br>' +
     '<b>G</b> ' + sim.grav.toFixed(1) + ' m/s&sup2;<br>' +
     '<b>ACC</b> ' + (sim.accel / ENV.g0).toFixed(1) + ' g<br>' +
-    (progradeHold ? '<span class="val">PROGRADE HOLD</span>' : '');
+    '<b>Q</b> <span class="' + qClass + '">' + qKPa.toFixed(1) + ' kPa</span><br>' +
+    '<b>SAS</b> <span class="val">' + sasMode.toUpperCase() + '</span>';
   var stgF = stageFuel(sim.parts, sim.currentStage), stgFM = 0;
   for (var i = 0; i < sim.parts.length; i++)
     if (sim.parts[i].stage === sim.currentStage && PARTS[sim.parts[i].key].fuel) stgFM += PARTS[sim.parts[i].key].fuel;
   var fp = stgFM > 0 ? Math.round(stgF / stgFM * 100) : 0;
+  var twr = stageTWR(sim.parts, sim.currentStage, sim.altitude);
+  var twrClass = twr < 1 ? 'warn' : 'val';
   document.getElementById('hudBL').innerHTML =
     '<b>STAGE</b> ' + sim.currentStage + '<br>' +
     '<b>FUEL</b> <span class="' + (fp < 10 ? 'warn' : 'val') + '">' + fp + '%</span><br>' +
+    '<b>TWR</b> <span class="' + twrClass + '">' + twr.toFixed(2) + '</span><br>' +
     '<b>&Delta;v</b> ' + Math.round(totalDv(sim.parts)) + ' m/s';
   var vorb = orbitalVelocity(Math.max(0, sim.altitude));
   document.getElementById('hudBR').innerHTML =
     '<b>ORBIT V</b> ' + Math.round(vorb) + ' m/s<br>' +
-    '<b>PROGRESS</b> ' + Math.min(100, Math.round(sim.speed / vorb * 100)) + '%';
+    '<b>PROGRESS</b> ' + Math.min(100, Math.round(sim.speed / vorb * 100)) + '%<br>' +
+    '<b>ECC</b> ' + (sim.eccentricity < 10 ? sim.eccentricity.toFixed(3) : '---');
   document.getElementById('throttleFill').style.height = (sim.throttle * 100) + '%';
+}
+
+function stageTWR(parts, stage, alt) {
+  if (stage < 0) return 0;
+  var thr = 0;
+  for (var i = 0; i < parts.length; i++) {
+    var def = PARTS[parts[i].key];
+    if (parts[i].stage === stage && (def.type === 'engine' || def.type === 'srb')) thr += def.thrust;
+  }
+  var m = 0;
+  for (var i = 0; i < parts.length; i++) {
+    if (parts[i].stage <= stage) m += PARTS[parts[i].key].mass + (parts[i].fuel || 0);
+  }
+  if (m <= 0) return 0;
+  var gLocal = gravity(Math.max(0, alt || 0));
+  return (thr * 1000) / (m * 1000 * gLocal);
+}
+
+/* ===== MAP VIEW + ORBIT PREDICTION ===== */
+function keplerianFromState(pos, vel) {
+  var r = pos.length(), v = vel.length();
+  if (r < 1 || v < 0.01) return null;
+  var eps = v*v/2 - MU/r;
+  var h = new THREE.Vector3().crossVectors(pos, vel);
+  var hMag = h.length();
+  if (hMag < 1) return null;
+  var eVec = new THREE.Vector3().crossVectors(vel, h).divideScalar(MU).sub(pos.clone().divideScalar(r));
+  var e = eVec.length();
+  var hHat = h.clone().normalize();
+  var eHat;
+  if (e > 1e-6) eHat = eVec.clone().normalize();
+  else {
+    eHat = Math.abs(hHat.dot(new THREE.Vector3(1,0,0))) < 0.9 ? new THREE.Vector3(1,0,0) : new THREE.Vector3(0,1,0);
+    eHat.sub(hHat.clone().multiplyScalar(hHat.dot(eHat))).normalize();
+  }
+  var bHat = new THREE.Vector3().crossVectors(hHat, eHat);
+  var p = hMag*hMag/MU;
+  var a = (eps < 0 && e < 1) ? -MU/(2*eps) : 0;
+  return { a:a, e:e, p:p, eHat:eHat, bHat:bHat, hHat:hHat, energy:eps, bound:(eps<0 && e<1) };
+}
+
+function updateOrbitLine() {
+  var kep = keplerianFromState(sim.pos, sim.vel);
+  if (!kep || !kep.bound) {
+    orbitLine.visible = false;
+    peMarker.visible = false;
+    apMarker.visible = false;
+    return;
+  }
+  var N = 128;
+  var arr = orbitLine.geometry.attributes.position.array;
+  for (var i = 0; i <= N; i++) {
+    var nu = (i/N) * Math.PI * 2;
+    var rN = kep.p / (1 + kep.e * Math.cos(nu));
+    var x = kep.eHat.x*rN*Math.cos(nu) + kep.bHat.x*rN*Math.sin(nu);
+    var y = kep.eHat.y*rN*Math.cos(nu) + kep.bHat.y*rN*Math.sin(nu);
+    var z = kep.eHat.z*rN*Math.cos(nu) + kep.bHat.z*rN*Math.sin(nu);
+    arr[i*3] = x; arr[i*3+1] = y; arr[i*3+2] = z;
+  }
+  orbitLine.geometry.attributes.position.needsUpdate = true;
+  orbitLine.geometry.computeBoundingSphere();
+  orbitLine.visible = true;
+  var peR = kep.a * (1 - kep.e);
+  var apR = kep.a * (1 + kep.e);
+  peMarker.position.copy(kep.eHat).multiplyScalar(peR);
+  apMarker.position.copy(kep.eHat).multiplyScalar(-apR);
+  peMarker.visible = apMarker.visible = true;
+}
+
+function setView(mode) {
+  viewMode = mode;
+  document.getElementById('vtFlight').classList.toggle('active', mode === 'flight');
+  document.getElementById('vtMap').classList.toggle('active', mode === 'map');
+  var mapOnly = mode === 'map';
+  document.getElementById('mapInfoTL').style.display = mapOnly ? 'block' : 'none';
+  document.getElementById('mapLegend').style.display = mapOnly ? 'block' : 'none';
+  document.getElementById('sasPanel').style.display = mapOnly ? 'none' : 'block';
+  document.getElementById('throttleBar').style.display = mapOnly ? 'none' : 'block';
+  var hudDisp = mapOnly ? 'none' : 'block';
+  document.getElementById('hudTL').style.display = hudDisp;
+  document.getElementById('hudBL').style.display = hudDisp;
+  document.getElementById('hudBR').style.display = hudDisp;
+  if (!mapOnly && peMarker) { peMarker.visible = false; apMarker.visible = false; shipMarker.visible = false; orbitLine.visible = false; }
+}
+
+function renderMapView() {
+  updateOrbitLine();
+  shipMarker.position.copy(sim.pos);
+  shipMarker.visible = true;
+  // Hide rocket mesh in map (too small anyway; ship sprite replaces it)
+  rocketGroup.visible = false;
+  var d = mapState.dist;
+  var cp = Math.cos(mapState.pitch), sp = Math.sin(mapState.pitch);
+  var cy = Math.cos(mapState.yaw), sy = Math.sin(mapState.yaw);
+  mapCamera.position.set(d*cp*sy, d*sp, d*cp*cy);
+  mapCamera.up.set(0, 1, 0);
+  mapCamera.lookAt(0, 0, 0);
+  renderer.render(scene, mapCamera);
+  // Update map info HUD
+  var kep = keplerianFromState(sim.pos, sim.vel);
+  var info = '<b>PE</b> ' + fmtAlt(sim.periapsis) + '<br><b>AP</b> ' + fmtAlt(sim.apoapsis) + '<br><b>ECC</b> ' + (kep ? kep.e.toFixed(4) : '---') + '<br><b>ZOOM</b> ' + (mapState.dist/ENV.R).toFixed(1) + 'R';
+  if (kep && kep.bound) {
+    var period = 2 * Math.PI * Math.sqrt(kep.a * kep.a * kep.a / MU);
+    info += '<br><b>PERIOD</b> ' + fmtTime(period);
+  }
+  document.getElementById('mapInfoTL').innerHTML = info;
+  // After map render, un-hide rocket so flight view next frame works
+  rocketGroup.visible = true;
+}
+
+/* ===== AUDIO ===== */
+function initAudio() {
+  if (audio.ctx) { if (audio.ctx.state === 'suspended') audio.ctx.resume(); return; }
+  try {
+    audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+  } catch (e) { return; }
+  audio.engineOsc = audio.ctx.createOscillator();
+  audio.engineOsc.type = 'sawtooth';
+  audio.engineOsc.frequency.value = 48;
+  var noiseBuf = audio.ctx.createBuffer(1, audio.ctx.sampleRate * 2, audio.ctx.sampleRate);
+  var nd = noiseBuf.getChannelData(0);
+  for (var i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * 0.4;
+  audio.noiseSrc = audio.ctx.createBufferSource();
+  audio.noiseSrc.buffer = noiseBuf;
+  audio.noiseSrc.loop = true;
+  audio.engineFilter = audio.ctx.createBiquadFilter();
+  audio.engineFilter.type = 'lowpass';
+  audio.engineFilter.frequency.value = 300;
+  audio.engineFilter.Q.value = 1;
+  audio.engineGain = audio.ctx.createGain();
+  audio.engineGain.gain.value = 0;
+  audio.noiseSrc.connect(audio.engineFilter);
+  audio.engineOsc.connect(audio.engineFilter);
+  audio.engineFilter.connect(audio.engineGain);
+  audio.engineGain.connect(audio.ctx.destination);
+  audio.engineOsc.start();
+  audio.noiseSrc.start();
+}
+
+function updateAudio(s) {
+  if (!audio.ctx) return;
+  if (audio.muted) { audio.engineGain.gain.setTargetAtTime(0, audio.ctx.currentTime, 0.05); return; }
+  var thrFrac = s.thrustN > 0 ? s.throttle : 0;
+  var rho = atmDensity(s.altitude);
+  var atmFactor = Math.min(1, rho / 0.4 + 0.15);
+  var vol = thrFrac * 0.35 * atmFactor;
+  audio.engineGain.gain.setTargetAtTime(vol, audio.ctx.currentTime, 0.05);
+  audio.engineFilter.frequency.setTargetAtTime(100 + atmFactor * 450 + thrFrac * 250, audio.ctx.currentTime, 0.05);
+  // Heat/plasma whoosh on the noise path is already included
+}
+
+function playStageSound() {
+  if (!audio.ctx || audio.muted) return;
+  var osc = audio.ctx.createOscillator(), g = audio.ctx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(320, audio.ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(70, audio.ctx.currentTime + 0.25);
+  g.gain.setValueAtTime(0.25, audio.ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.01, audio.ctx.currentTime + 0.3);
+  osc.connect(g); g.connect(audio.ctx.destination);
+  osc.start(); osc.stop(audio.ctx.currentTime + 0.3);
+}
+
+function toggleSound() {
+  audio.muted = !audio.muted;
+  document.getElementById('soundToggle').innerHTML = audio.muted ? '\u{1F507} OFF' : '\u{1F50A} ON';
 }
 
 /* ===== INPUT ===== */
@@ -812,12 +1143,15 @@ function handleInput() {
 }
 document.addEventListener('keydown', function(e) {
   keys[e.key.toLowerCase()] = true;
-  if (e.key === ' ' && gameState === 'flight') { e.preventDefault(); doStage(sim); }
-  if (e.key === '.' && gameState === 'flight') timeWarp = Math.min(10, timeWarp * 2);
-  if (e.key === ',' && gameState === 'flight') timeWarp = Math.max(1, timeWarp / 2);
-  if (e.key.toLowerCase() === 't' && gameState === 'flight') progradeHold = !progradeHold;
-  if (e.key === 'Escape' && gameState === 'flight') backToBuilder();
+  if (gameState !== 'flight') return;
+  if (e.key === ' ') { e.preventDefault(); doStage(sim); }
+  if (e.key === '.') timeWarp = Math.min(10, timeWarp * 2);
+  if (e.key === ',') timeWarp = Math.max(1, timeWarp / 2);
+  if (e.key.toLowerCase() === 'm') setView(viewMode === 'flight' ? 'map' : 'flight');
+  if (SAS_KYS_HANDLED.indexOf(e.key) >= 0) setSAS(SAS_KEYS[e.key]);
+  if (e.key === 'Escape') backToBuilder();
 });
+var SAS_KYS_HANDLED = ['0','1','2','3','4','5','6','7'];
 document.addEventListener('keyup', function(e) { keys[e.key.toLowerCase()] = false; });
 
 /* ===== HELPERS ===== */
