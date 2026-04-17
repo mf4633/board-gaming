@@ -107,6 +107,17 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 
 .map-hud { position: absolute; padding: 6px 10px; font-size: 0.75em; pointer-events: none; font-family: 'Courier New', monospace; z-index: 11; }
 .map-hud b { color: #4080D0; }
+.missions-panel { margin-top: 10px; padding-top: 8px; border-top: 1px solid #1A2A40; }
+.missions-panel h3 { color: #4080D0; font-size: 0.85em; margin-bottom: 4px; }
+.mission { padding: 4px 6px; margin: 3px 0; background: #0A1020; border: 1px solid #1A2A40; border-radius: 3px; font-size: 0.68em; }
+.mission.done { background: #0A2018; border-color: #40D080; opacity: 0.85; }
+.mission .mn { color: #B0C8E0; font-weight: bold; }
+.mission.done .mn { color: #40D080; }
+.mission .md { color: #6080A0; font-size: 0.95em; }
+.mission .mr { color: #FFD040; float: right; font-size: 0.85em; }
+.mission.done .mr { color: #40D080; }
+.funds-display { font-size: 0.9em; color: #FFD040; text-align: center; margin: 6px 0; padding: 4px; background: #1A1830; border-radius: 3px; }
+
 .maneuver-panel { position: absolute; bottom: 30px; left: 10px; width: 280px; background: rgba(20,10,40,0.88); border: 1px solid #8040D0; border-radius: 6px; padding: 8px 10px; z-index: 12; font-family: 'Courier New', monospace; font-size: 0.75em; color: #C0A0E0; display: none; }
 .maneuver-panel.active { display: block; }
 .maneuver-panel h4 { color: #B080FF; font-size: 0.85em; margin-bottom: 6px; text-align: center; font-family: Georgia, serif; letter-spacing: 2px; }
@@ -159,6 +170,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
       <button class="btn" onclick="loadPreset('sounding')">Sounding</button>
       <button class="btn" onclick="loadPreset('orbital')">Orbital</button>
       <button class="btn" onclick="loadPreset('heavy')">Heavy</button>
+      <button class="btn" onclick="loadPreset('munship')">MunShip</button>
       <button class="btn" onclick="clearRocket()">Clear</button>
       <button class="btn launch" onclick="startFlight()">LAUNCH</button>
     </div>
@@ -204,7 +216,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
   </div>
   <div class="map-hud" id="mapInfoTL" style="top:78px;left:8px;color:#B0C8E0;display:none;"></div>
   <div class="map-legend" id="mapLegend" style="display:none;"><b style="color:#4080D0;">MAP LEGEND</b><br><span class="sw" style="background:#40D080;"></span>Orbit<br><span class="sw" style="background:#D04040;"></span>Periapsis<br><span class="sw" style="background:#40C0FF;"></span>Apoapsis<br><span class="sw" style="background:#FFD040;"></span>Ship<br><br>Drag: rotate &nbsp; Wheel: zoom</div>
-  <div class="controls-hint">W/S: Throttle &nbsp; A/D: Pitch &nbsp; Q/E: Yaw &nbsp; SPACE: Stage &nbsp; 0-8: SAS &nbsp; M: Map &nbsp; N: Node &nbsp; ,/.: Warp &nbsp; ESC: Abort</div>
+  <div class="controls-hint">W/S: Throttle &nbsp; A/D: Pitch &nbsp; Q/E: Yaw &nbsp; SPACE: Stage &nbsp; 0-8: SAS &nbsp; M: Map &nbsp; N: Node &nbsp; G: Chute &nbsp; ,/.: Warp &nbsp; ESC: Abort</div>
   <div class="result-overlay" id="resultOverlay">
     <div class="result-box" id="resultBox">
       <h2 id="resultTitle">Orbit Achieved!</h2>
@@ -237,12 +249,27 @@ var PARTS = {
   'eng-lg':    { type:'engine', name:'Mainsail (1.5MN)',mass:6.0,  thrust:1500,isp:285, h:30, w:30, color:'#606870' },
   'srb-sm':    { type:'srb',    name:'Flea SRB',       mass:0.45, fuel:3.3, thrust:192, isp:140, h:40, w:18, color:'#8A7050' },
   'srb-lg':    { type:'srb',    name:'Hammer SRB',     mass:0.75, fuel:7.2, thrust:227, isp:170, h:55, w:20, color:'#8A7050' },
+  'srb-rd-2':  { type:'srb',    name:'Hammer x2 (radial)', mass:1.5, fuel:14.4, thrust:454, isp:170, h:55, w:20, color:'#8A7050', radial:2 },
+  'srb-rd-4':  { type:'srb',    name:'Hammer x4 (radial)', mass:3.0, fuel:28.8, thrust:908, isp:170, h:55, w:20, color:'#8A7050', radial:4 },
+  'fin':       { type:'fin',    name:'Aero Fin',        mass:0.08, h:12, w:36, color:'#7080A0' },
+  'chute':     { type:'chute',  name:'Parachute',       mass:0.15, h:8,  w:20, color:'#FFE080' },
   'decoupler': { type:'decoupler',name:'Decoupler',     mass:0.04, h:5, w:26, color:'#D06020' }
 };
+
+var MISSIONS = [
+  { id:'rookie',   name:'Rookie Launch',    desc:'Reach altitude &ge; 50 km',   reward: 500,   check:function(s) { return s.maxAlt >= 50000; } },
+  { id:'karman',   name:'Cross Karman',     desc:'Reach altitude &ge; 100 km',  reward: 1000,  check:function(s) { return s.maxAlt >= 100000; } },
+  { id:'orbit',    name:'First Orbit',      desc:'Earth orbit, PE > 70 km',      reward: 3000,  check:function(s) { return s.parent==='earth' && s.periapsis > 70000 && s.eccentricity < 1; } },
+  { id:'munflyby', name:'Mun Flyby',        desc:'Enter the Mun SOI',            reward: 5000,  check:function(s) { return s._everInMun; } },
+  { id:'munorbit', name:'Mun Orbit',        desc:'Bound orbit around Mun (PE>5km)', reward: 10000, check:function(s) { return s.parent==='mun' && s.periapsis > 5000 && s.eccentricity < 1; } },
+  { id:'munland',  name:'Mun Landing',      desc:'Soft-land on Mun (&lt;12 m/s)', reward: 25000, check:function(s) { return s.munLanded; } },
+  { id:'return',   name:'Safe Return',      desc:'Return home from Mun',         reward: 40000, check:function(s) { return s._everInMun && s.parent==='earth' && s.altitude < 500 && s.speed < 12 && s.maxAlt > 100000; } }
+];
 var PRESETS = {
-  sounding: [{key:'pod',stage:0},{key:'tank-sm',stage:0},{key:'eng-sm',stage:0}],
-  orbital: [{key:'pod',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2}],
-  heavy: [{key:'pod',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2},{key:'decoupler',stage:3},{key:'srb-lg',stage:3},{key:'srb-lg',stage:3}]
+  sounding: [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-sm',stage:0},{key:'eng-sm',stage:0}],
+  orbital:  [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2}],
+  heavy:    [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2},{key:'fin',stage:2},{key:'srb-rd-2',stage:3}],
+  munship:  [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2},{key:'fin',stage:2},{key:'srb-rd-4',stage:3}]
 };
 var PART_SCALE = 0.12;
 
@@ -615,6 +642,7 @@ function transitionSOI(s, newParent, reason) {
   s.vel = iVel.sub(inertialBodyVel(newParent, s.t));
   s.stabilityLock = null;
   s.soiEvent = { body: newParent, t: s.t, reason: reason };
+  if (newParent === 'mun') s._everInMun = true;
 }
 function checkSOIChange(s) {
   var curBody = BODIES[s.parent];
@@ -650,7 +678,16 @@ function physicsTick3D(s) {
   var rho = parent.atm ? atmDensity(alt) : 0;
   var q = 0.5 * rho * speed * speed;
   s.q = q;
-  var dm = rho > 0 ? (0.5 * rho * speed * speed * 0.3 * crossSection(s.parts)) : 0;
+  var chuteAreaCd = 0;
+  var hasChute = false;
+  for (var i = 0; i < s.parts.length; i++) if (PARTS[s.parts[i].key].type === 'chute') hasChute = true;
+  if (s.chuteDeployed && hasChute) chuteAreaCd = 80;
+  // Chute rips if deployed at high Q or supersonic in atm
+  if (s.chuteDeployed && (q > 40000 || (rho > 0.05 && speed > 350))) {
+    s.chuteDeployed = false; s.chuteRipped = true; chuteAreaCd = 0;
+    showToast('<span style="color:#D04040;">Parachute ripped!</span>');
+  }
+  var dm = rho > 0 ? (0.5 * rho * speed * speed * (0.3 * crossSection(s.parts) + chuteAreaCd)) : 0;
   var dragAcc = new THREE.Vector3();
   if (speed > 0.1) dragAcc = s.vel.clone().normalize().negate().multiplyScalar(dm / mass);
   var gravAcc = gravDir.multiplyScalar(gMag);
@@ -698,13 +735,13 @@ function physicsTick3D(s) {
     s.pos.normalize().multiplyScalar(parent.radius);
     var impactSpeed = speed;
     s.vel.set(0, 0, 0);
-    if (s.parent === 'mun' && impactSpeed < 12) {
-      s.munLanded = true;
-    } else if (s.parent === 'mun') {
-      s.crashed = true;
-      s.crashBody = 'mun';
+    var softLimit = s.parent === 'mun' ? 12 : 15;
+    if (impactSpeed < softLimit) {
+      if (s.parent === 'mun') s.munLanded = true;
+      s.landed = true;
     } else {
       s.crashed = true;
+      s.crashBody = s.parent;
     }
   }
   computeOrbitalElements(s);
@@ -796,13 +833,69 @@ function buildRocketMeshes(parts) {
   }
   rocketGroup.add(flameLight);
   var y = 0;
+  var STACK_R = 24/2 * PART_SCALE;
   for (var i = parts.length - 1; i >= 0; i--) {
     var def = PARTS[parts[i].key];
     var h = def.h * PART_SCALE, r = def.w / 2 * PART_SCALE;
+    if (def.radial) {
+      // Radial SRB cluster: N cylinders around Y axis, don't advance y
+      var N = def.radial;
+      var boosterR = def.w/2 * PART_SCALE;
+      var offset = STACK_R + boosterR * 1.15;
+      for (var j = 0; j < N; j++) {
+        var ang = (j / N) * Math.PI * 2;
+        var bm = new THREE.Mesh(new THREE.CylinderGeometry(boosterR, boosterR, h, 8), new THREE.MeshPhongMaterial({ color: def.color }));
+        bm.position.set(offset * Math.cos(ang), y + h / 2, offset * Math.sin(ang));
+        rocketGroup.add(bm);
+        // Tiny nozzle cone
+        var noz = new THREE.Mesh(new THREE.ConeGeometry(boosterR * 0.8, boosterR, 8), new THREE.MeshPhongMaterial({ color: 0x303030 }));
+        noz.rotation.x = Math.PI; // cone apex down
+        noz.position.set(offset * Math.cos(ang), y - boosterR * 0.5, offset * Math.sin(ang));
+        rocketGroup.add(noz);
+      }
+      continue; // radials don't advance y
+    }
+    if (def.type === 'fin') {
+      // Four thin fin blades at base of stack
+      var finH = h, finL = def.w/2 * PART_SCALE, finThick = 0.15;
+      for (var j = 0; j < 4; j++) {
+        var ang = (j / 4) * Math.PI * 2;
+        var fm = new THREE.Mesh(new THREE.BoxGeometry(finL, finH, finThick), new THREE.MeshPhongMaterial({ color: def.color }));
+        fm.position.set((STACK_R + finL/2) * Math.cos(ang), y + h/2, (STACK_R + finL/2) * Math.sin(ang));
+        fm.rotation.y = ang;
+        rocketGroup.add(fm);
+      }
+      y += h * 0.3;
+      continue;
+    }
     var mesh;
     if (def.type === 'pod') {
       mesh = new THREE.Mesh(new THREE.ConeGeometry(r, h, 8), new THREE.MeshPhongMaterial({ color: def.color }));
       mesh.position.y = y + h / 2;
+    } else if (def.type === 'chute') {
+      // Canister
+      mesh = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.8, r * 0.8, h, 8), new THREE.MeshPhongMaterial({ color: def.color }));
+      mesh.position.y = y + h / 2;
+      rocketGroup.add(mesh);
+      if (sim && sim.chuteDeployed) {
+        var canopyR = 3.5;
+        var canopy = new THREE.Mesh(
+          new THREE.SphereGeometry(canopyR, 14, 8, 0, Math.PI*2, 0, Math.PI/2),
+          new THREE.MeshPhongMaterial({ color: 0xFFA030, emissive: 0x401800, side: THREE.DoubleSide, shininess: 20 })
+        );
+        canopy.position.y = y + h + canopyR * 0.9;
+        rocketGroup.add(canopy);
+        // Shroud lines
+        var lineMat = new THREE.LineBasicMaterial({ color: 0xF0C050 });
+        for (var lj = 0; lj < 6; lj++) {
+          var la = (lj / 6) * Math.PI * 2;
+          var pts = [new THREE.Vector3(0, y + h, 0), new THREE.Vector3(canopyR*0.7*Math.cos(la), y + h + canopyR*0.85, canopyR*0.7*Math.sin(la))];
+          var lg = new THREE.BufferGeometry().setFromPoints(pts);
+          rocketGroup.add(new THREE.Line(lg, lineMat));
+        }
+      }
+      y += h;
+      continue;
     } else {
       mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 8), new THREE.MeshPhongMaterial({ color: def.color }));
       mesh.position.y = y + h / 2;
@@ -839,7 +932,7 @@ function loadPreset(name) {
 function renderCatalog() {
   var cat = document.getElementById('catalog');
   var html = '<h3>&#x1F680; Parts</h3>';
-  var groups = { pod:'Pods', tank:'Fuel Tanks', engine:'Engines', srb:'Solid Boosters', decoupler:'Decouplers' };
+  var groups = { pod:'Pods', chute:'Parachutes', tank:'Fuel Tanks', engine:'Engines', srb:'Solid Boosters', fin:'Aero Fins', decoupler:'Decouplers' };
   for (var g in groups) {
     html += '<h3>' + groups[g] + '</h3>';
     for (var k in PARTS) {
@@ -905,7 +998,48 @@ function renderStagePanel() {
     for (var s = 0; s <= maxStage() + 1; s++) html += '<button class="btn" style="font-size:0.65em;padding:1px 6px;" onclick="assignStage(' + selectedPart + ',' + s + ')">S' + s + '</button>';
     html += '</div>';
   }
+  // Missions
+  html += '<div class="missions-panel"><h3>&#x1F680; MISSIONS</h3>';
+  html += '<div class="funds-display">Funds: &#164;' + getFunds().toLocaleString() + '</div>';
+  for (var i = 0; i < MISSIONS.length; i++) {
+    var mis = MISSIONS[i];
+    var done = missionProgress[mis.id] && missionProgress[mis.id].completed;
+    html += '<div class="mission' + (done ? ' done' : '') + '"><span class="mr">&#164;' + mis.reward + '</span><span class="mn">' + (done ? '&#10003; ' : '') + mis.name + '</span><br><span class="md">' + mis.desc + '</span></div>';
+  }
+  html += '</div>';
   panel.innerHTML = html;
+}
+
+/* ===== MISSION TRACKING ===== */
+var missionProgress = loadMissionProgress();
+
+function loadMissionProgress() {
+  try { return JSON.parse(localStorage.getItem('apoapsis_missions') || '{}'); }
+  catch(e) { return {}; }
+}
+function saveMissionProgress() {
+  try { localStorage.setItem('apoapsis_missions', JSON.stringify(missionProgress)); } catch(e) {}
+}
+function getFunds() {
+  var total = 0;
+  for (var k in missionProgress) {
+    if (!missionProgress[k].completed) continue;
+    for (var i = 0; i < MISSIONS.length; i++) if (MISSIONS[i].id === k) total += MISSIONS[i].reward;
+  }
+  return total;
+}
+function checkMissions(s) {
+  for (var i = 0; i < MISSIONS.length; i++) {
+    var mis = MISSIONS[i];
+    if (missionProgress[mis.id] && missionProgress[mis.id].completed) continue;
+    if (mis.check(s)) {
+      missionProgress[mis.id] = { completed: true, completedAt: Date.now() };
+      saveMissionProgress();
+      showToast('MISSION: <b style="color:#FFD040;">' + mis.name + '</b><br>&#164;' + mis.reward + ' earned');
+      if (s.completedThisFlight == null) s.completedThisFlight = [];
+      s.completedThisFlight.push(mis);
+    }
+  }
 }
 function selectPart(idx) { selectedPart = idx; renderBuilder(); }
 function assignStage(idx, s) { rocket.parts[idx].stage = s; renderBuilder(); }
@@ -932,7 +1066,10 @@ function startFlight() {
     currentStage: stages[0],
     altitude: 0, speed: 0, thrustN: 0, grav: 0, mass: 0, accel: 0,
     maxAlt: 0, maxVel: 0, maxQ: 0, q: 0, heat: 0,
-    crashed: false, munLanded: false, crashBody: null,
+    crashed: false, munLanded: false, landed: false, crashBody: null,
+    chuteDeployed: false, chuteRipped: false,
+    _everInMun: false,
+    completedThisFlight: [],
     periapsis: 0, apoapsis: 0, eccentricity: 1, orbitalEnergy: 0,
     trail: [],
     stabilityLock: null,
@@ -959,6 +1096,7 @@ function backToBuilder() {
   gameState = 'builder';
   document.getElementById('flightScreen').classList.remove('active');
   document.getElementById('builderScreen').classList.add('active');
+  if (document.getElementById('maneuverPanel')) document.getElementById('maneuverPanel').classList.remove('active');
   renderBuilder();
 }
 
@@ -983,6 +1121,7 @@ function gameLoop(timestamp) {
     showToast((ev.reason === 'enter' ? 'Entered ' : 'Exited to ') + bName + ' SOI');
     playStageSound();
   }
+  checkMissions(sim);
   if (viewMode === 'map') renderMapView();
   else renderFlight3D();
   renderHUD();
@@ -997,8 +1136,12 @@ function updatePlasmaOverlay(s) {
 
 function checkWinLose() {
   if (sim.munLanded) { showResult(true, 'Mun Landing!'); return true; }
+  if (sim.landed && sim.parent === 'earth' && sim._everInMun) { showResult(true, 'Safe Return from Mun!'); return true; }
+  if (sim.landed && sim.parent === 'earth' && sim.maxAlt > 50000 && !sim.landedShown) {
+    sim.landedShown = true; showToast('Landed safely.');
+  }
   if (sim.parent === 'earth' && sim.periapsis > 70000 && sim.orbitalEnergy < 0 && sim.eccentricity < 1 && !sim.orbitAchieved) {
-    sim.orbitAchieved = true; // tag but keep flying
+    sim.orbitAchieved = true;
     showToast('Orbit achieved! Keep going to Mun &rarr;');
     return false;
   }
@@ -1030,12 +1173,23 @@ function showResult(win, title) {
   var el = document.getElementById('resultTitle');
   el.textContent = title;
   el.className = win ? '' : 'fail';
+  var missionsHtml = '';
+  var earned = 0;
+  if (sim.completedThisFlight && sim.completedThisFlight.length > 0) {
+    missionsHtml = '<p style="margin-top:8px;color:#FFD040;"><b>Missions this flight:</b></p>';
+    for (var i = 0; i < sim.completedThisFlight.length; i++) {
+      var mis = sim.completedThisFlight[i];
+      missionsHtml += '<p style="color:#40D080;">&#10003; ' + mis.name + ' &nbsp; <b>&#164;' + mis.reward + '</b></p>';
+      earned += mis.reward;
+    }
+    if (earned > 0) missionsHtml += '<p style="color:#FFD040;font-size:0.95em;">+&#164;' + earned + ' &nbsp; total: &#164;' + getFunds().toLocaleString() + '</p>';
+  }
   document.getElementById('resultStats').innerHTML =
     '<p>Max Altitude: <b>' + fmtAlt(sim.maxAlt) + '</b></p>' +
     '<p>Max Velocity: <b>' + Math.round(sim.maxVel) + ' m/s</b></p>' +
     '<p>Periapsis: <b>' + fmtAlt(sim.periapsis) + '</b></p>' +
     '<p>Apoapsis: <b>' + fmtAlt(sim.apoapsis) + '</b></p>' +
-    '<p>Flight Time: <b>' + fmtTime(sim.t) + '</b></p>';
+    '<p>Flight Time: <b>' + fmtTime(sim.t) + '</b></p>' + missionsHtml;
   document.getElementById('resultOverlay').classList.add('show');
 }
 
@@ -1649,6 +1803,18 @@ function toggleSound() {
   document.getElementById('soundToggle').innerHTML = audio.muted ? '\u{1F507} OFF' : '\u{1F50A} ON';
 }
 
+function deployChute() {
+  if (!sim) return;
+  var hasChute = false;
+  for (var i = 0; i < sim.parts.length; i++) if (PARTS[sim.parts[i].key].type === 'chute') hasChute = true;
+  if (!hasChute) { showToast('<span style="color:#D04040;">No parachute!</span>'); return; }
+  if (sim.chuteDeployed) { showToast('Chute already deployed.'); return; }
+  if (sim.chuteRipped) { showToast('<span style="color:#D04040;">Chute has been ripped.</span>'); return; }
+  sim.chuteDeployed = true;
+  showToast('Parachute deployed');
+  buildRocketMeshes(sim.parts); // rebuild to show canopy
+}
+
 /* ===== INPUT ===== */
 function handleInput() {
   sim.pitchRate = 0;
@@ -1668,6 +1834,7 @@ document.addEventListener('keydown', function(e) {
   if (e.key === ',') timeWarp = Math.max(1, timeWarp / 2);
   if (e.key.toLowerCase() === 'm') setView(viewMode === 'flight' ? 'map' : 'flight');
   if (e.key.toLowerCase() === 'n') { if (maneuverNode) clearNode(); else createNode(); }
+  if (e.key.toLowerCase() === 'g') deployChute();
   if (SAS_KYS_HANDLED.indexOf(e.key) >= 0) setSAS(SAS_KEYS[e.key]);
   if (e.key === 'Escape') backToBuilder();
 });
