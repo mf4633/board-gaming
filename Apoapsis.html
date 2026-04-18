@@ -217,6 +217,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
     <div class="man-row"><label>Radial</label><input type="range" id="manRad" min="-1500" max="1500" step="5" value="0"><span class="man-val" id="manRadVal">0</span></div>
     <div class="man-info" id="manInfo"></div>
     <button class="man-btn go" onclick="alignToNode()">Align SAS</button>
+    <button class="man-btn" onclick="planMunTransfer()">&rarr; Mun</button>
     <button class="man-btn clear" onclick="clearNode()">Clear</button>
   </div>
   <div class="map-hud" id="mapInfoTL" style="top:78px;left:8px;color:#B0C8E0;display:none;"></div>
@@ -246,13 +247,13 @@ var BODIES = {
 };
 var PARTS = {
   'pod':       { type:'pod',    name:'Command Pod',    mass:1.2,  h:30, w:24, color:'#8090A0' },
-  'tank-sm':   { type:'tank',   name:'Tank S (0.5t)',   mass:0.06, fuel:0.5, h:25, w:24, color:'#C0C8D0' },
-  'tank-md':   { type:'tank',   name:'Tank M (1.0t)',   mass:0.13, fuel:1.0, h:40, w:24, color:'#C0C8D0' },
-  'tank-lg':   { type:'tank',   name:'Tank L (2.0t)',   mass:0.25, fuel:2.0, h:60, w:24, color:'#C0C8D0' },
-  'tank-xl':   { type:'tank',   name:'Tank XL (4.0t)',  mass:0.5,  fuel:4.0, h:80, w:28, color:'#C0C8D0' },
+  'tank-sm':   { type:'tank',   name:'Tank S (1.5t)',   mass:0.15, fuel:1.5, h:25, w:24, color:'#C0C8D0' },
+  'tank-md':   { type:'tank',   name:'Tank M (3.5t)',   mass:0.30, fuel:3.5, h:40, w:24, color:'#C0C8D0' },
+  'tank-lg':   { type:'tank',   name:'Tank L (8.0t)',   mass:0.70, fuel:8.0, h:60, w:24, color:'#C0C8D0' },
+  'tank-xl':   { type:'tank',   name:'Tank XL (28t)',   mass:2.30, fuel:28.0, h:80, w:28, color:'#C0C8D0' },
   'eng-sm':    { type:'engine', name:'Terrier (60kN)',  mass:0.5,  thrust:60,  isp:345, h:18, w:18, color:'#606870' },
   'eng-md':    { type:'engine', name:'Reliant (215kN)', mass:1.25, thrust:215, isp:310, h:22, w:24, color:'#606870' },
-  'eng-lg':    { type:'engine', name:'Mainsail (1.5MN)',mass:6.0,  thrust:1500,isp:285, h:30, w:30, color:'#606870' },
+  'eng-lg':    { type:'engine', name:'Mainsail (1.5MN)',mass:4.0,  thrust:1500,isp:285, h:30, w:30, color:'#606870' },
   'srb-sm':    { type:'srb',    name:'Flea SRB',       mass:0.45, fuel:3.3, thrust:192, isp:140, h:40, w:18, color:'#8A7050' },
   'srb-lg':    { type:'srb',    name:'Hammer SRB',     mass:0.75, fuel:7.2, thrust:227, isp:170, h:55, w:20, color:'#8A7050' },
   'srb-rd-2':  { type:'srb',    name:'Hammer x2 (radial)', mass:1.5, fuel:14.4, thrust:454, isp:170, h:55, w:20, color:'#8A7050', radial:2 },
@@ -276,7 +277,7 @@ var MISSIONS = [
 ];
 var PRESETS = {
   sounding: [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-sm',stage:0},{key:'eng-sm',stage:0}],
-  orbital:  [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2}],
+  orbital:  [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2}],
   heavy:    [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2},{key:'fin',stage:2},{key:'srb-rd-2',stage:3}],
   munship:  [{key:'pod',stage:0},{key:'chute',stage:0},{key:'leg',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2},{key:'fin',stage:2},{key:'srb-rd-4',stage:3}]
 };
@@ -306,7 +307,7 @@ var nextPatchLine = null, encounterMarker = null, escapeMarker = null;
 
 /* ===== THREE.JS ===== */
 var renderer, scene, camera;
-var earthMesh, atmMesh, rocketGroup, flameLight;
+var earthMesh, atmMesh, cloudMesh, rocketGroup, flameLight;
 var bodyMeshes = {}, bodyOrbitLines = {}, bodyMarkers = {};
 var exhaustParticles, exhaustPositions, exhaustColors, exhaustSizes, exhaustData = [];
 var trailGeom, trailLine;
@@ -343,6 +344,28 @@ function initThree() {
   var oceanMat = new THREE.MeshPhongMaterial({ color: 0x1a3366, emissive: 0x0a1028, transparent: true, opacity: 0.6 });
   var oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
   scene.add(oceanMesh);
+
+  // Earth cloud layer
+  var cloudCanvas = document.createElement('canvas');
+  cloudCanvas.width = 1024; cloudCanvas.height = 512;
+  var cctx = cloudCanvas.getContext('2d');
+  cctx.fillStyle = 'rgba(0,0,0,0)';
+  cctx.fillRect(0, 0, 1024, 512);
+  for (var i = 0; i < 140; i++) {
+    var cx = Math.random() * 1024, cy = 30 + Math.random() * 452;
+    var cr = 25 + Math.random() * 90;
+    var g = cctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
+    g.addColorStop(0, 'rgba(255,255,255,' + (0.5 + Math.random()*0.4) + ')');
+    g.addColorStop(0.6, 'rgba(255,255,255,' + (0.15 + Math.random()*0.2) + ')');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    cctx.fillStyle = g;
+    cctx.fillRect(cx-cr, cy-cr, 2*cr, 2*cr);
+  }
+  var cloudTex = new THREE.CanvasTexture(cloudCanvas);
+  var cloudGeo = new THREE.SphereGeometry(ENV.R + 12000, 48, 48);
+  var cloudMat = new THREE.MeshLambertMaterial({ map: cloudTex, transparent: true, opacity: 0.85, depthWrite: false });
+  cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
+  scene.add(cloudMesh);
 
   // Atmosphere glow
   var atmGeo = new THREE.SphereGeometry(ENV.R + 80000, 48, 48);
@@ -1358,6 +1381,7 @@ function showResult(win, title) {
 
 /* ===== 3D RENDERER ===== */
 function renderFlight3D() {
+  if (cloudMesh) cloudMesh.rotation.y = sim.t * 0.00003;
   var shipInertialPos = inertialPosOf(sim);
   rocketGroup.position.copy(shipInertialPos);
   // sim.orientation is in world/inertial frame; model's +Y = nose
@@ -1863,6 +1887,45 @@ function alignToNode() {
   if (!maneuverNode) return;
   setSAS('maneuver');
   setView('flight');
+}
+
+function planMunTransfer() {
+  if (!sim || sim.parent !== 'earth') { showToast('Only plannable from Earth orbit'); return; }
+  var parent = BODIES.earth, target = BODIES.mun;
+  var kep = keplerianFromState(sim.pos, sim.vel, parent.mu);
+  if (!kep || !kep.bound) { showToast('Need bound Earth orbit first'); return; }
+  if (kep.e > 0.15) { showToast('Circularize orbit first (ecc too high)'); return; }
+  var r1 = sim.pos.length();
+  var r2 = target.orbitR;
+  var a_t = (r1 + r2) / 2;
+  var v_t = Math.sqrt(parent.mu * (2/r1 - 1/a_t));
+  var v_now = sim.vel.length();
+  var dv_pro = v_t - v_now;
+  dv_pro = Math.max(-3000, Math.min(3000, dv_pro));
+  var T_transfer = Math.PI * Math.sqrt(a_t*a_t*a_t / parent.mu);
+  // Phase-match: find dt so that at burn+T_transfer, Mun is at arrival angle
+  // Ship angle in XZ plane (orbit is approx in XZ):
+  var shipAngle = Math.atan2(sim.pos.z, sim.pos.x);
+  var omegaShip = Math.sqrt(parent.mu / (r1*r1*r1));
+  var signProgade = (sim.vel.x * -Math.sin(shipAngle) + sim.vel.z * Math.cos(shipAngle)) > 0 ? 1 : -1;
+  omegaShip *= signProgade;
+  var omegaMun = 2*Math.PI / target.period;
+  // Solve: shipAngle + omegaShip*dt + π = phase_mun + omegaMun*(sim.t + dt + T_transfer)
+  var rhs = (target.phase + omegaMun*(sim.t + T_transfer)) - (shipAngle + Math.PI);
+  var denom = omegaShip - omegaMun;
+  var dt_wait = -rhs / denom;
+  var synodic = 2*Math.PI / Math.abs(denom);
+  while (dt_wait < 10) dt_wait += synodic;
+  // Cap at slider max
+  if (dt_wait > 14400) dt_wait = dt_wait % synodic;
+  if (dt_wait > 14400) dt_wait = 14400;
+  createNode();
+  maneuverNode.dt = dt_wait;
+  maneuverNode.dvPro = dv_pro;
+  document.getElementById('manTime').value = Math.round(dt_wait);
+  document.getElementById('manPro').value = Math.round(dv_pro);
+  updateManeuverUI();
+  showToast('Hohmann to Mun: &Delta;v ' + Math.round(dv_pro) + ', T+ ' + Math.round(dt_wait) + 's');
 }
 
 function updateManeuverUI() {
