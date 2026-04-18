@@ -254,7 +254,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
   </div>
   <div class="map-hud" id="mapInfoTL" style="top:78px;left:8px;color:#B0C8E0;display:none;"></div>
   <div class="map-legend" id="mapLegend" style="display:none;"><b style="color:#4080D0;">MAP LEGEND</b><br><span class="sw" style="background:#40D080;"></span>Orbit<br><span class="sw" style="background:#D04040;"></span>Periapsis<br><span class="sw" style="background:#40C0FF;"></span>Apoapsis<br><span class="sw" style="background:#FFD040;"></span>Ship<br><br>Drag: rotate &nbsp; Wheel: zoom</div>
-  <div class="controls-hint">W/S Throttle &nbsp; A/D Pitch &nbsp; Q/E Yaw &nbsp; Shift+move=RCS &nbsp; SPACE Stage &nbsp; 0-9 SAS &nbsp; M Map &nbsp; N Node &nbsp; G Chute &nbsp; L Autopilot &nbsp; ,/. Warp &nbsp; ESC Abort</div>
+  <div class="controls-hint">W/S Throttle &nbsp; A/D Pitch &nbsp; Q/E Yaw &nbsp; Shift+move=RCS &nbsp; SPACE Stage &nbsp; 0-9 SAS &nbsp; M Map &nbsp; N Node &nbsp; G Chute &nbsp; X Abort &nbsp; L Autopilot &nbsp; ,/. Warp &nbsp; ESC Quit</div>
   <div class="result-overlay" id="resultOverlay">
     <div class="result-box" id="resultBox">
       <h2 id="resultTitle">Orbit Achieved!</h2>
@@ -294,6 +294,7 @@ var PARTS = {
   'chute':     { type:'chute',  name:'Parachute',       mass:0.15, h:8,  w:20, color:'#FFE080' },
   'leg':       { type:'leg',    name:'Landing Legs',    mass:0.20, h:14, w:30, color:'#606570' },
   'rcs':       { type:'rcs',    name:'RCS Block',       mass:0.12, h:10, w:16, fuel:0.8, thrust:4, isp:240, color:'#B0C0D0' },
+  'abort':     { type:'abort',  name:'Launch Escape',   mass:0.9,  h:18, w:18, fuel:0.6, thrust:320, isp:190, color:'#D04040' },
   'decoupler': { type:'decoupler',name:'Decoupler',     mass:0.04, h:5, w:26, color:'#D06020' }
 };
 
@@ -762,7 +763,7 @@ function computeThrust(parts, stage, throttle) {
     if (def.type === 'engine' && stageFuel(parts, stage) > 0) {
       thr += def.thrust * throttle;
       mdot += (def.thrust * throttle) / (def.isp * ENV.g0);
-    } else if (def.type === 'srb' && p.fuel > 0) {
+    } else if ((def.type === 'srb' || def.type === 'abort') && p.fuel > 0) {
       thr += def.thrust;
       mdot += def.thrust / (def.isp * ENV.g0);
     }
@@ -772,7 +773,8 @@ function computeThrust(parts, stage, throttle) {
 function stageFuel(parts, stage) {
   var f = 0;
   for (var i = 0; i < parts.length; i++) {
-    if (parts[i].stage === stage && (PARTS[parts[i].key].type === 'tank' || PARTS[parts[i].key].type === 'srb'))
+    var t = PARTS[parts[i].key].type;
+    if (parts[i].stage === stage && (t === 'tank' || t === 'srb' || t === 'abort'))
       f += parts[i].fuel || 0;
   }
   return f;
@@ -786,7 +788,7 @@ function consumeFuel(parts, stage, kgToConsume) {
   for (var i = 0; i < parts.length; i++) {
     if (parts[i].stage !== stage) continue;
     var def = PARTS[parts[i].key];
-    if ((def.type === 'tank' || def.type === 'srb') && parts[i].fuel > 0) {
+    if ((def.type === 'tank' || def.type === 'srb' || def.type === 'abort') && parts[i].fuel > 0) {
       var take = Math.min(parts[i].fuel * 1000, kgToConsume);
       parts[i].fuel -= take / 1000;
       kgToConsume -= take;
@@ -1135,6 +1137,28 @@ function buildRocketMeshes(parts) {
       }
       continue;
     }
+    if (def.type === 'abort') {
+      // Central tapered spire
+      var spireH = h, spireR = def.w/2 * PART_SCALE;
+      var spire = new THREE.Mesh(new THREE.CylinderGeometry(spireR*0.2, spireR*0.9, spireH*0.55, 8), new THREE.MeshPhongMaterial({ color: def.color }));
+      spire.position.y = y + spireH * 0.725;
+      rocketGroup.add(spire);
+      // Thruster block at base
+      var base = new THREE.Mesh(new THREE.CylinderGeometry(spireR*0.95, spireR*1.05, spireH*0.35, 8), new THREE.MeshPhongMaterial({ color: 0x803030 }));
+      base.position.y = y + spireH * 0.25;
+      rocketGroup.add(base);
+      // 4 radial nozzles canted downward (pulling pod up)
+      for (var j = 0; j < 4; j++) {
+        var ang = j * Math.PI/2;
+        var noz = new THREE.Mesh(new THREE.ConeGeometry(spireR*0.3, spireR*0.9, 6), new THREE.MeshPhongMaterial({ color: 0x202428 }));
+        noz.position.set(spireR*1.1 * Math.cos(ang), y + spireH*0.1, spireR*1.1 * Math.sin(ang));
+        noz.rotation.z = Math.cos(ang) * 0.5;
+        noz.rotation.x = Math.sin(ang) * 0.5;
+        rocketGroup.add(noz);
+      }
+      y += spireH;
+      continue;
+    }
     if (def.type === 'rcs') {
       // Four small quad thrusters around the stack
       var rcsH = h, rcsL = def.w/2 * PART_SCALE, rcsThk = 0.35;
@@ -1235,7 +1259,7 @@ function renderCatalog() {
     }
   }
   html += '<h3>&#x1F680; Parts</h3>';
-  var groups = { pod:'Pods', chute:'Parachutes', tank:'Fuel Tanks', engine:'Engines', srb:'Solid Boosters', rcs:'RCS', fin:'Aero Fins', leg:'Landing Gear', decoupler:'Decouplers' };
+  var groups = { pod:'Pods', abort:'Abort System', chute:'Parachutes', tank:'Fuel Tanks', engine:'Engines', srb:'Solid Boosters', rcs:'RCS', fin:'Aero Fins', leg:'Landing Gear', decoupler:'Decouplers' };
   for (var g in groups) {
     html += '<h3>' + groups[g] + '</h3>';
     for (var k in PARTS) {
@@ -2840,6 +2864,28 @@ function renderNavball() {
   navRenderer.render(navScene, navCamera);
 }
 
+function activateAbort() {
+  if (!sim) return;
+  var hasAbort = false;
+  for (var i = 0; i < sim.parts.length; i++) {
+    var p = sim.parts[i];
+    if (PARTS[p.key].type === 'abort' && p.fuel > 0.001) { hasAbort = true; break; }
+  }
+  if (!hasAbort) { showToast('<span style="color:#D04040;">No abort system / already spent</span>'); return; }
+  // Keep only survival parts
+  var keepTypes = { pod:true, chute:true, leg:true, rcs:true, abort:true };
+  sim.parts = sim.parts.filter(function(p) { return keepTypes[PARTS[p.key].type]; });
+  for (var i = 0; i < sim.parts.length; i++) sim.parts[i].stage = 0;
+  sim.currentStage = 0;
+  sim.aborted = true;
+  sim.throttle = 1.0;
+  setSAS('radial-out');
+  if (autopilot) autopilot = null;
+  buildRocketMeshes(sim.parts);
+  playStageSound();
+  showToast('<b style="color:#D04040;">ABORT! &mdash; Escape motor firing</b>');
+}
+
 function deployChute() {
   if (!sim) return;
   var hasChute = false;
@@ -2900,6 +2946,7 @@ document.addEventListener('keydown', function(e) {
   if (e.key.toLowerCase() === 'n') { if (maneuverNode) clearNode(); else createNode(); }
   if (e.key.toLowerCase() === 'g') deployChute();
   if (e.key.toLowerCase() === 'l') toggleAutopilot();
+  if (e.key.toLowerCase() === 'x') activateAbort();
   if (SAS_KYS_HANDLED.indexOf(e.key) >= 0) setSAS(SAS_KEYS[e.key]);
   if (e.key === 'Escape') backToBuilder();
 });
