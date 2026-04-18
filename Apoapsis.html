@@ -1712,10 +1712,17 @@ function renderFlight3D() {
     trailGeom.setAttribute('position', new THREE.BufferAttribute(tpos, 3));
   }
 
-  // KSP-style orbit-cam around ship in the local (radial=up) frame
+  // KSP-style orbit-cam: frame the whole rocket, positioned behind-and-above in the local (radial=up) frame
   var radial = sim.pos.clone().normalize();
   var shipFwd = new THREE.Vector3(0, 1, 0).applyQuaternion(rocketGroup.quaternion);
-  // Horizontal "north" direction = ship's nose projected onto tangent plane (fallback to arbitrary)
+
+  // Compute rocket stack height and pick the visual center of the craft (not its base)
+  var totalH = 0;
+  for (var pi = 0; pi < sim.parts.length; pi++) totalH += PARTS[sim.parts[pi].key].h;
+  var rocketSize = totalH * PART_SCALE;
+  var focusPoint = shipInertialPos.clone().add(shipFwd.clone().multiplyScalar(rocketSize * 0.5));
+
+  // "Behind" direction in the tangent plane — fallback if rocket is perfectly radial (launch pose)
   var horizFwd = shipFwd.clone().sub(radial.clone().multiplyScalar(shipFwd.dot(radial)));
   if (horizFwd.lengthSq() < 0.01) {
     horizFwd = Math.abs(radial.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
@@ -1724,14 +1731,18 @@ function renderFlight3D() {
     horizFwd.normalize();
   }
   var horizRight = new THREE.Vector3().crossVectors(horizFwd, radial).normalize();
-  var camDist = (40 + Math.log10(Math.max(1, sim.altitude + 1)) * 22) * flightCam.zoom;
-  // Start behind (opposite horizFwd), rotate by yaw around radial, elevate by pitch
-  var dir = horizFwd.clone().multiplyScalar(-1);
+
+  // Distance chosen so the rocket fills about 55% of the vertical FOV, plus altitude-dependent padding for context
+  var fitDist = Math.max(20, rocketSize * 1.9);
+  var camDist = (fitDist + Math.log10(Math.max(1, sim.altitude + 1)) * 18) * flightCam.zoom;
+
+  // Orbit around focus: behind→yaw→pitch
+  var dir = horizFwd.clone().negate();
   var cy = Math.cos(flightCam.yaw), sy = Math.sin(flightCam.yaw);
   var rotated = dir.clone().multiplyScalar(cy).add(horizRight.clone().multiplyScalar(-sy));
   var cp = Math.cos(flightCam.pitch), sp = Math.sin(flightCam.pitch);
   var offsetDir = rotated.multiplyScalar(cp).add(radial.clone().multiplyScalar(sp));
-  var camTarget = shipInertialPos.clone().add(offsetDir.multiplyScalar(camDist));
+  var camTarget = focusPoint.clone().add(offsetDir.multiplyScalar(camDist));
 
   // Screen shake
   var gForce = sim.accel / ENV.g0;
@@ -1744,10 +1755,10 @@ function renderFlight3D() {
     camera.position.copy(camTarget);
     camera._initialized = true;
   } else {
-    camera.position.lerp(camTarget, 0.12);
+    camera.position.lerp(camTarget, 0.15);
   }
   camera.up.copy(radial);
-  camera.lookAt(shipInertialPos);
+  camera.lookAt(focusPoint);
   camera.near = Math.max(0.5, sim.altitude * 0.0005);
   camera.far = 120000000;
   camera.updateProjectionMatrix();
