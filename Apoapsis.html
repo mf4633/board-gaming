@@ -107,6 +107,15 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 .q-warn { color: #D04040; font-weight: bold; }
 .plasma-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 4; transition: opacity 0.3s; opacity: 0; background: radial-gradient(ellipse at 50% 100%, rgba(255,120,40,0.55) 0%, rgba(255,60,0,0.25) 40%, transparent 75%); }
 
+.tutorial-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5,10,25,0.85); z-index: 2000; display: none; align-items: center; justify-content: center; }
+.tutorial-overlay.show { display: flex; }
+.tutorial-box { background: #0E1428; border: 2px solid #4080D0; border-radius: 10px; padding: 24px 32px; max-width: 600px; color: #B0C8E0; font-family: Georgia, serif; }
+.tutorial-box h2 { color: #40D080; font-size: 1.5em; margin-bottom: 12px; }
+.tutorial-box h3 { color: #4080D0; font-size: 1em; margin: 12px 0 6px; }
+.tutorial-box p { font-size: 0.85em; line-height: 1.55; margin: 4px 0; font-family: 'Courier New', monospace; color: #8098B0; }
+.tutorial-box kbd { background: #1A2848; color: #FFD040; border: 1px solid #4080D0; border-radius: 3px; padding: 1px 5px; font-family: 'Courier New', monospace; font-size: 0.9em; }
+.tutorial-box .btn { font-family: Georgia, serif; font-size: 0.9em; margin-top: 14px; }
+
 .sound-toggle { position: absolute; top: 42px; right: 10px; z-index: 15; background: #0E1428; border: 1px solid #1A2A40; color: #6080A0; padding: 3px 8px; font-size: 0.7em; font-family: 'Courier New', monospace; border-radius: 3px; cursor: pointer; }
 .sound-toggle:hover { background: #1A2848; }
 
@@ -163,6 +172,24 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
     <a href="Senet.html">Senet</a>
     <a href="Tidelands.html">Tidelands</a>
     <a href="Ur.html">Ur</a>
+  </div>
+</div>
+
+<div class="tutorial-overlay" id="tutorialOverlay">
+  <div class="tutorial-box">
+    <h2>&#x1F680; Welcome to Apoapsis</h2>
+    <p>Build a rocket, fly it to orbit, and chase the contracts. Real orbital mechanics, real Tsiolkovsky physics, two moons to visit.</p>
+    <h3>Builder</h3>
+    <p>Click parts on the left to stack them. <kbd>S0</kbd>/<kbd>S1</kbd>/... buttons assign stages. Stage with the highest number fires first. Use the <b>MunShip</b> preset if you want a ready-to-fly design.</p>
+    <h3>Flight &mdash; the 10 keys you need</h3>
+    <p><kbd>W</kbd>/<kbd>S</kbd> throttle &nbsp; <kbd>A</kbd>/<kbd>D</kbd> pitch &nbsp; <kbd>Q</kbd>/<kbd>E</kbd> yaw &nbsp; <kbd>Space</kbd> stage</p>
+    <p><kbd>0</kbd>-<kbd>9</kbd> SAS modes (prograde, retrograde, target, etc.)</p>
+    <p><kbd>L</kbd> autopilot (ascent on Earth &mdash; moon landing once in Mun/Minmus SOI)</p>
+    <p><kbd>M</kbd> map view &nbsp; <kbd>N</kbd> maneuver node &nbsp; <kbd>,</kbd>/<kbd>.</kbd> time warp</p>
+    <p><kbd>G</kbd> deploy chute &nbsp; <kbd>Shift</kbd>+WASDQE = RCS translate (precision docking)</p>
+    <h3>First mission</h3>
+    <p>Load MunShip, press LAUNCH, then hit <kbd>L</kbd> to let the autopilot put you in orbit. On the maneuver panel click <b>&rarr; Mun</b>, warp (.) until the burn window, hit <kbd>8</kbd> for SAS MANEUVER, then <kbd>W</kbd> to throttle up.</p>
+    <button class="btn" onclick="dismissTutorial()" style="border-color:#40D080;color:#40D080;font-weight:bold;">Got it &mdash; start flying</button>
   </div>
 </div>
 
@@ -227,7 +254,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
   </div>
   <div class="map-hud" id="mapInfoTL" style="top:78px;left:8px;color:#B0C8E0;display:none;"></div>
   <div class="map-legend" id="mapLegend" style="display:none;"><b style="color:#4080D0;">MAP LEGEND</b><br><span class="sw" style="background:#40D080;"></span>Orbit<br><span class="sw" style="background:#D04040;"></span>Periapsis<br><span class="sw" style="background:#40C0FF;"></span>Apoapsis<br><span class="sw" style="background:#FFD040;"></span>Ship<br><br>Drag: rotate &nbsp; Wheel: zoom</div>
-  <div class="controls-hint">W/S: Throttle &nbsp; A/D: Pitch &nbsp; Q/E: Yaw &nbsp; SPACE: Stage &nbsp; 0-9: SAS &nbsp; M: Map &nbsp; N: Node &nbsp; G: Chute &nbsp; L: Autopilot &nbsp; ,/.: Warp &nbsp; ESC: Abort</div>
+  <div class="controls-hint">W/S Throttle &nbsp; A/D Pitch &nbsp; Q/E Yaw &nbsp; Shift+move=RCS &nbsp; SPACE Stage &nbsp; 0-9 SAS &nbsp; M Map &nbsp; N Node &nbsp; G Chute &nbsp; L Autopilot &nbsp; ,/. Warp &nbsp; ESC Abort</div>
   <div class="result-overlay" id="resultOverlay">
     <div class="result-box" id="resultBox">
       <h2 id="resultTitle">Orbit Achieved!</h2>
@@ -266,6 +293,7 @@ var PARTS = {
   'fin':       { type:'fin',    name:'Aero Fin',        mass:0.08, h:12, w:36, color:'#7080A0' },
   'chute':     { type:'chute',  name:'Parachute',       mass:0.15, h:8,  w:20, color:'#FFE080' },
   'leg':       { type:'leg',    name:'Landing Legs',    mass:0.20, h:14, w:30, color:'#606570' },
+  'rcs':       { type:'rcs',    name:'RCS Block',       mass:0.12, h:10, w:16, fuel:0.8, thrust:4, isp:240, color:'#B0C0D0' },
   'decoupler': { type:'decoupler',name:'Decoupler',     mass:0.04, h:5, w:26, color:'#D06020' }
 };
 
@@ -683,6 +711,31 @@ function consumeFuel(parts, stage, kgToConsume) {
     }
   }
 }
+function rcsFuelRemaining(parts) {
+  var f = 0;
+  for (var i = 0; i < parts.length; i++) if (PARTS[parts[i].key].type === 'rcs') f += parts[i].fuel || 0;
+  return f;
+}
+function rcsFuelMax(parts) {
+  var f = 0;
+  for (var i = 0; i < parts.length; i++) if (PARTS[parts[i].key].type === 'rcs') f += PARTS[parts[i].key].fuel || 0;
+  return f;
+}
+function rcsTotalThrust(parts) {
+  var t = 0;
+  for (var i = 0; i < parts.length; i++) if (PARTS[parts[i].key].type === 'rcs') t += PARTS[parts[i].key].thrust;
+  return t;
+}
+function consumeRCSFuel(parts, kg) {
+  for (var i = 0; i < parts.length && kg > 0; i++) {
+    if (PARTS[parts[i].key].type !== 'rcs') continue;
+    var take = Math.min(parts[i].fuel * 1000, kg);
+    parts[i].fuel -= take / 1000;
+    kg -= take;
+    if (parts[i].fuel < 0.0001) parts[i].fuel = 0;
+  }
+}
+
 function crossSection(parts) {
   var maxW = 0;
   for (var i = 0; i < parts.length; i++) { var w = PARTS[parts[i].key].w; if (w > maxW) maxW = w; }
@@ -999,6 +1052,19 @@ function buildRocketMeshes(parts) {
       }
       continue;
     }
+    if (def.type === 'rcs') {
+      // Four small quad thrusters around the stack
+      var rcsH = h, rcsL = def.w/2 * PART_SCALE, rcsThk = 0.35;
+      for (var j = 0; j < 4; j++) {
+        var ang = (j / 4) * Math.PI * 2;
+        var rcsM = new THREE.Mesh(new THREE.BoxGeometry(rcsL*0.6, rcsH*0.6, rcsThk), new THREE.MeshPhongMaterial({ color: def.color }));
+        rcsM.position.set((STACK_R + rcsL*0.3) * Math.cos(ang), y + h/2, (STACK_R + rcsL*0.3) * Math.sin(ang));
+        rcsM.rotation.y = ang;
+        rocketGroup.add(rcsM);
+      }
+      y += h * 0.4;
+      continue;
+    }
     if (def.type === 'fin') {
       // Four thin fin blades at base of stack
       var finH = h, finL = def.w/2 * PART_SCALE, finThick = 0.15;
@@ -1086,7 +1152,7 @@ function renderCatalog() {
     }
   }
   html += '<h3>&#x1F680; Parts</h3>';
-  var groups = { pod:'Pods', chute:'Parachutes', tank:'Fuel Tanks', engine:'Engines', srb:'Solid Boosters', fin:'Aero Fins', leg:'Landing Gear', decoupler:'Decouplers' };
+  var groups = { pod:'Pods', chute:'Parachutes', tank:'Fuel Tanks', engine:'Engines', srb:'Solid Boosters', rcs:'RCS', fin:'Aero Fins', leg:'Landing Gear', decoupler:'Decouplers' };
   for (var g in groups) {
     html += '<h3>' + groups[g] + '</h3>';
     for (var k in PARTS) {
@@ -1571,11 +1637,17 @@ function renderHUD() {
   var fp = stgFM > 0 ? Math.round(stgF / stgFM * 100) : 0;
   var twr = stageTWR(sim.parts, sim.currentStage, sim.altitude);
   var twrClass = twr < 1 ? 'warn' : 'val';
+  var rcsMax = rcsFuelMax(sim.parts);
+  var rcsLine = '';
+  if (rcsMax > 0) {
+    var rcsPct = Math.round(rcsFuelRemaining(sim.parts) / rcsMax * 100);
+    rcsLine = '<br><b>RCS</b> <span class="' + (rcsPct < 15 ? 'warn' : 'val') + '">' + rcsPct + '%</span>';
+  }
   document.getElementById('hudBL').innerHTML =
     '<b>STAGE</b> ' + sim.currentStage + '<br>' +
     '<b>FUEL</b> <span class="' + (fp < 10 ? 'warn' : 'val') + '">' + fp + '%</span><br>' +
     '<b>TWR</b> <span class="' + twrClass + '">' + twr.toFixed(2) + '</span><br>' +
-    '<b>&Delta;v</b> ' + Math.round(totalDv(sim.parts)) + ' m/s';
+    '<b>&Delta;v</b> ' + Math.round(totalDv(sim.parts)) + ' m/s' + rcsLine;
   var vorb = orbitalVelocity(Math.max(0, sim.altitude), sim.parent);
   var parent = BODIES[sim.parent];
   var bodyInfo = '';
@@ -2499,6 +2571,29 @@ function deployChute() {
 function handleInput() {
   sim.pitchRate = 0;
   sim.yawRate = 0;
+  var shift = keys['shift'];
+  // RCS translation (Shift + WASD + QE). Requires an RCS block with fuel.
+  if (shift && rcsFuelRemaining(sim.parts) > 0 && rcsTotalThrust(sim.parts) > 0) {
+    var mass = sim.mass > 0 ? sim.mass : totalMass(sim.parts);
+    var totalThrustN = rcsTotalThrust(sim.parts) * 1000; // thrust stored in kN per block
+    var dv = totalThrustN / mass * PHYSICS_DT;
+    var bodyDir = new THREE.Vector3();
+    if (keys['w'] || keys['arrowup']) bodyDir.y += 1;
+    if (keys['s'] || keys['arrowdown']) bodyDir.y -= 1;
+    if (keys['a'] || keys['arrowleft']) bodyDir.x -= 1;
+    if (keys['d'] || keys['arrowright']) bodyDir.x += 1;
+    if (keys['q']) bodyDir.z -= 1;
+    if (keys['e']) bodyDir.z += 1;
+    if (bodyDir.lengthSq() > 0) {
+      bodyDir.normalize().applyQuaternion(sim.orientation);
+      sim.vel.add(bodyDir.multiplyScalar(dv));
+      // Consume monopropellant: mdot = F / (Isp * g0)
+      var isp = 240;
+      var mdot = totalThrustN / (isp * ENV.g0);
+      consumeRCSFuel(sim.parts, mdot * PHYSICS_DT);
+    }
+    return; // while Shift held, don't also throttle/pitch/yaw
+  }
   if (keys['w'] || keys['arrowup']) sim.throttle = Math.min(1, sim.throttle + 0.02);
   if (keys['s'] || keys['arrowdown']) sim.throttle = Math.max(0, sim.throttle - 0.02);
   if (keys['a'] || keys['arrowleft']) sim.pitchRate = -1.0;
@@ -2534,9 +2629,22 @@ document.addEventListener('keyup', function(e) { keys[e.key.toLowerCase()] = fal
 function fmtAlt(m) { if (!isFinite(m)) return '---'; if (Math.abs(m) >= 1e6) return (m/1000).toFixed(0) + ' km'; if (Math.abs(m) >= 1000) return (m/1000).toFixed(1) + ' km'; return Math.round(m) + ' m'; }
 function fmtTime(s) { var m = Math.floor(s / 60), sec = Math.floor(s % 60); return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec; }
 
+function dismissTutorial() {
+  document.getElementById('tutorialOverlay').classList.remove('show');
+  try { localStorage.setItem('apoapsis_tutorial_seen', '1'); } catch(e) {}
+}
+function maybeShowTutorial() {
+  try {
+    if (!localStorage.getItem('apoapsis_tutorial_seen')) {
+      document.getElementById('tutorialOverlay').classList.add('show');
+    }
+  } catch(e) {}
+}
+
 /* ===== INIT ===== */
 renderCatalog();
 loadPreset('orbital');
+maybeShowTutorial();
 </script>
 </body>
 </html>
