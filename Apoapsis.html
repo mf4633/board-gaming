@@ -59,22 +59,24 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 
 #flightScreen { position: relative; }
 #threeContainer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-.hud { position: absolute; font-size: 0.75em; pointer-events: none; z-index: 10; }
-.hud-tl { top: 8px; left: 8px; }
-.hud-tr { top: 8px; right: 8px; text-align: right; }
-.hud-bl { bottom: 8px; left: 8px; }
-.hud-br { bottom: 8px; right: 8px; text-align: right; }
-.hud b { color: #4080D0; }
-.hud .val { color: #40D080; }
-.hud .warn { color: #D04040; }
+.hud { position: absolute; font-size: 0.95em; pointer-events: none; z-index: 10; padding: 8px 12px; background: rgba(5,10,25,0.55); border: 1px solid rgba(64,128,208,0.35); border-radius: 6px; line-height: 1.55; color: #C0D0E0; backdrop-filter: blur(2px); }
+.hud-tl { top: 44px; left: 8px; min-width: 140px; }
+.hud-tr { top: 44px; right: 8px; text-align: right; min-width: 140px; }
+.hud-bl { bottom: 20px; left: 8px; min-width: 140px; }
+.hud-br { bottom: 20px; right: 8px; text-align: right; min-width: 140px; }
+.hud b { color: #4090E0; font-size: 0.85em; letter-spacing: 1px; }
+.hud .val { color: #40E090; font-weight: bold; }
+.hud .warn { color: #FFD040; }
+.hud .q-warn { color: #FF6040; font-weight: bold; }
 
-.navball { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); width: 130px; height: 130px; z-index: 10; pointer-events: none; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 2px #1A2A40, 0 4px 16px rgba(0,0,0,0.5); }
-.navball canvas { display: block; }
-.navball::before { content: ''; position: absolute; top: 50%; left: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 2px solid #40D080; border-radius: 50%; box-sizing: border-box; z-index: 2; }
-.navball::after { content: ''; position: absolute; top: 50%; left: 50%; width: 60px; height: 2px; margin: -1px 0 0 -30px; background: linear-gradient(to right, #40D080 0, #40D080 15%, transparent 15%, transparent 85%, #40D080 85%, #40D080 100%); z-index: 2; }
+.navball { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 220px; height: 220px; z-index: 10; pointer-events: none; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 3px #304060, inset 0 0 24px rgba(0,0,0,0.6), 0 6px 24px rgba(0,0,0,0.7); }
+.navball canvas { display: block; width: 220px; height: 220px; }
+.navball::before { content: ''; position: absolute; top: 50%; left: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; border: 2.5px solid #40E090; border-radius: 50%; box-sizing: border-box; z-index: 2; box-shadow: 0 0 4px rgba(64,224,144,0.6); }
+.navball::after { content: ''; position: absolute; top: 50%; left: 50%; width: 90px; height: 2.5px; margin: -1px 0 0 -45px; background: linear-gradient(to right, #40E090 0, #40E090 18%, transparent 18%, transparent 82%, #40E090 82%, #40E090 100%); z-index: 2; box-shadow: 0 0 4px rgba(64,224,144,0.5); }
 
-.throttle-bar { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 200px; background: #0A1020; border: 1px solid #1A2A40; border-radius: 3px; z-index: 10; }
-.throttle-fill { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, #D08020, #40D080); border-radius: 0 0 3px 3px; transition: height 0.1s; }
+.throttle-bar { position: absolute; bottom: 30px; left: calc(50% - 155px); width: 28px; height: 220px; background: rgba(5,10,25,0.7); border: 2px solid #304060; border-radius: 6px; z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.6); }
+.throttle-fill { position: absolute; bottom: 2px; left: 2px; right: 2px; background: linear-gradient(to top, #D06020 0%, #E0A040 40%, #40E080 100%); border-radius: 0 0 4px 4px; transition: height 0.1s; }
+.throttle-bar::before { content: 'THR'; position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: #6090C0; letter-spacing: 2px; font-family: 'Courier New', monospace; font-weight: bold; }
 
 .controls-hint { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 0.65em; color: #3A5070; pointer-events: none; z-index: 10; }
 
@@ -225,7 +227,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
   <div class="hud hud-bl" id="hudBL"></div>
   <div class="hud hud-br" id="hudBR"></div>
   <div class="throttle-bar" id="throttleBar"><div class="throttle-fill" id="throttleFill"></div></div>
-  <div class="navball" id="navball"><canvas id="navballCanvas" width="130" height="130"></canvas></div>
+  <div class="navball" id="navball"><canvas id="navballCanvas" width="220" height="220"></canvas></div>
   <div class="sas-panel" id="sasPanel">
     <h4>SAS</h4>
     <button class="sas-btn active" data-sas="off" onclick="setSAS('off')">OFF<span class="sas-key">0</span></button>
@@ -1722,7 +1724,7 @@ function renderFlight3D() {
     horizFwd.normalize();
   }
   var horizRight = new THREE.Vector3().crossVectors(horizFwd, radial).normalize();
-  var camDist = (25 + Math.log10(Math.max(1, sim.altitude + 1)) * 28) * flightCam.zoom;
+  var camDist = (40 + Math.log10(Math.max(1, sim.altitude + 1)) * 22) * flightCam.zoom;
   // Start behind (opposite horizFwd), rotate by yaw around radial, elevate by pitch
   var dir = horizFwd.clone().multiplyScalar(-1);
   var cy = Math.cos(flightCam.yaw), sy = Math.sin(flightCam.yaw);
@@ -2831,7 +2833,7 @@ function initNavball3D() {
   var canvas = document.getElementById('navballCanvas');
   if (!canvas) return;
   navRenderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-  navRenderer.setSize(130, 130);
+  navRenderer.setSize(220, 220);
   navRenderer.setPixelRatio(window.devicePixelRatio || 1);
   navScene = new THREE.Scene();
   navCamera = new THREE.PerspectiveCamera(65, 1, 0.01, 10);
