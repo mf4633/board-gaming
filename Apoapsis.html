@@ -208,7 +208,9 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
     <button class="sas-btn" data-sas="normal" onclick="setSAS('normal')">NORMAL+<span class="sas-key">6</span></button>
     <button class="sas-btn" data-sas="antinormal" onclick="setSAS('antinormal')">NORMAL-<span class="sas-key">7</span></button>
     <button class="sas-btn" data-sas="maneuver" onclick="setSAS('maneuver')">MANEUVER<span class="sas-key">8</span></button>
+    <button class="sas-btn" data-sas="target" onclick="setSAS('target')">TARGET<span class="sas-key">9</span></button>
   </div>
+  <button class="sound-toggle" id="targetToggle" onclick="toggleTarget()" style="top:72px;">&#x2316; Target</button>
   <div class="maneuver-panel" id="maneuverPanel">
     <h4>&#9733; MANEUVER NODE</h4>
     <div class="man-row"><label>T+</label><input type="range" id="manTime" min="0" max="14400" step="10" value="0"><span class="man-val" id="manTimeVal">+0s</span></div>
@@ -223,7 +225,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
   </div>
   <div class="map-hud" id="mapInfoTL" style="top:78px;left:8px;color:#B0C8E0;display:none;"></div>
   <div class="map-legend" id="mapLegend" style="display:none;"><b style="color:#4080D0;">MAP LEGEND</b><br><span class="sw" style="background:#40D080;"></span>Orbit<br><span class="sw" style="background:#D04040;"></span>Periapsis<br><span class="sw" style="background:#40C0FF;"></span>Apoapsis<br><span class="sw" style="background:#FFD040;"></span>Ship<br><br>Drag: rotate &nbsp; Wheel: zoom</div>
-  <div class="controls-hint">W/S: Throttle &nbsp; A/D: Pitch &nbsp; Q/E: Yaw &nbsp; SPACE: Stage &nbsp; 0-8: SAS &nbsp; M: Map &nbsp; N: Node &nbsp; G: Chute &nbsp; L: Autopilot &nbsp; ,/.: Warp &nbsp; ESC: Abort</div>
+  <div class="controls-hint">W/S: Throttle &nbsp; A/D: Pitch &nbsp; Q/E: Yaw &nbsp; SPACE: Stage &nbsp; 0-9: SAS &nbsp; M: Map &nbsp; N: Node &nbsp; G: Chute &nbsp; L: Autopilot &nbsp; ,/.: Warp &nbsp; ESC: Abort</div>
   <div class="result-overlay" id="resultOverlay">
     <div class="result-box" id="resultBox">
       <h2 id="resultTitle">Orbit Achieved!</h2>
@@ -274,7 +276,9 @@ var MISSIONS = [
   { id:'munland',  name:'Mun Landing',      desc:'Soft-land on Mun (&lt;12 m/s)', reward: 25000, check:function(s) { return s.munLanded; } },
   { id:'return',   name:'Safe Return',      desc:'Return home from Mun',         reward: 40000, check:function(s) { return s._everInMun && s.parent==='earth' && s.altitude < 500 && s.speed < 12 && s.maxAlt > 100000; } },
   { id:'minflyby', name:'Minmus Flyby',     desc:'Enter the Minmus SOI',         reward: 7000,  check:function(s) { return s._everInMinmus; } },
-  { id:'minland',  name:'Minmus Landing',   desc:'Soft-land on Minmus',          reward: 30000, check:function(s) { return s.minmusLanded; } }
+  { id:'minland',  name:'Minmus Landing',   desc:'Soft-land on Minmus',          reward: 30000, check:function(s) { return s.minmusLanded; } },
+  { id:'rendez',   name:'Rendezvous',       desc:'Approach target within 1 km',  reward: 8000,  check:function(s) { var tm = targetMetrics(s); return !!tm && tm.d < 1000; } },
+  { id:'dock',     name:'Docking',          desc:'Approach target &lt;30 m at &lt;2 m/s', reward: 25000, check:function(s) { var tm = targetMetrics(s); return !!tm && tm.d < 30 && tm.vRel < 2; } }
 ];
 var PRESETS = {
   sounding: [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-sm',stage:0},{key:'eng-sm',stage:0}],
@@ -297,10 +301,11 @@ var accumulator = 0;
 var PHYSICS_DT = 0.02;
 var viewMode = 'flight';
 var sasMode = 'off';
-var SAS_KEYS = { '0':'off', '1':'stability', '2':'prograde', '3':'retrograde', '4':'radial-out', '5':'radial-in', '6':'normal', '7':'antinormal', '8':'maneuver' };
+var SAS_KEYS = { '0':'off', '1':'stability', '2':'prograde', '3':'retrograde', '4':'radial-out', '5':'radial-in', '6':'normal', '7':'antinormal', '8':'maneuver', '9':'target' };
 var maneuverNode = null; // { dt: seconds from NOW, dvPro, dvNorm, dvRad }
 var plannedOrbitLine = null, manNodeMarker = null;
 var autopilot = null; // { mode, targetAlt }
+var target = null;    // rendezvous target: { kep, nu0, t0, parent, mesh, orbitLine, marker }
 var audio = { ctx:null, engineGain:null, engineOsc:null, engineFilter:null, noiseSrc:null, plasmaGain:null, plasmaSrc:null, muted:false };
 var mapState = { dist:ENV.R*4, yaw:0.0, pitch:0.35, dragging:false, lx:0, ly:0 };
 var orbitLine = null, peMarker = null, apMarker = null, shipMarker = null, mapCamera = null;
@@ -886,6 +891,11 @@ function sasTargetDir(s) {
       if (burnVec.lengthSq() < 1) return null;
       return burnVec.normalize();
     }
+    case 'target': {
+      if (!target) return null;
+      var rel = targetRelPos(s);
+      return rel && rel.lengthSq() > 1 ? rel.normalize() : null;
+    }
   }
   return null;
 }
@@ -1262,6 +1272,7 @@ function startFlight() {
   timeWarp = 1;
   maneuverNode = null;
   autopilot = null;
+  if (target) clearTarget();
   if (document.getElementById('maneuverPanel')) document.getElementById('maneuverPanel').classList.remove('active');
   setSAS('off');
   setView('flight');
@@ -1447,6 +1458,14 @@ function renderFlight3D() {
     bodyMeshes[bk].position.copy(inertialBodyPos(bk, sim.t));
     bodyMeshes[bk].visible = true;
   }
+  // Target
+  if (target) {
+    var ts = targetStateAt(sim.t);
+    if (ts) target.mesh.position.copy(ts.pos);
+    target.mesh.visible = true;
+    if (target.marker) target.marker.visible = false;
+    if (target.orbitLine) target.orbitLine.visible = false;
+  }
 
   // Flame light
   flameLight.intensity = sim.thrustN > 0 ? sim.throttle * 3 : 0;
@@ -1571,6 +1590,26 @@ function renderHUD() {
     '<b>ORBIT V</b> ' + Math.round(vorb) + ' m/s<br>' +
     '<b>PROGRESS</b> ' + Math.min(100, Math.round(sim.speed / vorb * 100)) + '%<br>' +
     '<b>ECC</b> ' + (sim.eccentricity < 10 ? sim.eccentricity.toFixed(3) : '---') + bodyInfo;
+  var tm = targetMetrics(sim);
+  if (tm) {
+    var tgtDiv = document.getElementById('hudTgt');
+    if (!tgtDiv) {
+      tgtDiv = document.createElement('div');
+      tgtDiv.id = 'hudTgt';
+      tgtDiv.className = 'hud';
+      tgtDiv.style.cssText = 'position:absolute;top:110px;right:8px;text-align:right;z-index:10;pointer-events:none;font-size:0.75em;';
+      document.getElementById('flightScreen').appendChild(tgtDiv);
+    }
+    tgtDiv.innerHTML =
+      '<b style="color:#FFA030;">TARGET</b><br>' +
+      '<b>DIST</b> ' + fmtAlt(tm.d) + '<br>' +
+      '<b>V-REL</b> ' + tm.vRel.toFixed(1) + ' m/s<br>' +
+      '<b>CLOSE</b> ' + (tm.closing >= 0 ? '+' : '') + tm.closing.toFixed(1) + ' m/s';
+    tgtDiv.style.display = viewMode === 'map' ? 'none' : 'block';
+  } else {
+    var tgtDiv = document.getElementById('hudTgt');
+    if (tgtDiv) tgtDiv.style.display = 'none';
+  }
   document.getElementById('throttleFill').style.height = (sim.throttle * 100) + '%';
 }
 
@@ -1805,6 +1844,109 @@ function updateOrbitLine() {
     else { escapeMarker.position.copy(ev.inertialPos); escapeMarker.visible = true; }
     if (patches.length > 1) fillLineFromPoints(nextPatchLine, patches[1].points);
   }
+}
+
+/* ===== RENDEZVOUS TARGET ===== */
+function toggleTarget() {
+  if (target) { clearTarget(); return; }
+  spawnTarget();
+}
+
+function spawnTarget() {
+  // 200 km circular equatorial orbit; phase 90° from ship's current angle (if on Earth) so player chases it.
+  var r = ENV.R + 200000;
+  var v = Math.sqrt(MU / r);
+  var shipAngle = 0;
+  if (sim) {
+    var iPos = inertialPosOf(sim);
+    shipAngle = Math.atan2(iPos.z, iPos.x);
+  }
+  var a = shipAngle + Math.PI/2;
+  var pos = new THREE.Vector3(r * Math.cos(a), 0, r * Math.sin(a));
+  var vel = new THREE.Vector3(-v * Math.sin(a), 0, v * Math.cos(a));
+  var kep = keplerianFromState(pos, vel, MU);
+  var nu0 = trueAnomalyFromState(pos, vel, kep);
+  target = { kep: kep, nu0: nu0, t0: sim ? sim.t : 0, parent: 'earth' };
+  // Mesh: small cylinder with a glowing orange tip (docking port)
+  var grp = new THREE.Group();
+  var body = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 8, 10), new THREE.MeshPhongMaterial({ color: 0xC0C0C8 }));
+  var tip = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 1.2, 10), new THREE.MeshPhongMaterial({ color: 0xFFA030, emissive: 0xFF6020 }));
+  tip.position.y = 4.5;
+  grp.add(body); grp.add(tip);
+  var halo = new THREE.Mesh(new THREE.SphereGeometry(18, 10, 8), new THREE.MeshBasicMaterial({ color: 0xFFA030, transparent: true, opacity: 0.25, depthWrite: false }));
+  grp.add(halo);
+  scene.add(grp);
+  target.mesh = grp;
+  // Orbit line (sampled once at spawn since kep is fixed)
+  var N = 96, arr = new Float32Array(N*3);
+  for (var i = 0; i < N; i++) {
+    var nu = (i/(N-1))*Math.PI*2;
+    var rN = kep.p / (1 + kep.e*Math.cos(nu));
+    arr[i*3] = kep.eHat.x*rN*Math.cos(nu) + kep.bHat.x*rN*Math.sin(nu);
+    arr[i*3+1] = kep.eHat.y*rN*Math.cos(nu) + kep.bHat.y*rN*Math.sin(nu);
+    arr[i*3+2] = kep.eHat.z*rN*Math.cos(nu) + kep.bHat.z*rN*Math.sin(nu);
+  }
+  var tGeom = new THREE.BufferGeometry();
+  tGeom.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+  var tLine = new THREE.Line(tGeom, new THREE.LineBasicMaterial({ color: 0xFFA030, transparent: true, opacity: 0.6 }));
+  tLine.visible = false;
+  scene.add(tLine);
+  target.orbitLine = tLine;
+  // Map marker
+  var markerCanvas = makeMarkerCanvas('\u2316', '#FFA030');
+  var sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(markerCanvas), depthTest: false, transparent: true }));
+  sprite.scale.set(350000, 350000, 1);
+  sprite.visible = false;
+  sprite.renderOrder = 999;
+  scene.add(sprite);
+  target.marker = sprite;
+  showToast('Target in 200 km Earth orbit');
+}
+
+function clearTarget() {
+  if (!target) return;
+  if (target.mesh) { scene.remove(target.mesh); target.mesh.children.forEach(function(c) { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose(); }); }
+  if (target.orbitLine) { scene.remove(target.orbitLine); target.orbitLine.geometry.dispose(); target.orbitLine.material.dispose(); }
+  if (target.marker) { scene.remove(target.marker); target.marker.material.map.dispose(); target.marker.material.dispose(); }
+  target = null;
+  if (sasMode === 'target') setSAS('off');
+  showToast('Target cleared');
+}
+
+function targetStateAt(t) {
+  if (!target) return null;
+  var kep = target.kep;
+  var dt = t - target.t0;
+  var n = Math.sqrt(MU / (kep.a*kep.a*kep.a));
+  var E0 = 2*Math.atan2(Math.sqrt(1-kep.e)*Math.sin(target.nu0/2), Math.sqrt(1+kep.e)*Math.cos(target.nu0/2));
+  var M = E0 - kep.e*Math.sin(E0) + n*dt;
+  var E = solveKepler(M, kep.e);
+  var nu = 2*Math.atan2(Math.sqrt(1+kep.e)*Math.sin(E/2), Math.sqrt(1-kep.e)*Math.cos(E/2));
+  var pv = posVelFromKepler(kep, nu, MU);
+  return pv; // Earth-centered inertial
+}
+
+// Returns relative position ship→target in ship's parent frame (for SAS aim).
+function targetRelPos(s) {
+  if (!target) return null;
+  var ts = targetStateAt(s.t);
+  if (!ts) return null;
+  var shipInertial = inertialPosOf(s);
+  return ts.pos.clone().sub(shipInertial);
+}
+
+function targetMetrics(s) {
+  if (!target) return null;
+  var ts = targetStateAt(s.t);
+  if (!ts) return null;
+  var shipI = inertialPosOf(s), shipV = inertialVelOf(s);
+  var relP = ts.pos.clone().sub(shipI);
+  var relV = ts.vel.clone().sub(shipV);
+  var d = relP.length();
+  var vRel = relV.length();
+  // Closing speed = -relV · relP_hat
+  var closing = d > 1 ? -relV.dot(relP)/d : 0;
+  return { d: d, vRel: vRel, closing: closing, tPos: ts.pos.clone(), tVel: ts.vel.clone() };
 }
 
 /* ===== ASCENT AUTOPILOT ===== */
@@ -2061,6 +2203,8 @@ function setView(mode) {
     peMarker.visible = false; apMarker.visible = false; shipMarker.visible = false; orbitLine.visible = false;
     for (var bk in bodyMarkers) bodyMarkers[bk].visible = false;
     for (var bk in bodyOrbitLines) bodyOrbitLines[bk].visible = false;
+    if (target && target.marker) target.marker.visible = false;
+    if (target && target.orbitLine) target.orbitLine.visible = false;
     if (nextPatchLine) nextPatchLine.visible = false;
     if (encounterMarker) encounterMarker.visible = false;
     if (escapeMarker) escapeMarker.visible = false;
@@ -2083,6 +2227,17 @@ function renderMapView() {
     bodyMarkers[bk].position.copy(bp);
     bodyMarkers[bk].visible = true;
     bodyOrbitLines[bk].visible = true;
+  }
+  // Target on map
+  if (target) {
+    var ts = targetStateAt(sim.t);
+    if (ts) {
+      target.mesh.position.copy(ts.pos);
+      target.mesh.visible = true;
+      target.marker.position.copy(ts.pos);
+      target.marker.visible = true;
+    }
+    target.orbitLine.visible = true;
   }
   var munPos = inertialBodyPos('mun', sim.t);
   // Hide rocket mesh in map (too small anyway; ship sprite replaces it)
@@ -2316,7 +2471,7 @@ document.addEventListener('keydown', function(e) {
   if (SAS_KYS_HANDLED.indexOf(e.key) >= 0) setSAS(SAS_KEYS[e.key]);
   if (e.key === 'Escape') backToBuilder();
 });
-var SAS_KYS_HANDLED = ['0','1','2','3','4','5','6','7','8'];
+var SAS_KYS_HANDLED = ['0','1','2','3','4','5','6','7','8','9'];
 
 // Wire up maneuver node sliders
 ['manTime','manPro','manNorm','manRad'].forEach(function(id) {
