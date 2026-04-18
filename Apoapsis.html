@@ -218,6 +218,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
     <div class="man-info" id="manInfo"></div>
     <button class="man-btn go" onclick="alignToNode()">Align SAS</button>
     <button class="man-btn" onclick="planMunTransfer()">&rarr; Mun</button>
+    <button class="man-btn" onclick="planMinmusTransfer()">&rarr; Minmus</button>
     <button class="man-btn clear" onclick="clearNode()">Clear</button>
   </div>
   <div class="map-hud" id="mapInfoTL" style="top:78px;left:8px;color:#B0C8E0;display:none;"></div>
@@ -377,8 +378,9 @@ function initThree() {
   for (var bk in BODIES) {
     var b = BODIES[bk];
     if (!b.parent) continue;
-    var bGeo = new THREE.SphereGeometry(b.radius, 48, 48);
-    var bMat = new THREE.MeshPhongMaterial({ color: b.color, emissive: 0x1a1a1e, shininess: 2 });
+    var bGeo = new THREE.SphereGeometry(b.radius, 64, 48);
+    var tex = new THREE.CanvasTexture(buildBodyTexture(bk));
+    var bMat = new THREE.MeshPhongMaterial({ map: tex, emissive: 0x0f0f12, shininess: 3 });
     var bMesh = new THREE.Mesh(bGeo, bMat);
     scene.add(bMesh);
     bodyMeshes[bk] = bMesh;
@@ -546,6 +548,59 @@ function initThree() {
   }, { passive: false });
 
   threeReady = true;
+}
+
+function buildBodyTexture(bodyKey) {
+  var b = BODIES[bodyKey];
+  var W = 1024, H = 512;
+  var c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  var ctx = c.getContext('2d');
+  // Base fill with slight shading variation
+  var baseHex = '#' + b.color.toString(16).padStart(6, '0');
+  ctx.fillStyle = baseHex;
+  ctx.fillRect(0, 0, W, H);
+  // Mare / darker regions (large low-frequency blobs)
+  var mareCount = bodyKey === 'minmus' ? 30 : 18;
+  for (var i = 0; i < mareCount; i++) {
+    var cx = Math.random()*W, cy = Math.random()*H;
+    var r = 40 + Math.random()*140;
+    var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    var shade = bodyKey === 'minmus' ? 'rgba(180,230,200,0.35)' : 'rgba(55,58,65,0.55)';
+    g.addColorStop(0, shade);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(cx-r, cy-r, 2*r, 2*r);
+  }
+  // Craters
+  var craterCount = bodyKey === 'minmus' ? 40 : 160;
+  for (var i = 0; i < craterCount; i++) {
+    var cx = Math.random()*W, cy = Math.random()*H;
+    var r = 3 + Math.random()*45;
+    // Dark floor
+    var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    var dark = bodyKey === 'minmus' ? 'rgba(100,160,130,0.7)' : 'rgba(45,45,50,0.85)';
+    g.addColorStop(0, dark);
+    g.addColorStop(0.6, dark.replace(/[\d.]+\)$/, '0.2)'));
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(cx-r, cy-r, 2*r, 2*r);
+    // Bright rim
+    var rim = bodyKey === 'minmus' ? 'rgba(220,245,230,0.55)' : 'rgba(195,200,205,0.55)';
+    ctx.strokeStyle = rim;
+    ctx.lineWidth = 1 + r * 0.08;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.95, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  // Speckle
+  var speckleCount = 800;
+  for (var i = 0; i < speckleCount; i++) {
+    var x = Math.random()*W, y = Math.random()*H;
+    ctx.fillStyle = 'rgba(' + (40+Math.random()*30) + ',' + (40+Math.random()*30) + ',' + (45+Math.random()*30) + ',' + (0.1 + Math.random()*0.15) + ')';
+    ctx.fillRect(x, y, 2, 2);
+  }
+  return c;
 }
 
 function makeMarkerCanvas(label, color) {
@@ -1889,12 +1944,16 @@ function alignToNode() {
   setView('flight');
 }
 
-function planMunTransfer() {
+function planMunTransfer() { planBodyTransfer('mun'); }
+function planMinmusTransfer() { planBodyTransfer('minmus'); }
+
+function planBodyTransfer(targetKey) {
   if (!sim || sim.parent !== 'earth') { showToast('Only plannable from Earth orbit'); return; }
-  var parent = BODIES.earth, target = BODIES.mun;
+  var parent = BODIES.earth, target = BODIES[targetKey];
+  if (!target || target.parent !== 'earth') { showToast('Invalid target'); return; }
   var kep = keplerianFromState(sim.pos, sim.vel, parent.mu);
   if (!kep || !kep.bound) { showToast('Need bound Earth orbit first'); return; }
-  if (kep.e > 0.15) { showToast('Circularize orbit first (ecc too high)'); return; }
+  if (kep.e > 0.15) { showToast('Circularize first (ecc too high)'); return; }
   var r1 = sim.pos.length();
   var r2 = target.orbitR;
   var a_t = (r1 + r2) / 2;
@@ -1902,30 +1961,33 @@ function planMunTransfer() {
   var v_now = sim.vel.length();
   var dv_pro = v_t - v_now;
   dv_pro = Math.max(-3000, Math.min(3000, dv_pro));
+  // Plane-change component if target is inclined (approximate: add normal dv)
+  var inc = target.inclination || 0;
+  var dv_norm = inc ? Math.round(v_t * Math.sin(inc) * 0.8) : 0;
+  dv_norm = Math.max(-1500, Math.min(1500, dv_norm));
   var T_transfer = Math.PI * Math.sqrt(a_t*a_t*a_t / parent.mu);
-  // Phase-match: find dt so that at burn+T_transfer, Mun is at arrival angle
-  // Ship angle in XZ plane (orbit is approx in XZ):
   var shipAngle = Math.atan2(sim.pos.z, sim.pos.x);
   var omegaShip = Math.sqrt(parent.mu / (r1*r1*r1));
   var signProgade = (sim.vel.x * -Math.sin(shipAngle) + sim.vel.z * Math.cos(shipAngle)) > 0 ? 1 : -1;
   omegaShip *= signProgade;
-  var omegaMun = 2*Math.PI / target.period;
-  // Solve: shipAngle + omegaShip*dt + π = phase_mun + omegaMun*(sim.t + dt + T_transfer)
-  var rhs = (target.phase + omegaMun*(sim.t + T_transfer)) - (shipAngle + Math.PI);
-  var denom = omegaShip - omegaMun;
+  var omegaTarget = 2*Math.PI / target.period;
+  var rhs = (target.phase + omegaTarget*(sim.t + T_transfer)) - (shipAngle + Math.PI);
+  var denom = omegaShip - omegaTarget;
   var dt_wait = -rhs / denom;
   var synodic = 2*Math.PI / Math.abs(denom);
   while (dt_wait < 10) dt_wait += synodic;
-  // Cap at slider max
   if (dt_wait > 14400) dt_wait = dt_wait % synodic;
   if (dt_wait > 14400) dt_wait = 14400;
   createNode();
   maneuverNode.dt = dt_wait;
   maneuverNode.dvPro = dv_pro;
+  maneuverNode.dvNorm = dv_norm;
   document.getElementById('manTime').value = Math.round(dt_wait);
   document.getElementById('manPro').value = Math.round(dv_pro);
+  document.getElementById('manNorm').value = dv_norm;
   updateManeuverUI();
-  showToast('Hohmann to Mun: &Delta;v ' + Math.round(dv_pro) + ', T+ ' + Math.round(dt_wait) + 's');
+  var bName = target.name;
+  showToast('Hohmann to ' + bName + ': &Delta;v ' + Math.round(dv_pro) + (dv_norm ? ' pro, ' + dv_norm + ' norm' : '') + ', T+ ' + Math.round(dt_wait) + 's');
 }
 
 function updateManeuverUI() {
