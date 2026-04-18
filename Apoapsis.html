@@ -1478,7 +1478,20 @@ function startFlight() {
   document.getElementById('builderScreen').classList.remove('active');
   document.getElementById('flightScreen').classList.add('active');
   document.getElementById('resultOverlay').classList.remove('show');
+  // Now that flightScreen is visible, threeContainer finally has real pixel dimensions.
+  // initThree ran while the container was hidden (0x0), so the renderer canvas is also 0x0 — fix it.
+  resizeFlightCanvas();
   requestAnimationFrame(gameLoop);
+}
+
+function resizeFlightCanvas() {
+  var c = document.getElementById('threeContainer');
+  if (!c || !renderer) return;
+  var w = c.clientWidth, h = c.clientHeight;
+  if (w <= 0 || h <= 0) return;
+  renderer.setSize(w, h);
+  if (camera) { camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  if (mapCamera) { mapCamera.aspect = w / h; mapCamera.updateProjectionMatrix(); }
 }
 
 function backToBuilder() {
@@ -1526,6 +1539,11 @@ function railStep(s, dt) {
 
 function gameLoop(timestamp) {
   if (gameState !== 'flight') return;
+  // Recover from any stale canvas sizing (e.g. first-frame after screen swap, window resize while hidden)
+  var _c = document.getElementById('threeContainer');
+  if (_c && renderer && (_c.clientWidth !== renderer.domElement.width || _c.clientHeight !== renderer.domElement.height)) {
+    resizeFlightCanvas();
+  }
   if (lastTime === 0) lastTime = timestamp;
   var frameTime = Math.min((timestamp - lastTime) / 1000, 0.1) * timeWarp;
   lastTime = timestamp;
