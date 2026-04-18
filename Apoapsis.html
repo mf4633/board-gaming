@@ -465,9 +465,9 @@ function initThree() {
   for (var bk in BODIES) {
     var b = BODIES[bk];
     if (!b.parent) continue;
-    var bGeo = new THREE.SphereGeometry(b.radius, 64, 48);
+    var bGeo = new THREE.SphereGeometry(b.radius, 96, 64);
     var tex = new THREE.CanvasTexture(buildBodyTexture(bk));
-    var bMat = new THREE.MeshPhongMaterial({ map: tex, emissive: 0x0f0f12, shininess: 3 });
+    var bMat = new THREE.MeshPhongMaterial({ map: tex, bumpMap: tex, bumpScale: bk === 'mun' ? 12000 : 5000, emissive: 0x0f0f12, shininess: 3 });
     var bMesh = new THREE.Mesh(bGeo, bMat);
     scene.add(bMesh);
     bodyMeshes[bk] = bMesh;
@@ -2091,10 +2091,38 @@ function timeToApoapsis(s) {
 
 function runAutopilot(s) {
   if (!autopilot) return null;
-  var target = autopilot.targetAlt;
+  var targetAltitude = autopilot.targetAlt;
   var radial = s.pos.clone().normalize();
   var prograde = s.speed > 10 ? s.vel.clone().normalize() : radial.clone();
   switch (autopilot.mode) {
+    case 'docking': {
+      if (!target) { autopilot.mode = 'done'; return null; }
+      var rcsF = rcsTotalThrust(s.parts) * 1000;
+      if (rcsF < 100 || rcsFuelRemaining(s.parts) < 0.001) { autopilot.mode = 'done'; showToast('<span style="color:#D04040;">Docking aborted: RCS empty</span>'); return null; }
+      var ts = targetStateAt(s.t);
+      var shipI = inertialPosOf(s), shipV = inertialVelOf(s);
+      var relP = ts.pos.clone().sub(shipI);
+      var relV = ts.vel.clone().sub(shipV);
+      var d = relP.length();
+      if (d < 25 && relV.length() < 0.4) { autopilot.mode = 'done'; showToast('<b style="color:#40D080;">Docked!</b>'); s.throttle = 0; return null; }
+      var relDir = relP.clone().normalize();
+      var approachSpeed = d > 500 ? 8 : (d > 100 ? 3 : (d > 30 ? 1 : 0.25));
+      // Want relV (target - ship) = -approachSpeed * relDir so ship closes on target
+      var desiredRelV = relDir.clone().multiplyScalar(-approachSpeed);
+      var deltaShipV = desiredRelV.clone().sub(relV).multiplyScalar(-1); // ship.vel change needed
+      var mass = totalMass(s.parts);
+      var maxDv = (rcsF / mass) * PHYSICS_DT;
+      var magDv = deltaShipV.length();
+      var applyDv;
+      if (magDv <= maxDv) applyDv = deltaShipV;
+      else applyDv = deltaShipV.clone().setLength(maxDv);
+      s.vel.add(applyDv);
+      var actualThrust = (applyDv.length() / PHYSICS_DT) * mass;
+      var mdot = actualThrust / (240 * ENV.g0);
+      consumeRCSFuel(s.parts, mdot * PHYSICS_DT);
+      s.throttle = 0;
+      return relDir; // SAS points at target
+    }
     case 'landing': {
       var retrograde = s.speed > 0.5 ? s.vel.clone().normalize().negate() : radial.clone();
       var mass = totalMass(s.parts);
@@ -2129,10 +2157,10 @@ function runAutopilot(s) {
       s.throttle = 1.0;
       var pitchRatio;
       if (s.altitude < 1000) pitchRatio = 0;
-      else if (s.altitude > target * 0.7) pitchRatio = 1;
-      else pitchRatio = Math.min(1, (s.altitude - 1000) / (target * 0.7 - 1000));
+      else if (s.altitude > targetAltitude * 0.7) pitchRatio = 1;
+      else pitchRatio = Math.min(1, (s.altitude - 1000) / (targetAltitude * 0.7 - 1000));
       var dir = radial.clone().multiplyScalar(1 - pitchRatio).add(prograde.clone().multiplyScalar(pitchRatio)).normalize();
-      if (s.apoapsis >= target && s.altitude > ENV.KARMAN) {
+      if (s.apoapsis >= targetAltitude && s.altitude > ENV.KARMAN) {
         s.throttle = 0;
         autopilot.mode = 'coast';
         showToast('Autopilot: coasting to apoapsis');
@@ -2149,7 +2177,7 @@ function runAutopilot(s) {
       return prograde;
     }
     case 'circularize': {
-      var wantPe = target - 3000;
+      var wantPe = targetAltitude - 3000;
       if (s.periapsis < wantPe) {
         s.throttle = 1.0;
       } else {
@@ -2169,7 +2197,20 @@ function toggleAutopilot() {
   if (autopilot) { autopilot = null; showToast('Autopilot disengaged'); return; }
   if (!sim) return;
   setSAS('off');
-  // Landing if in a non-Earth SOI and descending / close to surface
+  // Docking if target is active and within 10 km
+  if (target) {
+    var tm = targetMetrics(sim);
+    if (tm && tm.d < 10000) {
+      if (rcsTotalThrust(sim.parts) < 1 || rcsFuelRemaining(sim.parts) < 0.001) {
+        showToast('<span style="color:#D04040;">Need RCS + monoprop to dock</span>');
+        return;
+      }
+      autopilot = { mode: 'docking' };
+      showToast('Autopilot: docking');
+      return;
+    }
+  }
+  // Landing if in a non-Earth SOI
   if (sim.parent !== 'earth') {
     autopilot = { mode: 'landing' };
     showToast('Autopilot: landing on ' + BODIES[sim.parent].name);
@@ -2181,7 +2222,6 @@ function toggleAutopilot() {
     showToast('Autopilot: ascent to 100 km');
     return;
   }
-  // Earth, in orbit/suborbital coast — no autopilot task available
   showToast('Autopilot: no task available in current regime');
 }
 
