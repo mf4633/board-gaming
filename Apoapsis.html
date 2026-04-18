@@ -221,7 +221,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
   </div>
   <div class="map-hud" id="mapInfoTL" style="top:78px;left:8px;color:#B0C8E0;display:none;"></div>
   <div class="map-legend" id="mapLegend" style="display:none;"><b style="color:#4080D0;">MAP LEGEND</b><br><span class="sw" style="background:#40D080;"></span>Orbit<br><span class="sw" style="background:#D04040;"></span>Periapsis<br><span class="sw" style="background:#40C0FF;"></span>Apoapsis<br><span class="sw" style="background:#FFD040;"></span>Ship<br><br>Drag: rotate &nbsp; Wheel: zoom</div>
-  <div class="controls-hint">W/S: Throttle &nbsp; A/D: Pitch &nbsp; Q/E: Yaw &nbsp; SPACE: Stage &nbsp; 0-8: SAS &nbsp; M: Map &nbsp; N: Node &nbsp; G: Chute &nbsp; ,/.: Warp &nbsp; ESC: Abort</div>
+  <div class="controls-hint">W/S: Throttle &nbsp; A/D: Pitch &nbsp; Q/E: Yaw &nbsp; SPACE: Stage &nbsp; 0-8: SAS &nbsp; M: Map &nbsp; N: Node &nbsp; G: Chute &nbsp; L: Autopilot &nbsp; ,/.: Warp &nbsp; ESC: Abort</div>
   <div class="result-overlay" id="resultOverlay">
     <div class="result-box" id="resultBox">
       <h2 id="resultTitle">Orbit Achieved!</h2>
@@ -240,8 +240,9 @@ var MU = ENV.g0 * ENV.R * ENV.R;
 // Multi-body system. Mun is scaled KSP-like for playable Hohmann transfer times.
 // Earth-centered inertial frame = world. Mun orbits Earth in XZ plane.
 var BODIES = {
-  'earth': { name:'Earth', mu: MU, radius: ENV.R, atm: true, color: 0x1a5533, parent: null, soiRadius: Infinity, orbitR: 0, period: 0, phase: 0 },
-  'mun':   { name:'Mun',   mu: 2.7e10, radius: 300000, atm: false, color: 0x9CA0A5, parent: 'earth', soiRadius: 1500000, orbitR: 10033000, period: 10000, phase: 0 }
+  'earth':  { name:'Earth', mu: MU,       radius: ENV.R,  atm: true,  color: 0x1a5533, markerColor:'#40D080', parent: null,    soiRadius: Infinity, orbitR: 0,        period: 0,     phase: 0,   inclination: 0 },
+  'mun':    { name:'Mun',   mu: 2.7e10,   radius: 300000, atm: false, color: 0x9CA0A5, markerColor:'#9CA0A5', parent: 'earth', soiRadius: 1500000,  orbitR: 10033000, period: 10000, phase: 0,   inclination: 0 },
+  'minmus': { name:'Minmus',mu: 1.766e9,  radius: 60000,  atm: false, color: 0xAAE8C0, markerColor:'#AAE8C0', parent: 'earth', soiRadius: 2000000,  orbitR: 14500000, period: 17000, phase: 1.2, inclination: 0.105 }
 };
 var PARTS = {
   'pod':       { type:'pod',    name:'Command Pod',    mass:1.2,  h:30, w:24, color:'#8090A0' },
@@ -269,7 +270,9 @@ var MISSIONS = [
   { id:'munflyby', name:'Mun Flyby',        desc:'Enter the Mun SOI',            reward: 5000,  check:function(s) { return s._everInMun; } },
   { id:'munorbit', name:'Mun Orbit',        desc:'Bound orbit around Mun (PE>5km)', reward: 10000, check:function(s) { return s.parent==='mun' && s.periapsis > 5000 && s.eccentricity < 1; } },
   { id:'munland',  name:'Mun Landing',      desc:'Soft-land on Mun (&lt;12 m/s)', reward: 25000, check:function(s) { return s.munLanded; } },
-  { id:'return',   name:'Safe Return',      desc:'Return home from Mun',         reward: 40000, check:function(s) { return s._everInMun && s.parent==='earth' && s.altitude < 500 && s.speed < 12 && s.maxAlt > 100000; } }
+  { id:'return',   name:'Safe Return',      desc:'Return home from Mun',         reward: 40000, check:function(s) { return s._everInMun && s.parent==='earth' && s.altitude < 500 && s.speed < 12 && s.maxAlt > 100000; } },
+  { id:'minflyby', name:'Minmus Flyby',     desc:'Enter the Minmus SOI',         reward: 7000,  check:function(s) { return s._everInMinmus; } },
+  { id:'minland',  name:'Minmus Landing',   desc:'Soft-land on Minmus',          reward: 30000, check:function(s) { return s.minmusLanded; } }
 ];
 var PRESETS = {
   sounding: [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-sm',stage:0},{key:'eng-sm',stage:0}],
@@ -295,6 +298,7 @@ var sasMode = 'off';
 var SAS_KEYS = { '0':'off', '1':'stability', '2':'prograde', '3':'retrograde', '4':'radial-out', '5':'radial-in', '6':'normal', '7':'antinormal', '8':'maneuver' };
 var maneuverNode = null; // { dt: seconds from NOW, dvPro, dvNorm, dvRad }
 var plannedOrbitLine = null, manNodeMarker = null;
+var autopilot = null; // { mode, targetAlt }
 var audio = { ctx:null, engineGain:null, engineOsc:null, engineFilter:null, noiseSrc:null, plasmaGain:null, plasmaSrc:null, muted:false };
 var mapState = { dist:ENV.R*4, yaw:0.0, pitch:0.35, dragging:false, lx:0, ly:0 };
 var orbitLine = null, peMarker = null, apMarker = null, shipMarker = null, mapCamera = null;
@@ -303,7 +307,7 @@ var nextPatchLine = null, encounterMarker = null, escapeMarker = null;
 /* ===== THREE.JS ===== */
 var renderer, scene, camera;
 var earthMesh, atmMesh, rocketGroup, flameLight;
-var munMesh, munOrbitLine, munBodyMarker;
+var bodyMeshes = {}, bodyOrbitLines = {}, bodyMarkers = {};
 var exhaustParticles, exhaustPositions, exhaustColors, exhaustSizes, exhaustData = [];
 var trailGeom, trailLine;
 var threeReady = false;
@@ -346,27 +350,31 @@ function initThree() {
   atmMesh = new THREE.Mesh(atmGeo, atmMat);
   scene.add(atmMesh);
 
-  // Mun
-  var munGeo = new THREE.SphereGeometry(BODIES.mun.radius, 48, 48);
-  var munMat = new THREE.MeshPhongMaterial({ color: BODIES.mun.color, emissive: 0x1a1a1e, shininess: 2 });
-  munMesh = new THREE.Mesh(munGeo, munMat);
-  scene.add(munMesh);
-
-  // Mun's orbit around Earth (shown in map view)
-  var munOrbitN = 96;
-  var munOrbitPos = new Float32Array(munOrbitN * 3);
-  for (var i = 0; i < munOrbitN; i++) {
-    var a = (i / (munOrbitN - 1)) * Math.PI * 2;
-    munOrbitPos[i*3] = Math.cos(a) * BODIES.mun.orbitR;
-    munOrbitPos[i*3+1] = 0;
-    munOrbitPos[i*3+2] = Math.sin(a) * BODIES.mun.orbitR;
+  // Non-Earth bodies: mesh + orbit line
+  for (var bk in BODIES) {
+    var b = BODIES[bk];
+    if (!b.parent) continue;
+    var bGeo = new THREE.SphereGeometry(b.radius, 48, 48);
+    var bMat = new THREE.MeshPhongMaterial({ color: b.color, emissive: 0x1a1a1e, shininess: 2 });
+    var bMesh = new THREE.Mesh(bGeo, bMat);
+    scene.add(bMesh);
+    bodyMeshes[bk] = bMesh;
+    // Orbit line sampled from inertialBodyPos so inclination is honored
+    var N = 96;
+    var pos = new Float32Array(N * 3);
+    for (var i = 0; i < N; i++) {
+      var tS = (i / (N - 1)) * b.period;
+      var p = inertialBodyPos(bk, tS);
+      pos[i*3] = p.x; pos[i*3+1] = p.y; pos[i*3+2] = p.z;
+    }
+    var oGeom = new THREE.BufferGeometry();
+    oGeom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    var oMat = new THREE.LineBasicMaterial({ color: 0x6070A0, transparent: true, opacity: 0.4 });
+    var oLine = new THREE.Line(oGeom, oMat);
+    oLine.visible = false;
+    scene.add(oLine);
+    bodyOrbitLines[bk] = oLine;
   }
-  var munOrbitGeom = new THREE.BufferGeometry();
-  munOrbitGeom.setAttribute('position', new THREE.BufferAttribute(munOrbitPos, 3));
-  var munOrbitMat = new THREE.LineBasicMaterial({ color: 0x6070A0, transparent: true, opacity: 0.4 });
-  munOrbitLine = new THREE.Line(munOrbitGeom, munOrbitMat);
-  munOrbitLine.visible = false;
-  scene.add(munOrbitLine);
 
   // Stars
   var starGeo = new THREE.BufferGeometry();
@@ -473,14 +481,19 @@ function initThree() {
   peMarker.renderOrder = apMarker.renderOrder = shipMarker.renderOrder = 999;
   scene.add(peMarker); scene.add(apMarker); scene.add(shipMarker);
 
-  // Mun body marker (sprite in map view when Mun is small on screen)
-  var munMarkerCanvas = makeMarkerCanvas('Mun', '#9CA0A5');
-  var munMarkerTex = new THREE.CanvasTexture(munMarkerCanvas);
-  munBodyMarker = new THREE.Sprite(new THREE.SpriteMaterial({ map: munMarkerTex, depthTest: false, transparent: true }));
-  munBodyMarker.scale.set(600000, 600000, 1);
-  munBodyMarker.visible = false;
-  munBodyMarker.renderOrder = 998;
-  scene.add(munBodyMarker);
+  // Body markers
+  for (var bk in BODIES) {
+    var b = BODIES[bk];
+    if (!b.parent) continue;
+    var canvas = makeMarkerCanvas(b.name, b.markerColor || '#9CA0A5');
+    var tex = new THREE.CanvasTexture(canvas);
+    var spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+    spr.scale.set(600000, 600000, 1);
+    spr.visible = false;
+    spr.renderOrder = 998;
+    scene.add(spr);
+    bodyMarkers[bk] = spr;
+  }
 
   window.addEventListener('resize', function() {
     var c = document.getElementById('threeContainer');
@@ -628,16 +641,20 @@ function inertialBodyPos(bodyKey, t) {
   if (!b.parent) return new THREE.Vector3(0, 0, 0);
   var omega = 2 * Math.PI / b.period;
   var nu = b.phase + omega * t;
-  var parentPos = inertialBodyPos(b.parent, t);
-  return new THREE.Vector3(b.orbitR * Math.cos(nu), 0, b.orbitR * Math.sin(nu)).add(parentPos);
+  var x = b.orbitR * Math.cos(nu), z = b.orbitR * Math.sin(nu), y = 0;
+  var inc = b.inclination || 0;
+  if (inc) { var c = Math.cos(inc), s = Math.sin(inc); var yN = -z*s, zN = z*c; y = yN; z = zN; }
+  return new THREE.Vector3(x, y, z).add(inertialBodyPos(b.parent, t));
 }
 function inertialBodyVel(bodyKey, t) {
   var b = BODIES[bodyKey];
   if (!b.parent) return new THREE.Vector3(0, 0, 0);
   var omega = 2 * Math.PI / b.period;
   var nu = b.phase + omega * t;
-  var parentVel = inertialBodyVel(b.parent, t);
-  return new THREE.Vector3(-b.orbitR*omega*Math.sin(nu), 0, b.orbitR*omega*Math.cos(nu)).add(parentVel);
+  var vx = -b.orbitR*omega*Math.sin(nu), vz = b.orbitR*omega*Math.cos(nu), vy = 0;
+  var inc = b.inclination || 0;
+  if (inc) { var c = Math.cos(inc), s = Math.sin(inc); var yN = -vz*s, zN = vz*c; vy = yN; vz = zN; }
+  return new THREE.Vector3(vx, vy, vz).add(inertialBodyVel(b.parent, t));
 }
 function inertialPosOf(s) { return s.pos.clone().add(inertialBodyPos(s.parent, s.t)); }
 function inertialVelOf(s) { return s.vel.clone().add(inertialBodyVel(s.parent, s.t)); }
@@ -649,6 +666,7 @@ function transitionSOI(s, newParent, reason) {
   s.stabilityLock = null;
   s.soiEvent = { body: newParent, t: s.t, reason: reason };
   if (newParent === 'mun') s._everInMun = true;
+  if (newParent === 'minmus') s._everInMinmus = true;
 }
 function checkSOIChange(s) {
   var curBody = BODIES[s.parent];
@@ -703,8 +721,13 @@ function physicsTick3D(s) {
   s.t += PHYSICS_DT;
   if (t.mdot > 0) consumeFuel(s.parts, s.currentStage, t.mdot * PHYSICS_DT);
 
-  // Attitude control: SAS auto-align OR manual pitch/yaw
-  var sasTarget = sasTargetDir(s);
+  // Autopilot runs before SAS; overrides throttle + target direction
+  var sasTarget;
+  if (autopilot && autopilot.mode !== 'done') {
+    sasTarget = runAutopilot(s);
+  } else {
+    sasTarget = sasTargetDir(s);
+  }
   if (sasTarget) {
     var targetQ = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), sasTarget);
     s.orientation.slerp(targetQ, 0.08);
@@ -743,9 +766,13 @@ function physicsTick3D(s) {
     s.vel.set(0, 0, 0);
     var hasLegs = false;
     for (var li = 0; li < s.parts.length; li++) if (PARTS[s.parts[li].key].type === 'leg') { hasLegs = true; break; }
-    var softLimit = s.parent === 'mun' ? (hasLegs ? 18 : 12) : (hasLegs ? 22 : 15);
+    var softLimit;
+    if (s.parent === 'minmus') softLimit = hasLegs ? 15 : 8;
+    else if (s.parent === 'mun') softLimit = hasLegs ? 18 : 12;
+    else softLimit = hasLegs ? 22 : 15;
     if (impactSpeed < softLimit) {
       if (s.parent === 'mun') s.munLanded = true;
+      if (s.parent === 'minmus') s.minmusLanded = true;
       s.landed = true;
     } else {
       s.crashed = true;
@@ -1142,9 +1169,9 @@ function startFlight() {
     currentStage: stages[0],
     altitude: 0, speed: 0, thrustN: 0, grav: 0, mass: 0, accel: 0,
     maxAlt: 0, maxVel: 0, maxQ: 0, q: 0, heat: 0,
-    crashed: false, munLanded: false, landed: false, crashBody: null,
+    crashed: false, munLanded: false, minmusLanded: false, landed: false, crashBody: null,
     chuteDeployed: false, chuteRipped: false,
-    _everInMun: false,
+    _everInMun: false, _everInMinmus: false,
     completedThisFlight: [],
     periapsis: 0, apoapsis: 0, eccentricity: 1, orbitalEnergy: 0,
     trail: [],
@@ -1156,6 +1183,7 @@ function startFlight() {
   gameState = 'flight';
   timeWarp = 1;
   maneuverNode = null;
+  autopilot = null;
   if (document.getElementById('maneuverPanel')) document.getElementById('maneuverPanel').classList.remove('active');
   setSAS('off');
   setView('flight');
@@ -1270,6 +1298,7 @@ function updatePlasmaOverlay(s) {
 
 function checkWinLose() {
   if (sim.munLanded) { showResult(true, 'Mun Landing!'); return true; }
+  if (sim.minmusLanded) { showResult(true, 'Minmus Landing!'); return true; }
   if (sim.landed && sim.parent === 'earth' && sim._everInMun) { showResult(true, 'Safe Return from Mun!'); return true; }
   if (sim.landed && sim.parent === 'earth' && sim.maxAlt > 50000 && !sim.landedShown) {
     sim.landedShown = true; showToast('Landed safely.');
@@ -1334,9 +1363,11 @@ function renderFlight3D() {
   // sim.orientation is in world/inertial frame; model's +Y = nose
   rocketGroup.quaternion.copy(sim.orientation);
 
-  // Update Mun position
-  munMesh.position.copy(inertialBodyPos('mun', sim.t));
-  munMesh.visible = true;
+  // Update all non-Earth body positions
+  for (var bk in bodyMeshes) {
+    bodyMeshes[bk].position.copy(inertialBodyPos(bk, sim.t));
+    bodyMeshes[bk].visible = true;
+  }
 
   // Flame light
   flameLight.intensity = sim.thrustN > 0 ? sim.throttle * 3 : 0;
@@ -1446,18 +1477,21 @@ function renderHUD() {
     '<b>&Delta;v</b> ' + Math.round(totalDv(sim.parts)) + ' m/s';
   var vorb = orbitalVelocity(Math.max(0, sim.altitude), sim.parent);
   var parent = BODIES[sim.parent];
-  var dMunInfo = '';
+  var bodyInfo = '';
   if (sim.parent === 'earth') {
     var iPos = inertialPosOf(sim);
-    var munPos = inertialBodyPos('mun', sim.t);
-    var dMun = iPos.sub(munPos).length() - BODIES.mun.radius;
-    dMunInfo = '<br><b>MUN</b> ' + fmtAlt(dMun);
+    for (var bk in BODIES) {
+      var b = BODIES[bk];
+      if (!b.parent) continue;
+      var d = iPos.clone().sub(inertialBodyPos(bk, sim.t)).length() - b.radius;
+      bodyInfo += '<br><b>' + b.name.toUpperCase() + '</b> ' + fmtAlt(d);
+    }
   }
   document.getElementById('hudBR').innerHTML =
     '<b>SOI</b> <span class="val">' + parent.name + '</span><br>' +
     '<b>ORBIT V</b> ' + Math.round(vorb) + ' m/s<br>' +
     '<b>PROGRESS</b> ' + Math.min(100, Math.round(sim.speed / vorb * 100)) + '%<br>' +
-    '<b>ECC</b> ' + (sim.eccentricity < 10 ? sim.eccentricity.toFixed(3) : '---') + dMunInfo;
+    '<b>ECC</b> ' + (sim.eccentricity < 10 ? sim.eccentricity.toFixed(3) : '---') + bodyInfo;
   document.getElementById('throttleFill').style.height = (sim.throttle * 100) + '%';
 }
 
@@ -1694,6 +1728,77 @@ function updateOrbitLine() {
   }
 }
 
+/* ===== ASCENT AUTOPILOT ===== */
+function timeToApoapsis(s) {
+  var parent = BODIES[s.parent];
+  var kep = keplerianFromState(s.pos, s.vel, parent.mu);
+  if (!kep || !kep.bound) return Infinity;
+  var nu0 = trueAnomalyFromState(s.pos, s.vel, kep);
+  var E0 = 2*Math.atan2(Math.sqrt(1-kep.e)*Math.sin(nu0/2), Math.sqrt(1+kep.e)*Math.cos(nu0/2));
+  var M0 = E0 - kep.e*Math.sin(E0);
+  var dM = (Math.PI - M0 + 2*Math.PI) % (2*Math.PI);
+  var n = Math.sqrt(parent.mu / (kep.a*kep.a*kep.a));
+  return dM / n;
+}
+
+function runAutopilot(s) {
+  if (!autopilot) return null;
+  var target = autopilot.targetAlt;
+  var radial = s.pos.clone().normalize();
+  var prograde = s.speed > 10 ? s.vel.clone().normalize() : radial.clone();
+  switch (autopilot.mode) {
+    case 'ascent': {
+      s.throttle = 1.0;
+      var pitchRatio;
+      if (s.altitude < 1000) pitchRatio = 0;
+      else if (s.altitude > target * 0.7) pitchRatio = 1;
+      else pitchRatio = Math.min(1, (s.altitude - 1000) / (target * 0.7 - 1000));
+      var dir = radial.clone().multiplyScalar(1 - pitchRatio).add(prograde.clone().multiplyScalar(pitchRatio)).normalize();
+      if (s.apoapsis >= target && s.altitude > ENV.KARMAN) {
+        s.throttle = 0;
+        autopilot.mode = 'coast';
+        showToast('Autopilot: coasting to apoapsis');
+      }
+      return dir;
+    }
+    case 'coast': {
+      s.throttle = 0;
+      var tAp = timeToApoapsis(s);
+      if (tAp < 8 || s.altitude >= target - 2000) {
+        autopilot.mode = 'circularize';
+        showToast('Autopilot: circularizing');
+      }
+      return prograde;
+    }
+    case 'circularize': {
+      var wantPe = target - 3000;
+      if (s.periapsis < wantPe) {
+        s.throttle = 1.0;
+      } else {
+        s.throttle = 0;
+        autopilot.mode = 'done';
+        showToast('Autopilot: orbit achieved. Hand-off to you.');
+      }
+      return prograde;
+    }
+    case 'done':
+      return prograde;
+  }
+  return null;
+}
+
+function toggleAutopilot() {
+  if (autopilot) {
+    autopilot = null;
+    showToast('Autopilot disengaged');
+    return;
+  }
+  if (!sim) return;
+  autopilot = { mode: 'ascent', targetAlt: 100000 };
+  setSAS('off');
+  showToast('Autopilot: ascent to 100 km');
+}
+
 /* ===== MANEUVER NODES ===== */
 // Propagate the current state forward by dt within the current SOI (no SOI crossing).
 // Returns { pos, vel, parent } at t + dt. Works for elliptic; falls back for others.
@@ -1829,8 +1934,8 @@ function setView(mode) {
   document.getElementById('hudBR').style.display = hudDisp;
   if (!mapOnly && peMarker) {
     peMarker.visible = false; apMarker.visible = false; shipMarker.visible = false; orbitLine.visible = false;
-    if (munBodyMarker) munBodyMarker.visible = false;
-    if (munOrbitLine) munOrbitLine.visible = false;
+    for (var bk in bodyMarkers) bodyMarkers[bk].visible = false;
+    for (var bk in bodyOrbitLines) bodyOrbitLines[bk].visible = false;
     if (nextPatchLine) nextPatchLine.visible = false;
     if (encounterMarker) encounterMarker.visible = false;
     if (escapeMarker) escapeMarker.visible = false;
@@ -1845,13 +1950,16 @@ function renderMapView() {
   var shipInertialPos = inertialPosOf(sim);
   shipMarker.position.copy(shipInertialPos);
   shipMarker.visible = true;
-  // Update Mun position + marker + orbit line
+  // Update all non-Earth bodies + markers + orbit lines
+  for (var bk in bodyMeshes) {
+    var bp = inertialBodyPos(bk, sim.t);
+    bodyMeshes[bk].position.copy(bp);
+    bodyMeshes[bk].visible = true;
+    bodyMarkers[bk].position.copy(bp);
+    bodyMarkers[bk].visible = true;
+    bodyOrbitLines[bk].visible = true;
+  }
   var munPos = inertialBodyPos('mun', sim.t);
-  munMesh.position.copy(munPos);
-  munMesh.visible = true;
-  munBodyMarker.position.copy(munPos);
-  munBodyMarker.visible = true;
-  munOrbitLine.visible = true;
   // Hide rocket mesh in map (too small anyway; ship sprite replaces it)
   rocketGroup.visible = false;
   // Center map camera on current parent body
@@ -2079,6 +2187,7 @@ document.addEventListener('keydown', function(e) {
   if (e.key.toLowerCase() === 'm') setView(viewMode === 'flight' ? 'map' : 'flight');
   if (e.key.toLowerCase() === 'n') { if (maneuverNode) clearNode(); else createNode(); }
   if (e.key.toLowerCase() === 'g') deployChute();
+  if (e.key.toLowerCase() === 'l') toggleAutopilot();
   if (SAS_KYS_HANDLED.indexOf(e.key) >= 0) setSAS(SAS_KEYS[e.key]);
   if (e.key === 'Escape') backToBuilder();
 });
