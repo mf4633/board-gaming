@@ -68,6 +68,9 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 .hud .val { color: #40D080; }
 .hud .warn { color: #D04040; }
 
+.navball { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); width: 130px; height: 130px; z-index: 10; pointer-events: none; }
+.navball canvas { display: block; }
+
 .throttle-bar { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 200px; background: #0A1020; border: 1px solid #1A2A40; border-radius: 3px; z-index: 10; }
 .throttle-fill { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, #D08020, #40D080); border-radius: 0 0 3px 3px; transition: height 0.1s; }
 
@@ -171,6 +174,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
       <button class="btn" onclick="loadPreset('orbital')">Orbital</button>
       <button class="btn" onclick="loadPreset('heavy')">Heavy</button>
       <button class="btn" onclick="loadPreset('munship')">MunShip</button>
+      <button class="btn" onclick="saveCraft()">Save</button>
       <button class="btn" onclick="clearRocket()">Clear</button>
       <button class="btn launch" onclick="startFlight()">LAUNCH</button>
     </div>
@@ -192,6 +196,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
   <div class="hud hud-bl" id="hudBL"></div>
   <div class="hud hud-br" id="hudBR"></div>
   <div class="throttle-bar" id="throttleBar"><div class="throttle-fill" id="throttleFill"></div></div>
+  <div class="navball" id="navball"><canvas id="navballCanvas" width="130" height="130"></canvas></div>
   <div class="sas-panel" id="sasPanel">
     <h4>SAS</h4>
     <button class="sas-btn active" data-sas="off" onclick="setSAS('off')">OFF<span class="sas-key">0</span></button>
@@ -253,6 +258,7 @@ var PARTS = {
   'srb-rd-4':  { type:'srb',    name:'Hammer x4 (radial)', mass:3.0, fuel:28.8, thrust:908, isp:170, h:55, w:20, color:'#8A7050', radial:4 },
   'fin':       { type:'fin',    name:'Aero Fin',        mass:0.08, h:12, w:36, color:'#7080A0' },
   'chute':     { type:'chute',  name:'Parachute',       mass:0.15, h:8,  w:20, color:'#FFE080' },
+  'leg':       { type:'leg',    name:'Landing Legs',    mass:0.20, h:14, w:30, color:'#606570' },
   'decoupler': { type:'decoupler',name:'Decoupler',     mass:0.04, h:5, w:26, color:'#D06020' }
 };
 
@@ -269,7 +275,7 @@ var PRESETS = {
   sounding: [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-sm',stage:0},{key:'eng-sm',stage:0}],
   orbital:  [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2}],
   heavy:    [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2},{key:'fin',stage:2},{key:'srb-rd-2',stage:3}],
-  munship:  [{key:'pod',stage:0},{key:'chute',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2},{key:'fin',stage:2},{key:'srb-rd-4',stage:3}]
+  munship:  [{key:'pod',stage:0},{key:'chute',stage:0},{key:'leg',stage:0},{key:'tank-md',stage:0},{key:'eng-sm',stage:0},{key:'decoupler',stage:1},{key:'tank-lg',stage:1},{key:'tank-lg',stage:1},{key:'eng-md',stage:1},{key:'decoupler',stage:2},{key:'tank-xl',stage:2},{key:'tank-xl',stage:2},{key:'eng-lg',stage:2},{key:'fin',stage:2},{key:'srb-rd-4',stage:3}]
 };
 var PART_SCALE = 0.12;
 
@@ -735,7 +741,9 @@ function physicsTick3D(s) {
     s.pos.normalize().multiplyScalar(parent.radius);
     var impactSpeed = speed;
     s.vel.set(0, 0, 0);
-    var softLimit = s.parent === 'mun' ? 12 : 15;
+    var hasLegs = false;
+    for (var li = 0; li < s.parts.length; li++) if (PARTS[s.parts[li].key].type === 'leg') { hasLegs = true; break; }
+    var softLimit = s.parent === 'mun' ? (hasLegs ? 18 : 12) : (hasLegs ? 22 : 15);
     if (impactSpeed < softLimit) {
       if (s.parent === 'mun') s.munLanded = true;
       s.landed = true;
@@ -855,6 +863,24 @@ function buildRocketMeshes(parts) {
       }
       continue; // radials don't advance y
     }
+    if (def.type === 'leg') {
+      var legLen = def.h * PART_SCALE;
+      var footOffset = def.w/2 * PART_SCALE;
+      for (var j = 0; j < 4; j++) {
+        var ang = (j / 4) * Math.PI * 2 + Math.PI/4;
+        var legM = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, legLen, 6), new THREE.MeshPhongMaterial({ color: def.color }));
+        var outX = (STACK_R + footOffset*0.8) * Math.cos(ang);
+        var outZ = (STACK_R + footOffset*0.8) * Math.sin(ang);
+        legM.position.set(outX*0.6, y - legLen*0.2, outZ*0.6);
+        legM.lookAt(outX, y - legLen, outZ);
+        legM.rotateX(Math.PI/2);
+        rocketGroup.add(legM);
+        var footM = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 6), new THREE.MeshPhongMaterial({ color: def.color }));
+        footM.position.set(outX, y - legLen*0.9, outZ);
+        rocketGroup.add(footM);
+      }
+      continue;
+    }
     if (def.type === 'fin') {
       // Four thin fin blades at base of stack
       var finH = h, finL = def.w/2 * PART_SCALE, finThick = 0.15;
@@ -931,8 +957,18 @@ function loadPreset(name) {
 }
 function renderCatalog() {
   var cat = document.getElementById('catalog');
-  var html = '<h3>&#x1F680; Parts</h3>';
-  var groups = { pod:'Pods', chute:'Parachutes', tank:'Fuel Tanks', engine:'Engines', srb:'Solid Boosters', fin:'Aero Fins', decoupler:'Decouplers' };
+  var html = '';
+  var saves = loadAllCrafts();
+  var saveKeys = Object.keys(saves);
+  if (saveKeys.length > 0) {
+    html += '<h3>&#x1F4BE; My Crafts</h3>';
+    for (var i = 0; i < saveKeys.length; i++) {
+      var k = saveKeys[i];
+      html += '<div class="cat-part" style="display:flex;justify-content:space-between;align-items:center;"><span class="pname" style="flex:1;cursor:pointer;" onclick="loadCraft(' + JSON.stringify(k).replace(/"/g,'&quot;') + ')">' + k + '</span><span style="color:#D04040;cursor:pointer;padding:0 4px;" onclick="deleteCraft(' + JSON.stringify(k).replace(/"/g,'&quot;') + ');event.stopPropagation();">&times;</span></div>';
+    }
+  }
+  html += '<h3>&#x1F680; Parts</h3>';
+  var groups = { pod:'Pods', chute:'Parachutes', tank:'Fuel Tanks', engine:'Engines', srb:'Solid Boosters', fin:'Aero Fins', leg:'Landing Gear', decoupler:'Decouplers' };
   for (var g in groups) {
     html += '<h3>' + groups[g] + '</h3>';
     for (var k in PARTS) {
@@ -1028,6 +1064,46 @@ function getFunds() {
   }
   return total;
 }
+function loadAllCrafts() {
+  try { return JSON.parse(localStorage.getItem('apoapsis_craft') || '{}'); }
+  catch(e) { return {}; }
+}
+function saveCraft() {
+  if (rocket.parts.length === 0) { alert('Nothing to save.'); return; }
+  var name = prompt('Craft name:');
+  if (!name) return;
+  name = name.trim().slice(0, 20);
+  if (!name) return;
+  var saves = loadAllCrafts();
+  saves[name] = rocket.parts.map(function(p) { return { key: p.key, stage: p.stage, fuel: p.fuel }; });
+  try { localStorage.setItem('apoapsis_craft', JSON.stringify(saves)); } catch(e) {}
+  renderBuilder();
+}
+function loadCraft(name) {
+  var saves = loadAllCrafts();
+  if (!saves[name]) return;
+  rocket.parts = [];
+  partIdCounter = 0;
+  for (var i = 0; i < saves[name].length; i++) {
+    var sp = saves[name][i];
+    var def = PARTS[sp.key];
+    if (!def) continue;
+    var p = { id: partIdCounter++, key: sp.key, stage: sp.stage };
+    if (sp.fuel !== undefined) p.fuel = sp.fuel;
+    else if (def.fuel) p.fuel = def.fuel;
+    rocket.parts.push(p);
+  }
+  selectedPart = -1;
+  renderBuilder();
+}
+function deleteCraft(name) {
+  if (!confirm('Delete "' + name + '"?')) return;
+  var saves = loadAllCrafts();
+  delete saves[name];
+  try { localStorage.setItem('apoapsis_craft', JSON.stringify(saves)); } catch(e) {}
+  renderBuilder();
+}
+
 function checkMissions(s) {
   for (var i = 0; i < MISSIONS.length; i++) {
     var mis = MISSIONS[i];
@@ -1100,11 +1176,68 @@ function backToBuilder() {
   renderBuilder();
 }
 
+function canRail(s) {
+  if (!s) return false;
+  var parent = BODIES[s.parent];
+  var aboveAtm = !parent.atm || s.altitude > ENV.KARMAN;
+  return s.thrustN === 0 && s.throttle === 0 && aboveAtm;
+}
+
+function railStep(s, dt) {
+  var remaining = dt;
+  var MAX_SUB = 10; // sim seconds per kepler step
+  while (remaining > 0.001) {
+    var sub = Math.min(MAX_SUB, remaining);
+    var parent = BODIES[s.parent];
+    var kep = keplerianFromState(s.pos, s.vel, parent.mu);
+    if (!kep || !kep.bound) return false;
+    var n = Math.sqrt(parent.mu / (kep.a*kep.a*kep.a));
+    var nu0 = trueAnomalyFromState(s.pos, s.vel, kep);
+    var E0 = 2*Math.atan2(Math.sqrt(1-kep.e)*Math.sin(nu0/2), Math.sqrt(1+kep.e)*Math.cos(nu0/2));
+    var M = E0 - kep.e*Math.sin(E0) + n*sub;
+    var E = solveKepler(M, kep.e);
+    var nu = 2*Math.atan2(Math.sqrt(1+kep.e)*Math.sin(E/2), Math.sqrt(1-kep.e)*Math.cos(E/2));
+    var pv = posVelFromKepler(kep, nu, parent.mu);
+    s.pos.copy(pv.pos);
+    s.vel.copy(pv.vel);
+    s.t += sub;
+    s.altitude = s.pos.length() - parent.radius;
+    s.speed = s.vel.length();
+    checkSOIChange(s);
+    computeOrbitalElements(s);
+    if (!canRail(s)) return true;
+    remaining -= sub;
+  }
+  return true;
+}
+
 function gameLoop(timestamp) {
   if (gameState !== 'flight') return;
   if (lastTime === 0) lastTime = timestamp;
   var frameTime = Math.min((timestamp - lastTime) / 1000, 0.1) * timeWarp;
   lastTime = timestamp;
+  // High warp on rails: skip integration loop, use Kepler propagation
+  if (canRail(sim) && timeWarp >= 50) {
+    var railed = railStep(sim, frameTime);
+    if (railed) {
+      accumulator = 0;
+      if (checkWinLose()) return;
+      if (sim.soiEvent) {
+        var ev = sim.soiEvent; sim.soiEvent = null;
+        showToast((ev.reason === 'enter' ? 'Entered ' : 'Exited to ') + BODIES[ev.body].name + ' SOI');
+        playStageSound();
+      }
+      checkMissions(sim);
+      if (viewMode === 'map') renderMapView();
+      else renderFlight3D();
+      renderHUD();
+      updateAudio(sim);
+      updatePlasmaOverlay(sim);
+      requestAnimationFrame(gameLoop);
+      return;
+    }
+  }
+  if (timeWarp > 10 && !canRail(sim)) { timeWarp = 10; showToast('<span style="color:#D04040;">Rails broken &mdash; warp capped at 10x</span>'); }
   accumulator += frameTime;
   while (accumulator >= PHYSICS_DT) {
     handleInput();
@@ -1125,6 +1258,7 @@ function gameLoop(timestamp) {
   if (viewMode === 'map') renderMapView();
   else renderFlight3D();
   renderHUD();
+  renderNavball();
   updateAudio(sim);
   updatePlasmaOverlay(sim);
   requestAnimationFrame(gameLoop);
@@ -1294,7 +1428,7 @@ function renderHUD() {
   var qKPa = (sim.q || 0) / 1000;
   var qClass = qKPa > 40 ? 'q-warn' : qKPa > 15 ? 'warn' : 'val';
   document.getElementById('hudTR').innerHTML =
-    '<b>T+</b> ' + fmtTime(sim.t) + (timeWarp > 1 ? ' <span class="warn">x' + timeWarp + '</span>' : '') + '<br>' +
+    '<b>T+</b> ' + fmtTime(sim.t) + (timeWarp > 1 ? ' <span class="warn">x' + timeWarp + (canRail(sim) && timeWarp >= 50 ? ' RAIL' : '') + '</span>' : '') + '<br>' +
     '<b>G</b> ' + sim.grav.toFixed(1) + ' m/s&sup2;<br>' +
     '<b>ACC</b> ' + (sim.accel / ENV.g0).toFixed(1) + ' g<br>' +
     '<b>Q</b> <span class="' + qClass + '">' + qKPa.toFixed(1) + ' kPa</span><br>' +
@@ -1688,6 +1822,7 @@ function setView(mode) {
   document.getElementById('mapLegend').style.display = mapOnly ? 'block' : 'none';
   document.getElementById('sasPanel').style.display = mapOnly ? 'none' : 'block';
   document.getElementById('throttleBar').style.display = mapOnly ? 'none' : 'block';
+  document.getElementById('navball').style.display = mapOnly ? 'none' : 'block';
   var hudDisp = mapOnly ? 'none' : 'block';
   document.getElementById('hudTL').style.display = hudDisp;
   document.getElementById('hudBL').style.display = hudDisp;
@@ -1803,6 +1938,112 @@ function toggleSound() {
   document.getElementById('soundToggle').innerHTML = audio.muted ? '\u{1F507} OFF' : '\u{1F50A} ON';
 }
 
+/* ===== NAVBALL ===== */
+function renderNavball() {
+  var c = document.getElementById('navballCanvas');
+  if (!c || !sim) return;
+  var ctx = c.getContext('2d');
+  var W = c.width, H = c.height;
+  var cx = W/2, cy = H/2, R = Math.min(W, H)/2 - 4;
+  ctx.clearRect(0, 0, W, H);
+
+  // Ship body basis in world: +Y body = nose (forward)
+  var shipFwd = new THREE.Vector3(0, 1, 0).applyQuaternion(sim.orientation);
+  var shipRight = new THREE.Vector3(1, 0, 0).applyQuaternion(sim.orientation);
+  var shipUp = new THREE.Vector3(0, 0, 1).applyQuaternion(sim.orientation); // body +Z
+
+  // Local "up" = radial from parent center
+  var radialUp = sim.pos.clone().normalize();
+  // Pitch = angle between ship forward and local horizon (90° = pointing zenith)
+  var pitchSin = shipFwd.dot(radialUp); // 1 if nose at zenith
+  var pitchDeg = Math.asin(Math.max(-1, Math.min(1, pitchSin))) * 180 / Math.PI;
+  // Horizon rotation: pitch shifts horizon line vertically
+  var horizonY = cy - (pitchDeg / 90) * R * 0.9;
+
+  // Sky gradient (top) / ground gradient (bottom)
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.clip();
+  // Sky
+  var skyGrad = ctx.createLinearGradient(0, cy - R, 0, horizonY);
+  skyGrad.addColorStop(0, '#2a5a9a');
+  skyGrad.addColorStop(1, '#7aaad0');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(cx - R, cy - R, 2*R, horizonY - (cy - R));
+  // Ground
+  var grndGrad = ctx.createLinearGradient(0, horizonY, 0, cy + R);
+  grndGrad.addColorStop(0, '#8a6a30');
+  grndGrad.addColorStop(1, '#3a2810');
+  ctx.fillStyle = grndGrad;
+  ctx.fillRect(cx - R, horizonY, 2*R, (cy + R) - horizonY);
+  // Horizon line
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx - R, horizonY); ctx.lineTo(cx + R, horizonY); ctx.stroke();
+  // Pitch ticks every 30° above/below center
+  ctx.fillStyle = '#fff'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+  for (var p = -60; p <= 60; p += 30) {
+    if (p === 0) continue;
+    var ty = cy - ((pitchDeg + p) / 90) * R * 0.9;
+    ctx.beginPath(); ctx.moveTo(cx - R*0.3, ty); ctx.lineTo(cx + R*0.3, ty); ctx.stroke();
+    ctx.fillText(String(-p), cx + R*0.3 + 10, ty + 3);
+  }
+  ctx.restore();
+
+  // Circle outline
+  ctx.strokeStyle = '#1A2A40';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.stroke();
+
+  // Prograde marker (project velocity vector into ship body frame)
+  if (sim.speed > 1) {
+    var v = sim.vel.clone().normalize();
+    // body frame: x = shipRight, y = shipFwd, z = shipUp
+    var bx = v.dot(shipRight);
+    var by = v.dot(shipFwd);
+    var bz = v.dot(shipUp);
+    drawNavMarker(ctx, cx, cy, R, bx, by, bz, '#FFD040', 'P');
+    // Retrograde
+    drawNavMarker(ctx, cx, cy, R, -bx, -by, -bz, '#FFD040', 'R', true);
+  }
+
+  // Radial-out marker
+  var rx = radialUp.dot(shipRight);
+  var ry = radialUp.dot(shipFwd);
+  var rz = radialUp.dot(shipUp);
+  drawNavMarker(ctx, cx, cy, R, rx, ry, rz, '#40C0FF', '+');
+
+  // Ship attitude crosshair (fixed at center — ship always at center of ball)
+  ctx.strokeStyle = '#40D080';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx - 12, cy); ctx.lineTo(cx - 6, cy); ctx.moveTo(cx + 6, cy); ctx.lineTo(cx + 12, cy);
+  ctx.moveTo(cx, cy - 12); ctx.lineTo(cx, cy - 6); ctx.moveTo(cx, cy + 6); ctx.lineTo(cx, cy + 12); ctx.stroke();
+}
+
+// Draw a marker symbol projected from body frame (x=right, y=forward, z=up) onto navball.
+// by >= 0 means in front of ship (visible on the ball). by < 0 means behind ship (dim).
+function drawNavMarker(ctx, cx, cy, R, bx, by, bz, color, letter, hollow) {
+  var px = cx + bx * R * 0.9;
+  var py = cy - bz * R * 0.9;
+  ctx.globalAlpha = by >= 0 ? 1 : 0.35;
+  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  if (hollow) {
+    ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI*2); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(px, py, 9, 0, Math.PI*2); ctx.stroke();
+  }
+  ctx.fillStyle = '#000';
+  ctx.font = 'bold 9px monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (!hollow) ctx.fillText(letter, px, py + 1);
+  ctx.globalAlpha = 1;
+}
+
 function deployChute() {
   if (!sim) return;
   var hasChute = false;
@@ -1830,7 +2071,10 @@ document.addEventListener('keydown', function(e) {
   keys[e.key.toLowerCase()] = true;
   if (gameState !== 'flight') return;
   if (e.key === ' ') { e.preventDefault(); doStage(sim); }
-  if (e.key === '.') timeWarp = Math.min(10, timeWarp * 2);
+  if (e.key === '.') {
+    var cap = canRail(sim) ? 10000 : 10;
+    timeWarp = Math.min(cap, timeWarp * 2);
+  }
   if (e.key === ',') timeWarp = Math.max(1, timeWarp / 2);
   if (e.key.toLowerCase() === 'm') setView(viewMode === 'flight' ? 'map' : 'flight');
   if (e.key.toLowerCase() === 'n') { if (maneuverNode) clearNode(); else createNode(); }
