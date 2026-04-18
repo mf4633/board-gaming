@@ -636,12 +636,26 @@ function initThree() {
 
   // Map view mouse handling
   var cv = renderer.domElement;
-  cv.addEventListener('mousedown', function(e) { if (viewMode !== 'map') return; mapState.dragging = true; mapState.lx = e.clientX; mapState.ly = e.clientY; });
-  window.addEventListener('mouseup', function() { mapState.dragging = false; });
+  var mapClickStart = null;
+  cv.addEventListener('mousedown', function(e) {
+    if (viewMode !== 'map') return;
+    mapState.dragging = true;
+    mapState.lx = e.clientX; mapState.ly = e.clientY;
+    mapClickStart = { x: e.clientX, y: e.clientY, t: Date.now(), moved: 0 };
+  });
+  window.addEventListener('mouseup', function(e) {
+    mapState.dragging = false;
+    if (viewMode !== 'map' || !mapClickStart) return;
+    var dx = e.clientX - mapClickStart.x, dy = e.clientY - mapClickStart.y;
+    var dur = Date.now() - mapClickStart.t;
+    if (Math.sqrt(dx*dx + dy*dy) < 5 && dur < 500) handleMapClick(e);
+    mapClickStart = null;
+  });
   window.addEventListener('mousemove', function(e) {
     if (viewMode !== 'map' || !mapState.dragging) return;
     var dx = e.clientX - mapState.lx, dy = e.clientY - mapState.ly;
     mapState.lx = e.clientX; mapState.ly = e.clientY;
+    if (mapClickStart) mapClickStart.moved += Math.abs(dx) + Math.abs(dy);
     mapState.yaw -= dx * 0.005;
     mapState.pitch = Math.max(-1.4, Math.min(1.4, mapState.pitch + dy * 0.005));
   });
@@ -2469,6 +2483,47 @@ function updatePlannedOrbitLine() {
   var fakeSim = { pos: bs.pos, vel: postVel, parent: bs.parent, t: sim.t + maneuverNode.dt };
   var patches = predictTrajectory(fakeSim, BODIES.mun.period * 2);
   if (patches.length > 0) fillLineFromPoints(plannedOrbitLine, patches[0].points);
+}
+
+function handleMapClick(e) {
+  if (!sim) return;
+  var cv = renderer.domElement;
+  var rect = cv.getBoundingClientRect();
+  var mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  var my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  var parent = BODIES[sim.parent];
+  var kep = keplerianFromState(sim.pos, sim.vel, parent.mu);
+  if (!kep || !kep.bound) { showToast('Need bound orbit to place node'); return; }
+  var parentInertial = inertialBodyPos(sim.parent, sim.t);
+  var bestNu = 0, bestDist2 = Infinity;
+  var N = 128;
+  for (var i = 0; i <= N; i++) {
+    var nu = (i / N) * Math.PI * 2;
+    var rN = kep.p / (1 + kep.e * Math.cos(nu));
+    var pt = kep.eHat.clone().multiplyScalar(rN * Math.cos(nu))
+      .add(kep.bHat.clone().multiplyScalar(rN * Math.sin(nu)))
+      .add(parentInertial);
+    var ndc = pt.clone().project(mapCamera);
+    if (ndc.z < -1 || ndc.z > 1) continue;
+    var d2 = (ndc.x - mx)*(ndc.x - mx) + (ndc.y - my)*(ndc.y - my);
+    if (d2 < bestDist2) { bestDist2 = d2; bestNu = nu; }
+  }
+  if (bestDist2 > 0.015) return; // clicked too far from orbit (~12% of screen)
+  var nu0 = trueAnomalyFromState(sim.pos, sim.vel, kep);
+  var n = Math.sqrt(parent.mu / (kep.a*kep.a*kep.a));
+  var E0 = 2*Math.atan2(Math.sqrt(1-kep.e)*Math.sin(nu0/2), Math.sqrt(1+kep.e)*Math.cos(nu0/2));
+  var E1 = 2*Math.atan2(Math.sqrt(1-kep.e)*Math.sin(bestNu/2), Math.sqrt(1+kep.e)*Math.cos(bestNu/2));
+  var M0 = E0 - kep.e*Math.sin(E0);
+  var M1 = E1 - kep.e*Math.sin(E1);
+  var dM = M1 - M0;
+  while (dM < 0) dM += 2*Math.PI;
+  var dt_sec = dM / n;
+  if (dt_sec > 14400) dt_sec = 14400;
+  if (!maneuverNode) createNode();
+  maneuverNode.dt = dt_sec;
+  document.getElementById('manTime').value = Math.round(dt_sec);
+  updateManeuverUI();
+  showToast('Node placed at T+ ' + Math.round(dt_sec) + 's');
 }
 
 function setView(mode) {
