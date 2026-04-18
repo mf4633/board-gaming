@@ -68,8 +68,10 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 .hud .val { color: #40D080; }
 .hud .warn { color: #D04040; }
 
-.navball { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); width: 130px; height: 130px; z-index: 10; pointer-events: none; }
+.navball { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); width: 130px; height: 130px; z-index: 10; pointer-events: none; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 2px #1A2A40, 0 4px 16px rgba(0,0,0,0.5); }
 .navball canvas { display: block; }
+.navball::before { content: ''; position: absolute; top: 50%; left: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 2px solid #40D080; border-radius: 50%; box-sizing: border-box; z-index: 2; }
+.navball::after { content: ''; position: absolute; top: 50%; left: 50%; width: 60px; height: 2px; margin: -1px 0 0 -30px; background: linear-gradient(to right, #40D080 0, #40D080 15%, transparent 15%, transparent 85%, #40D080 85%, #40D080 100%); z-index: 2; }
 
 .throttle-bar { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 200px; background: #0A1020; border: 1px solid #1A2A40; border-radius: 3px; z-index: 10; }
 .throttle-fill { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, #D08020, #40D080); border-radius: 0 0 3px 3px; transition: height 0.1s; }
@@ -313,6 +315,7 @@ var nextPatchLine = null, encounterMarker = null, escapeMarker = null;
 
 /* ===== THREE.JS ===== */
 var renderer, scene, camera;
+var navRenderer, navScene, navCamera, navBall, navPrograde, navRetrograde, navTarget;
 var earthMesh, atmMesh, cloudMesh, rocketGroup, flameLight;
 var bodyMeshes = {}, bodyOrbitLines = {}, bodyMarkers = {};
 var exhaustParticles, exhaustPositions, exhaustColors, exhaustSizes, exhaustData = [];
@@ -1968,6 +1971,36 @@ function runAutopilot(s) {
   var radial = s.pos.clone().normalize();
   var prograde = s.speed > 10 ? s.vel.clone().normalize() : radial.clone();
   switch (autopilot.mode) {
+    case 'landing': {
+      var retrograde = s.speed > 0.5 ? s.vel.clone().normalize().negate() : radial.clone();
+      var mass = totalMass(s.parts);
+      var tt = computeThrust(s.parts, s.currentStage, 1.0);
+      if (tt.thrust === 0 || mass <= 0) { s.throttle = 0; return retrograde; }
+      var a_thrust = tt.thrust / mass;
+      var parent = BODIES[s.parent];
+      var g = parent.mu / (s.pos.length() * s.pos.length());
+      var a_eff = a_thrust - g;
+      var vRadial = -s.vel.dot(radial); // descending > 0
+      // Gentle touchdown window
+      if (s.altitude < 15 && s.speed < 2.5) {
+        s.throttle = 0;
+        autopilot.mode = 'done';
+        showToast('Autopilot: touchdown');
+        return radial.clone();
+      }
+      // Suicide-burn threshold (vertical-only approximation); burns retro full throttle when below burn altitude
+      if (a_eff <= 0.05) { s.throttle = 1; return retrograde; }
+      var burnAlt = (s.speed * s.speed) / (2 * a_eff) + 300; // 300 m safety margin
+      if (s.altitude <= burnAlt) {
+        s.throttle = 1;
+      } else {
+        s.throttle = 0;
+      }
+      // Low-altitude hover corrections
+      if (s.altitude < 80 && s.speed > 4) s.throttle = 1;
+      if (s.altitude < 40 && s.speed < 1.5) s.throttle = 0;
+      return retrograde;
+    }
     case 'ascent': {
       s.throttle = 1.0;
       var pitchRatio;
@@ -2009,15 +2042,23 @@ function runAutopilot(s) {
 }
 
 function toggleAutopilot() {
-  if (autopilot) {
-    autopilot = null;
-    showToast('Autopilot disengaged');
+  if (autopilot) { autopilot = null; showToast('Autopilot disengaged'); return; }
+  if (!sim) return;
+  setSAS('off');
+  // Landing if in a non-Earth SOI and descending / close to surface
+  if (sim.parent !== 'earth') {
+    autopilot = { mode: 'landing' };
+    showToast('Autopilot: landing on ' + BODIES[sim.parent].name);
     return;
   }
-  if (!sim) return;
-  autopilot = { mode: 'ascent', targetAlt: 100000 };
-  setSAS('off');
-  showToast('Autopilot: ascent to 100 km');
+  // Earth ascent default (only when below orbit)
+  if (sim.altitude < ENV.KARMAN) {
+    autopilot = { mode: 'ascent', targetAlt: 100000 };
+    showToast('Autopilot: ascent to 100 km');
+    return;
+  }
+  // Earth, in orbit/suborbital coast — no autopilot task available
+  showToast('Autopilot: no task available in current regime');
 }
 
 /* ===== MANEUVER NODES ===== */
@@ -2326,110 +2367,120 @@ function toggleSound() {
   document.getElementById('soundToggle').innerHTML = audio.muted ? '\u{1F507} OFF' : '\u{1F50A} ON';
 }
 
-/* ===== NAVBALL ===== */
-function renderNavball() {
-  var c = document.getElementById('navballCanvas');
-  if (!c || !sim) return;
+/* ===== NAVBALL (3D) ===== */
+function buildNavballTexture() {
+  var W = 1024, H = 512;
+  var c = document.createElement('canvas'); c.width = W; c.height = H;
   var ctx = c.getContext('2d');
-  var W = c.width, H = c.height;
-  var cx = W/2, cy = H/2, R = Math.min(W, H)/2 - 4;
-  ctx.clearRect(0, 0, W, H);
-
-  // Ship body basis in world: +Y body = nose (forward)
-  var shipFwd = new THREE.Vector3(0, 1, 0).applyQuaternion(sim.orientation);
-  var shipRight = new THREE.Vector3(1, 0, 0).applyQuaternion(sim.orientation);
-  var shipUp = new THREE.Vector3(0, 0, 1).applyQuaternion(sim.orientation); // body +Z
-
-  // Local "up" = radial from parent center
-  var radialUp = sim.pos.clone().normalize();
-  // Pitch = angle between ship forward and local horizon (90° = pointing zenith)
-  var pitchSin = shipFwd.dot(radialUp); // 1 if nose at zenith
-  var pitchDeg = Math.asin(Math.max(-1, Math.min(1, pitchSin))) * 180 / Math.PI;
-  // Horizon rotation: pitch shifts horizon line vertically
-  var horizonY = cy - (pitchDeg / 90) * R * 0.9;
-
-  // Sky gradient (top) / ground gradient (bottom)
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, R, 0, Math.PI * 2);
-  ctx.clip();
-  // Sky
-  var skyGrad = ctx.createLinearGradient(0, cy - R, 0, horizonY);
-  skyGrad.addColorStop(0, '#2a5a9a');
-  skyGrad.addColorStop(1, '#7aaad0');
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(cx - R, cy - R, 2*R, horizonY - (cy - R));
-  // Ground
-  var grndGrad = ctx.createLinearGradient(0, horizonY, 0, cy + R);
-  grndGrad.addColorStop(0, '#8a6a30');
-  grndGrad.addColorStop(1, '#3a2810');
-  ctx.fillStyle = grndGrad;
-  ctx.fillRect(cx - R, horizonY, 2*R, (cy + R) - horizonY);
-  // Horizon line
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(cx - R, horizonY); ctx.lineTo(cx + R, horizonY); ctx.stroke();
-  // Pitch ticks every 30° above/below center
-  ctx.fillStyle = '#fff'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
-  for (var p = -60; p <= 60; p += 30) {
+  // Canvas y=0 top; Three SphereGeometry default UV: v=0 at bottom (south pole -Y), v=1 at top (+Y north)
+  // CanvasTexture uploads canvas as-is; Three flipY defaults to true so canvas top becomes v=1. Fine.
+  var skyGrad = ctx.createLinearGradient(0, 0, 0, H/2);
+  skyGrad.addColorStop(0, '#2e538a');
+  skyGrad.addColorStop(1, '#a7c6e8');
+  ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, W, H/2);
+  var groundGrad = ctx.createLinearGradient(0, H/2, 0, H);
+  groundGrad.addColorStop(0, '#8a6830');
+  groundGrad.addColorStop(1, '#3a2810');
+  ctx.fillStyle = groundGrad; ctx.fillRect(0, H/2, W, H/2);
+  // Horizon
+  ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+  // Pitch ticks (±15°, 30°, 45°, 60°, 75°)
+  ctx.strokeStyle = '#FFFFFF'; ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'center';
+  for (var p = -75; p <= 75; p += 15) {
     if (p === 0) continue;
-    var ty = cy - ((pitchDeg + p) / 90) * R * 0.9;
-    ctx.beginPath(); ctx.moveTo(cx - R*0.3, ty); ctx.lineTo(cx + R*0.3, ty); ctx.stroke();
-    ctx.fillText(String(-p), cx + R*0.3 + 10, ty + 3);
+    var y = H/2 - (p / 90) * (H/2 - 12);
+    for (var xl = 0; xl < 8; xl++) {
+      var xc = (xl + 0.5) * (W / 8);
+      ctx.beginPath(); ctx.moveTo(xc - 40, y); ctx.lineTo(xc + 40, y); ctx.stroke();
+      ctx.fillText((p > 0 ? '+' : '') + p, xc, y + 5);
+    }
   }
-  ctx.restore();
-
-  // Circle outline
-  ctx.strokeStyle = '#1A2A40';
-  ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.stroke();
-
-  // Prograde marker (project velocity vector into ship body frame)
-  if (sim.speed > 1) {
-    var v = sim.vel.clone().normalize();
-    // body frame: x = shipRight, y = shipFwd, z = shipUp
-    var bx = v.dot(shipRight);
-    var by = v.dot(shipFwd);
-    var bz = v.dot(shipUp);
-    drawNavMarker(ctx, cx, cy, R, bx, by, bz, '#FFD040', 'P');
-    // Retrograde
-    drawNavMarker(ctx, cx, cy, R, -bx, -by, -bz, '#FFD040', 'R', true);
+  // Compass (N E S W etc) at equator
+  var labels = ['N','NE','E','SE','S','SW','W','NW'];
+  var compassColors = ['#FF6040','#FFA030','#40D080','#40A0FF','#A080FF','#FF60C0','#60E0C0','#F0F040'];
+  ctx.font = 'bold 26px monospace';
+  for (var i = 0; i < 8; i++) {
+    var x = (i / 8) * W + W/16;
+    ctx.fillStyle = compassColors[i];
+    ctx.fillText(labels[i], x, H/2 - 18);
+    ctx.fillText(labels[i], x, H/2 + 36);
   }
-
-  // Radial-out marker
-  var rx = radialUp.dot(shipRight);
-  var ry = radialUp.dot(shipFwd);
-  var rz = radialUp.dot(shipUp);
-  drawNavMarker(ctx, cx, cy, R, rx, ry, rz, '#40C0FF', '+');
-
-  // Ship attitude crosshair (fixed at center — ship always at center of ball)
-  ctx.strokeStyle = '#40D080';
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI*2); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx - 12, cy); ctx.lineTo(cx - 6, cy); ctx.moveTo(cx + 6, cy); ctx.lineTo(cx + 12, cy);
-  ctx.moveTo(cx, cy - 12); ctx.lineTo(cx, cy - 6); ctx.moveTo(cx, cy + 6); ctx.lineTo(cx, cy + 12); ctx.stroke();
+  return c;
 }
 
-// Draw a marker symbol projected from body frame (x=right, y=forward, z=up) onto navball.
-// by >= 0 means in front of ship (visible on the ball). by < 0 means behind ship (dim).
-function drawNavMarker(ctx, cx, cy, R, bx, by, bz, color, letter, hollow) {
-  var px = cx + bx * R * 0.9;
-  var py = cy - bz * R * 0.9;
-  ctx.globalAlpha = by >= 0 ? 1 : 0.35;
+function initNavball3D() {
+  var canvas = document.getElementById('navballCanvas');
+  if (!canvas) return;
+  navRenderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+  navRenderer.setSize(130, 130);
+  navRenderer.setPixelRatio(window.devicePixelRatio || 1);
+  navScene = new THREE.Scene();
+  navCamera = new THREE.PerspectiveCamera(65, 1, 0.01, 10);
+  navCamera.position.set(0, 0, 0);
+  // Ball: sphere with backside texture (camera is inside)
+  var geo = new THREE.SphereGeometry(1, 32, 24);
+  var tex = new THREE.CanvasTexture(buildNavballTexture());
+  var mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide });
+  navBall = new THREE.Mesh(geo, mat);
+  navScene.add(navBall);
+  // Prograde/retrograde/target sprites — positioned per frame at their world direction
+  navPrograde = makeNavSprite('#FFD040', 'P');
+  navRetrograde = makeNavSprite('#FFD040', 'X', true);
+  navTarget = makeNavSprite('#FFA030', 'T');
+  [navPrograde, navRetrograde, navTarget].forEach(function(s) { s.visible = false; navScene.add(s); });
+}
+
+function makeNavSprite(color, letter, hollow) {
+  var c = document.createElement('canvas');
+  c.width = 64; c.height = 64;
+  var ctx = c.getContext('2d');
   ctx.fillStyle = color;
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 3;
   if (hollow) {
-    ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(32, 32, 14, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(16, 16); ctx.lineTo(48, 48); ctx.moveTo(48, 16); ctx.lineTo(16, 48); ctx.stroke();
   } else {
-    ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(px, py, 9, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(32, 32, 10, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(32, 32, 16, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 14px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(letter, 32, 33);
   }
-  ctx.fillStyle = '#000';
-  ctx.font = 'bold 9px monospace';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  if (!hollow) ctx.fillText(letter, px, py + 1);
-  ctx.globalAlpha = 1;
+  var tex = new THREE.CanvasTexture(c);
+  var mat = new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true });
+  var sprite = new THREE.Sprite(mat);
+  sprite.scale.set(0.22, 0.22, 1);
+  return sprite;
+}
+
+function renderNavball() {
+  if (!sim) return;
+  if (!navRenderer) { initNavball3D(); if (!navRenderer) return; }
+  // Camera at origin (ball center), looking in ship's nose direction
+  var shipFwd = new THREE.Vector3(0, 1, 0).applyQuaternion(sim.orientation);
+  var localUp = sim.pos.clone().normalize();
+  navCamera.up.copy(localUp);
+  navCamera.lookAt(shipFwd);
+  // Prograde marker at velocity direction
+  if (sim.speed > 1) {
+    var v = sim.vel.clone().normalize();
+    navPrograde.position.copy(v.clone().multiplyScalar(0.96));
+    navRetrograde.position.copy(v.clone().multiplyScalar(-0.96));
+    navPrograde.visible = true;
+    navRetrograde.visible = true;
+  } else { navPrograde.visible = false; navRetrograde.visible = false; }
+  // Target marker
+  if (target) {
+    var ts = targetStateAt(sim.t);
+    if (ts) {
+      var relDir = ts.pos.clone().sub(inertialPosOf(sim)).normalize();
+      navTarget.position.copy(relDir.clone().multiplyScalar(0.96));
+      navTarget.visible = true;
+    }
+  } else navTarget.visible = false;
+  navRenderer.render(navScene, navCamera);
 }
 
 function deployChute() {
