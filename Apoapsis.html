@@ -382,6 +382,57 @@ function initThree() {
   var oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
   scene.add(oceanMesh);
 
+  // Launch pad (concrete disc at north pole) + tower
+  var padGeo = new THREE.CircleGeometry(80, 48);
+  var padCanvas = document.createElement('canvas');
+  padCanvas.width = 256; padCanvas.height = 256;
+  var pctx = padCanvas.getContext('2d');
+  pctx.fillStyle = '#606266'; pctx.fillRect(0, 0, 256, 256);
+  pctx.strokeStyle = '#3a3c40'; pctx.lineWidth = 2;
+  for (var gi = 0; gi < 8; gi++) {
+    pctx.beginPath(); pctx.moveTo(gi*32, 0); pctx.lineTo(gi*32, 256); pctx.stroke();
+    pctx.beginPath(); pctx.moveTo(0, gi*32); pctx.lineTo(256, gi*32); pctx.stroke();
+  }
+  // Hazard stripes in center
+  pctx.strokeStyle = '#FFD040'; pctx.lineWidth = 4;
+  pctx.beginPath(); pctx.arc(128, 128, 30, 0, Math.PI*2); pctx.stroke();
+  pctx.beginPath(); pctx.arc(128, 128, 50, 0, Math.PI*2); pctx.stroke();
+  var padMat = new THREE.MeshPhongMaterial({ map: new THREE.CanvasTexture(padCanvas), shininess: 4 });
+  var pad = new THREE.Mesh(padGeo, padMat);
+  pad.position.set(0, ENV.R + 1, 0);
+  pad.rotation.x = -Math.PI/2;
+  scene.add(pad);
+  // Launch tower: 4 legs + beams
+  var towerMat = new THREE.MeshPhongMaterial({ color: 0x303438 });
+  var beamMat = new THREE.MeshPhongMaterial({ color: 0x404448 });
+  var towerOffset = 22;
+  var towerHeight = 46;
+  for (var ti = 0; ti < 4; ti++) {
+    var ang = ti * Math.PI/2 + Math.PI/4;
+    var leg = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, towerHeight, 6), towerMat);
+    leg.position.set(towerOffset * Math.cos(ang), ENV.R + towerHeight/2, towerOffset * Math.sin(ang));
+    scene.add(leg);
+  }
+  for (var lv = 0; lv < 4; lv++) {
+    var y = ENV.R + 8 + lv * 11;
+    for (var side = 0; side < 4; side++) {
+      var a1 = side * Math.PI/2 + Math.PI/4;
+      var a2 = ((side+1) % 4) * Math.PI/2 + Math.PI/4;
+      var p1 = new THREE.Vector3(towerOffset*Math.cos(a1), y, towerOffset*Math.sin(a1));
+      var p2 = new THREE.Vector3(towerOffset*Math.cos(a2), y, towerOffset*Math.sin(a2));
+      var len = p1.distanceTo(p2);
+      var beam = new THREE.Mesh(new THREE.BoxGeometry(len, 0.5, 0.5), beamMat);
+      beam.position.copy(p1).add(p2).multiplyScalar(0.5);
+      beam.lookAt(p2);
+      beam.rotateY(Math.PI/2);
+      scene.add(beam);
+    }
+  }
+  // Tower platform (walkway at the top)
+  var plat = new THREE.Mesh(new THREE.BoxGeometry(towerOffset*2+6, 1, 8), beamMat);
+  plat.position.set(0, ENV.R + towerHeight, 0);
+  scene.add(plat);
+
   // Earth cloud layer
   var cloudCanvas = document.createElement('canvas');
   cloudCanvas.width = 1024; cloudCanvas.height = 512;
@@ -1296,6 +1347,7 @@ function checkMissions(s) {
       missionProgress[mis.id] = { completed: true, completedAt: Date.now() };
       saveMissionProgress();
       showToast('MISSION: <b style="color:#FFD040;">' + mis.name + '</b><br>&#164;' + mis.reward + ' earned');
+      playMissionChime();
       if (s.completedThisFlight == null) s.completedThisFlight = [];
       s.completedThisFlight.push(mis);
     }
@@ -2408,18 +2460,75 @@ function initAudio() {
   audio.engineGain.connect(audio.ctx.destination);
   audio.engineOsc.start();
   audio.noiseSrc.start();
+  // Reentry wind: separate noise + bandpass chain, driven by Q
+  audio.windSrc = audio.ctx.createBufferSource();
+  audio.windSrc.buffer = noiseBuf; // reuse buffer
+  audio.windSrc.loop = true;
+  audio.windFilter = audio.ctx.createBiquadFilter();
+  audio.windFilter.type = 'bandpass';
+  audio.windFilter.frequency.value = 800;
+  audio.windFilter.Q.value = 0.7;
+  audio.windGain = audio.ctx.createGain();
+  audio.windGain.gain.value = 0;
+  audio.windSrc.connect(audio.windFilter);
+  audio.windFilter.connect(audio.windGain);
+  audio.windGain.connect(audio.ctx.destination);
+  audio.windSrc.start();
 }
 
 function updateAudio(s) {
   if (!audio.ctx) return;
-  if (audio.muted) { audio.engineGain.gain.setTargetAtTime(0, audio.ctx.currentTime, 0.05); return; }
+  if (audio.muted) {
+    audio.engineGain.gain.setTargetAtTime(0, audio.ctx.currentTime, 0.05);
+    if (audio.windGain) audio.windGain.gain.setTargetAtTime(0, audio.ctx.currentTime, 0.05);
+    return;
+  }
   var thrFrac = s.thrustN > 0 ? s.throttle : 0;
-  var rho = atmDensity(s.altitude);
+  var rho = s.parent === 'earth' ? atmDensity(s.altitude) : 0;
   var atmFactor = Math.min(1, rho / 0.4 + 0.15);
   var vol = thrFrac * 0.35 * atmFactor;
   audio.engineGain.gain.setTargetAtTime(vol, audio.ctx.currentTime, 0.05);
   audio.engineFilter.frequency.setTargetAtTime(100 + atmFactor * 450 + thrFrac * 250, audio.ctx.currentTime, 0.05);
-  // Heat/plasma whoosh on the noise path is already included
+  // Reentry wind: Q-driven, pitched by speed
+  if (audio.windGain && audio.windFilter) {
+    var q = s.q || 0;
+    var windVol = Math.min(0.35, q / 80000);
+    if (s.parent !== 'earth' || s.altitude > ENV.KARMAN) windVol = 0;
+    audio.windGain.gain.setTargetAtTime(windVol, audio.ctx.currentTime, 0.1);
+    var windFreq = 400 + Math.min(2500, s.speed * 3);
+    audio.windFilter.frequency.setTargetAtTime(windFreq, audio.ctx.currentTime, 0.1);
+  }
+}
+
+function playMissionChime() {
+  if (!audio.ctx || audio.muted) return;
+  var t0 = audio.ctx.currentTime;
+  [523.25, 659.25, 783.99].forEach(function(freq, i) {
+    var o = audio.ctx.createOscillator(), g = audio.ctx.createGain();
+    o.type = 'triangle';
+    o.frequency.value = freq;
+    var st = t0 + i * 0.12;
+    g.gain.setValueAtTime(0.0001, st);
+    g.gain.exponentialRampToValueAtTime(0.18, st + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, st + 0.5);
+    o.connect(g); g.connect(audio.ctx.destination);
+    o.start(st); o.stop(st + 0.55);
+  });
+}
+
+function playChuteSound() {
+  if (!audio.ctx || audio.muted) return;
+  var buf = audio.ctx.createBuffer(1, audio.ctx.sampleRate * 0.7, audio.ctx.sampleRate);
+  var d = buf.getChannelData(0);
+  for (var i = 0; i < d.length; i++) {
+    var env = i < d.length*0.1 ? i/(d.length*0.1) : Math.pow(1 - (i - d.length*0.1)/(d.length*0.9), 1.5);
+    d[i] = (Math.random()*2 - 1) * env * 0.6;
+  }
+  var src = audio.ctx.createBufferSource(); src.buffer = buf;
+  var filt = audio.ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 1200;
+  var g = audio.ctx.createGain(); g.gain.value = 0.5;
+  src.connect(filt); filt.connect(g); g.connect(audio.ctx.destination);
+  src.start();
 }
 
 function playStageSound() {
@@ -2564,6 +2673,7 @@ function deployChute() {
   if (sim.chuteRipped) { showToast('<span style="color:#D04040;">Chute has been ripped.</span>'); return; }
   sim.chuteDeployed = true;
   showToast('Parachute deployed');
+  playChuteSound();
   buildRocketMeshes(sim.parts); // rebuild to show canopy
 }
 
