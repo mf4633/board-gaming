@@ -361,14 +361,32 @@ function initThree() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000005);
 
-  camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 1, 30000000);
-  mapCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 10000, 200000000);
+  camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 1, 120000000);
+  mapCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 10000, 250000000);
 
   var amb = new THREE.AmbientLight(0x334455, 0.6);
   scene.add(amb);
-  var sun = new THREE.DirectionalLight(0xffffff, 1.2);
-  sun.position.set(5000000, 8000000, 3000000);
-  scene.add(sun);
+  var sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  var sunDir = new THREE.Vector3(5000000, 8000000, 3000000).normalize();
+  var sunDist = 70000000;
+  var sunPos = sunDir.clone().multiplyScalar(sunDist);
+  sunLight.position.copy(sunPos);
+  scene.add(sunLight);
+  // Visible Sun disc + corona
+  var sunGeo = new THREE.SphereGeometry(2200000, 32, 24);
+  var sunMat = new THREE.MeshBasicMaterial({ color: 0xFFFED0 });
+  var sunMesh = new THREE.Mesh(sunGeo, sunMat);
+  sunMesh.position.copy(sunPos);
+  scene.add(sunMesh);
+  var coronaMat = new THREE.MeshBasicMaterial({ color: 0xFFE880, transparent: true, opacity: 0.25, depthWrite: false, blending: THREE.AdditiveBlending });
+  var coronaMesh = new THREE.Mesh(new THREE.SphereGeometry(5500000, 32, 24), coronaMat);
+  coronaMesh.position.copy(sunPos);
+  scene.add(coronaMesh);
+  // Wide soft glow
+  var glowMat = new THREE.MeshBasicMaterial({ color: 0xFFC860, transparent: true, opacity: 0.08, depthWrite: false, blending: THREE.AdditiveBlending });
+  var glowMesh = new THREE.Mesh(new THREE.SphereGeometry(12000000, 24, 16), glowMat);
+  glowMesh.position.copy(sunPos);
+  scene.add(glowMesh);
 
   // Earth
   var earthGeo = new THREE.SphereGeometry(ENV.R, 64, 64);
@@ -1654,7 +1672,7 @@ function renderFlight3D() {
   camera.lookAt(shipInertialPos);
   camera.up.copy(up);
   camera.near = Math.max(0.5, sim.altitude * 0.0005);
-  camera.far = 50000000;
+  camera.far = 120000000;
   camera.updateProjectionMatrix();
 
   // G-force vignette
@@ -1979,6 +1997,77 @@ function toggleTarget() {
   spawnTarget();
 }
 
+function buildStationMesh() {
+  var grp = new THREE.Group();
+  var coreMat = new THREE.MeshPhongMaterial({ color: 0xDDE0E8, shininess: 30 });
+  var accMat = new THREE.MeshPhongMaterial({ color: 0x9090A0 });
+  // Hull: 3 cylindrical modules end-to-end along Y
+  for (var i = 0; i < 3; i++) {
+    var mod = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 6, 16), coreMat);
+    mod.position.y = (i - 1) * 6;
+    grp.add(mod);
+    // Ring belt between modules
+    if (i < 2) {
+      var belt = new THREE.Mesh(new THREE.TorusGeometry(3.1, 0.35, 8, 18), accMat);
+      belt.position.y = (i - 1) * 6 + 3;
+      belt.rotation.x = Math.PI/2;
+      grp.add(belt);
+    }
+  }
+  // Glowing orange docking port at +Y end
+  var port = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.0, 1.8, 12), new THREE.MeshPhongMaterial({ color: 0xFFA030, emissive: 0xFF6020 }));
+  port.position.y = 9.9;
+  grp.add(port);
+  var portRing = new THREE.Mesh(new THREE.TorusGeometry(2.7, 0.2, 6, 18), new THREE.MeshPhongMaterial({ color: 0xFFD040, emissive: 0x806000 }));
+  portRing.position.y = 10.9;
+  portRing.rotation.x = Math.PI/2;
+  grp.add(portRing);
+  // Aft thruster cluster
+  var aft = new THREE.Mesh(new THREE.CylinderGeometry(2, 1.5, 1.2, 10), accMat);
+  aft.position.y = -9.6;
+  grp.add(aft);
+  for (var j = 0; j < 4; j++) {
+    var ang = j * Math.PI/2 + Math.PI/4;
+    var nozzle = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.8, 6), new THREE.MeshPhongMaterial({ color: 0x202428 }));
+    nozzle.position.set(1.4 * Math.cos(ang), -10.6, 1.4 * Math.sin(ang));
+    nozzle.rotation.x = Math.PI;
+    grp.add(nozzle);
+  }
+  // Solar panel arrays (two trussed wings along X)
+  var panelMat = new THREE.MeshPhongMaterial({ color: 0x253058, emissive: 0x0e1530, shininess: 100 });
+  var gridOverlayMat = new THREE.MeshBasicMaterial({ color: 0x4a6ab0, transparent: true, opacity: 0.25 });
+  for (var side = 0; side < 2; side++) {
+    var sign = side === 0 ? -1 : 1;
+    // Truss extension
+    var strut = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 7, 6), accMat);
+    strut.rotation.z = Math.PI/2;
+    strut.position.set(sign * 6.5, 0, 0);
+    grp.add(strut);
+    // Two panels (forward and aft pairs)
+    for (var p = 0; p < 2; p++) {
+      var panel = new THREE.Mesh(new THREE.BoxGeometry(16, 0.25, 5), panelMat);
+      panel.position.set(sign * 18, 0, p === 0 ? 3 : -3);
+      grp.add(panel);
+      var grid = new THREE.Mesh(new THREE.BoxGeometry(16.02, 0.26, 5.02), gridOverlayMat);
+      grid.position.copy(panel.position);
+      grp.add(grid);
+    }
+  }
+  // Antenna dish
+  var dish = new THREE.Mesh(new THREE.SphereGeometry(2.5, 16, 10, 0, Math.PI*2, 0, Math.PI/2.3), new THREE.MeshPhongMaterial({ color: 0xE0E4EC, side: THREE.DoubleSide }));
+  dish.position.set(0, 2, 4.5);
+  dish.rotation.x = -Math.PI/3;
+  grp.add(dish);
+  var dishPole = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 3.5, 6), accMat);
+  dishPole.position.set(0, 1, 3);
+  dishPole.rotation.x = Math.PI/3;
+  grp.add(dishPole);
+  // Proximity halo
+  var halo = new THREE.Mesh(new THREE.SphereGeometry(30, 12, 10), new THREE.MeshBasicMaterial({ color: 0xFFA030, transparent: true, opacity: 0.12, depthWrite: false }));
+  grp.add(halo);
+  return grp;
+}
+
 function spawnTarget() {
   // 200 km circular equatorial orbit; phase 90° from ship's current angle (if on Earth) so player chases it.
   var r = ENV.R + 200000;
@@ -1994,16 +2083,8 @@ function spawnTarget() {
   var kep = keplerianFromState(pos, vel, MU);
   var nu0 = trueAnomalyFromState(pos, vel, kep);
   target = { kep: kep, nu0: nu0, t0: sim ? sim.t : 0, parent: 'earth' };
-  // Mesh: small cylinder with a glowing orange tip (docking port)
-  var grp = new THREE.Group();
-  var body = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 8, 10), new THREE.MeshPhongMaterial({ color: 0xC0C0C8 }));
-  var tip = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 1.2, 10), new THREE.MeshPhongMaterial({ color: 0xFFA030, emissive: 0xFF6020 }));
-  tip.position.y = 4.5;
-  grp.add(body); grp.add(tip);
-  var halo = new THREE.Mesh(new THREE.SphereGeometry(18, 10, 8), new THREE.MeshBasicMaterial({ color: 0xFFA030, transparent: true, opacity: 0.25, depthWrite: false }));
-  grp.add(halo);
-  scene.add(grp);
-  target.mesh = grp;
+  target.mesh = buildStationMesh();
+  scene.add(target.mesh);
   // Orbit line (sampled once at spawn since kep is fixed)
   var N = 96, arr = new Float32Array(N*3);
   for (var i = 0; i < N; i++) {
