@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tower</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F3E2;</text></svg>">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height: 100vh; overflow: hidden; user-select: none; }
+
+#gameNav { display: block; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: #0A0E12; border-bottom: 1px solid #2A3038; }
+#gameNav .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 18px; max-width: 1400px; margin: 0 auto; position: relative; }
+#gameNav .nav-title { color: #D0D8E0; font-size: 0.95em; letter-spacing: 1px; }
+#gameNav .nav-toggle { background: none; border: 1px solid #2A3038; color: #D0D8E0; font-size: 1.1em; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-family: Georgia, serif; }
+#gameNav .nav-toggle:hover { background: #1A2028; }
+#gameNav .nav-menu { display: none; position: absolute; right: 18px; top: 100%; background: #0A0E12; border: 1px solid #2A3038; border-top: none; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 10000; }
+#gameNav .nav-menu.open { display: block; }
+#gameNav .nav-menu a { display: block; padding: 10px 18px; color: #7088A0; text-decoration: none; font-size: 0.85em; border-bottom: 1px solid #1A2028; }
+#gameNav .nav-menu a:last-child { border-bottom: none; }
+#gameNav .nav-menu a:hover { background: #1A2028; color: #B0C8E0; }
+#gameNav .nav-menu a.current { color: #FFD060; font-weight: bold; }
+
+#gameArea { position: absolute; top: 34px; left: 0; right: 0; bottom: 0; overflow: hidden; }
+#towerCanvas { display: block; cursor: grab; }
+#towerCanvas.panning { cursor: grabbing; }
+#towerCanvas.building { cursor: crosshair; }
+#towerCanvas.bulldozing { cursor: not-allowed; }
+
+.hud { position: absolute; background: rgba(12,18,26,0.82); border: 1px solid #3A4858; border-radius: 6px; padding: 8px 12px; font-family: 'Courier New', monospace; font-size: 0.85em; color: #C0D0E0; pointer-events: none; z-index: 10; backdrop-filter: blur(3px); }
+.hud b { color: #7AB0E0; font-size: 0.8em; letter-spacing: 1.5px; }
+.hud .val { color: #60E090; font-weight: bold; }
+.hud .warn { color: #E0A040; }
+.hud .err { color: #E04040; }
+
+#hudTopLeft { top: 44px; left: 12px; min-width: 180px; }
+#hudTopRight { top: 44px; right: 12px; text-align: right; min-width: 170px; }
+#hudTopCenter { top: 44px; left: 50%; transform: translateX(-50%); text-align: center; }
+
+.stars { color: #FFD040; font-size: 1.3em; letter-spacing: 2px; }
+
+.palette { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: rgba(12,18,26,0.92); border: 1px solid #3A4858; border-radius: 8px; padding: 10px 12px; z-index: 20; box-shadow: 0 4px 18px rgba(0,0,0,0.6); display: flex; gap: 6px; backdrop-filter: blur(4px); }
+.pal-btn { min-width: 80px; padding: 8px 10px; background: #1A2030; color: #B0C8E0; border: 1.5px solid #3A4858; border-radius: 5px; cursor: pointer; font-family: Georgia, serif; font-size: 0.8em; text-align: center; line-height: 1.4; transition: all 0.08s; }
+.pal-btn:hover { background: #2A3848; border-color: #7AB0E0; color: #FFF; }
+.pal-btn.active { background: #1A3860; color: #FFD060; border-color: #FFD060; box-shadow: 0 0 10px rgba(255,208,96,0.3); }
+.pal-btn.bulldoze.active { background: #5A2020; color: #FFA040; border-color: #FFA040; }
+.pal-btn .pb-name { font-weight: bold; display: block; }
+.pal-btn .pb-cost { font-size: 0.75em; color: #8098B0; display: block; margin-top: 2px; font-family: 'Courier New', monospace; }
+.pal-btn.active .pb-cost { color: #FFD060; }
+
+.speed-ctl { position: absolute; bottom: 16px; right: 16px; display: flex; gap: 4px; z-index: 20; }
+.speed-btn { padding: 8px 14px; background: rgba(12,18,26,0.92); color: #B0C8E0; border: 1px solid #3A4858; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 0.9em; }
+.speed-btn:hover { background: #1A2030; }
+.speed-btn.active { background: #1A3860; color: #FFD060; border-color: #FFD060; }
+
+.tooltip { position: absolute; background: rgba(18,24,36,0.96); border: 1px solid #5A7090; border-radius: 5px; padding: 6px 10px; font-size: 0.8em; font-family: 'Courier New', monospace; color: #D0E0F0; pointer-events: none; z-index: 100; display: none; }
+.tooltip.show { display: block; }
+
+.build-hint { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(24,36,50,0.95); border: 1px solid #FFD060; color: #FFD060; padding: 6px 14px; border-radius: 4px; font-size: 0.85em; font-family: Georgia, serif; pointer-events: none; z-index: 15; display: none; }
+.build-hint.show { display: block; }
+
+.toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(10,20,40,0.95); border: 2px solid #7AB0E0; color: #E0ECFF; padding: 14px 26px; border-radius: 8px; font-family: Georgia, serif; font-size: 1em; z-index: 50; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+.toast.show { opacity: 1; }
+
+.star-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(40,30,10,0.96); border: 3px solid #FFD040; color: #FFEE80; padding: 20px 36px; border-radius: 12px; font-family: Georgia, serif; font-size: 1.4em; z-index: 60; pointer-events: none; text-align: center; opacity: 0; transition: opacity 0.5s; box-shadow: 0 0 40px rgba(255,208,64,0.4); }
+.star-popup.show { opacity: 1; }
+
+#infoPanel { position: absolute; top: 150px; left: 12px; background: rgba(12,18,26,0.92); border: 1px solid #3A4858; border-radius: 6px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 0.78em; color: #B0C0D0; min-width: 200px; z-index: 12; display: none; }
+#infoPanel.show { display: block; }
+#infoPanel h4 { color: #7AB0E0; font-family: Georgia, serif; font-size: 1.1em; margin-bottom: 6px; letter-spacing: 1px; }
+#infoPanel .row { display: flex; justify-content: space-between; margin: 2px 0; }
+#infoPanel .row span:last-child { color: #60E090; }
+
+@media (max-width: 768px) {
+  .palette { bottom: 8px; padding: 6px 8px; gap: 4px; }
+  .pal-btn { min-width: 64px; padding: 5px 6px; font-size: 0.72em; }
+  .hud { font-size: 0.75em; padding: 6px 9px; }
+}
+</style>
+</head>
+<body>
+
+<div id="gameNav">
+  <div class="nav-bar">
+    <span class="nav-title">Tower</span>
+    <button class="nav-toggle" onclick="document.querySelector('#gameNav .nav-menu').classList.toggle('open')">&#9776;</button>
+  </div>
+  <div class="nav-menu">
+    <a href="Agora.html">Agora</a>
+    <a href="Apoapsis.html">Apoapsis</a>
+    <a href="Aresia.html">Aresia</a>
+    <a href="Backgammon.html">Backgammon</a>
+    <a href="Bisque.html">Bisque</a>
+    <a href="Chess.html">Chess</a>
+    <a href="Convergence.html">Convergence</a>
+    <a href="Go.html">Go</a>
+    <a href="Mancala.html">Mancala</a>
+    <a href="Odyssey.html">Odyssey</a>
+    <a href="Othello.html">Othello</a>
+    <a href="PenteGrammai.html">Pente Grammai</a>
+    <a href="Senet.html">Senet</a>
+    <a href="Tidelands.html">Tidelands</a>
+    <a href="Tower.html" class="current">Tower</a>
+    <a href="Ur.html">Ur</a>
+  </div>
+</div>
+
+<div id="gameArea">
+  <canvas id="towerCanvas"></canvas>
+
+  <div class="hud" id="hudTopLeft">
+    <div class="stars" id="starDisplay">&#9734;</div>
+    <div><b>POP</b> <span class="val" id="popDisplay">0</span> &nbsp; <b>UNITS</b> <span class="val" id="unitCount">0</span></div>
+  </div>
+
+  <div class="hud" id="hudTopCenter">
+    <div><b>DAY</b> <span class="val" id="dayDisplay">1</span> &nbsp; <span id="clockDisplay">6:00 AM</span></div>
+  </div>
+
+  <div class="hud" id="hudTopRight">
+    <div><b>FUNDS</b> <span class="val" id="fundsDisplay">$2,000,000</span></div>
+    <div><b>YESTERDAY</b> <span id="incomeDisplay">---</span></div>
+  </div>
+
+  <div class="palette" id="palette"></div>
+
+  <div class="speed-ctl">
+    <button class="speed-btn" id="sp0" onclick="setSpeed(0)">&#10074;&#10074;</button>
+    <button class="speed-btn active" id="sp1" onclick="setSpeed(1)">1&times;</button>
+    <button class="speed-btn" id="sp3" onclick="setSpeed(3)">3&times;</button>
+    <button class="speed-btn" id="sp9" onclick="setSpeed(9)">9&times;</button>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+  <div class="build-hint" id="buildHint"></div>
+  <div class="toast" id="toast"></div>
+  <div class="star-popup" id="starPopup"></div>
+  <div id="infoPanel"></div>
+</div>
+
+<script>
+/* ===== CONSTANTS ===== */
+var CELL_W = 18;
+var CELL_H = 22;
+var GRID_W = 28;           // cells wide
+var FLOOR_MIN = -8;
+var FLOOR_MAX = 80;
+var GROUND_Y = 0;          // floor 0 is ground
+
+/* ===== UNIT TYPES ===== */
+var UNITS = {
+  lobby:    { name:'Lobby',     w:8, h:1, cost:200000, rent:0,    color:'#D8C28A', textColor:'#5A4A2A', groundOnly:true, capacity:0 },
+  office:   { name:'Office',    w:4, h:1, cost:50000,  rent:3000, color:'#8AA0D0', textColor:'#1A2A50', capacity:6 },
+  condo:    { name:'Condo',     w:4, h:1, cost:70000,  rent:2200, color:'#D0A090', textColor:'#5A2A20', capacity:3 },
+  stairs:   { name:'Stairs',    w:2, h:1, cost:15000,  rent:0,    color:'#909898', textColor:'#303838', capacity:0 },
+  elevator: { name:'Elevator',  w:1, h:1, cost:60000,  rent:0,    color:'#7A7A82', textColor:'#FFF', capacity:0, isElevator:true }
+};
+var PAL_ORDER = ['lobby','office','condo','stairs','elevator'];
+
+/* ===== STATE ===== */
+var state = {
+  cash: 2000000,
+  yesterdayIncome: null,
+  units: {},            // id → { id, type, x, y, w, h, tenants, lastRent }
+  grid: {},             // "x,y" → unitId
+  nextUnitId: 1,
+  agents: [],           // { id, type, x, y, destFloor, destX, state, path, ... }
+  nextAgentId: 1,
+  elevators: [],        // { shaftX, minY, maxY, cars:[ { y, dir, passengers, queue, ... } ] }
+  day: 1,
+  minute: 360,          // 6:00 AM
+  speed: 1,
+  paused: false,
+  camY: 180,            // pixels to shift view; smaller = see higher floors
+  camX: 0,
+  stars: 1,
+  population: 0,
+  stat: { touched: 0 }
+};
+var build = { mode: null, bulldoze: false, hoverCell: null };
+var canvas, ctx, dpr = 1;
+var lastRealTime = 0;
+var gameMinuteAccum = 0;
+
+/* ===== INIT ===== */
+function init() {
+  canvas = document.getElementById('towerCanvas');
+  ctx = canvas.getContext('2d');
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Pan
+  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('mouseup', onMouseUp);
+  canvas.addEventListener('mouseleave', onMouseUp);
+  canvas.addEventListener('wheel', onWheel, { passive: false });
+  canvas.addEventListener('click', onClick);
+  document.addEventListener('keydown', onKey);
+
+  renderPalette();
+  requestAnimationFrame(loop);
+}
+
+function resize() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var w = window.innerWidth;
+  var h = window.innerHeight - 34;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+/* ===== PALETTE ===== */
+function renderPalette() {
+  var p = document.getElementById('palette');
+  var html = '';
+  for (var i = 0; i < PAL_ORDER.length; i++) {
+    var key = PAL_ORDER[i];
+    var u = UNITS[key];
+    var sz = u.w + 'x' + u.h;
+    html += '<div class="pal-btn" data-unit="' + key + '" onclick="setBuild(\'' + key + '\')">' +
+            '<span class="pb-name">' + u.name + '</span>' +
+            '<span class="pb-cost">' + sz + ' $' + Math.round(u.cost/1000) + 'k</span>' +
+            '</div>';
+  }
+  html += '<div class="pal-btn bulldoze" data-unit="bulldoze" onclick="setBuild(null, true)">' +
+          '<span class="pb-name">Bulldoze</span><span class="pb-cost">free</span></div>';
+  p.innerHTML = html;
+}
+
+function setBuild(unitType, bulldozeMode) {
+  build.mode = unitType || null;
+  build.bulldoze = !!bulldozeMode;
+  var btns = document.querySelectorAll('.pal-btn');
+  for (var i = 0; i < btns.length; i++) {
+    var key = btns[i].getAttribute('data-unit');
+    var active = (key === unitType) || (bulldozeMode && key === 'bulldoze');
+    btns[i].classList.toggle('active', !!active);
+  }
+  canvas.className = build.bulldoze ? 'bulldozing' : (build.mode ? 'building' : '');
+  updateBuildHint();
+}
+
+function updateBuildHint() {
+  var hint = document.getElementById('buildHint');
+  if (!build.mode && !build.bulldoze) { hint.classList.remove('show'); return; }
+  var msg;
+  if (build.bulldoze) msg = 'Click a unit to bulldoze it.';
+  else {
+    var u = UNITS[build.mode];
+    msg = 'Place ' + u.name + ' (click to build, ESC to cancel)';
+    if (u.groundOnly) msg += '\u00A0\u2014\u00A0ground floor only';
+  }
+  hint.textContent = msg;
+  hint.classList.add('show');
+}
+
+/* ===== COORDINATES ===== */
+function worldToScreen(x, y) {
+  // x: grid column (0..GRID_W)
+  // y: floor number (negative = basement, 0 = ground, positive = above)
+  var cx = canvas.clientWidth / 2;
+  var screenX = cx + (x - GRID_W/2) * CELL_W - state.camX;
+  var screenY = canvas.clientHeight - state.camY - y * CELL_H;
+  return { x: screenX, y: screenY };
+}
+function screenToCell(sx, sy) {
+  var cx = canvas.clientWidth / 2;
+  var x = Math.floor((sx - cx + state.camX) / CELL_W + GRID_W/2);
+  var y = Math.floor((canvas.clientHeight - sy - state.camY) / CELL_H) + 1;
+  // +1 because floor y's top is at screenY = ...
+  y = y - 1;
+  return { x: x, y: y };
+}
+
+/* ===== BUILDING ===== */
+function canPlace(type, gx, gy) {
+  var u = UNITS[type];
+  if (!u) return { ok: false, reason: 'Invalid unit' };
+  if (u.groundOnly && gy !== 0) return { ok: false, reason: 'Ground floor only' };
+  if (state.cash < u.cost) return { ok: false, reason: 'Insufficient funds' };
+  for (var dx = 0; dx < u.w; dx++) {
+    for (var dy = 0; dy < u.h; dy++) {
+      var x = gx + dx, y = gy + dy;
+      if (x < 0 || x >= GRID_W || y < FLOOR_MIN || y > FLOOR_MAX) return { ok: false, reason: 'Out of bounds' };
+      if (state.grid[x+','+y]) return { ok: false, reason: 'Cell occupied' };
+    }
+  }
+  // Elevator shaft: must be placed adjacent (above/below) to existing elevator if any, OR start at ground floor
+  if (u.isElevator) {
+    var key = gx + ',' + (gy - 1);
+    var below = state.grid[key];
+    if (gy !== 0 && (!below || UNITS[state.units[below].type].isElevator === undefined || !UNITS[state.units[below].type].isElevator)) {
+      return { ok: false, reason: 'Shaft must start at ground or above another elevator' };
+    }
+  }
+  return { ok: true };
+}
+
+function placeUnit(type, gx, gy) {
+  var u = UNITS[type];
+  var check = canPlace(type, gx, gy);
+  if (!check.ok) { showToast(check.reason); return false; }
+  var id = state.nextUnitId++;
+  var unit = { id: id, type: type, x: gx, y: gy, w: u.w, h: u.h, tenants: 0, occupants: [] };
+  state.units[id] = unit;
+  for (var dx = 0; dx < u.w; dx++) {
+    for (var dy = 0; dy < u.h; dy++) {
+      state.grid[(gx+dx) + ',' + (gy+dy)] = id;
+    }
+  }
+  state.cash -= u.cost;
+  if (u.isElevator) rebuildElevators();
+  updatePopulation();
+  updateStars();
+  return true;
+}
+
+function bulldozeAt(gx, gy) {
+  var uid = state.grid[gx+','+gy];
+  if (!uid) return;
+  var unit = state.units[uid];
+  // Kick out occupants
+  for (var i = state.agents.length - 1; i >= 0; i--) {
+    if (state.agents[i].unitId === uid) state.agents.splice(i, 1);
+  }
+  // Remove grid cells
+  for (var dx = 0; dx < unit.w; dx++) {
+    for (var dy = 0; dy < unit.h; dy++) {
+      delete state.grid[(unit.x+dx) + ',' + (unit.y+dy)];
+    }
+  }
+  delete state.units[uid];
+  var def = UNITS[unit.type];
+  if (def.isElevator) rebuildElevators();
+  updatePopulation();
+  updateStars();
+  showToast('Bulldozed: ' + def.name);
+}
+
+function rebuildElevators() {
+  // Group vertically adjacent elevator cells into shafts. Each shaft has one car for now.
+  state.elevators = [];
+  var used = {};
+  for (var key in state.grid) {
+    var uid = state.grid[key];
+    var unit = state.units[uid];
+    if (!unit || !UNITS[unit.type].isElevator) continue;
+    if (used[key]) continue;
+    // walk down to bottom of shaft
+    var parts = key.split(',');
+    var x = parseInt(parts[0]);
+    var y = parseInt(parts[1]);
+    var bot = y;
+    while (state.grid[x+','+(bot-1)] && UNITS[state.units[state.grid[x+','+(bot-1)]].type].isElevator) bot--;
+    var top = y;
+    while (state.grid[x+','+(top+1)] && UNITS[state.units[state.grid[x+','+(top+1)]].type].isElevator) top++;
+    for (var fy = bot; fy <= top; fy++) used[x+','+fy] = true;
+    state.elevators.push({
+      shaftX: x, minY: bot, maxY: top,
+      car: { y: bot, floatY: bot, dir: 1, passengers: [], queueUp: {}, queueDown: {}, stopTimer: 0 }
+    });
+  }
+}
+
+/* ===== TIME / SPEED ===== */
+function setSpeed(s) {
+  state.speed = s;
+  state.paused = (s === 0);
+  document.querySelectorAll('.speed-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('sp' + s).classList.add('active');
+}
+
+function advanceTime(realDt) {
+  if (state.paused) return;
+  // 1 game minute = 1 real-second * (15 / state.speed adjusted). At 1x: day (1440 min) takes 1440/60 = 24 real-seconds.
+  var gameMinutesPerRealSecond = 60 * state.speed;
+  gameMinuteAccum += realDt * gameMinutesPerRealSecond;
+  var steps = Math.floor(gameMinuteAccum);
+  if (steps > 30) steps = 30; // cap to avoid runaway
+  gameMinuteAccum -= steps;
+  for (var i = 0; i < steps; i++) {
+    state.minute++;
+    if (state.minute >= 1440) { state.minute = 0; state.day++; endOfDay(); }
+    simMinute();
+  }
+}
+
+function formatTime(m) {
+  var h = Math.floor(m / 60), mm = m % 60;
+  var ampm = h < 12 ? 'AM' : 'PM';
+  var hr = h % 12; if (hr === 0) hr = 12;
+  return hr + ':' + (mm < 10 ? '0' : '') + mm + ' ' + ampm;
+}
+
+/* ===== SIMULATION ===== */
+function simMinute() {
+  var h = Math.floor(state.minute / 60);
+  // Spawn office workers at ~8am and have them leave at ~5pm
+  if (state.minute === 8 * 60) spawnWorkers();
+  if (state.minute === 17 * 60) releaseWorkers();
+  // Condo residents: spawn at 6pm-ish, leave 8am
+  if (state.minute === 18 * 60) spawnResidents();
+  if (state.minute === 8 * 60 + 30) releaseResidents();
+
+  for (var i = state.agents.length - 1; i >= 0; i--) {
+    tickAgent(state.agents[i]);
+    if (state.agents[i].state === 'gone') state.agents.splice(i, 1);
+  }
+  for (var ei = 0; ei < state.elevators.length; ei++) tickElevator(state.elevators[ei]);
+}
+
+function spawnWorkers() {
+  for (var id in state.units) {
+    var u = state.units[id];
+    if (u.type !== 'office') continue;
+    var def = UNITS.office;
+    var need = def.capacity - u.tenants;
+    for (var k = 0; k < need; k++) {
+      state.agents.push({
+        id: state.nextAgentId++, type: 'worker',
+        x: GRID_W/2, y: 0,           // spawn at lobby center
+        phase: 'toWork', unitId: u.id,
+        path: null,
+        inElevator: null,
+        walkDelay: Math.random() * 30 // staggered arrival
+      });
+      u.tenants++;
+    }
+  }
+}
+function releaseWorkers() {
+  for (var i = 0; i < state.agents.length; i++) {
+    var a = state.agents[i];
+    if (a.type === 'worker') a.phase = 'toHome';
+  }
+}
+function spawnResidents() {
+  for (var id in state.units) {
+    var u = state.units[id];
+    if (u.type !== 'condo') continue;
+    var def = UNITS.condo;
+    var need = def.capacity - u.tenants;
+    for (var k = 0; k < need; k++) {
+      state.agents.push({
+        id: state.nextAgentId++, type: 'resident',
+        x: GRID_W/2, y: 0, phase: 'toHome', unitId: u.id, walkDelay: Math.random() * 60
+      });
+      u.tenants++;
+    }
+  }
+}
+function releaseResidents() {
+  for (var i = 0; i < state.agents.length; i++) {
+    var a = state.agents[i];
+    if (a.type === 'resident') a.phase = 'leaving';
+  }
+}
+
+function tickAgent(a) {
+  if (a.walkDelay && a.walkDelay > 0) { a.walkDelay--; return; }
+  var target = a.unitId && state.units[a.unitId];
+  if (!target && a.phase !== 'leaving') { a.phase = 'leaving'; }
+  if (a.phase === 'toWork' || a.phase === 'toHome') {
+    var tx = target ? target.x + target.w / 2 : GRID_W/2;
+    var ty = target ? target.y : 0;
+    if (stepToward(a, tx, ty)) {
+      a.phase = (a.phase === 'toWork') ? 'atWork' : 'atHome';
+    }
+  } else if (a.phase === 'atWork' || a.phase === 'atHome') {
+    // Idle at target unit
+  } else if (a.phase === 'leaving') {
+    if (stepToward(a, GRID_W/2, 0)) {
+      a.state = 'gone';
+      if (target) target.tenants = Math.max(0, target.tenants - 1);
+    }
+  }
+}
+
+// Move agent toward target (tx, ty). Horizontal walking on current floor, elevator/stairs between.
+// Returns true if arrived.
+function stepToward(a, tx, ty) {
+  if (Math.abs(a.x - tx) < 0.1 && a.y === ty) return true;
+  // If on different floor, seek vertical transport
+  if (a.y !== ty) {
+    // If we're currently inside an elevator, the elevator moves us; don't step.
+    if (a.inElevator != null) return false;
+    var transport = findBestTransport(a.x, a.y, ty);
+    if (!transport) {
+      // No path - stuck. Just idle.
+      return false;
+    }
+    // Walk to transport entry on this floor
+    var entryX = transport.x;
+    if (Math.abs(a.x - entryX) > 0.08) {
+      a.x += Math.sign(entryX - a.x) * 0.14;
+      if (Math.abs(a.x - entryX) < 0.14) a.x = entryX;
+      return false;
+    }
+    // At transport entry
+    if (transport.kind === 'stairs') {
+      // Climb one floor in direction of ty
+      var dy = Math.sign(ty - a.y);
+      a.y += dy;
+      return false;
+    }
+    if (transport.kind === 'elevator') {
+      // Call elevator to our floor
+      var elev = state.elevators[transport.elevIdx];
+      if (!elev) return false;
+      var goingUp = ty > a.y;
+      var queue = goingUp ? elev.car.queueUp : elev.car.queueDown;
+      if (!queue[a.y]) queue[a.y] = [];
+      if (queue[a.y].indexOf(a.id) < 0) queue[a.y].push(a.id);
+      // Wait for car to arrive and pick us up. tickElevator handles pickup.
+      return false;
+    }
+  }
+  // Same floor, walk horizontally toward tx
+  if (Math.abs(a.x - tx) > 0.08) {
+    a.x += Math.sign(tx - a.x) * 0.14;
+    if (Math.abs(a.x - tx) < 0.14) a.x = tx;
+    return Math.abs(a.x - tx) < 0.08;
+  }
+  return true;
+}
+
+// Find nearest vertical-transport that serves floors [a.y, ty].
+function findBestTransport(ax, ay, targetY) {
+  var best = null, bestDist = Infinity;
+  // Stairs
+  for (var id in state.units) {
+    var u = state.units[id];
+    if (u.type !== 'stairs') continue;
+    if (u.y !== ay) continue;
+    // Stairs only connect to adjacent floor (ay ± 1)
+    var desiredNext = ay + Math.sign(targetY - ay);
+    if (desiredNext === ay) continue;
+    // Check stairs exist on the desiredNext floor OR we can accept stairs just here
+    // We accept: stepping onto any stairs at current floor moves one floor toward target.
+    var sx = u.x + u.w / 2;
+    var d = Math.abs(ax - sx);
+    if (d < bestDist) { bestDist = d; best = { kind: 'stairs', x: sx, unitId: id }; }
+  }
+  // Elevator
+  for (var ei = 0; ei < state.elevators.length; ei++) {
+    var e = state.elevators[ei];
+    if (ay < e.minY || ay > e.maxY) continue;
+    if (targetY < e.minY || targetY > e.maxY) continue;
+    var ex = e.shaftX + 0.5;
+    var d2 = Math.abs(ax - ex);
+    if (d2 < bestDist) { bestDist = d2; best = { kind: 'elevator', x: ex, elevIdx: ei }; }
+  }
+  return best;
+}
+
+/* ===== ELEVATOR ===== */
+function tickElevator(e) {
+  var c = e.car;
+  // Smooth visual Y toward logical Y
+  c.floatY += (c.y - c.floatY) * 0.15;
+  if (c.stopTimer > 0) { c.stopTimer--; return; }
+  // Unload passengers whose destination is this floor
+  for (var i = c.passengers.length - 1; i >= 0; i--) {
+    var a = findAgent(c.passengers[i]);
+    if (!a) { c.passengers.splice(i, 1); continue; }
+    var destY = desiredFloorForAgent(a);
+    if (destY === c.y) {
+      a.inElevator = null;
+      a.y = c.y;
+      c.passengers.splice(i, 1);
+      c.stopTimer = 8;
+    }
+  }
+  // Pick up waiting passengers on this floor matching current direction
+  var queue = c.dir > 0 ? c.queueUp : c.queueDown;
+  if (queue[c.y] && queue[c.y].length > 0) {
+    var pickingUp = queue[c.y].slice();
+    var maxCap = 8;
+    for (var j = 0; j < pickingUp.length && c.passengers.length < maxCap; j++) {
+      var a2 = findAgent(pickingUp[j]);
+      if (!a2) continue;
+      a2.inElevator = e;
+      c.passengers.push(a2.id);
+      queue[c.y].splice(queue[c.y].indexOf(pickingUp[j]), 1);
+      c.stopTimer = 8;
+    }
+  }
+  if (c.stopTimer > 0) return;
+  // Decide next move
+  var upstreamCalls = anyCalls(c, c.y + 1, e.maxY, c.dir);
+  var downstreamCalls = anyCalls(c, e.minY, c.y - 1, c.dir);
+  if (c.dir > 0) {
+    if (c.y < e.maxY && upstreamCalls) c.y++;
+    else if (c.y > e.minY && downstreamCalls) { c.dir = -1; c.y--; }
+    else if (c.passengers.length === 0 && c.y > e.minY && !anyAnyCalls(c)) { c.dir = -1; c.y--; }
+  } else {
+    if (c.y > e.minY && downstreamCalls) c.y--;
+    else if (c.y < e.maxY && upstreamCalls) { c.dir = 1; c.y++; }
+    else if (c.passengers.length === 0 && c.y < e.maxY && !anyAnyCalls(c)) { c.dir = 1; c.y++; }
+  }
+}
+
+function desiredFloorForAgent(a) {
+  var u = state.units[a.unitId];
+  if (!u) return 0;
+  if (a.phase === 'leaving' || a.phase === 'toHome' && a.type === 'worker') return 0;
+  if (a.phase === 'toHome' && a.type === 'resident') return u.y;
+  if (a.phase === 'toWork') return u.y;
+  return u.y;
+}
+
+function anyCalls(c, from, to, dir) {
+  for (var y = from; y <= to; y++) {
+    var q = dir > 0 ? c.queueUp : c.queueDown;
+    if (q[y] && q[y].length > 0) return true;
+    // Also passengers aboard heading this way
+    for (var p = 0; p < c.passengers.length; p++) {
+      var a = findAgent(c.passengers[p]);
+      if (!a) continue;
+      var d = desiredFloorForAgent(a);
+      if ((dir > 0 && d >= y) || (dir < 0 && d <= y)) return true;
+    }
+  }
+  return false;
+}
+function anyAnyCalls(c) {
+  for (var y in c.queueUp) if (c.queueUp[y].length > 0) return true;
+  for (var y in c.queueDown) if (c.queueDown[y].length > 0) return true;
+  return false;
+}
+function findAgent(id) {
+  for (var i = 0; i < state.agents.length; i++) if (state.agents[i].id === id) return state.agents[i];
+  return null;
+}
+
+/* ===== ECONOMY ===== */
+function endOfDay() {
+  var income = 0, expenses = 0;
+  for (var id in state.units) {
+    var u = state.units[id];
+    var def = UNITS[u.type];
+    // Rent: proportional to occupancy
+    if (def.rent && def.capacity > 0) {
+      var occ = u.tenants / def.capacity;
+      income += Math.round(def.rent * occ);
+    }
+    // Upkeep
+    if (u.type === 'lobby') expenses += 800;
+    if (u.type === 'elevator') expenses += 200;
+  }
+  var net = income - expenses;
+  state.cash += net;
+  state.yesterdayIncome = net;
+  updateStars();
+}
+
+function updatePopulation() {
+  var p = 0;
+  for (var id in state.units) { p += state.units[id].tenants; }
+  state.population = p;
+}
+
+function updateStars() {
+  // 1★: Lobby + at least 1 office or condo; 2★: 300 pop; 3★: 1000 pop; 4★: 3000 pop; 5★: 5000 pop + basement
+  var has_lobby = false, has_rentable = false;
+  for (var id in state.units) {
+    if (state.units[id].type === 'lobby') has_lobby = true;
+    if (state.units[id].type === 'office' || state.units[id].type === 'condo') has_rentable = true;
+  }
+  var stars = 0;
+  if (has_lobby && has_rentable) stars = 1;
+  if (state.population >= 300) stars = 2;
+  if (state.population >= 1000) stars = 3;
+  if (state.population >= 3000) stars = 4;
+  if (state.population >= 5000) stars = 5;
+  if (stars > state.stars) {
+    var prev = state.stars;
+    state.stars = stars;
+    showStarPopup(stars);
+  } else if (stars < state.stars) {
+    state.stars = stars;
+  }
+}
+
+/* ===== RENDERING ===== */
+function render() {
+  var W = canvas.clientWidth, H = canvas.clientHeight;
+  // Sky gradient — colour shifts with time of day
+  var h = state.minute / 60;
+  var dayT = (h >= 6 && h <= 18) ? 1 : 0;
+  var dawn = Math.max(0, 1 - Math.abs(h - 6)) + Math.max(0, 1 - Math.abs(h - 18));
+  var skyTop, skyBottom;
+  if (h < 5 || h > 19) { skyTop = '#0A0E22'; skyBottom = '#1A2040'; }
+  else if (h < 7) { skyTop = '#183060'; skyBottom = '#D86040'; }
+  else if (h < 17) { skyTop = '#4A80C0'; skyBottom = '#9AC8E0'; }
+  else if (h < 19) { skyTop = '#183060'; skyBottom = '#D06030'; }
+  else { skyTop = '#0A0E22'; skyBottom = '#1A2040'; }
+  var g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, skyTop);
+  g.addColorStop(1, skyBottom);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  // Stars at night
+  if (h < 6 || h > 20) drawStars(W, H);
+  // Ground
+  var ground = worldToScreen(0, 0);
+  ctx.fillStyle = '#3A4A32';
+  ctx.fillRect(0, ground.y, W, H - ground.y);
+  // Grid lines (very subtle)
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (var y = FLOOR_MIN; y <= FLOOR_MAX; y++) {
+    var sp = worldToScreen(0, y);
+    if (sp.y < 0 || sp.y > H) continue;
+    ctx.beginPath(); ctx.moveTo(0, sp.y); ctx.lineTo(W, sp.y); ctx.stroke();
+  }
+  // Floor numbers on left margin
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'left';
+  for (var y = FLOOR_MIN; y <= FLOOR_MAX; y++) {
+    var sp2 = worldToScreen(0, y);
+    if (sp2.y < 20 || sp2.y > H - 10) continue;
+    var label = y === 0 ? 'G' : (y > 0 ? '' + y : 'B' + (-y));
+    ctx.fillText(label, 6, sp2.y - 6);
+  }
+  // Units
+  for (var id in state.units) {
+    drawUnit(state.units[id]);
+  }
+  // Elevator cars
+  for (var ei = 0; ei < state.elevators.length; ei++) drawElevatorCar(state.elevators[ei]);
+  // Agents
+  for (var i = 0; i < state.agents.length; i++) drawAgent(state.agents[i]);
+  // Hover preview
+  drawHoverPreview();
+}
+
+function drawStars(W, H) {
+  // Deterministic seeded stars
+  ctx.fillStyle = '#FFF';
+  for (var i = 0; i < 120; i++) {
+    var px = ((i * 1973) % W);
+    var py = ((i * 977) % (H * 0.6));
+    var s = (i % 3 === 0) ? 2 : 1;
+    ctx.fillRect(px, py, s, s);
+  }
+}
+
+function drawUnit(u) {
+  var def = UNITS[u.type];
+  var topLeft = worldToScreen(u.x, u.y + u.h - 1);
+  var w = u.w * CELL_W, h = u.h * CELL_H;
+  var x = topLeft.x, y = topLeft.y;
+  ctx.fillStyle = def.color;
+  ctx.fillRect(x, y, w, h);
+  // Border
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  // Inner detail by type
+  if (u.type === 'lobby') {
+    // Revolving door + plants
+    ctx.fillStyle = '#8A6840';
+    ctx.fillRect(x + w/2 - 6, y + 4, 12, h - 8);
+    ctx.fillStyle = '#406030';
+    ctx.fillRect(x + 4, y + h - 8, 4, 4);
+    ctx.fillRect(x + w - 8, y + h - 8, 4, 4);
+    ctx.fillStyle = def.textColor;
+    ctx.font = 'bold 9px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('LOBBY', x + w/2, y + h/2 - 2);
+  } else if (u.type === 'office') {
+    // Windows (lit if occupied)
+    var h2 = state.minute / 60;
+    var lit = (u.tenants > 0 && h2 >= 8 && h2 < 18);
+    ctx.fillStyle = lit ? '#FFEC88' : '#1A2C4A';
+    for (var xi = 0; xi < 4; xi++) {
+      var wx = x + 3 + xi * ((w - 6) / 4);
+      ctx.fillRect(wx, y + 4, (w - 6) / 4 - 2, h - 8);
+    }
+    ctx.fillStyle = def.textColor;
+    ctx.font = 'bold 8px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('OFFICE', x + w/2, y + h - 4);
+  } else if (u.type === 'condo') {
+    // Windows (lit at night)
+    var h3 = state.minute / 60;
+    var lit2 = (u.tenants > 0 && (h3 < 7 || h3 >= 18));
+    ctx.fillStyle = lit2 ? '#FFCC60' : '#2A1414';
+    for (var xj = 0; xj < 3; xj++) {
+      var wx2 = x + 4 + xj * ((w - 8) / 3);
+      ctx.fillRect(wx2, y + 4, (w - 8) / 3 - 2, h - 8);
+    }
+    ctx.fillStyle = def.textColor;
+    ctx.font = 'bold 8px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('CONDO', x + w/2, y + h - 4);
+  } else if (u.type === 'stairs') {
+    ctx.strokeStyle = '#404850';
+    ctx.lineWidth = 1.5;
+    for (var si = 0; si < 4; si++) {
+      ctx.beginPath();
+      ctx.moveTo(x + si * (w/4), y + h);
+      ctx.lineTo(x + si * (w/4), y + h - (si+1) * (h/4));
+      ctx.lineTo(x + (si+1) * (w/4), y + h - (si+1) * (h/4));
+      ctx.stroke();
+    }
+  } else if (u.type === 'elevator') {
+    // Shaft walls
+    ctx.fillStyle = '#383A42';
+    ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+    ctx.strokeStyle = '#1A1C24';
+    ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+  }
+}
+
+function drawElevatorCar(e) {
+  var c = e.car;
+  var center = worldToScreen(e.shaftX + 0.5, 0);
+  var floorScreen = worldToScreen(e.shaftX, c.floatY + 1 - 1);
+  var ySnap = canvas.clientHeight - state.camY - c.floatY * CELL_H - CELL_H;
+  var cx = center.x;
+  var w = CELL_W - 4, h = CELL_H - 4;
+  ctx.fillStyle = '#FFD060';
+  ctx.fillRect(cx - w/2, ySnap + 2, w, h);
+  ctx.strokeStyle = '#9A7020';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx - w/2 + 0.5, ySnap + 2.5, w - 1, h - 1);
+  // Number of passengers
+  if (c.passengers.length > 0) {
+    ctx.fillStyle = '#1A1A1A';
+    ctx.font = 'bold 9px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(c.passengers.length, cx, ySnap + h - 2);
+  }
+}
+
+function drawAgent(a) {
+  var displayY = a.y;
+  if (a.inElevator) {
+    displayY = a.inElevator.car.floatY;
+    var epos = worldToScreen(a.inElevator.shaftX + 0.5, displayY);
+    ctx.fillStyle = a.type === 'worker' ? '#4A80D0' : '#D06060';
+    ctx.fillRect(epos.x - 1, epos.y - CELL_H + 6, 2, CELL_H - 8);
+    return;
+  }
+  var ps = worldToScreen(a.x, displayY);
+  ctx.fillStyle = a.type === 'worker' ? '#4A80D0' : '#D06060';
+  ctx.fillRect(ps.x - 1, ps.y - CELL_H + 6, 2, CELL_H - 8);
+}
+
+function drawHoverPreview() {
+  if (!build.hoverCell) return;
+  var gx = build.hoverCell.x, gy = build.hoverCell.y;
+  if (build.bulldoze) {
+    var uid = state.grid[gx+','+gy];
+    if (uid) {
+      var u = state.units[uid];
+      var tl = worldToScreen(u.x, u.y + u.h - 1);
+      ctx.strokeStyle = '#E04040';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.strokeRect(tl.x + 1, tl.y + 1, u.w * CELL_W - 2, u.h * CELL_H - 2);
+      ctx.setLineDash([]);
+    }
+    return;
+  }
+  if (!build.mode) return;
+  var def = UNITS[build.mode];
+  var check = canPlace(build.mode, gx, gy);
+  var tl2 = worldToScreen(gx, gy + def.h - 1);
+  ctx.globalAlpha = 0.55;
+  ctx.fillStyle = check.ok ? def.color : '#E04040';
+  ctx.fillRect(tl2.x, tl2.y, def.w * CELL_W, def.h * CELL_H);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = check.ok ? '#FFF' : '#E04040';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 3]);
+  ctx.strokeRect(tl2.x + 1, tl2.y + 1, def.w * CELL_W - 2, def.h * CELL_H - 2);
+  ctx.setLineDash([]);
+}
+
+/* ===== INPUT ===== */
+var panState = { dragging: false, startX: 0, startY: 0, camX0: 0, camY0: 0, moved: 0 };
+function onMouseDown(e) {
+  panState.dragging = true;
+  panState.startX = e.clientX; panState.startY = e.clientY;
+  panState.camX0 = state.camX; panState.camY0 = state.camY;
+  panState.moved = 0;
+  if (build.mode || build.bulldoze) {
+    // Don't start pan when building
+    panState.dragging = false;
+  } else {
+    canvas.classList.add('panning');
+  }
+}
+function onMouseMove(e) {
+  var rect = canvas.getBoundingClientRect();
+  var sx = e.clientX - rect.left;
+  var sy = e.clientY - rect.top;
+  var cell = screenToCell(sx, sy);
+  build.hoverCell = cell;
+  // Tooltip for unit
+  if (!build.mode && !build.bulldoze) {
+    var uid = state.grid[cell.x+','+cell.y];
+    var tip = document.getElementById('tooltip');
+    if (uid) {
+      var u = state.units[uid];
+      var def = UNITS[u.type];
+      var cap = def.capacity > 0 ? (u.tenants + '/' + def.capacity) : '';
+      tip.innerHTML = '<b>' + def.name + '</b>' + (cap ? ' &middot; ' + cap : '') + (def.rent ? '<br>Rent: $' + def.rent + '/day' : '');
+      tip.style.left = (e.clientX + 12) + 'px';
+      tip.style.top = (e.clientY + 12) + 'px';
+      tip.classList.add('show');
+    } else {
+      tip.classList.remove('show');
+    }
+  } else {
+    document.getElementById('tooltip').classList.remove('show');
+  }
+  if (!panState.dragging) return;
+  var dx = e.clientX - panState.startX;
+  var dy = e.clientY - panState.startY;
+  panState.moved += Math.abs(dx) + Math.abs(dy);
+  state.camX = panState.camX0 - dx;
+  state.camY = panState.camY0 - dy;
+  clampCamera();
+}
+function onMouseUp() {
+  panState.dragging = false;
+  canvas.classList.remove('panning');
+}
+function onClick(e) {
+  if (panState.moved > 6) return; // was a drag
+  var rect = canvas.getBoundingClientRect();
+  var sx = e.clientX - rect.left;
+  var sy = e.clientY - rect.top;
+  var cell = screenToCell(sx, sy);
+  if (build.bulldoze) {
+    bulldozeAt(cell.x, cell.y);
+  } else if (build.mode) {
+    placeUnit(build.mode, cell.x, cell.y);
+  }
+}
+function onWheel(e) {
+  e.preventDefault();
+  state.camY -= e.deltaY * 0.5;
+  clampCamera();
+}
+function clampCamera() {
+  var minY = -40; // how far below surface we show
+  var maxY = (FLOOR_MAX - 10) * CELL_H;
+  if (state.camY < minY) state.camY = minY;
+  if (state.camY > maxY) state.camY = maxY;
+  var maxX = GRID_W * CELL_W / 2;
+  if (state.camX < -maxX) state.camX = -maxX;
+  if (state.camX > maxX) state.camX = maxX;
+}
+function onKey(e) {
+  if (e.key === 'Escape') setBuild(null);
+  else if (e.key === ' ') { e.preventDefault(); setSpeed(state.paused ? 1 : 0); }
+  else if (e.key === '1') setSpeed(1);
+  else if (e.key === '3') setSpeed(3);
+  else if (e.key === '9') setSpeed(9);
+  else if (e.key.toLowerCase() === 'b') setBuild('office');
+}
+
+/* ===== HUD ===== */
+function updateHUD() {
+  document.getElementById('fundsDisplay').textContent = '$' + formatMoney(state.cash);
+  var inc = state.yesterdayIncome;
+  var incEl = document.getElementById('incomeDisplay');
+  if (inc === null) { incEl.textContent = '---'; incEl.className = ''; }
+  else { incEl.textContent = (inc >= 0 ? '+$' : '-$') + formatMoney(Math.abs(inc)); incEl.className = inc >= 0 ? 'val' : 'err'; }
+  document.getElementById('dayDisplay').textContent = state.day;
+  document.getElementById('clockDisplay').textContent = formatTime(state.minute);
+  document.getElementById('popDisplay').textContent = state.population;
+  document.getElementById('unitCount').textContent = Object.keys(state.units).length;
+  var starStr = '';
+  for (var i = 0; i < 5; i++) starStr += (i < state.stars) ? '★' : '☆';
+  document.getElementById('starDisplay').innerHTML = starStr;
+}
+
+function formatMoney(n) {
+  if (Math.abs(n) >= 1000000) return (n / 1000000).toFixed(2) + 'M';
+  if (Math.abs(n) >= 10000) return Math.round(n / 1000) + ',000';
+  return '' + Math.round(n);
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._to);
+  t._to = setTimeout(function() { t.classList.remove('show'); }, 1600);
+}
+
+function showStarPopup(n) {
+  var p = document.getElementById('starPopup');
+  var stars = '';
+  for (var i = 0; i < n; i++) stars += '★';
+  p.innerHTML = stars + '<br>TOWER PROMOTED!';
+  p.classList.add('show');
+  setTimeout(function() { p.classList.remove('show'); }, 2500);
+}
+
+/* ===== MAIN LOOP ===== */
+function loop(t) {
+  var realDt = lastRealTime ? (t - lastRealTime) / 1000 : 0;
+  lastRealTime = t;
+  if (realDt > 0.1) realDt = 0.1;
+  advanceTime(realDt);
+  render();
+  updateHUD();
+  requestAnimationFrame(loop);
+}
+
+/* ===== STARTUP ===== */
+init();
+</script>
+</body>
+</html>
