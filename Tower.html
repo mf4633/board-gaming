@@ -715,49 +715,82 @@ function tickElevator(e) {
 function tickCar(e, c, carIdx) {
   c.floatY += (c.y - c.floatY) * 0.15;
   if (c.stopTimer > 0) { c.stopTimer--; return; }
-  // Unload passengers whose destination is this floor
+  // Drop off passengers at this floor
   for (var i = c.passengers.length - 1; i >= 0; i--) {
     var a = findAgent(c.passengers[i]);
     if (!a) { c.passengers.splice(i, 1); continue; }
-    var destY = desiredFloorForAgent(a);
-    if (destY === c.y) {
+    if (desiredFloorForAgent(a) === c.y) {
       a.inElevator = null;
       a.y = c.y;
       c.passengers.splice(i, 1);
       c.stopTimer = 8;
     }
   }
-  // Pick up passengers on this floor going in our direction
+  // Pick up passengers waiting in our direction
   var queue = c.dir > 0 ? e.queueUp : e.queueDown;
   if (queue[c.y] && queue[c.y].length > 0) {
-    var pickingUp = queue[c.y].slice();
+    var picks = queue[c.y].slice();
     var maxCap = 8;
-    for (var j = 0; j < pickingUp.length && c.passengers.length < maxCap; j++) {
-      var a2 = findAgent(pickingUp[j]);
+    for (var j = 0; j < picks.length && c.passengers.length < maxCap; j++) {
+      var a2 = findAgent(picks[j]);
       if (!a2) continue;
       a2.inElevator = e;
       a2.waitTicks = 0;
       c.passengers.push(a2.id);
-      queue[c.y].splice(queue[c.y].indexOf(pickingUp[j]), 1);
+      queue[c.y].splice(queue[c.y].indexOf(picks[j]), 1);
       c.stopTimer = 8;
     }
   }
   if (c.stopTimer > 0) return;
-  // Next-move decision with multi-car awareness: avoid collision and share calls
+
+  // Collision avoidance against sibling cars
   var otherYs = [];
-  for (var oi = 0; oi < e.cars.length; oi++) { if (oi !== carIdx) otherYs.push(e.cars[oi].y); }
-  var upCalls = anyCallsInRange(e, c, c.y + 1, e.maxY, c.dir);
-  var downCalls = anyCallsInRange(e, c, e.minY, c.y - 1, c.dir);
+  for (var oi = 0; oi < e.cars.length; oi++) if (oi !== carIdx) otherYs.push(e.cars[oi].y);
   var collides = function(ny) { return otherYs.indexOf(ny) >= 0; };
-  if (c.dir > 0) {
-    if (c.y < e.maxY && upCalls && !collides(c.y + 1)) c.y++;
-    else if (c.y > e.minY && downCalls && !collides(c.y - 1)) { c.dir = -1; c.y--; }
-    else if (c.passengers.length === 0 && c.y > e.minY && !anyAnyCallsShaft(e) && !collides(c.y - 1)) { c.dir = -1; c.y--; }
-  } else {
-    if (c.y > e.minY && downCalls && !collides(c.y - 1)) c.y--;
-    else if (c.y < e.maxY && upCalls && !collides(c.y + 1)) { c.dir = 1; c.y++; }
-    else if (c.passengers.length === 0 && c.y < e.maxY && !anyAnyCallsShaft(e) && !collides(c.y + 1)) { c.dir = 1; c.y++; }
+
+  // No passengers, no shaft calls: park at a unique floor and stop
+  if (c.passengers.length === 0 && !anyAnyCallsShaft(e)) {
+    var parkY = Math.min(e.maxY, Math.max(e.minY, 0) + carIdx);
+    while (otherYs.indexOf(parkY) >= 0 && parkY < e.maxY) parkY++;
+    if (c.y > parkY && !collides(c.y - 1)) c.y--;
+    else if (c.y < parkY && !collides(c.y + 1)) c.y++;
+    return; // otherwise stay put (this is the fix — no more oscillation)
   }
+
+  // SCAN scheduling: move toward demand; reverse when there's none in current direction
+  var callsAbove = hasCallsAround(e, c, c.y, +1);
+  var callsBelow = hasCallsAround(e, c, c.y, -1);
+  if (c.dir > 0) {
+    if (c.y < e.maxY && callsAbove && !collides(c.y + 1)) c.y++;
+    else if (c.y > e.minY && callsBelow && !collides(c.y - 1)) { c.dir = -1; c.y--; }
+  } else {
+    if (c.y > e.minY && callsBelow && !collides(c.y - 1)) c.y--;
+    else if (c.y < e.maxY && callsAbove && !collides(c.y + 1)) { c.dir = 1; c.y++; }
+  }
+}
+
+// Are there any calls/passengers with destinations above/below the car's current floor?
+function hasCallsAround(e, c, y, side) {
+  if (side > 0) {
+    for (var fy = y + 1; fy <= e.maxY; fy++) {
+      if (e.queueUp[fy] && e.queueUp[fy].length) return true;
+      if (e.queueDown[fy] && e.queueDown[fy].length) return true;
+    }
+    for (var pi = 0; pi < c.passengers.length; pi++) {
+      var a = findAgent(c.passengers[pi]);
+      if (a && desiredFloorForAgent(a) > y) return true;
+    }
+  } else {
+    for (var fy2 = y - 1; fy2 >= e.minY; fy2--) {
+      if (e.queueUp[fy2] && e.queueUp[fy2].length) return true;
+      if (e.queueDown[fy2] && e.queueDown[fy2].length) return true;
+    }
+    for (var pi2 = 0; pi2 < c.passengers.length; pi2++) {
+      var a2 = findAgent(c.passengers[pi2]);
+      if (a2 && desiredFloorForAgent(a2) < y) return true;
+    }
+  }
+  return false;
 }
 
 function desiredFloorForAgent(a) {
@@ -922,6 +955,68 @@ function drawStars(W, H) {
   }
 }
 
+function drawWindowedUnit(u, x, y, w, h, label, textColor, kind) {
+  var def = UNITS[u.type];
+  var h2 = state.minute / 60;
+  // Is this the unit's "active" (lit) period?
+  var active;
+  if (kind === 'office') active = (h2 >= 8 && h2 < 18);
+  else if (kind === 'condo') active = (h2 < 7 || h2 >= 18);
+  else active = (h2 < 7 || h2 >= 21);   // hotel
+  var nWindows = Math.max(2, def.capacity);
+  var ww = (w - 6) / nWindows;
+  var winY = y + 3, winH = h - 10;
+  // Draw each window — one per tenant
+  for (var wi = 0; wi < nWindows; wi++) {
+    var wx = x + 3 + wi * ww;
+    var occupied = wi < u.tenants;
+    var lit = occupied && active;
+    if (lit) {
+      // Warm glow
+      ctx.fillStyle = kind === 'office' ? '#FFEE90' : (kind === 'condo' ? '#FFC868' : '#FFB088');
+      ctx.fillRect(wx, winY, ww - 1, winH);
+      // Silhouette figure
+      ctx.fillStyle = 'rgba(20,10,0,0.55)';
+      var figX = wx + ww * 0.5 - 1.5;
+      ctx.fillRect(figX, winY + 2, 3, 3);            // head
+      ctx.fillRect(figX - 1, winY + 5, 5, winH - 7); // body
+      // Window frame
+      ctx.strokeStyle = 'rgba(40,20,10,0.5)';
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(wx + 0.5, winY + 0.5, ww - 2, winH - 1);
+    } else if (occupied) {
+      // Occupied but sleeping/quiet — dim warm
+      ctx.fillStyle = kind === 'office' ? '#2A4060' : (kind === 'condo' ? '#503020' : '#4A2840');
+      ctx.fillRect(wx, winY, ww - 1, winH);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.strokeRect(wx + 0.5, winY + 0.5, ww - 2, winH - 1);
+    } else {
+      // Vacant
+      ctx.fillStyle = '#1A2030';
+      ctx.fillRect(wx, winY, ww - 1, winH);
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      ctx.strokeRect(wx + 0.5, winY + 0.5, ww - 2, winH - 1);
+      // Vacancy "X"
+      ctx.strokeStyle = 'rgba(255,80,80,0.25)';
+      ctx.beginPath();
+      ctx.moveTo(wx + 1, winY + 1); ctx.lineTo(wx + ww - 2, winY + winH - 1);
+      ctx.moveTo(wx + ww - 2, winY + 1); ctx.lineTo(wx + 1, winY + winH - 1);
+      ctx.stroke();
+    }
+  }
+  // Label + occupancy badge at bottom
+  ctx.fillStyle = textColor;
+  ctx.font = 'bold 7px Georgia';
+  ctx.textAlign = 'left';
+  ctx.fillText(label, x + 3, y + h - 2);
+  if (u.tenants > 0) {
+    ctx.fillStyle = active ? '#FFF0A0' : '#A0B0C0';
+    ctx.font = 'bold 7px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(u.tenants + '/' + def.capacity, x + w - 3, y + h - 2);
+  }
+}
+
 function drawUnit(u) {
   var def = UNITS[u.type];
   var topLeft = worldToScreen(u.x, u.y + u.h - 1);
@@ -946,67 +1041,73 @@ function drawUnit(u) {
     ctx.textAlign = 'center';
     ctx.fillText('LOBBY', x + w/2, y + h/2 - 2);
   } else if (u.type === 'office') {
-    // Windows (lit if occupied)
-    var h2 = state.minute / 60;
-    var lit = (u.tenants > 0 && h2 >= 8 && h2 < 18);
-    ctx.fillStyle = lit ? '#FFEC88' : '#1A2C4A';
-    for (var xi = 0; xi < 4; xi++) {
-      var wx = x + 3 + xi * ((w - 6) / 4);
-      ctx.fillRect(wx, y + 4, (w - 6) / 4 - 2, h - 8);
-    }
-    ctx.fillStyle = def.textColor;
-    ctx.font = 'bold 8px Georgia';
-    ctx.textAlign = 'center';
-    ctx.fillText('OFFICE', x + w/2, y + h - 4);
+    drawWindowedUnit(u, x, y, w, h, 'OFFICE', def.textColor, 'office');
   } else if (u.type === 'condo') {
-    // Windows (lit at night)
-    var h3 = state.minute / 60;
-    var lit2 = (u.tenants > 0 && (h3 < 7 || h3 >= 18));
-    ctx.fillStyle = lit2 ? '#FFCC60' : '#2A1414';
-    for (var xj = 0; xj < 3; xj++) {
-      var wx2 = x + 4 + xj * ((w - 8) / 3);
-      ctx.fillRect(wx2, y + 4, (w - 8) / 3 - 2, h - 8);
-    }
-    ctx.fillStyle = def.textColor;
-    ctx.font = 'bold 8px Georgia';
-    ctx.textAlign = 'center';
-    ctx.fillText('CONDO', x + w/2, y + h - 4);
+    drawWindowedUnit(u, x, y, w, h, 'CONDO', def.textColor, 'condo');
   } else if (u.type === 'hotel') {
-    var h4 = state.minute / 60;
-    var lit3 = (u.tenants > 0 && (h4 < 7 || h4 >= 21));
-    ctx.fillStyle = lit3 ? '#FFB880' : '#3A1A30';
-    for (var xh = 0; xh < 3; xh++) {
-      var wx3 = x + 4 + xh * ((w - 8) / 3);
-      ctx.fillRect(wx3, y + 4, (w - 8) / 3 - 2, h - 8);
+    drawWindowedUnit(u, x, y, w, h, 'HOTEL', def.textColor, 'hotel');
+  } else if (u.type === 'restaurant') {
+    var active = state.minute >= 11*60 && state.minute <= 22*60;
+    ctx.fillStyle = active ? '#FFE8B8' : '#6A5030';
+    ctx.fillRect(x + 3, y + 4, w - 6, h - 8);
+    // Awning stripes
+    ctx.fillStyle = '#C04020';
+    for (var rx = 0; rx < 6; rx++) { ctx.fillRect(x + 3 + rx*((w-6)/6), y + 4, 1.5, 3); }
+    // Tables with diners
+    var ntables = 6;
+    for (var ti = 0; ti < ntables; ti++) {
+      var tx = x + 5 + ti * ((w - 10) / ntables);
+      var filled = (ti + 1) * (def.capacity / ntables) <= u.tenants;
+      ctx.fillStyle = '#805030';
+      ctx.fillRect(tx, y + h - 8, 3, 3);
+      if (filled) {
+        ctx.fillStyle = '#E04040';
+        ctx.fillRect(tx, y + h - 12, 1, 3);
+        ctx.fillStyle = '#4080D0';
+        ctx.fillRect(tx + 2, y + h - 12, 1, 3);
+      }
     }
     ctx.fillStyle = def.textColor;
-    ctx.font = 'bold 8px Georgia';
-    ctx.textAlign = 'center';
-    ctx.fillText('HOTEL', x + w/2, y + h - 4);
-  } else if (u.type === 'restaurant') {
-    // Awning + tables
-    ctx.fillStyle = '#FFE0B0';
-    ctx.fillRect(x + 3, y + 5, w - 6, h - 10);
-    ctx.fillStyle = '#A04020';
-    for (var rx = 0; rx < 4; rx++) { ctx.fillRect(x + 6 + rx*((w-12)/4), y + 5, 3, 3); }
-    ctx.fillStyle = def.textColor;
-    ctx.font = 'bold 9px Georgia';
-    ctx.textAlign = 'center';
-    ctx.fillText('RESTAURANT', x + w/2, y + h/2 + 1);
+    ctx.font = 'bold 7px Georgia';
+    ctx.textAlign = 'left';
+    ctx.fillText('RESTAURANT', x + 4, y + h/2 + 2);
     if (u.tenants > 0) {
-      ctx.fillStyle = '#805030';
+      ctx.fillStyle = '#FFD060';
       ctx.font = 'bold 7px monospace';
-      ctx.fillText(u.tenants + ' diners', x + w/2, y + h - 3);
+      ctx.textAlign = 'right';
+      ctx.fillText(u.tenants + ' dining', x + w - 3, y + h/2 + 2);
     }
   } else if (u.type === 'shop') {
-    ctx.fillStyle = '#FFFFE0';
+    ctx.fillStyle = u.tenants > 0 ? '#FFFFE8' : '#A0A890';
     ctx.fillRect(x + 3, y + 4, w - 6, h - 8);
-    ctx.fillStyle = '#406050';
+    // Storefront awning
+    ctx.fillStyle = '#306040';
     ctx.fillRect(x + 3, y + 4, w - 6, 3);
+    // Display shelves + browsing shoppers
+    var shelves = 3;
+    for (var si = 0; si < shelves; si++) {
+      var sx = x + 5 + si * ((w - 10) / shelves);
+      ctx.fillStyle = '#8A7040';
+      ctx.fillRect(sx, y + 9, (w-10)/shelves - 2, 2);
+    }
+    if (u.tenants > 0) {
+      var browsers = Math.min(u.tenants, 4);
+      for (var bi = 0; bi < browsers; bi++) {
+        var bx = x + 6 + bi * ((w - 12) / 4);
+        ctx.fillStyle = '#60C080';
+        ctx.fillRect(bx, y + h - 9, 2, 5);
+      }
+    }
     ctx.fillStyle = def.textColor;
-    ctx.font = 'bold 9px Georgia';
-    ctx.textAlign = 'center';
-    ctx.fillText('SHOP', x + w/2, y + h/2 + 2);
+    ctx.font = 'bold 7px Georgia';
+    ctx.textAlign = 'left';
+    ctx.fillText('SHOP', x + 4, y + h - 2);
+    if (u.tenants > 0) {
+      ctx.fillStyle = '#FFE080';
+      ctx.font = 'bold 7px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(u.tenants, x + w - 3, y + h - 2);
+    }
   } else if (u.type === 'stairs') {
     ctx.strokeStyle = '#404850';
     ctx.lineWidth = 1.5;
