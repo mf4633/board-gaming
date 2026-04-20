@@ -289,6 +289,9 @@ function updateBuildHint() {
     var u = UNITS[build.mode];
     msg = 'Place ' + u.name + ' (click to build, ESC to cancel)';
     if (u.groundOnly) msg += '\u00A0\u2014\u00A0must be on floor 1 (ground)';
+    if (build.mode === 'elevator' || build.mode === 'stairs') {
+      msg = 'Drag up/down to build a ' + u.name.toLowerCase() + ' shaft (click for single cell)';
+    }
   }
   hint.textContent = msg;
   hint.classList.add('show');
@@ -325,14 +328,9 @@ function canPlace(type, gx, gy) {
       if (state.grid[x+','+y]) return { ok: false, reason: 'Cell occupied' };
     }
   }
-  // Elevator shaft: must be placed adjacent (above/below) to existing elevator if any, OR start at ground floor
-  if (u.isElevator) {
-    var key = gx + ',' + (gy - 1);
-    var below = state.grid[key];
-    if (gy !== 0 && (!below || UNITS[state.units[below].type].isElevator === undefined || !UNITS[state.units[below].type].isElevator)) {
-      return { ok: false, reason: 'Shaft must start at ground or above another elevator' };
-    }
-  }
+  // Elevator shafts can be placed anywhere; rebuildElevators merges vertically-adjacent cells
+  // into a single shaft. A shaft must ultimately include the ground floor to be useful (passengers
+  // board from the lobby), but that's a usability concern, not a placement rule.
   return { ok: true };
 }
 
@@ -1430,17 +1428,36 @@ function drawHoverPreview() {
 
 /* ===== INPUT ===== */
 var panState = { dragging: false, startX: 0, startY: 0, camX0: 0, camY0: 0, moved: 0 };
+var dragBuild = { active: false, lockX: null, lastKey: '' };
 function onMouseDown(e) {
   panState.dragging = true;
   panState.startX = e.clientX; panState.startY = e.clientY;
   panState.camX0 = state.camX; panState.camY0 = state.camY;
   panState.moved = 0;
   if (build.mode || build.bulldoze) {
-    // Don't start pan when building
     panState.dragging = false;
+    // Start a drag-build session for stairs / elevator so the player can
+    // paint a full shaft in one stroke without clicking each cell.
+    if (build.mode === 'elevator' || build.mode === 'stairs') {
+      var rect = canvas.getBoundingClientRect();
+      var cell = screenToCell(e.clientX - rect.left, e.clientY - rect.top);
+      dragBuild.active = true;
+      dragBuild.lockX = cell.x;
+      dragBuild.lastKey = '';
+      tryPlaceAtDrag(cell.x, cell.y);
+    }
   } else {
     canvas.classList.add('panning');
   }
+}
+
+function tryPlaceAtDrag(gx, gy) {
+  var key = gx + ',' + gy;
+  if (key === dragBuild.lastKey) return;
+  dragBuild.lastKey = key;
+  // Skip silently if the cell is already filled; avoids a spammy toast during drag
+  if (state.grid[key]) return;
+  placeUnit(build.mode, gx, gy);
 }
 function onMouseMove(e) {
   var rect = canvas.getBoundingClientRect();
@@ -1468,6 +1485,22 @@ function onMouseMove(e) {
   } else {
     document.getElementById('tooltip').classList.remove('show');
   }
+  if (dragBuild.active) {
+    var fx = dragBuild.lockX;  // lock to starting column so the shaft stays straight
+    // Interpolate along Y between last placed cell and current cell so fast drags don't skip cells
+    var c = cell;
+    if (dragBuild.lastKey) {
+      var parts = dragBuild.lastKey.split(',');
+      var lastY = parseInt(parts[1]);
+      var step = c.y > lastY ? 1 : (c.y < lastY ? -1 : 0);
+      for (var yy = lastY + step; step !== 0 && yy !== c.y + step; yy += step) {
+        tryPlaceAtDrag(fx, yy);
+      }
+    } else {
+      tryPlaceAtDrag(fx, c.y);
+    }
+    return;
+  }
   if (!panState.dragging) return;
   var dx = e.clientX - panState.startX;
   var dy = e.clientY - panState.startY;
@@ -1478,6 +1511,11 @@ function onMouseMove(e) {
 }
 function onMouseUp() {
   panState.dragging = false;
+  if (dragBuild.active) {
+    dragBuild.active = false;
+    dragBuild.lockX = null;
+    dragBuild.lastKey = '';
+  }
   canvas.classList.remove('panning');
 }
 function onClick(e) {
@@ -1493,6 +1531,8 @@ function onClick(e) {
   } else if (build.mode === 'identify') {
     var uid = state.grid[cell.x+','+cell.y];
     if (uid) showUnitInfo(uid); else hideUnitInfo();
+  } else if (build.mode === 'elevator' || build.mode === 'stairs') {
+    // Drag-build tool — placement already happened on mousedown, nothing to do
   } else if (build.mode) {
     placeUnit(build.mode, cell.x, cell.y);
   }
