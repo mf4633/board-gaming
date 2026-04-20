@@ -255,6 +255,7 @@ function updateBuildHint() {
   if (!build.mode && !build.bulldoze) { hint.classList.remove('show'); return; }
   var msg;
   if (build.bulldoze) msg = 'Click a unit to bulldoze it.';
+  else if (build.mode === 'addcar') msg = 'Click an elevator shaft cell to add a car ($80k).';
   else {
     var u = UNITS[build.mode];
     msg = 'Place ' + u.name + ' (click to build, ESC to cancel)';
@@ -1194,6 +1195,20 @@ function drawHoverPreview() {
     return;
   }
   if (!build.mode) return;
+  if (build.mode === 'addcar') {
+    // Highlight the elevator shaft cell under cursor
+    var uid = state.grid[gx+','+gy];
+    if (uid && UNITS[state.units[uid].type].isElevator) {
+      var u = state.units[uid];
+      var tl = worldToScreen(u.x, u.y + u.h - 1);
+      ctx.strokeStyle = '#FFD060';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.strokeRect(tl.x + 1, tl.y + 1, u.w * CELL_W - 2, u.h * CELL_H - 2);
+      ctx.setLineDash([]);
+    }
+    return;
+  }
   var def = UNITS[build.mode];
   var check = canPlace(build.mode, gx, gy);
   var tl2 = worldToScreen(gx, gy + def.h - 1);
