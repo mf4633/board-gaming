@@ -65,11 +65,32 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
 .star-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(40,30,10,0.96); border: 3px solid #FFD040; color: #FFEE80; padding: 20px 36px; border-radius: 12px; font-family: Georgia, serif; font-size: 1.4em; z-index: 60; pointer-events: none; text-align: center; opacity: 0; transition: opacity 0.5s; box-shadow: 0 0 40px rgba(255,208,64,0.4); }
 .star-popup.show { opacity: 1; }
 
-#infoPanel { position: absolute; top: 150px; left: 12px; background: rgba(12,18,26,0.92); border: 1px solid #3A4858; border-radius: 6px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 0.78em; color: #B0C0D0; min-width: 200px; z-index: 12; display: none; }
+#infoPanel { position: absolute; top: 150px; left: 12px; background: rgba(12,18,26,0.95); border: 1.5px solid #5A7898; border-radius: 8px; padding: 12px 16px; font-family: 'Courier New', monospace; font-size: 0.82em; color: #C0D0E0; min-width: 250px; max-width: 320px; z-index: 25; display: none; box-shadow: 0 4px 18px rgba(0,0,0,0.55); }
 #infoPanel.show { display: block; }
-#infoPanel h4 { color: #7AB0E0; font-family: Georgia, serif; font-size: 1.1em; margin-bottom: 6px; letter-spacing: 1px; }
-#infoPanel .row { display: flex; justify-content: space-between; margin: 2px 0; }
-#infoPanel .row span:last-child { color: #60E090; }
+#infoPanel h4 { color: #9ADBFF; font-family: Georgia, serif; font-size: 1.15em; margin-bottom: 8px; letter-spacing: 1.5px; border-bottom: 1px solid #3A4858; padding-bottom: 4px; }
+#infoPanel .row { display: flex; justify-content: space-between; margin: 3px 0; }
+#infoPanel .row span:first-child { color: #7AB0E0; }
+#infoPanel .row span:last-child { color: #C0E0B0; font-weight: bold; }
+#infoPanel .sat-bar { height: 6px; background: #2A3040; border-radius: 3px; margin: 6px 0 10px; overflow: hidden; position: relative; }
+#infoPanel .sat-fill { height: 100%; background: linear-gradient(to right, #E04040, #E0A040, #40E080); transition: width 0.2s; }
+#infoPanel .complaints { margin-top: 10px; padding-top: 8px; border-top: 1px solid #3A4858; font-size: 0.9em; }
+#infoPanel .complaint { color: #E0A880; margin: 2px 0; font-size: 0.85em; }
+#infoPanel .close-btn { position: absolute; top: 8px; right: 10px; color: #6080A0; cursor: pointer; pointer-events: auto; font-size: 1.2em; font-family: Georgia, serif; line-height: 1; }
+#infoPanel .close-btn:hover { color: #FF8080; }
+#infoPanel { pointer-events: auto; }
+
+#logPanel { position: absolute; top: 100px; right: 12px; background: rgba(12,18,26,0.93); border: 1.5px solid #3A4858; border-radius: 8px; padding: 10px 12px; font-family: 'Courier New', monospace; font-size: 0.74em; color: #B0C0D0; width: 300px; max-height: calc(100vh - 300px); overflow-y: auto; z-index: 22; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.55); }
+#logPanel.show { display: block; }
+#logPanel h4 { color: #FFD060; font-family: Georgia, serif; font-size: 1em; margin-bottom: 6px; letter-spacing: 1.5px; position: sticky; top: 0; background: rgba(12,18,26,0.97); padding-bottom: 3px; }
+#logPanel .log-entry { margin: 3px 0; line-height: 1.35; padding-left: 4px; border-left: 2px solid transparent; }
+#logPanel .log-entry.warn { border-left-color: #E0A040; color: #E0B070; }
+#logPanel .log-entry.bad { border-left-color: #E04040; color: #E08080; }
+#logPanel .log-entry.good { border-left-color: #40E080; color: #A0E0A0; }
+#logPanel .log-time { color: #5A7898; font-size: 0.9em; margin-right: 6px; }
+
+#logToggle { position: absolute; top: 100px; right: 12px; padding: 6px 12px; background: rgba(12,18,26,0.92); border: 1px solid #3A4858; color: #B0C8E0; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 0.8em; z-index: 21; }
+#logToggle:hover { background: #1A2030; }
+#logToggle.active { background: #4A3010; color: #FFD060; border-color: #FFD060; }
 
 @media (max-width: 768px) {
   .palette { bottom: 8px; padding: 6px 8px; gap: 4px; }
@@ -136,6 +157,8 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
   <div class="toast" id="toast"></div>
   <div class="star-popup" id="starPopup"></div>
   <div id="infoPanel"></div>
+  <button id="logToggle" onclick="toggleLog()">LOG (0)</button>
+  <div id="logPanel"><h4>EVENT LOG</h4><div id="logBody"></div></div>
 </div>
 
 <script>
@@ -179,7 +202,10 @@ var state = {
   camX: 0,
   stars: 1,
   population: 0,
-  stat: { touched: 0 }
+  stat: { touched: 0 },
+  log: [],             // {day, minute, text, severity}
+  logUnread: 0,
+  selectedUnitId: null
 };
 var build = { mode: null, bulldoze: false, hoverCell: null };
 var canvas, ctx, dpr = 1;
@@ -232,6 +258,8 @@ function renderPalette() {
   }
   html += '<div class="pal-btn" data-unit="addcar" onclick="setBuild(\'addcar\')">' +
           '<span class="pb-name">+ Car</span><span class="pb-cost">$80k</span></div>';
+  html += '<div class="pal-btn" data-unit="identify" onclick="setBuild(\'identify\')">' +
+          '<span class="pb-name">Identify</span><span class="pb-cost">inspect</span></div>';
   html += '<div class="pal-btn bulldoze" data-unit="bulldoze" onclick="setBuild(null, true)">' +
           '<span class="pb-name">Bulldoze</span><span class="pb-cost">free</span></div>';
   p.innerHTML = html;
@@ -256,6 +284,7 @@ function updateBuildHint() {
   var msg;
   if (build.bulldoze) msg = 'Click a unit to bulldoze it.';
   else if (build.mode === 'addcar') msg = 'Click an elevator shaft cell to add a car ($80k).';
+  else if (build.mode === 'identify') msg = 'Click any unit to inspect its stats, satisfaction, and complaints.';
   else {
     var u = UNITS[build.mode];
     msg = 'Place ' + u.name + ' (click to build, ESC to cancel)';
@@ -347,6 +376,8 @@ function bulldozeAt(gx, gy) {
   updatePopulation();
   updateStars();
   showToast('Bulldozed: ' + def.name + '  (+$' + formatMoney(refund) + ')');
+  logEvent('Bulldozed ' + def.name + ' @ floor ' + floorLabel(unit.y) + ' (+$' + formatMoney(refund) + ')');
+  if (state.selectedUnitId === uid) hideUnitInfo();
 }
 
 function rebuildElevators() {
@@ -629,7 +660,33 @@ function tickAgent(a) {
   if (a.waiting) {
     a.waitTicks = (a.waitTicks || 0) + 1;
     if (target && a.waitTicks > 5) target.satFall = (target.satFall || 0) + 1;
+    // Emit complaint bubble after sustained wait; log it once per agent-day
+    if (a.waitTicks === 180 && !a.complained) {
+      a.complained = true;
+      var msg = pickComplaint(a);
+      a.bubble = { text: msg, age: 0, maxAge: 600 };
+      var floorStr = target ? ' (floor ' + floorLabel(target.y) + ')' : '';
+      logEvent(agentLabel(a) + ': "' + msg + '"' + floorStr, 'warn');
+    }
+  } else if (a.waitTicks) {
+    // Finished waiting, keep bubble aging
   }
+  if (a.bubble) { a.bubble.age++; if (a.bubble.age > a.bubble.maxAge) a.bubble = null; }
+}
+
+function agentLabel(a) {
+  return { worker:'Worker', resident:'Resident', hotelGuest:'Hotel guest', patron:'Diner', shopper:'Shopper' }[a.type] || 'Visitor';
+}
+function pickComplaint(a) {
+  var list;
+  if (a.type === 'worker' || a.type === 'resident') {
+    list = ['Elevators too busy!', 'This is taking forever\u2026', 'Add more elevator cars!', 'I\'ll be late again\u2026'];
+  } else if (a.type === 'hotelGuest') {
+    list = ['Where is the elevator?', 'Terrible service.', 'I\'m checking out early.'];
+  } else {
+    list = ['Too slow!', 'Forget this.', 'I\'m leaving.'];
+  }
+  return list[Math.floor(Math.random() * list.length)];
 }
 
 // Move agent toward target (tx, ty). Horizontal walking on current floor, elevator/stairs between.
@@ -827,6 +884,48 @@ function findAgent(id) {
 }
 
 /* ===== ECONOMY ===== */
+function showUnitInfo(uid) {
+  state.selectedUnitId = uid;
+  var u = state.units[uid];
+  if (!u) { hideUnitInfo(); return; }
+  var def = UNITS[u.type];
+  var sat = Math.round(unitSatisfaction(u));
+  var occPct = def.capacity > 0 ? Math.round(u.tenants / def.capacity * 100) : null;
+  var rentLine = def.rent ? '$' + def.rent + '/day (peak)' : (def.nightly ? '$' + def.nightly + '/night/guest' : (def.perVisit ? '$' + def.perVisit + '/visit' : '\u2014'));
+  var upkeep = (u.type === 'lobby' ? 800 : u.type === 'elevator' ? 200 : u.type === 'hotel' ? 120 : u.type === 'restaurant' ? 1200 : u.type === 'shop' ? 400 : 0);
+  // Recent complaints from this unit's tenants
+  var complaints = [];
+  for (var i = state.log.length - 1; i >= 0 && complaints.length < 4; i--) {
+    var e = state.log[i];
+    if (e.severity === 'warn' && e.text.indexOf('(floor ' + floorLabel(u.y) + ')') >= 0) complaints.push(e);
+  }
+  var html = '<span class="close-btn" onclick="hideUnitInfo()">&times;</span>' +
+    '<h4>' + def.name + ' @ floor ' + floorLabel(u.y) + '</h4>';
+  if (def.capacity > 0) {
+    html += '<div class="row"><span>Occupancy</span><span>' + u.tenants + ' / ' + def.capacity + ' (' + occPct + '%)</span></div>';
+    html += '<div class="row"><span>Satisfaction</span><span>' + sat + '%</span></div>';
+    html += '<div class="sat-bar"><div class="sat-fill" style="width:' + sat + '%"></div></div>';
+  }
+  html += '<div class="row"><span>Rent</span><span>' + rentLine + '</span></div>';
+  html += '<div class="row"><span>Upkeep</span><span>$' + upkeep + '/day</span></div>';
+  html += '<div class="row"><span>Size</span><span>' + u.w + '\u00d7' + u.h + ' @ (' + u.x + ',' + floorLabel(u.y) + ')</span></div>';
+  html += '<div class="row"><span>Build cost</span><span>$' + formatMoney(def.cost) + '</span></div>';
+  if (complaints.length) {
+    html += '<div class="complaints"><span style="color:#E0A880;">Recent complaints:</span>';
+    for (var j = 0; j < complaints.length; j++) {
+      html += '<div class="complaint">&bull; ' + complaints[j].text + '</div>';
+    }
+    html += '</div>';
+  }
+  var panel = document.getElementById('infoPanel');
+  panel.innerHTML = html;
+  panel.classList.add('show');
+}
+function hideUnitInfo() {
+  state.selectedUnitId = null;
+  document.getElementById('infoPanel').classList.remove('show');
+}
+
 function unitSatisfaction(u) {
   // satFall accumulates when this unit's tenants wait too long for transport.
   // 100% minus 0.5% per accumulated wait-tick, clamped [0, 100].
@@ -835,6 +934,11 @@ function unitSatisfaction(u) {
 }
 
 function endOfDay() {
+  // Reset daily complaint throttles so tenants can flag new issues tomorrow
+  for (var ai = 0; ai < state.agents.length; ai++) {
+    state.agents[ai].complained = false;
+    state.agents[ai].waitTicks = 0;
+  }
   var income = 0, expenses = 0;
   for (var id in state.units) {
     var u = state.units[id];
@@ -860,6 +964,7 @@ function endOfDay() {
   var net = income - expenses;
   state.cash += net;
   state.yesterdayIncome = net;
+  logEvent('End of day ' + (state.day - 1) + ': income $' + formatMoney(income) + ', upkeep $' + formatMoney(expenses) + ', net ' + (net >= 0 ? '+$' : '-$') + formatMoney(Math.abs(net)), net >= 0 ? 'good' : 'bad');
   updateStars();
 }
 
@@ -883,10 +988,11 @@ function updateStars() {
   if (state.population >= 3000) stars = 4;
   if (state.population >= 5000) stars = 5;
   if (stars > state.stars) {
-    var prev = state.stars;
     state.stars = stars;
     showStarPopup(stars);
+    logEvent('Tower promoted to ' + stars + '\u2605!', 'good');
   } else if (stars < state.stars) {
+    logEvent('Tower demoted to ' + stars + '\u2605', 'bad');
     state.stars = stars;
   }
 }
@@ -959,6 +1065,16 @@ function render() {
   // Units
   for (var id in state.units) {
     drawUnit(state.units[id]);
+  }
+  // Selected-unit highlight (Identify panel open)
+  if (state.selectedUnitId && state.units[state.selectedUnitId]) {
+    var su = state.units[state.selectedUnitId];
+    var stl = worldToScreen(su.x, su.y + su.h - 1);
+    ctx.strokeStyle = '#9ADBFF';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([5, 3]);
+    ctx.strokeRect(stl.x - 1, stl.y - 1, su.w * CELL_W + 2, su.h * CELL_H + 2);
+    ctx.setLineDash([]);
   }
   // Elevator cars
   for (var ei = 0; ei < state.elevators.length; ei++) drawElevatorCar(state.elevators[ei]);
@@ -1196,6 +1312,7 @@ function agentColor(a) {
 
 function drawAgent(a) {
   var displayY = a.y;
+  var drawX, drawTop;
   if (a.inElevator) {
     var ridingCar = null;
     for (var ci = 0; ci < a.inElevator.cars.length; ci++) {
@@ -1206,12 +1323,51 @@ function drawAgent(a) {
       var epos = worldToScreen(a.inElevator.shaftX + 0.5, displayY);
       ctx.fillStyle = agentColor(a);
       ctx.fillRect(epos.x - 1, epos.y - CELL_H + 6, 2, CELL_H - 8);
+      drawX = epos.x; drawTop = epos.y - CELL_H + 6;
+      if (a.bubble) drawBubble(a.bubble, drawX, drawTop);
       return;
     }
   }
   var ps = worldToScreen(a.x, displayY);
   ctx.fillStyle = agentColor(a);
   ctx.fillRect(ps.x - 1, ps.y - CELL_H + 6, 2, CELL_H - 8);
+  drawX = ps.x; drawTop = ps.y - CELL_H + 6;
+  if (a.bubble) drawBubble(a.bubble, drawX, drawTop);
+}
+
+function drawBubble(bubble, cx, cy) {
+  var fade = 1;
+  if (bubble.age > bubble.maxAge - 80) fade = Math.max(0, (bubble.maxAge - bubble.age) / 80);
+  ctx.save();
+  ctx.globalAlpha = fade;
+  ctx.font = 'bold 10px Georgia';
+  var m = ctx.measureText(bubble.text);
+  var tw = m.width + 10, th = 16;
+  var bx = cx - tw/2, by = cy - th - 6;
+  // Bubble body
+  ctx.fillStyle = 'rgba(255,248,220,0.95)';
+  ctx.strokeStyle = '#8A6030';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (ctx.roundRect) { ctx.roundRect(bx, by, tw, th, 4); }
+  else { ctx.rect(bx, by, tw, th); }
+  ctx.fill(); ctx.stroke();
+  // Tail
+  ctx.fillStyle = 'rgba(255,248,220,0.95)';
+  ctx.strokeStyle = '#8A6030';
+  ctx.beginPath();
+  ctx.moveTo(cx - 3, by + th);
+  ctx.lineTo(cx, cy - 1);
+  ctx.lineTo(cx + 3, by + th);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  // Text
+  ctx.fillStyle = '#40301A';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(bubble.text, cx, by + th/2);
+  ctx.textBaseline = 'alphabetic';
+  ctx.restore();
 }
 
 function drawHoverPreview() {
@@ -1232,7 +1388,6 @@ function drawHoverPreview() {
   }
   if (!build.mode) return;
   if (build.mode === 'addcar') {
-    // Highlight the elevator shaft cell under cursor
     var uid = state.grid[gx+','+gy];
     if (uid && state.units[uid] && UNITS[state.units[uid].type] && UNITS[state.units[uid].type].isElevator) {
       var u = state.units[uid];
@@ -1241,6 +1396,19 @@ function drawHoverPreview() {
       ctx.lineWidth = 2;
       ctx.setLineDash([4, 3]);
       ctx.strokeRect(tl.x + 1, tl.y + 1, u.w * CELL_W - 2, u.h * CELL_H - 2);
+      ctx.setLineDash([]);
+    }
+    return;
+  }
+  if (build.mode === 'identify') {
+    var uidI = state.grid[gx+','+gy];
+    if (uidI && state.units[uidI]) {
+      var uI = state.units[uidI];
+      var tlI = worldToScreen(uI.x, uI.y + uI.h - 1);
+      ctx.strokeStyle = '#9ADBFF';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([3, 2]);
+      ctx.strokeRect(tlI.x + 1, tlI.y + 1, uI.w * CELL_W - 2, uI.h * CELL_H - 2);
       ctx.setLineDash([]);
     }
     return;
@@ -1322,6 +1490,9 @@ function onClick(e) {
     bulldozeAt(cell.x, cell.y);
   } else if (build.mode === 'addcar') {
     addElevatorCar(cell.x, cell.y);
+  } else if (build.mode === 'identify') {
+    var uid = state.grid[cell.x+','+cell.y];
+    if (uid) showUnitInfo(uid); else hideUnitInfo();
   } else if (build.mode) {
     placeUnit(build.mode, cell.x, cell.y);
   }
@@ -1363,6 +1534,41 @@ function updateHUD() {
   var starStr = '';
   for (var i = 0; i < 5; i++) starStr += (i < state.stars) ? '★' : '☆';
   document.getElementById('starDisplay').innerHTML = starStr;
+}
+
+/* ===== EVENT LOG ===== */
+function logEvent(text, severity) {
+  severity = severity || 'info';
+  state.log.push({ day: state.day, minute: state.minute, text: text, severity: severity });
+  if (state.log.length > 300) state.log.shift();
+  state.logUnread++;
+  var btn = document.getElementById('logToggle');
+  if (btn) btn.textContent = 'LOG (' + state.logUnread + ')';
+  if (document.getElementById('logPanel').classList.contains('show')) renderLog();
+}
+
+function toggleLog() {
+  var panel = document.getElementById('logPanel');
+  var btn = document.getElementById('logToggle');
+  var open = !panel.classList.contains('show');
+  panel.classList.toggle('show', open);
+  btn.classList.toggle('active', open);
+  if (open) {
+    state.logUnread = 0;
+    btn.textContent = 'LOG (0)';
+    renderLog();
+  }
+}
+
+function renderLog() {
+  var body = document.getElementById('logBody');
+  if (state.log.length === 0) { body.innerHTML = '<div style="color:#6080A0;font-style:italic;">No events yet.</div>'; return; }
+  var html = '';
+  for (var i = state.log.length - 1; i >= 0; i--) {
+    var e = state.log[i];
+    html += '<div class="log-entry ' + e.severity + '"><span class="log-time">D' + e.day + ' ' + formatTime(e.minute) + '</span>' + e.text + '</div>';
+  }
+  body.innerHTML = html;
 }
 
 function floorLabel(y) {
