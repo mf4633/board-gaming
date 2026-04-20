@@ -396,23 +396,26 @@ function rebuildElevators() {
     var top = y;
     while (state.grid[x+','+(top+1)] && UNITS[state.units[state.grid[x+','+(top+1)]].type].isElevator) top++;
     for (var fy = bot; fy <= top; fy++) used[x+','+fy] = true;
-    // Find existing shaft with same shaftX, overlapping range — preserve cars
-    var carryCars = null, carryUp = {}, carryDown = {};
+    // Find ALL existing shafts at this shaftX that overlap the new range and absorb their cars + queues
+    var carryCars = [], carryUp = {}, carryDown = {};
     for (var pi = 0; pi < prev.length; pi++) {
       var p = prev[pi];
-      if (p.shaftX === x && !(p.maxY < bot || p.minY > top)) {
-        carryCars = p.cars;
-        carryUp = p.queueUp || {};
-        carryDown = p.queueDown || {};
-        break;
-      }
+      if (p.shaftX !== x) continue;
+      if (p.maxY < bot || p.minY > top) continue;
+      for (var pcj = 0; pcj < p.cars.length; pcj++) carryCars.push(p.cars[pcj]);
+      for (var qky in p.queueUp) { if (!carryUp[qky]) carryUp[qky] = []; carryUp[qky] = carryUp[qky].concat(p.queueUp[qky]); }
+      for (var qky2 in p.queueDown) { if (!carryDown[qky2]) carryDown[qky2] = []; carryDown[qky2] = carryDown[qky2].concat(p.queueDown[qky2]); }
     }
     var cars;
-    if (carryCars && carryCars.length > 0) {
+    if (carryCars.length > 0) {
       cars = [];
       for (var ci = 0; ci < carryCars.length; ci++) {
         var oc = carryCars[ci];
-        cars.push({ y: Math.max(bot, Math.min(top, oc.y)), floatY: oc.floatY, dir: oc.dir, passengers: oc.passengers.slice(), stopTimer: oc.stopTimer });
+        cars.push({
+          y: Math.max(bot, Math.min(top, oc.y)),
+          floatY: Math.max(bot, Math.min(top, oc.floatY)),
+          dir: oc.dir, passengers: oc.passengers.slice(), stopTimer: oc.stopTimer
+        });
       }
     } else {
       cars = [{ y: bot, floatY: bot, dir: 1, passengers: [], stopTimer: 0 }];
@@ -816,12 +819,17 @@ function tickCar(e, c, carIdx) {
   // SCAN scheduling: move toward demand; reverse when there's none in current direction
   var callsAbove = hasCallsAround(e, c, c.y, +1);
   var callsBelow = hasCallsAround(e, c, c.y, -1);
+  var sameFloorOpposite = c.dir > 0
+    ? (e.queueDown[c.y] && e.queueDown[c.y].length > 0)
+    : (e.queueUp[c.y] && e.queueUp[c.y].length > 0);
   if (c.dir > 0) {
     if (c.y < e.maxY && callsAbove && !collides(c.y + 1)) c.y++;
     else if (c.y > e.minY && callsBelow && !collides(c.y - 1)) { c.dir = -1; c.y--; }
+    else if (sameFloorOpposite) c.dir = -1;   // passenger at our floor waiting to go down — flip, pickup next tick
   } else {
     if (c.y > e.minY && callsBelow && !collides(c.y - 1)) c.y--;
     else if (c.y < e.maxY && callsAbove && !collides(c.y + 1)) { c.dir = 1; c.y++; }
+    else if (sameFloorOpposite) c.dir = 1;
   }
 }
 
