@@ -911,23 +911,26 @@ function render() {
   ctx.fillRect(0, 0, W, H);
   // Stars at night
   if (h < 6 || h > 20) drawStars(W, H);
-  // Underground: earth/dirt fill everything below the ground floor's bottom line
-  var groundTopY = worldToScreen(0, 1).y;        // top of floor 1 = ground floor ceiling
-  var groundBottomY = worldToScreen(0, 0).y;     // top of basement-1 = ground floor FLOOR
-  var earthGrad = ctx.createLinearGradient(0, groundBottomY, 0, H);
+  // Geometry reminder: a unit at floor y occupies screen rows
+  // [worldToScreen(0, y).y, worldToScreen(0, y).y + CELL_H).
+  // So the ground floor (y=0) spans [worldToScreen(0,0).y, worldToScreen(0,-1).y).
+  var floor0TopY = worldToScreen(0, 0).y;        // TOP of the ground-floor row on screen
+  var streetY   = worldToScreen(0, -1).y;        // BOTTOM of the ground-floor row = street/soil line
+  // Underground: earth below the street line
+  var earthGrad = ctx.createLinearGradient(0, streetY, 0, H);
   earthGrad.addColorStop(0, '#4A3020');
   earthGrad.addColorStop(1, '#241308');
   ctx.fillStyle = earthGrad;
-  ctx.fillRect(0, groundBottomY, W, H - groundBottomY);
-  // Sidewalk strip (3 px) right at ground-floor level — the "street" the tower sits on
+  ctx.fillRect(0, streetY, W, H - streetY);
+  // Sidewalk strip right at the street (above the earth)
   ctx.fillStyle = '#9AA0A8';
-  ctx.fillRect(0, groundBottomY - 3, W, 3);
+  ctx.fillRect(0, streetY - 3, W, 3);
   ctx.fillStyle = '#6A7078';
-  for (var sx = 0; sx < W; sx += 28) ctx.fillRect(sx, groundBottomY - 3, 1, 3);
-  // Strong ground line
+  for (var sx = 0; sx < W; sx += 28) ctx.fillRect(sx, streetY - 3, 1, 3);
+  // Strong ground line at the street
   ctx.strokeStyle = '#8A6A38';
   ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(0, groundBottomY); ctx.lineTo(W, groundBottomY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, streetY); ctx.lineTo(W, streetY); ctx.stroke();
   // Grid lines (subtle)
   ctx.strokeStyle = 'rgba(255,255,255,0.05)';
   ctx.lineWidth = 1;
@@ -945,13 +948,14 @@ function render() {
     ctx.font = y === 0 ? 'bold 12px monospace' : '10px monospace';
     ctx.fillText(floorLabel(y), 6, sp2.y - 5);
   }
-  // "GROUND FLOOR" watermark along the street
+  // "GROUND FLOOR" watermark IN the ground-floor row (centered vertically in floor 0's band)
+  var gfMidY = (floor0TopY + streetY) / 2 + 4;
   ctx.fillStyle = 'rgba(255,208,96,0.28)';
   ctx.font = 'bold 13px Georgia';
   ctx.textAlign = 'left';
-  ctx.fillText('\u2014 GROUND FLOOR', 28, groundBottomY - 6);
+  ctx.fillText('\u2014 GROUND FLOOR', 28, gfMidY);
   ctx.textAlign = 'right';
-  ctx.fillText('GROUND FLOOR \u2014', W - 28, groundBottomY - 6);
+  ctx.fillText('GROUND FLOOR \u2014', W - 28, gfMidY);
   // Units
   for (var id in state.units) {
     drawUnit(state.units[id]);
@@ -960,13 +964,13 @@ function render() {
   for (var ei = 0; ei < state.elevators.length; ei++) drawElevatorCar(state.elevators[ei]);
   // Agents
   for (var i = 0; i < state.agents.length; i++) drawAgent(state.agents[i]);
-  // While Lobby is the active tool, softly highlight the ground-floor row
+  // While Lobby is the active tool, softly highlight the actual ground-floor row (floor y=0)
   if (build.mode === 'lobby') {
-    var gTop = worldToScreen(0, 1).y;
-    var gBot = worldToScreen(0, 0).y;
-    ctx.fillStyle = 'rgba(255,208,96,0.14)';
+    var gTop = worldToScreen(0, 0).y;
+    var gBot = worldToScreen(0, -1).y;
+    ctx.fillStyle = 'rgba(255,208,96,0.18)';
     ctx.fillRect(0, gTop, W, gBot - gTop);
-    ctx.strokeStyle = 'rgba(255,208,96,0.7)';
+    ctx.strokeStyle = 'rgba(255,208,96,0.75)';
     ctx.setLineDash([6, 4]);
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(0, gTop); ctx.lineTo(W, gTop); ctx.stroke();
