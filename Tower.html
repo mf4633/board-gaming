@@ -230,6 +230,8 @@ function renderPalette() {
             '<span class="pb-cost">' + sz + ' $' + Math.round(u.cost/1000) + 'k</span>' +
             '</div>';
   }
+  html += '<div class="pal-btn" data-unit="addcar" onclick="setBuild(\'addcar\')">' +
+          '<span class="pb-name">+ Car</span><span class="pb-cost">$80k</span></div>';
   html += '<div class="pal-btn bulldoze" data-unit="bulldoze" onclick="setBuild(null, true)">' +
           '<span class="pb-name">Bulldoze</span><span class="pb-cost">free</span></div>';
   p.innerHTML = html;
@@ -347,7 +349,8 @@ function bulldozeAt(gx, gy) {
 }
 
 function rebuildElevators() {
-  // Group vertically adjacent elevator cells into shafts. Each shaft has one car for now.
+  // Keep existing shafts' car configs if the shaft at same (shaftX, minY-ish) still exists
+  var prev = state.elevators || [];
   state.elevators = [];
   var used = {};
   for (var key in state.grid) {
@@ -355,7 +358,6 @@ function rebuildElevators() {
     var unit = state.units[uid];
     if (!unit || !UNITS[unit.type].isElevator) continue;
     if (used[key]) continue;
-    // walk down to bottom of shaft
     var parts = key.split(',');
     var x = parseInt(parts[0]);
     var y = parseInt(parts[1]);
@@ -364,10 +366,50 @@ function rebuildElevators() {
     var top = y;
     while (state.grid[x+','+(top+1)] && UNITS[state.units[state.grid[x+','+(top+1)]].type].isElevator) top++;
     for (var fy = bot; fy <= top; fy++) used[x+','+fy] = true;
+    // Find existing shaft with same shaftX, overlapping range — preserve cars
+    var carryCars = null, carryUp = {}, carryDown = {};
+    for (var pi = 0; pi < prev.length; pi++) {
+      var p = prev[pi];
+      if (p.shaftX === x && !(p.maxY < bot || p.minY > top)) {
+        carryCars = p.cars;
+        carryUp = p.queueUp || {};
+        carryDown = p.queueDown || {};
+        break;
+      }
+    }
+    var cars;
+    if (carryCars && carryCars.length > 0) {
+      cars = [];
+      for (var ci = 0; ci < carryCars.length; ci++) {
+        var oc = carryCars[ci];
+        cars.push({ y: Math.max(bot, Math.min(top, oc.y)), floatY: oc.floatY, dir: oc.dir, passengers: oc.passengers.slice(), stopTimer: oc.stopTimer });
+      }
+    } else {
+      cars = [{ y: bot, floatY: bot, dir: 1, passengers: [], stopTimer: 0 }];
+    }
     state.elevators.push({
       shaftX: x, minY: bot, maxY: top,
-      car: { y: bot, floatY: bot, dir: 1, passengers: [], queueUp: {}, queueDown: {}, stopTimer: 0 }
+      queueUp: carryUp, queueDown: carryDown,
+      cars: cars
     });
+  }
+}
+
+function addElevatorCar(gx, gy) {
+  var uid = state.grid[gx+','+gy];
+  if (!uid) { showToast('Click an existing elevator shaft'); return; }
+  var unit = state.units[uid];
+  if (!UNITS[unit.type].isElevator) { showToast('Not an elevator'); return; }
+  if (state.cash < 80000) { showToast('Need $80,000'); return; }
+  for (var ei = 0; ei < state.elevators.length; ei++) {
+    var e = state.elevators[ei];
+    if (gx === e.shaftX && gy >= e.minY && gy <= e.maxY) {
+      if (e.cars.length >= 4) { showToast('Max 4 cars per shaft'); return; }
+      e.cars.push({ y: e.minY, floatY: e.minY, dir: 1, passengers: [], stopTimer: 0 });
+      state.cash -= 80000;
+      showToast('Added elevator car (+1, now ' + e.cars.length + ')');
+      return;
+    }
   }
 }
 
@@ -556,6 +598,9 @@ function spawnShopPatrons() {
 
 function tickAgent(a) {
   if (a.walkDelay && a.walkDelay > 0) { a.walkDelay--; return; }
+  if (a.waitTicks === undefined) a.waitTicks = 0;
+  var wasWaiting = a.waiting;
+  a.waiting = false;
   var target = a.unitId && state.units[a.unitId];
   if (!target && a.phase !== 'leaving') { a.phase = 'leaving'; }
   if (a.phase === 'toWork' || a.phase === 'toHome') {
@@ -565,7 +610,6 @@ function tickAgent(a) {
       a.phase = (a.phase === 'toWork') ? 'atWork' : 'atHome';
     }
   } else if (a.phase === 'atWork' || a.phase === 'atHome') {
-    // Shoppers time out and leave after visiting
     if (a.type === 'shopper') {
       a.visitTimer--;
       if (a.visitTimer <= 0) {
@@ -577,9 +621,13 @@ function tickAgent(a) {
     if (stepToward(a, GRID_W/2, 0)) {
       a.state = 'gone';
       if (target) target.tenants = Math.max(0, target.tenants - 1);
-      // Patron / visitor pays on departure if not already paid
       if (a.payment) { state.dayRevenue = (state.dayRevenue || 0) + a.payment; a.payment = 0; }
     }
+  }
+  // Wait-time accounting: penalize sitting in elevator queue
+  if (a.waiting) {
+    a.waitTicks = (a.waitTicks || 0) + 1;
+    if (target && a.waitTicks > 5) target.satFall = (target.satFall || 0) + 1;
   }
 }
 
@@ -611,14 +659,13 @@ function stepToward(a, tx, ty) {
       return false;
     }
     if (transport.kind === 'elevator') {
-      // Call elevator to our floor
       var elev = state.elevators[transport.elevIdx];
       if (!elev) return false;
       var goingUp = ty > a.y;
-      var queue = goingUp ? elev.car.queueUp : elev.car.queueDown;
+      var queue = goingUp ? elev.queueUp : elev.queueDown;
       if (!queue[a.y]) queue[a.y] = [];
       if (queue[a.y].indexOf(a.id) < 0) queue[a.y].push(a.id);
-      // Wait for car to arrive and pick us up. tickElevator handles pickup.
+      a.waiting = true;
       return false;
     }
   }
@@ -662,8 +709,10 @@ function findBestTransport(ax, ay, targetY) {
 
 /* ===== ELEVATOR ===== */
 function tickElevator(e) {
-  var c = e.car;
-  // Smooth visual Y toward logical Y
+  for (var ci = 0; ci < e.cars.length; ci++) tickCar(e, e.cars[ci], ci);
+}
+
+function tickCar(e, c, carIdx) {
   c.floatY += (c.y - c.floatY) * 0.15;
   if (c.stopTimer > 0) { c.stopTimer--; return; }
   // Unload passengers whose destination is this floor
@@ -678,8 +727,8 @@ function tickElevator(e) {
       c.stopTimer = 8;
     }
   }
-  // Pick up waiting passengers on this floor matching current direction
-  var queue = c.dir > 0 ? c.queueUp : c.queueDown;
+  // Pick up passengers on this floor going in our direction
+  var queue = c.dir > 0 ? e.queueUp : e.queueDown;
   if (queue[c.y] && queue[c.y].length > 0) {
     var pickingUp = queue[c.y].slice();
     var maxCap = 8;
@@ -687,23 +736,27 @@ function tickElevator(e) {
       var a2 = findAgent(pickingUp[j]);
       if (!a2) continue;
       a2.inElevator = e;
+      a2.waitTicks = 0;
       c.passengers.push(a2.id);
       queue[c.y].splice(queue[c.y].indexOf(pickingUp[j]), 1);
       c.stopTimer = 8;
     }
   }
   if (c.stopTimer > 0) return;
-  // Decide next move
-  var upstreamCalls = anyCalls(c, c.y + 1, e.maxY, c.dir);
-  var downstreamCalls = anyCalls(c, e.minY, c.y - 1, c.dir);
+  // Next-move decision with multi-car awareness: avoid collision and share calls
+  var otherYs = [];
+  for (var oi = 0; oi < e.cars.length; oi++) { if (oi !== carIdx) otherYs.push(e.cars[oi].y); }
+  var upCalls = anyCallsInRange(e, c, c.y + 1, e.maxY, c.dir);
+  var downCalls = anyCallsInRange(e, c, e.minY, c.y - 1, c.dir);
+  var collides = function(ny) { return otherYs.indexOf(ny) >= 0; };
   if (c.dir > 0) {
-    if (c.y < e.maxY && upstreamCalls) c.y++;
-    else if (c.y > e.minY && downstreamCalls) { c.dir = -1; c.y--; }
-    else if (c.passengers.length === 0 && c.y > e.minY && !anyAnyCalls(c)) { c.dir = -1; c.y--; }
+    if (c.y < e.maxY && upCalls && !collides(c.y + 1)) c.y++;
+    else if (c.y > e.minY && downCalls && !collides(c.y - 1)) { c.dir = -1; c.y--; }
+    else if (c.passengers.length === 0 && c.y > e.minY && !anyAnyCallsShaft(e) && !collides(c.y - 1)) { c.dir = -1; c.y--; }
   } else {
-    if (c.y > e.minY && downstreamCalls) c.y--;
-    else if (c.y < e.maxY && upstreamCalls) { c.dir = 1; c.y++; }
-    else if (c.passengers.length === 0 && c.y < e.maxY && !anyAnyCalls(c)) { c.dir = 1; c.y++; }
+    if (c.y > e.minY && downCalls && !collides(c.y - 1)) c.y--;
+    else if (c.y < e.maxY && upCalls && !collides(c.y + 1)) { c.dir = 1; c.y++; }
+    else if (c.passengers.length === 0 && c.y < e.maxY && !anyAnyCallsShaft(e) && !collides(c.y + 1)) { c.dir = 1; c.y++; }
   }
 }
 
@@ -716,11 +769,10 @@ function desiredFloorForAgent(a) {
   return u.y;
 }
 
-function anyCalls(c, from, to, dir) {
+function anyCallsInRange(e, c, from, to, dir) {
   for (var y = from; y <= to; y++) {
-    var q = dir > 0 ? c.queueUp : c.queueDown;
+    var q = dir > 0 ? e.queueUp : e.queueDown;
     if (q[y] && q[y].length > 0) return true;
-    // Also passengers aboard heading this way
     for (var p = 0; p < c.passengers.length; p++) {
       var a = findAgent(c.passengers[p]);
       if (!a) continue;
@@ -730,9 +782,9 @@ function anyCalls(c, from, to, dir) {
   }
   return false;
 }
-function anyAnyCalls(c) {
-  for (var y in c.queueUp) if (c.queueUp[y].length > 0) return true;
-  for (var y in c.queueDown) if (c.queueDown[y].length > 0) return true;
+function anyAnyCallsShaft(e) {
+  for (var y in e.queueUp) if (e.queueUp[y].length > 0) return true;
+  for (var y in e.queueDown) if (e.queueDown[y].length > 0) return true;
   return false;
 }
 function findAgent(id) {
@@ -741,16 +793,26 @@ function findAgent(id) {
 }
 
 /* ===== ECONOMY ===== */
+function unitSatisfaction(u) {
+  // satFall accumulates when this unit's tenants wait too long for transport.
+  // 100% minus 0.5% per accumulated wait-tick, clamped [0, 100].
+  var fall = u.satFall || 0;
+  return Math.max(0, 100 - fall * 0.5);
+}
+
 function endOfDay() {
   var income = 0, expenses = 0;
   for (var id in state.units) {
     var u = state.units[id];
     var def = UNITS[u.type];
-    // Rent from residents/workers: proportional to occupancy
+    // Rent scaled by occupancy AND satisfaction
     if (def.rent && def.capacity > 0) {
       var occ = u.tenants / def.capacity;
-      income += Math.round(def.rent * occ);
+      var sat = unitSatisfaction(u) / 100;
+      income += Math.round(def.rent * occ * (0.4 + 0.6 * sat));
     }
+    // Decay satFall so yesterday's misery doesn't haunt forever
+    if (u.satFall) u.satFall = Math.max(0, u.satFall - 30);
     // Upkeep
     if (u.type === 'lobby') expenses += 800;
     if (u.type === 'elevator') expenses += 200;
@@ -965,23 +1027,23 @@ function drawUnit(u) {
 }
 
 function drawElevatorCar(e) {
-  var c = e.car;
-  var center = worldToScreen(e.shaftX + 0.5, 0);
-  var floorScreen = worldToScreen(e.shaftX, c.floatY + 1 - 1);
-  var ySnap = canvas.clientHeight - state.camY - c.floatY * CELL_H - CELL_H;
-  var cx = center.x;
-  var w = CELL_W - 4, h = CELL_H - 4;
-  ctx.fillStyle = '#FFD060';
-  ctx.fillRect(cx - w/2, ySnap + 2, w, h);
-  ctx.strokeStyle = '#9A7020';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(cx - w/2 + 0.5, ySnap + 2.5, w - 1, h - 1);
-  // Number of passengers
-  if (c.passengers.length > 0) {
-    ctx.fillStyle = '#1A1A1A';
-    ctx.font = 'bold 9px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(c.passengers.length, cx, ySnap + h - 2);
+  for (var ci = 0; ci < e.cars.length; ci++) {
+    var c = e.cars[ci];
+    var center = worldToScreen(e.shaftX + 0.5, 0);
+    var ySnap = canvas.clientHeight - state.camY - c.floatY * CELL_H - CELL_H;
+    var cx = center.x;
+    var w = CELL_W - 4, h = CELL_H - 4;
+    ctx.fillStyle = '#FFD060';
+    ctx.fillRect(cx - w/2, ySnap + 2, w, h);
+    ctx.strokeStyle = '#9A7020';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(cx - w/2 + 0.5, ySnap + 2.5, w - 1, h - 1);
+    if (c.passengers.length > 0) {
+      ctx.fillStyle = '#1A1A1A';
+      ctx.font = 'bold 9px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(c.passengers.length, cx, ySnap + h - 2);
+    }
   }
 }
 
@@ -997,11 +1059,17 @@ function agentColor(a) {
 function drawAgent(a) {
   var displayY = a.y;
   if (a.inElevator) {
-    displayY = a.inElevator.car.floatY;
-    var epos = worldToScreen(a.inElevator.shaftX + 0.5, displayY);
-    ctx.fillStyle = agentColor(a);
-    ctx.fillRect(epos.x - 1, epos.y - CELL_H + 6, 2, CELL_H - 8);
-    return;
+    var ridingCar = null;
+    for (var ci = 0; ci < a.inElevator.cars.length; ci++) {
+      if (a.inElevator.cars[ci].passengers.indexOf(a.id) >= 0) { ridingCar = a.inElevator.cars[ci]; break; }
+    }
+    if (ridingCar) {
+      displayY = ridingCar.floatY;
+      var epos = worldToScreen(a.inElevator.shaftX + 0.5, displayY);
+      ctx.fillStyle = agentColor(a);
+      ctx.fillRect(epos.x - 1, epos.y - CELL_H + 6, 2, CELL_H - 8);
+      return;
+    }
   }
   var ps = worldToScreen(a.x, displayY);
   ctx.fillStyle = agentColor(a);
@@ -1067,7 +1135,9 @@ function onMouseMove(e) {
       var u = state.units[uid];
       var def = UNITS[u.type];
       var cap = def.capacity > 0 ? (u.tenants + '/' + def.capacity) : '';
-      tip.innerHTML = '<b>' + def.name + '</b>' + (cap ? ' &middot; ' + cap : '') + (def.rent ? '<br>Rent: $' + def.rent + '/day' : '');
+      var sat = unitSatisfaction(u);
+      var satLine = def.capacity > 0 ? '<br>Satisfaction: ' + Math.round(sat) + '%' : '';
+      tip.innerHTML = '<b>' + def.name + '</b>' + (cap ? ' &middot; ' + cap : '') + (def.rent ? '<br>Rent: $' + def.rent + '/day' : '') + satLine;
       tip.style.left = (e.clientX + 12) + 'px';
       tip.style.top = (e.clientY + 12) + 'px';
       tip.classList.add('show');
@@ -1097,6 +1167,8 @@ function onClick(e) {
   var cell = screenToCell(sx, sy);
   if (build.bulldoze) {
     bulldozeAt(cell.x, cell.y);
+  } else if (build.mode === 'addcar') {
+    addElevatorCar(cell.x, cell.y);
   } else if (build.mode) {
     placeUnit(build.mode, cell.x, cell.y);
   }
