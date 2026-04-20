@@ -152,15 +152,19 @@ var UNITS = {
   lobby:    { name:'Lobby',     w:8, h:1, cost:200000, rent:0,    color:'#D8C28A', textColor:'#5A4A2A', groundOnly:true, capacity:0 },
   office:   { name:'Office',    w:4, h:1, cost:50000,  rent:3000, color:'#8AA0D0', textColor:'#1A2A50', capacity:6 },
   condo:    { name:'Condo',     w:4, h:1, cost:70000,  rent:2200, color:'#D0A090', textColor:'#5A2A20', capacity:3 },
+  hotel:    { name:'Hotel Rm',  w:3, h:1, cost:45000,  rent:0,    color:'#C098B8', textColor:'#3A1A30', capacity:2, nightly:180 },
+  restaurant:{ name:'Restaurant',w:6, h:1, cost:180000, rent:0,   color:'#E0A860', textColor:'#5A3010', capacity:24, perVisit:22 },
+  shop:     { name:'Shop',      w:4, h:1, cost:90000,  rent:0,    color:'#98D0A8', textColor:'#204028', capacity:12, perVisit:14 },
   stairs:   { name:'Stairs',    w:2, h:1, cost:15000,  rent:0,    color:'#909898', textColor:'#303838', capacity:0 },
   elevator: { name:'Elevator',  w:1, h:1, cost:60000,  rent:0,    color:'#7A7A82', textColor:'#FFF', capacity:0, isElevator:true }
 };
-var PAL_ORDER = ['lobby','office','condo','stairs','elevator'];
+var PAL_ORDER = ['lobby','office','condo','hotel','restaurant','shop','stairs','elevator'];
 
 /* ===== STATE ===== */
 var state = {
   cash: 2000000,
   yesterdayIncome: null,
+  dayRevenue: 0,
   units: {},            // id → { id, type, x, y, w, h, tenants, lastRent }
   grid: {},             // "x,y" → unitId
   nextUnitId: 1,
@@ -323,11 +327,9 @@ function bulldozeAt(gx, gy) {
   var uid = state.grid[gx+','+gy];
   if (!uid) return;
   var unit = state.units[uid];
-  // Kick out occupants
   for (var i = state.agents.length - 1; i >= 0; i--) {
     if (state.agents[i].unitId === uid) state.agents.splice(i, 1);
   }
-  // Remove grid cells
   for (var dx = 0; dx < unit.w; dx++) {
     for (var dy = 0; dy < unit.h; dy++) {
       delete state.grid[(unit.x+dx) + ',' + (unit.y+dy)];
@@ -335,10 +337,13 @@ function bulldozeAt(gx, gy) {
   }
   delete state.units[uid];
   var def = UNITS[unit.type];
+  // 50% refund
+  var refund = Math.round(def.cost * 0.5);
+  state.cash += refund;
   if (def.isElevator) rebuildElevators();
   updatePopulation();
   updateStars();
-  showToast('Bulldozed: ' + def.name);
+  showToast('Bulldozed: ' + def.name + '  (+$' + formatMoney(refund) + ')');
 }
 
 function rebuildElevators() {
@@ -399,12 +404,22 @@ function formatTime(m) {
 /* ===== SIMULATION ===== */
 function simMinute() {
   var h = Math.floor(state.minute / 60);
-  // Spawn office workers at ~8am and have them leave at ~5pm
   if (state.minute === 8 * 60) spawnWorkers();
   if (state.minute === 17 * 60) releaseWorkers();
-  // Condo residents: spawn at 6pm-ish, leave 8am
   if (state.minute === 18 * 60) spawnResidents();
   if (state.minute === 8 * 60 + 30) releaseResidents();
+  // Hotel guests: arrive 6pm-10pm random, check out 8am-10am
+  if (state.minute >= 18 * 60 && state.minute <= 22 * 60 && state.minute % 5 === 0) spawnHotelGuests();
+  if (state.minute === 9 * 60) checkoutHotelGuests();
+  // Restaurant rushes: noon-1pm (lunch), 6pm-8pm (dinner)
+  if (state.minute === 11 * 60 + 30) startRushLunch();
+  if (state.minute === 12 * 60 + 30) stopRushLunch();
+  if (state.minute === 17 * 60 + 30) startRushDinner();
+  if (state.minute === 19 * 60 + 30) stopRushDinner();
+  // Shop patrons trickle 10am-9pm
+  if (state.minute >= 10 * 60 && state.minute <= 21 * 60 && state.minute % 6 === 0) spawnShopPatrons();
+  // Restaurant patrons trickle during rushes
+  if ((rushActive.lunch || rushActive.dinner) && state.minute % 4 === 0) spawnRestaurantPatrons();
 
   for (var i = state.agents.length - 1; i >= 0; i--) {
     tickAgent(state.agents[i]);
@@ -460,6 +475,85 @@ function releaseResidents() {
   }
 }
 
+function spawnHotelGuests() {
+  for (var id in state.units) {
+    var u = state.units[id];
+    if (u.type !== 'hotel') continue;
+    var def = UNITS.hotel;
+    var free = def.capacity - u.tenants;
+    if (free <= 0) continue;
+    if (Math.random() < 0.35) {
+      state.agents.push({
+        id: state.nextAgentId++, type: 'hotelGuest',
+        x: GRID_W/2, y: 0, phase: 'toHome', unitId: u.id, walkDelay: Math.random() * 40,
+        payment: def.nightly
+      });
+      u.tenants++;
+    }
+  }
+}
+function checkoutHotelGuests() {
+  for (var i = 0; i < state.agents.length; i++) {
+    var a = state.agents[i];
+    if (a.type === 'hotelGuest') {
+      a.phase = 'leaving';
+      if (a.payment) { state.dayRevenue = (state.dayRevenue || 0) + a.payment; a.payment = 0; }
+    }
+  }
+}
+
+var rushActive = { lunch:false, dinner:false };
+function startRushLunch() { rushActive.lunch = true; }
+function stopRushLunch() { rushActive.lunch = false; releaseRestaurantPatrons('lunch'); }
+function startRushDinner() { rushActive.dinner = true; }
+function stopRushDinner() { rushActive.dinner = false; releaseRestaurantPatrons('dinner'); }
+function releaseRestaurantPatrons(meal) {
+  for (var i = 0; i < state.agents.length; i++) {
+    var a = state.agents[i];
+    if (a.type === 'patron' && a.meal === meal) a.phase = 'leaving';
+  }
+}
+
+// Tick-called spawning: restaurant patrons spawn every few minutes during a rush
+function spawnRestaurantPatrons() {
+  if (!rushActive.lunch && !rushActive.dinner) return;
+  var meal = rushActive.lunch ? 'lunch' : 'dinner';
+  for (var id in state.units) {
+    var u = state.units[id];
+    if (u.type !== 'restaurant') continue;
+    var def = UNITS.restaurant;
+    var free = def.capacity - u.tenants;
+    if (free <= 0) continue;
+    var want = Math.min(free, 2 + Math.floor(Math.random() * 3));
+    for (var k = 0; k < want; k++) {
+      state.agents.push({
+        id: state.nextAgentId++, type: 'patron', meal: meal,
+        x: GRID_W/2, y: 0, phase: 'toHome', unitId: u.id, walkDelay: Math.random() * 20,
+        payment: def.perVisit
+      });
+      u.tenants++;
+    }
+  }
+}
+
+function spawnShopPatrons() {
+  for (var id in state.units) {
+    var u = state.units[id];
+    if (u.type !== 'shop') continue;
+    var def = UNITS.shop;
+    var free = def.capacity - u.tenants;
+    if (free <= 0) continue;
+    if (Math.random() < 0.4) {
+      state.agents.push({
+        id: state.nextAgentId++, type: 'shopper',
+        x: GRID_W/2, y: 0, phase: 'toHome', unitId: u.id, walkDelay: Math.random() * 15,
+        payment: def.perVisit, visitTimer: 60 + Math.floor(Math.random() * 120)
+      });
+      u.tenants++;
+    }
+  }
+}
+
 function tickAgent(a) {
   if (a.walkDelay && a.walkDelay > 0) { a.walkDelay--; return; }
   var target = a.unitId && state.units[a.unitId];
@@ -471,11 +565,20 @@ function tickAgent(a) {
       a.phase = (a.phase === 'toWork') ? 'atWork' : 'atHome';
     }
   } else if (a.phase === 'atWork' || a.phase === 'atHome') {
-    // Idle at target unit
+    // Shoppers time out and leave after visiting
+    if (a.type === 'shopper') {
+      a.visitTimer--;
+      if (a.visitTimer <= 0) {
+        a.phase = 'leaving';
+        if (a.payment) { state.dayRevenue = (state.dayRevenue || 0) + a.payment; a.payment = 0; }
+      }
+    }
   } else if (a.phase === 'leaving') {
     if (stepToward(a, GRID_W/2, 0)) {
       a.state = 'gone';
       if (target) target.tenants = Math.max(0, target.tenants - 1);
+      // Patron / visitor pays on departure if not already paid
+      if (a.payment) { state.dayRevenue = (state.dayRevenue || 0) + a.payment; a.payment = 0; }
     }
   }
 }
@@ -643,7 +746,7 @@ function endOfDay() {
   for (var id in state.units) {
     var u = state.units[id];
     var def = UNITS[u.type];
-    // Rent: proportional to occupancy
+    // Rent from residents/workers: proportional to occupancy
     if (def.rent && def.capacity > 0) {
       var occ = u.tenants / def.capacity;
       income += Math.round(def.rent * occ);
@@ -651,7 +754,13 @@ function endOfDay() {
     // Upkeep
     if (u.type === 'lobby') expenses += 800;
     if (u.type === 'elevator') expenses += 200;
+    if (u.type === 'hotel') expenses += 120;
+    if (u.type === 'restaurant') expenses += 1200;
+    if (u.type === 'shop') expenses += 400;
   }
+  // Visit-based revenue accumulated during the day (shops, hotel checkouts, restaurants)
+  income += Math.round(state.dayRevenue || 0);
+  state.dayRevenue = 0;
   var net = income - expenses;
   state.cash += net;
   state.yesterdayIncome = net;
@@ -800,6 +909,42 @@ function drawUnit(u) {
     ctx.font = 'bold 8px Georgia';
     ctx.textAlign = 'center';
     ctx.fillText('CONDO', x + w/2, y + h - 4);
+  } else if (u.type === 'hotel') {
+    var h4 = state.minute / 60;
+    var lit3 = (u.tenants > 0 && (h4 < 7 || h4 >= 21));
+    ctx.fillStyle = lit3 ? '#FFB880' : '#3A1A30';
+    for (var xh = 0; xh < 3; xh++) {
+      var wx3 = x + 4 + xh * ((w - 8) / 3);
+      ctx.fillRect(wx3, y + 4, (w - 8) / 3 - 2, h - 8);
+    }
+    ctx.fillStyle = def.textColor;
+    ctx.font = 'bold 8px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('HOTEL', x + w/2, y + h - 4);
+  } else if (u.type === 'restaurant') {
+    // Awning + tables
+    ctx.fillStyle = '#FFE0B0';
+    ctx.fillRect(x + 3, y + 5, w - 6, h - 10);
+    ctx.fillStyle = '#A04020';
+    for (var rx = 0; rx < 4; rx++) { ctx.fillRect(x + 6 + rx*((w-12)/4), y + 5, 3, 3); }
+    ctx.fillStyle = def.textColor;
+    ctx.font = 'bold 9px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('RESTAURANT', x + w/2, y + h/2 + 1);
+    if (u.tenants > 0) {
+      ctx.fillStyle = '#805030';
+      ctx.font = 'bold 7px monospace';
+      ctx.fillText(u.tenants + ' diners', x + w/2, y + h - 3);
+    }
+  } else if (u.type === 'shop') {
+    ctx.fillStyle = '#FFFFE0';
+    ctx.fillRect(x + 3, y + 4, w - 6, h - 8);
+    ctx.fillStyle = '#406050';
+    ctx.fillRect(x + 3, y + 4, w - 6, 3);
+    ctx.fillStyle = def.textColor;
+    ctx.font = 'bold 9px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('SHOP', x + w/2, y + h/2 + 2);
   } else if (u.type === 'stairs') {
     ctx.strokeStyle = '#404850';
     ctx.lineWidth = 1.5;
@@ -840,17 +985,26 @@ function drawElevatorCar(e) {
   }
 }
 
+function agentColor(a) {
+  if (a.type === 'worker') return '#4A80D0';
+  if (a.type === 'resident') return '#D06060';
+  if (a.type === 'hotelGuest') return '#B080C0';
+  if (a.type === 'patron') return '#E0A040';
+  if (a.type === 'shopper') return '#60C080';
+  return '#FFF';
+}
+
 function drawAgent(a) {
   var displayY = a.y;
   if (a.inElevator) {
     displayY = a.inElevator.car.floatY;
     var epos = worldToScreen(a.inElevator.shaftX + 0.5, displayY);
-    ctx.fillStyle = a.type === 'worker' ? '#4A80D0' : '#D06060';
+    ctx.fillStyle = agentColor(a);
     ctx.fillRect(epos.x - 1, epos.y - CELL_H + 6, 2, CELL_H - 8);
     return;
   }
   var ps = worldToScreen(a.x, displayY);
-  ctx.fillStyle = a.type === 'worker' ? '#4A80D0' : '#D06060';
+  ctx.fillStyle = agentColor(a);
   ctx.fillRect(ps.x - 1, ps.y - CELL_H + 6, 2, CELL_H - 8);
 }
 
