@@ -275,11 +275,11 @@ function worldToScreen(x, y) {
   return { x: screenX, y: screenY };
 }
 function screenToCell(sx, sy) {
+  // worldToScreen(x,y).y is the TOP of floor y. A unit at floor y occupies screen rows
+  // [worldY(y), worldY(y) + CELL_H). Inverse: y = ceil((H - camY - sy) / CELL_H).
   var cx = canvas.clientWidth / 2;
   var x = Math.floor((sx - cx + state.camX) / CELL_W + GRID_W/2);
-  var y = Math.floor((canvas.clientHeight - sy - state.camY) / CELL_H) + 1;
-  // +1 because floor y's top is at screenY = ...
-  y = y - 1;
+  var y = Math.ceil((canvas.clientHeight - sy - state.camY) / CELL_H);
   return { x: x, y: y };
 }
 
