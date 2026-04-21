@@ -44,7 +44,6 @@
   .meter { margin-bottom: 10px; }
   .meter .mrow { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
   .bar { position: relative; height: 16px; background: #0a1014; border: 1px solid #22303a; overflow: hidden; }
-  .bar .fill { position: absolute; top: 0; bottom: 0; left: 0; background: var(--accent); transition: width 0.1s linear, background 0.2s; opacity: 0.18; }
   .bar .zone { position: absolute; top: 0; bottom: 0; pointer-events: none; }
   .bar .zone-good { background: rgba(102, 187, 106, 0.30); }
   .bar .zone-warn { background: rgba(255, 179, 0, 0.22); }
@@ -213,11 +212,11 @@
         <div class="meter">
           <div class="mrow"><span>GRID <span id="m-hz-v">60.00</span> Hz</span><span style="color:var(--dim)">target 60.00 ±0.3</span></div>
           <div class="bar" id="bar-hz">
-            <div class="zone zone-bad"  style="left:0;width:10%;"></div>
-            <div class="zone zone-warn" style="left:10%;width:20%;"></div>
-            <div class="zone zone-good" style="left:30%;width:40%;"></div>
-            <div class="zone zone-warn" style="left:70%;width:20%;"></div>
-            <div class="zone zone-bad"  style="left:90%;width:10%;"></div>
+            <div class="zone zone-bad"  style="left:0;width:22.5%;"></div>
+            <div class="zone zone-warn" style="left:22.5%;width:12.5%;"></div>
+            <div class="zone zone-good" style="left:35%;width:30%;"></div>
+            <div class="zone zone-warn" style="left:65%;width:12.5%;"></div>
+            <div class="zone zone-bad"  style="left:77.5%;width:22.5%;"></div>
             <div class="mark target" style="left:50%;"></div>
             <div class="mark" id="mk-hz"></div>
           </div>
@@ -324,15 +323,12 @@ const CANVAS_PLAN = document.getElementById('canvas-plan');
 const CTX_PLAN = CANVAS_PLAN.getContext('2d');
 
 // ----- Plant constants (Bonneville-ish, simplified) -----
+// Capacities (turbines, spillway, reservoir area) live on PLANT_STATE — they grow with upgrades.
 const PLANT = {
   elevMin: 71.5, elevMax: 77.5,         // operating band (ft)
   elevLow: 72.0, elevHigh: 77.0,        // preferred band
   tailwaterBase: 12.0,                   // ft (datum)
-  reservoirAreaAcres: 20000,             // Lake Bonneville ~ 20k acres
   headLossPerKcfs: 0.015,                // ft head loss per kcfs turbine flow
-  turbineEff: 0.89,
-  maxTurbineKcfs: 260,
-  maxSpillKcfs: 400,
   nameplateMW: 1077,
   energyPriceBase: 42,                   // $/MWh
 };
@@ -542,7 +538,7 @@ function step(dt) {
   // Lockage forces a navigation-lock chamber cycle — water and one powerhouse unit are committed,
   // reducing effective turbine capacity. Player must ride it out; ignoring it = Coast Guard complaint.
   const lockActive = S._lockageUntil && S.t < S._lockageUntil;
-  const turbCap = lockActive ? (PLANT.maxTurbineKcfs - S._lockDraw) : PLANT.maxTurbineKcfs;
+  const turbCap = lockActive ? (PLANT_STATE.maxTurbineKcfs - S._lockDraw) : PLANT_STATE.maxTurbineKcfs;
   const effTurbQ = Math.min(S.turbQ, turbCap);
   if (lockActive && S.turbQ > turbCap + 1 && !S._lockageWarned) {
     log('⚓ Lock chamber active — powerhouse units 1-2 tripped offline by dispatch override.', 'warn');
@@ -680,20 +676,23 @@ function drawPlan() {
   ctx.fillStyle = '#243230';
   ctx.fillRect(0, 0, W, riverTop);
   ctx.fillRect(0, riverBot, W, H - riverBot);
-  // Tree specks, deterministic so they don't shimmer
+  // Tree specks, batched into one path so it's a single fill call
   ctx.fillStyle = '#18221f';
+  ctx.beginPath();
+  const topBand = Math.floor(riverTop * 0.95);
+  const botBand = Math.floor((H - riverBot) * 0.95);
   for (let i = 0; i < 120; i++) {
-    const seed = i * 9301;
-    const x = (seed % W);
-    const y = ((seed * 7) % Math.floor(riverTop * 0.95));
-    ctx.beginPath(); ctx.arc(x, y, 2 + (i % 3), 0, Math.PI * 2); ctx.fill();
+    const s = i * 9301;
+    ctx.moveTo((s % W) + (2 + (i % 3)), (s * 7) % topBand);
+    ctx.arc((s % W), (s * 7) % topBand, 2 + (i % 3), 0, Math.PI * 2);
   }
   for (let i = 0; i < 120; i++) {
-    const seed = i * 4021 + 17;
-    const x = (seed % W);
-    const y = riverBot + ((seed * 3) % Math.floor((H - riverBot) * 0.95));
-    ctx.beginPath(); ctx.arc(x, y, 2 + (i % 3), 0, Math.PI * 2); ctx.fill();
+    const s = i * 4021 + 17;
+    const y = riverBot + (s * 3) % botBand;
+    ctx.moveTo((s % W) + (2 + (i % 3)), y);
+    ctx.arc((s % W), y, 2 + (i % 3), 0, Math.PI * 2);
   }
+  ctx.fill();
 
   // Upstream reservoir pool
   const poolGrad = ctx.createLinearGradient(0, riverTop, damX, riverBot);
