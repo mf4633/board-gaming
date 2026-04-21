@@ -1,0 +1,3582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Floodline — Flood Engineering Simulator</title>
+<style>
+  :root {
+    --bg: #0a0e14;
+    --panel: #141b26;
+    --panel2: #1d2735;
+    --accent: #7dd3fc;
+    --accent2: #fbbf24;
+    --danger: #ef4444;
+    --ok: #22c55e;
+    --text: #e6edf3;
+    --dim: #94a3b8;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; height: 100%; user-select: none; }
+  #game { display: grid; grid-template-columns: 240px 1fr 260px; grid-template-rows: 48px 1fr 120px; height: 100vh; gap: 4px; padding: 4px; }
+  #topbar { grid-column: 1 / 4; background: var(--panel); border-radius: 6px; display: flex; align-items: center; padding: 0 16px; gap: 16px; }
+  #toolpanel { background: var(--panel); border-radius: 6px; padding: 12px; overflow-y: auto; }
+  #canvaswrap { background: #000; border-radius: 6px; position: relative; overflow: hidden; }
+  #canvas { display: block; width: 100%; height: 100%; cursor: crosshair; image-rendering: pixelated; }
+  #infopanel { background: var(--panel); border-radius: 6px; padding: 12px; overflow-y: auto; }
+  #timeline { grid-column: 1 / 4; background: var(--panel); border-radius: 6px; padding: 10px; position: relative; }
+
+  .stat { display: inline-flex; flex-direction: column; align-items: flex-start; padding: 4px 10px; background: var(--panel2); border-radius: 4px; font-size: 11px; color: var(--dim); }
+  .stat b { font-size: 15px; color: var(--accent); }
+  .stat.warn b { color: var(--accent2); }
+  .stat.danger b { color: var(--danger); }
+
+  h3 { margin: 0 0 8px 0; font-size: 13px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
+  .tool { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; padding: 8px; background: var(--panel2); border-radius: 4px; cursor: pointer; margin-bottom: 6px; border: 2px solid transparent; font-size: 12px; transition: background 0.15s; }
+  .tool:hover { background: #263142; }
+  .tool.active { border-color: var(--accent); background: #1e2c42; }
+  .tool.locked { opacity: 0.4; cursor: not-allowed; }
+  .tool .icon { width: 28px; height: 28px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .tool .cost { color: var(--accent2); font-weight: bold; font-size: 11px; }
+  .tool .desc { color: var(--dim); font-size: 10px; margin-top: 2px; }
+
+  button { background: #2563eb; color: white; border: none; padding: 8px 14px; border-radius: 5px; font-size: 13px; cursor: pointer; font-weight: 500; }
+  button:hover { background: #3b82f6; }
+  button:disabled { background: #374151; cursor: not-allowed; color: #64748b; }
+  button.danger { background: #b91c1c; }
+  button.danger:hover { background: #dc2626; }
+  button.ghost { background: transparent; border: 1px solid #475569; }
+  button.ghost:hover { background: #1e293b; }
+
+  #overlay { position: absolute; inset: 0; background: rgba(5,10,18,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; overflow-y: auto; }
+  .modal { background: var(--panel); border-radius: 8px; padding: 24px 32px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; }
+  .modal h1 { color: var(--accent); margin-top: 0; font-size: 28px; }
+  .modal h2 { color: var(--accent2); font-size: 16px; margin-top: 18px; }
+  .modal p { line-height: 1.5; color: #cbd5e1; }
+
+  .scenarios { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+  .scenario-card { background: var(--panel2); border-radius: 6px; padding: 14px; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+  .scenario-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .scenario-card.locked { opacity: 0.5; cursor: not-allowed; }
+  .scenario-card h3 { margin: 0 0 4px 0; color: var(--text); text-transform: none; font-size: 15px; letter-spacing: 0; }
+  .scenario-card .yr { color: var(--accent); font-size: 12px; font-weight: bold; }
+  .scenario-card .diff { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; background: #475569; margin-top: 6px; }
+  .scenario-card .diff.easy { background: #166534; }
+  .scenario-card .diff.hard { background: #9a3412; }
+  .scenario-card .diff.extreme { background: #7f1d1d; }
+  .scenario-card .blurb { color: var(--dim); font-size: 11px; margin-top: 6px; line-height: 1.4; }
+  .scenario-card .best { color: var(--accent2); font-size: 11px; margin-top: 6px; }
+
+  #hydrograph { width: 100%; height: 100%; display: block; }
+  .msg { color: var(--accent2); font-size: 13px; margin-top: 8px; text-align: center; }
+  .minor { color: var(--dim); font-size: 11px; }
+
+  .objectives { margin-top: 12px; }
+  .obj-item { display: flex; align-items: center; gap: 8px; padding: 6px; background: var(--panel2); border-radius: 4px; margin-bottom: 4px; font-size: 12px; }
+  .obj-item.done { color: var(--ok); }
+  .obj-item.fail { color: var(--danger); }
+  .obj-item .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); }
+  .obj-item.done .dot { background: var(--ok); }
+  .obj-item.fail .dot { background: var(--danger); }
+
+  .speed-btns { display: inline-flex; gap: 2px; background: var(--panel2); padding: 2px; border-radius: 4px; }
+  .speed-btns button { background: transparent; padding: 4px 10px; font-size: 11px; }
+  .speed-btns button.active { background: var(--accent); color: #0a0e14; }
+
+  .toast { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); background: var(--panel2); padding: 8px 16px; border-radius: 4px; border: 1px solid var(--accent); font-size: 13px; z-index: 50; animation: fadeInOut 4s forwards; pointer-events: none; }
+  @keyframes fadeInOut { 0% { opacity: 0; } 10% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+
+  .breach-alert { color: var(--danger); font-weight: bold; animation: pulse 0.8s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes starBurst { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: var(--dim); margin-top: 4px; }
+  .legend span { display: flex; align-items: center; gap: 4px; }
+  .legend i { width: 10px; height: 10px; display: inline-block; border-radius: 2px; }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #475569; }
+</style>
+</head>
+<body>
+<style id="siteNav-css">
+  #siteNav { position: sticky; top: 0; z-index: 99999; background: rgba(16,20,28,0.96); border-bottom: 1px solid #2a3540; font-family: Georgia, "Times New Roman", serif; box-shadow: 0 2px 10px rgba(0,0,0,0.6); color: #d8d0c0; }
+  #siteNav * { box-sizing: border-box; }
+  #siteNav .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; max-width: 1400px; margin: 0 auto; gap: 12px; }
+  #siteNav .nav-home { color: #d8d0c0; text-decoration: none; font-size: 0.82em; letter-spacing: 2px; padding: 5px 12px; border: 1px solid #3a5060; border-radius: 3px; white-space: nowrap; }
+  #siteNav .nav-home:hover { background: #1e2838; color: #f0e0b0; }
+  #siteNav .nav-title { color: #f0d89c; font-size: 0.95em; letter-spacing: 3px; font-weight: bold; text-align: center; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #siteNav .nav-toggle { background: none; border: 1px solid #3a5060; color: #d8d0c0; font-size: 0.85em; letter-spacing: 2px; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  #siteNav .nav-toggle:hover { background: #1e2838; color: #f0e0b0; }
+  #siteNav .nav-menu { display: none; background: #0f141c; border-top: 1px solid #2a4050; padding: 14px 16px; max-width: 1400px; margin: 0 auto; }
+  #siteNav .nav-menu.open { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  #siteNav .nav-cat { min-width: 0; }
+  #siteNav .nav-cat-label { color: #8098a8; font-size: 0.72em; letter-spacing: 4px; padding: 4px 0 8px 0; border-bottom: 1px solid #2a3540; margin-bottom: 6px; }
+  #siteNav .nav-cat a { display: block; padding: 6px 10px; color: #a8b0c0; text-decoration: none; font-size: 0.88em; border-radius: 3px; }
+  #siteNav .nav-cat a:hover { background: #1e2838; color: #f0e0b0; }
+  #siteNav .nav-cat a.current { color: #f0d89c; font-weight: bold; background: #1e2838; }
+  @media (max-width: 640px) {
+    #siteNav .nav-menu.open { grid-template-columns: 1fr; gap: 14px; }
+    #siteNav .nav-title { font-size: 0.82em; letter-spacing: 2px; }
+    #siteNav .nav-home,
+    #siteNav .nav-toggle { font-size: 0.74em; padding: 4px 8px; }
+  }
+</style>
+<div id="siteNav">
+  <div class="nav-bar">
+    <a href="index.html" class="nav-home">HOME</a>
+    <span class="nav-title">Floodline</span>
+    <button class="nav-toggle" onclick="document.querySelector('#siteNav .nav-menu').classList.toggle('open')">GAMES &#9776;</button>
+  </div>
+  <div class="nav-menu">
+    <div class="nav-cat">
+      <div class="nav-cat-label">BOARD GAMES</div>
+      <a href="Agora.html">Agora</a>
+      <a href="Aresia.html">Aresia</a>
+      <a href="Backgammon.html">Backgammon</a>
+      <a href="Bisque.html">Bisque</a>
+      <a href="Chess.html">Chess</a>
+      <a href="Convergence.html">Convergence</a>
+      <a href="Go.html">Go</a>
+      <a href="Mancala.html">Mancala</a>
+      <a href="Odyssey.html">Odyssey</a>
+      <a href="Othello.html">Othello</a>
+      <a href="PenteGrammai.html">Pente Grammai</a>
+      <a href="Senet.html">Senet</a>
+      <a href="Tidelands.html">Tidelands</a>
+      <a href="Ur.html">Ur</a>
+    </div>
+    <div class="nav-cat">
+      <div class="nav-cat-label">SIMULATIONS</div>
+      <a href="Apoapsis.html">Apoapsis</a>
+      <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
+      <a href="Floodline.html" class="current">Floodline</a>
+      <a href="SimEarth.html">SimEarth</a>
+      <a href="Tower.html">Tower</a>
+    </div>
+  </div>
+</div>
+
+<div id="game">
+  <div id="topbar">
+    <div style="font-size:16px; color:var(--accent); font-weight:bold; letter-spacing:0.05em;">FLOODLINE</div>
+    <div id="scenarioName" style="font-size:13px; color:var(--dim);"></div>
+    <div style="flex:1;"></div>
+    <div class="stat"><span>Wallet</span><b id="walletDisp">$0</b></div>
+    <div class="stat"><span>Budget</span><b id="budgetDisp">$0</b></div>
+    <div class="stat"><span>Time</span><b id="timeDisp">0:00</b></div>
+    <div class="stat"><span>River Stage</span><b id="stageDisp">0.0 m</b></div>
+    <div class="stat warn"><span>Rainfall</span><b id="rainDisp">0 mm/hr</b></div>
+    <div class="stat"><span>Tailwater</span><b id="tailwaterDisp">2.8 m</b></div>
+    <div class="stat danger"><span>Damage</span><b id="damageDisp">0%</b></div>
+    <div class="speed-btns">
+      <button data-spd="0">Pause</button>
+      <button data-spd="1" class="active">1x</button>
+      <button data-spd="2">2x</button>
+      <button data-spd="4">4x</button>
+    </div>
+    <button id="startBtn">Start Storm</button>
+    <button id="viewBtn" class="ghost" title="Toggle view (V)">Iso</button>
+    <button id="undoBtn" class="ghost" title="Ctrl+Z">↶ Undo</button>
+    <button id="muteBtn" class="ghost" title="Toggle audio">🔊</button>
+    <button id="menuBtn" class="ghost">Menu</button>
+  </div>
+
+  <div id="toolpanel">
+    <h3>Construction</h3>
+    <div id="tools"></div>
+    <h3 style="margin-top:16px;">Objectives</h3>
+    <div id="objectives" class="objectives"></div>
+    <h3 style="margin-top:16px;">Legend</h3>
+    <div class="legend">
+      <span><i style="background:#e6d57a;"></i>Town</span>
+      <span><i style="background:#ef4444;"></i>Hospital</span>
+      <span><i style="background:#a855f7;"></i>School</span>
+      <span><i style="background:#3b82f6;"></i>Water</span>
+      <span><i style="background:#8b6f47;"></i>Levee</span>
+    </div>
+  </div>
+
+  <div id="canvaswrap">
+    <canvas id="canvas"></canvas>
+    <div id="canvasOverlay"></div>
+  </div>
+
+  <div id="infopanel">
+    <h3>Briefing</h3>
+    <div id="briefing" style="font-size:12px; line-height:1.5; color:#cbd5e1;"></div>
+    <h3 style="margin-top:16px;">Infrastructure Status</h3>
+    <div id="infraStatus" style="font-size:12px;"></div>
+    <h3 style="margin-top:16px;">Tips</h3>
+    <div style="font-size:11px; color:var(--dim); line-height:1.5;">
+      Levees fail when overtopped for too long. Channels drain 2× faster. Pumps need dry grid to run. Watch the hydrograph — pre-position for the peak.
+    </div>
+  </div>
+
+  <div id="timeline">
+    <canvas id="hydrograph"></canvas>
+  </div>
+</div>
+
+<div id="overlay">
+  <div class="modal" id="menuModal">
+    <h1>Floodline</h1>
+    <p style="color:var(--dim);">A flood engineering simulator. Build levees, channels, and pumps against real hydrology. Levees breach under load. Infiltration matters. The hydrograph tells the truth — read it, and pre-position.</p>
+    <h2>Scenario Select</h2>
+    <div id="scenarioGrid" class="scenarios"></div>
+    <p style="margin-top:20px; font-size:11px; color:var(--dim);">Historical scenarios use simplified but faithful parameters — river inflow, rainfall depth, breach risk, and terrain are derived from real events. This is a game, not an engineering tool.</p>
+    <div style="margin-top:16px; font-size:11px; color:var(--dim);">
+      <b>Keys:</b> 1–8 select tool · Space pause · [ / ] speed · R replay · Esc menu
+    </div>
+  </div>
+</div>
+
+<div id="resultsOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:520px;">
+    <h1 id="resultsTitle">Scenario Complete</h1>
+    <div id="resultsBody"></div>
+    <div style="margin-top:20px; display:flex; gap:8px;">
+      <button id="resultsReplay">Replay</button>
+      <button id="resultsNext" class="ghost">Next Scenario →</button>
+      <button id="resultsMenu" class="ghost">Scenario Select</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ *  FLOODLINE
+ *  Single-file HTML5 flood-defense simulator.
+ * ============================================================ */
+
+'use strict';
+
+// ---------- Grid (per-scenario sizing) ----------
+let COLS = 180;
+let ROWS = 108;
+
+// ---------- Tile types ----------
+const T = {
+  GRASS: 0, RIVER: 1, TOWN: 2, SANDBAG: 3, LEVEE: 4, CHANNEL: 5,
+  PUMP: 6, OUTLET: 7, HOSPITAL: 8, SCHOOL: 9, POND: 10, SPILLWAY: 11,
+  ROAD: 12, EVACUATED: 13, BREACH: 14, SIPHON: 15,
+};
+
+// ---------- Tool catalog ----------
+const TOOLS = {
+  sandbag:    { name: 'Sandbag',      cost: 50,   icon: 'S', color: '#d4a56a', desc: 'Stackable bump, fast to place' },
+  levee:      { name: 'Levee',        cost: 300,  icon: 'L', color: '#8b6f47', desc: 'Tall wall, can breach if overtopped' },
+  reinforce:  { name: 'Reinforce',    cost: 150,  icon: '⚙', color: '#a78bfa', desc: 'Clears stress and hardens existing levee' },
+  channel:    { name: 'Channel',      cost: 150,  icon: 'C', color: '#4a5568', desc: 'Drains water 2× faster downstream' },
+  pump:       { name: 'Pump Station', cost: 800,  icon: 'P', color: '#dc2626', desc: 'Actively removes water in 5×5 area' },
+  siphon:     { name: 'Siphon',       cost: 250,  icon: '~', color: '#06b6d4', desc: 'Passive drain, no power; slower than pump' },
+  pond:       { name: 'Retention',    cost: 400,  icon: 'R', color: '#1e40af', desc: 'Excavates basin to store water' },
+  spillway:   { name: 'Spillway',     cost: 500,  icon: 'W', color: '#64748b', desc: 'Controlled overflow to safe area' },
+  evac:       { name: 'Evacuate',     cost: 200,  icon: 'E', color: '#22c55e', desc: 'Removes people; no damage counted' },
+  breach:     { name: 'Emergency Cut', cost: 100, icon: 'X', color: '#f59e0b', desc: 'Deliberately cuts a levee to relieve pressure' },
+};
+
+// ---------- SCS Type II hyetograph (24-hour cumulative rainfall distribution) ----------
+// Standard NRCS Type II dimensionless storm: cumulative fraction of P24 vs time (hr).
+const SCS_TYPE_II = [
+  [0.00, 0.000], [1.00, 0.011], [2.00, 0.022], [3.00, 0.035], [4.00, 0.048],
+  [5.00, 0.064], [6.00, 0.080], [7.00, 0.098], [8.00, 0.120], [8.50, 0.133],
+  [9.00, 0.147], [9.50, 0.163], [9.75, 0.172], [10.00, 0.181], [10.50, 0.204],
+  [11.00, 0.235], [11.50, 0.283], [11.75, 0.357], [12.00, 0.663], [12.50, 0.735],
+  [13.00, 0.772], [13.50, 0.799], [14.00, 0.820], [15.00, 0.854], [16.00, 0.880],
+  [18.00, 0.922], [20.00, 0.952], [22.00, 0.980], [24.00, 1.000],
+];
+function typeIICumulative(tHr) {
+  if (tHr <= 0) return 0;
+  if (tHr >= 24) return 1;
+  for (let i = 0; i < SCS_TYPE_II.length - 1; i++) {
+    const [t0, c0] = SCS_TYPE_II[i];
+    const [t1, c1] = SCS_TYPE_II[i + 1];
+    if (tHr >= t0 && tHr <= t1) {
+      const f = (tHr - t0) / (t1 - t0);
+      return c0 + f * (c1 - c0);
+    }
+  }
+  return 1;
+}
+// Rainfall rate (mm/hr) at game-hour tHr for a storm of total depth P24 (mm).
+function typeIIRate(tHr, P24mm) {
+  const dt = 0.1;
+  const c1 = typeIICumulative(Math.max(0, tHr - dt / 2));
+  const c2 = typeIICumulative(Math.min(24, tHr + dt / 2));
+  return ((c2 - c1) / dt) * P24mm;
+}
+
+// SCS triangular unit hydrograph — returns unitless runoff fraction at time tHr.
+// Peak at Tp = 0.5 * D + Tlag. For a 24-hr storm, pick Tp reasonable for watershed.
+function scsTriangularUH(tHr, Tp) {
+  if (tHr < 0) return 0;
+  if (tHr < Tp) return tHr / Tp;
+  if (tHr < 2.67 * Tp) return 1 - (tHr - Tp) / (1.67 * Tp);
+  return 0;
+}
+
+// ---------- Cities (approximate 100-yr 24-hr precipitation, inches) ----------
+// Values are representative / simplified; source: NOAA Atlas 14 for US, approximate globally.
+const CITIES = [
+  { id: 'houston_tx',       name: 'Houston, TX',          P24in: 13.0, country: 'USA' },
+  { id: 'neworleans_la',    name: 'New Orleans, LA',      P24in: 13.4, country: 'USA' },
+  { id: 'miami_fl',         name: 'Miami, FL',            P24in: 16.0, country: 'USA' },
+  { id: 'atlanta_ga',       name: 'Atlanta, GA',          P24in: 7.8,  country: 'USA' },
+  { id: 'charlotte_nc',     name: 'Charlotte, NC',        P24in: 7.0,  country: 'USA' },
+  { id: 'raleigh_nc',       name: 'Raleigh, NC',          P24in: 7.3,  country: 'USA' },
+  { id: 'asheville_nc',     name: 'Asheville, NC',        P24in: 5.8,  country: 'USA' },
+  { id: 'wilmington_nc',    name: 'Wilmington, NC',       P24in: 10.5, country: 'USA' },
+  { id: 'lumberton_nc',     name: 'Lumberton, NC',        P24in: 9.2,  country: 'USA' },
+  { id: 'nashville_tn',     name: 'Nashville, TN',        P24in: 7.5,  country: 'USA' },
+  { id: 'memphis_tn',       name: 'Memphis, TN',          P24in: 8.5,  country: 'USA' },
+  { id: 'stlouis_mo',       name: 'St. Louis, MO',        P24in: 7.8,  country: 'USA' },
+  { id: 'kc_mo',            name: 'Kansas City, MO',      P24in: 7.9,  country: 'USA' },
+  { id: 'omaha_ne',         name: 'Omaha, NE',            P24in: 7.5,  country: 'USA' },
+  { id: 'denver_co',        name: 'Denver, CO',           P24in: 3.5,  country: 'USA' },
+  { id: 'saltlake_ut',      name: 'Salt Lake City, UT',   P24in: 2.8,  country: 'USA' },
+  { id: 'phoenix_az',       name: 'Phoenix, AZ',          P24in: 3.9,  country: 'USA' },
+  { id: 'tucson_az',        name: 'Tucson, AZ',           P24in: 3.8,  country: 'USA' },
+  { id: 'la_ca',            name: 'Los Angeles, CA',      P24in: 5.2,  country: 'USA' },
+  { id: 'sf_ca',            name: 'San Francisco, CA',    P24in: 5.8,  country: 'USA' },
+  { id: 'portland_or',      name: 'Portland, OR',         P24in: 4.2,  country: 'USA' },
+  { id: 'seattle_wa',       name: 'Seattle, WA',          P24in: 4.5,  country: 'USA' },
+  { id: 'anchorage_ak',     name: 'Anchorage, AK',        P24in: 3.0,  country: 'USA' },
+  { id: 'honolulu_hi',      name: 'Honolulu, HI',         P24in: 10.8, country: 'USA' },
+  { id: 'chicago_il',       name: 'Chicago, IL',          P24in: 6.8,  country: 'USA' },
+  { id: 'detroit_mi',       name: 'Detroit, MI',          P24in: 5.5,  country: 'USA' },
+  { id: 'minneapolis_mn',   name: 'Minneapolis, MN',      P24in: 5.8,  country: 'USA' },
+  { id: 'milwaukee_wi',     name: 'Milwaukee, WI',        P24in: 6.1,  country: 'USA' },
+  { id: 'cedarrapids_ia',   name: 'Cedar Rapids, IA',     P24in: 6.5,  country: 'USA' },
+  { id: 'boston_ma',        name: 'Boston, MA',           P24in: 7.3,  country: 'USA' },
+  { id: 'nyc_ny',           name: 'New York, NY',         P24in: 7.8,  country: 'USA' },
+  { id: 'philly_pa',        name: 'Philadelphia, PA',     P24in: 7.4,  country: 'USA' },
+  { id: 'dc',               name: 'Washington, DC',       P24in: 7.4,  country: 'USA' },
+  { id: 'pittsburgh_pa',    name: 'Pittsburgh, PA',       P24in: 5.3,  country: 'USA' },
+  { id: 'tokyo',            name: 'Tokyo',                P24in: 10.5, country: 'Japan' },
+  { id: 'manila',           name: 'Manila',               P24in: 16.0, country: 'Philippines' },
+  { id: 'singapore',        name: 'Singapore',            P24in: 11.5, country: 'Singapore' },
+  { id: 'mumbai',           name: 'Mumbai',               P24in: 13.5, country: 'India' },
+  { id: 'delhi',            name: 'Delhi',                P24in: 8.5,  country: 'India' },
+  { id: 'bangkok',          name: 'Bangkok',              P24in: 9.0,  country: 'Thailand' },
+  { id: 'hochiminh',        name: 'Ho Chi Minh City',     P24in: 11.0, country: 'Vietnam' },
+  { id: 'jakarta',          name: 'Jakarta',              P24in: 12.5, country: 'Indonesia' },
+  { id: 'dhaka',            name: 'Dhaka',                P24in: 13.0, country: 'Bangladesh' },
+  { id: 'karachi',          name: 'Karachi',              P24in: 8.5,  country: 'Pakistan' },
+  { id: 'hongkong',         name: 'Hong Kong',            P24in: 13.0, country: 'China' },
+  { id: 'shanghai',         name: 'Shanghai',             P24in: 9.5,  country: 'China' },
+  { id: 'london',           name: 'London',               P24in: 3.5,  country: 'UK' },
+  { id: 'paris',            name: 'Paris',                P24in: 3.0,  country: 'France' },
+  { id: 'amsterdam',        name: 'Amsterdam',            P24in: 3.5,  country: 'Netherlands' },
+  { id: 'berlin',           name: 'Berlin',               P24in: 3.2,  country: 'Germany' },
+  { id: 'rome',             name: 'Rome',                 P24in: 5.5,  country: 'Italy' },
+  { id: 'madrid',           name: 'Madrid',               P24in: 4.5,  country: 'Spain' },
+  { id: 'stockholm',        name: 'Stockholm',            P24in: 3.0,  country: 'Sweden' },
+  { id: 'moscow',           name: 'Moscow',               P24in: 3.8,  country: 'Russia' },
+  { id: 'istanbul',         name: 'Istanbul',             P24in: 5.0,  country: 'Turkey' },
+  { id: 'dubai',            name: 'Dubai',                P24in: 5.5,  country: 'UAE' },
+  { id: 'sydney',           name: 'Sydney',               P24in: 8.5,  country: 'Australia' },
+  { id: 'brisbane',         name: 'Brisbane',             P24in: 10.0, country: 'Australia' },
+  { id: 'auckland',         name: 'Auckland',             P24in: 5.5,  country: 'New Zealand' },
+  { id: 'mexicocity',       name: 'Mexico City',          P24in: 5.0,  country: 'Mexico' },
+  { id: 'rio',              name: 'Rio de Janeiro',       P24in: 8.5,  country: 'Brazil' },
+  { id: 'buenosaires',      name: 'Buenos Aires',         P24in: 6.5,  country: 'Argentina' },
+  { id: 'toronto',          name: 'Toronto',              P24in: 5.5,  country: 'Canada' },
+  { id: 'vancouver',        name: 'Vancouver',            P24in: 4.8,  country: 'Canada' },
+  { id: 'montreal',         name: 'Montreal',             P24in: 5.0,  country: 'Canada' },
+  { id: 'capetown',         name: 'Cape Town',            P24in: 4.0,  country: 'South Africa' },
+  { id: 'lagos',            name: 'Lagos',                P24in: 9.5,  country: 'Nigeria' },
+  { id: 'nairobi',          name: 'Nairobi',              P24in: 5.0,  country: 'Kenya' },
+];
+
+function loadLocation() {
+  const stored = localStorage.getItem('floodline_location');
+  return CITIES.find(c => c.id === stored) || CITIES.find(c => c.id === 'charlotte_nc') || CITIES[0];
+}
+function saveLocation(id) { localStorage.setItem('floodline_location', id); }
+
+// ---------- Hashing ----------
+function hashCode(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h >>> 0;
+}
+
+// ---------- Daily seed ----------
+function dailySeed() {
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = a;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const _dailyRng = mulberry32(dailySeed());
+const _dailyParams = {
+  rainBase: 15 + _dailyRng() * 20,
+  rainPeak: 30 + _dailyRng() * 30,
+  rainPhase: _dailyRng() * Math.PI * 2,
+  flowBase: 0.3 + _dailyRng() * 0.4,
+  flowPeak: 1 + _dailyRng() * 3,
+  flowOffset: 20 + _dailyRng() * 40,
+};
+function dailyStormProfile(t) {
+  const p = _dailyParams;
+  return {
+    rain: p.rainBase + p.rainPeak * Math.max(0, Math.sin(Math.PI * t / 160 + p.rainPhase)),
+    inflow: p.flowBase + p.flowPeak * Math.max(0, Math.sin(Math.PI * (t - p.flowOffset) / 140)),
+  };
+}
+
+// ---------- Challenge modifiers ----------
+// Optional difficulty toggles. Each grants bonus stars on victory.
+const CHALLENGES = {
+  hardcore:  { name: 'Hardcore',     desc: '60% budget',                  bonus: 1, apply: sc => { sc._budgetMod = 0.6; } },
+  antilev:   { name: 'No Levees',    desc: 'Levee/reinforce disabled',    bonus: 2, apply: sc => { sc._noLevees = true; } },
+  pacifist:  { name: 'Hold the Line', desc: 'No evacuations allowed',     bonus: 1, apply: sc => { sc._noEvac = true; } },
+  speedrun:  { name: 'Speedrun',     desc: 'Storm duration 66%',          bonus: 1, apply: sc => { sc._durationMod = 0.66; } },
+  noPump:    { name: 'No Pumps',     desc: 'Pumps disabled',              bonus: 2, apply: sc => { sc._noPump = true; } },
+};
+
+const state_challenges = new Set();
+
+// ---------- Campaign progression ----------
+// Total stars earned across all scenarios unlocks the next.
+const STAR_REQUIREMENTS = {
+  training: 0,
+  sandbox: 0,
+  localstorm: 0,
+  iowa2008: 1,
+  daily: 1,
+  harvey2017: 3,
+  mississippi1927: 5,
+  lumberton2016: 6,
+  johnstown1889: 8,
+  edenville2020: 10,
+  oroville2017: 13,
+  katrina2005: 16,
+  endless: 20,
+};
+
+function totalStarsEarned() {
+  const scores = loadScores();
+  let total = 0;
+  for (const id in scores) total += (scores[id].stars ?? starsForPct(scores[id].pct));
+  return total;
+}
+
+function isScenarioUnlocked(id) {
+  return totalStarsEarned() >= (STAR_REQUIREMENTS[id] ?? 0);
+}
+
+// SCS Type II storm profile for the "Local Design Storm" scenario.
+// gameDuration is scenario.duration (seconds). 24 hours of storm compressed to it.
+function localStormProfile(gameT, gameDuration) {
+  const loc = loadLocation();
+  const P24mm = loc.P24in * 25.4;
+  const stormHr = (gameT / gameDuration) * 24;
+  const rainRate = typeIIRate(stormHr, P24mm);   // mm/hr at this point in storm
+
+  // River inflow via SCS triangular UH. Assume Tp ~ 9 hr for a small-medium watershed.
+  // Integrate past rain through UH via tabulated approximation.
+  const Tp = 9.0;
+  // Compute accumulated runoff-weighted response up to now (approx convolution)
+  let inflow = 0;
+  for (let tau = 0; tau < 24; tau += 0.5) {
+    const pastHr = stormHr - tau;
+    if (pastHr < 0) break;
+    const pastRate = typeIIRate(pastHr, P24mm);
+    const uh = scsTriangularUH(tau, Tp);
+    inflow += pastRate * uh * 0.5;
+  }
+  // Scale inflow into game's internal units (roughly matching existing scenarios).
+  const inflowScaled = inflow * 0.002;
+  return { rain: rainRate, inflow: Math.max(0.2, inflowScaled) };
+}
+
+// ---------- Scenarios ----------
+const SCENARIOS = [
+  {
+    id: 'training',
+    name: 'Training Ground',
+    year: 'Sandbox',
+    diff: 'easy',
+    blurb: 'Flat meadow, steady river, light storm. Learn the physics.',
+    brief: 'A light training scenario. Rainfall is moderate and the river is tame. Use this to get comfortable with levees, channels, and pumps before tackling real disasters.',
+    budget: 3000,
+    duration: 120,
+    mapScale: 0.7,
+    stormProfile: t => ({
+      rain: t > 20 ? 20 * Math.sin(Math.PI * (t - 20) / 80) : 0,
+      inflow: 0.5 + 0.2 * Math.max(0, Math.sin(Math.PI * (t - 30) / 60)),
+    }),
+    terrain: generateValley,
+    townBox: { x: 0.55, y: 0.55, w: 12, h: 8 },
+    hospital: null,
+    school: null,
+    winDamage: 40,
+    tools: ['sandbag', 'levee', 'channel', 'pump'],
+    peakAt: 60,
+    peakFlow: 0.7,
+    peakRain: 20,
+  },
+  {
+    id: 'iowa2008',
+    name: 'Cedar Rapids',
+    year: '2008',
+    diff: 'normal',
+    blurb: 'Slow-rising crest. Weeks of rain upstream, now the river peaks.',
+    brief: 'June 2008. Cedar River at Cedar Rapids reached 31.12 ft — nearly 12 ft above the 100-year flood. 1,300 city blocks inundated. The river rises gradually; this is a duration fight, not a flash flood. Pre-position levees and let pumps run long.',
+    budget: 5000,
+    duration: 180,
+    mapScale: 1.0,
+    amc: 0.85,
+    stormProfile: t => ({
+      rain: 10 + 15 * Math.sin(Math.PI * t / 180),
+      inflow: 0.4 + 1.8 * Math.max(0, Math.sin(Math.PI * (t - 40) / 140)),
+    }),
+    terrain: generateValley,
+    townBox: { x: 0.40, y: 0.50, w: 20, h: 12 },
+    hospital: { x: 0.42, y: 0.45 },
+    school: { x: 0.55, y: 0.58 },
+    winDamage: 40,
+    tools: ['sandbag', 'levee', 'channel', 'pump', 'evac'],
+    peakAt: 110,
+    peakFlow: 2.2,
+    peakRain: 25,
+  },
+  {
+    id: 'harvey2017',
+    name: 'Houston (Harvey)',
+    year: '2017',
+    diff: 'hard',
+    blurb: 'Compound flooding. Stalled hurricane dumps 40 inches of rain.',
+    brief: 'August 2017. Hurricane Harvey stalled over SE Texas and dropped 40+ inches in four days. Flat terrain, overwhelmed bayous, reservoirs at capacity. The enemy here is pure rainfall depth, not river peak. Retention ponds and pumps earn their keep.',
+    budget: 6500,
+    duration: 240,
+    mapScale: 1.3,
+    amc: 0.75,
+    stormProfile: t => ({
+      rain: 35 + 25 * Math.sin(t * 0.08) + 15 * Math.sin(t * 0.03),
+      inflow: 0.3 + 0.8 * Math.max(0, Math.sin(Math.PI * (t - 60) / 180)),
+    }),
+    terrain: generateFlatBasin,
+    townBox: { x: 0.35, y: 0.45, w: 28, h: 16 },
+    hospital: { x: 0.40, y: 0.42 },
+    school: { x: 0.55, y: 0.60 },
+    winDamage: 50,
+    tools: ['sandbag', 'levee', 'channel', 'pump', 'pond', 'evac'],
+    peakAt: 140,
+    peakFlow: 1.1,
+    peakRain: 65,
+  },
+  {
+    id: 'johnstown1889',
+    name: 'Johnstown',
+    year: '1889',
+    diff: 'extreme',
+    blurb: 'Dam failure upstream. Minutes to evacuate. 2,209 died.',
+    brief: 'May 31, 1889. South Fork Dam on Lake Conemaugh failed after heavy rain. A 36-foot wall of water, 20M tons, hit Johnstown in under an hour. 2,209 died — one of the worst disasters in US history. You have limited warning. Evacuations save lives; levees probably will not hold.',
+    budget: 8000,
+    duration: 120,
+    mapScale: 1.2,
+    stormProfile: t => ({
+      rain: 15 + 5 * Math.sin(t * 0.1),
+      inflow: t < 35 ? 0.8 + t * 0.02 : (t < 50 ? 8 + (t - 35) * 1.5 : 25 * Math.exp(-(t - 50) / 30) + 1),
+    }),
+    terrain: generateNarrowValley,
+    townBox: { x: 0.55, y: 0.60, w: 16, h: 10 },
+    hospital: { x: 0.58, y: 0.56 },
+    school: { x: 0.65, y: 0.65 },
+    winDamage: 55,
+    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'evac', 'breach'],
+    peakAt: 55,
+    peakFlow: 25,
+    peakRain: 20,
+  },
+  {
+    id: 'katrina2005',
+    name: 'New Orleans (Katrina)',
+    year: '2005',
+    diff: 'extreme',
+    blurb: 'Storm surge overtops levees. Below sea level. Pumps or perish.',
+    brief: 'August 29, 2005. Category 3 at landfall. Storm surge overtopped and breached 50+ levees. 80% of the city flooded, much of it below sea level. Pumps are essential but many were knocked out. Strengthen levees, stage pumps, protect the Superdome and hospitals.',
+    budget: 9000,
+    duration: 180,
+    mapScale: 1.4,
+    stormProfile: t => {
+      const surge = t > 30 && t < 80 ? 6 * Math.sin(Math.PI * (t - 30) / 50) : 0;
+      return {
+        rain: 20 + 30 * Math.max(0, Math.sin(Math.PI * (t - 20) / 80)),
+        inflow: 0.5 + surge,
+      };
+    },
+    terrain: generateSubSeaLevel,
+    townBox: { x: 0.30, y: 0.45, w: 30, h: 20 },
+    hospital: { x: 0.35, y: 0.50 },
+    school: { x: 0.55, y: 0.55 },
+    winDamage: 50,
+    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'spillway', 'evac', 'breach'],
+    peakAt: 55,
+    peakFlow: 6.5,
+    peakRain: 50,
+  },
+  {
+    id: 'mississippi1927',
+    name: 'Great Mississippi Flood',
+    year: '1927',
+    diff: 'hard',
+    blurb: 'Engineering dilemma: breach a levee upstream or let the city flood.',
+    brief: 'Spring 1927. The Mississippi reached 80-foot crests; 27,000 sq miles submerged across 7 states. The Army Corps dynamited the Caernarvon levee to save New Orleans, flooding poorer parishes downstream. Here the river is wide and relentless. Sometimes a controlled breach is the right call — even if it costs you damage.',
+    budget: 7000,
+    duration: 240,
+    mapScale: 1.3,
+    amc: 0.8,
+    stormProfile: t => ({
+      rain: 20 + 10 * Math.sin(t * 0.04),
+      inflow: 0.6 + 2.8 * Math.max(0, Math.sin(Math.PI * (t - 30) / 180)) + (t > 100 ? Math.min(1.5, (t - 100) * 0.02) : 0),
+    }),
+    terrain: generateWideRiver,
+    townBox: { x: 0.55, y: 0.50, w: 22, h: 14 },
+    hospital: { x: 0.58, y: 0.46 },
+    school: { x: 0.70, y: 0.58 },
+    winDamage: 45,
+    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'spillway', 'evac', 'breach'],
+    peakAt: 150,
+    peakFlow: 4.3,
+    peakRain: 30,
+  },
+  {
+    id: 'oroville2017',
+    name: 'Oroville Spillway',
+    year: '2017',
+    diff: 'extreme',
+    blurb: 'Main spillway fractured. Auxiliary eroding. 188,000 evacuated.',
+    brief: 'February 2017. Oroville Dam — tallest in the US — saw its main spillway disintegrate mid-release. The auxiliary emergency spillway, never used before, began eroding toward the dam foundation. 188,000 people downstream evacuated. The reservoir cannot be allowed to overtop. Manage flow, reinforce the path, buy time.',
+    budget: 10000,
+    duration: 200,
+    mapScale: 1.3,
+    stormProfile: t => ({
+      rain: 25 + 20 * Math.max(0, Math.sin(Math.PI * t / 140)),
+      inflow: 0.8 + 4 * Math.max(0, Math.sin(Math.PI * (t - 20) / 120)) + (t > 80 && t < 130 ? 3 : 0),
+    }),
+    terrain: generateDamReservoir,
+    townBox: { x: 0.40, y: 0.65, w: 22, h: 8 },
+    hospital: { x: 0.50, y: 0.62 },
+    school: null,
+    winDamage: 40,
+    tools: ['sandbag', 'levee', 'channel', 'pump', 'spillway', 'evac', 'breach'],
+    peakAt: 100,
+    peakFlow: 7,
+    peakRain: 45,
+  },
+  {
+    id: 'edenville2020',
+    name: 'Edenville Dam',
+    year: '2020',
+    diff: 'hard',
+    blurb: 'Cascading failure. Edenville fails, Sanford next. Two towns downstream.',
+    brief: 'May 19, 2020. Midland County, Michigan. After days of rain, Edenville Dam failed — releasing Wixom Lake downstream into Sanford Lake, which then overtopped Sanford Dam. 10,000 evacuated, $250M damage. You have two reservoirs, two dams, and cascading consequences. Protect downstream before upstream fails.',
+    budget: 6500,
+    duration: 180,
+    mapScale: 1.2,
+    stormProfile: t => ({
+      rain: 18 + 12 * Math.sin(t * 0.05),
+      inflow: 0.5 + 1.8 * Math.max(0, Math.sin(Math.PI * (t - 20) / 140)) + (t > 70 ? 1.2 * Math.exp(-(t - 90) / 30) : 0) * (t > 90 ? 1 : 0),
+    }),
+    terrain: generateCascadeValley,
+    townBox: { x: 0.45, y: 0.70, w: 18, h: 10 },
+    hospital: { x: 0.50, y: 0.68 },
+    school: { x: 0.60, y: 0.75 },
+    winDamage: 45,
+    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'evac', 'breach'],
+    peakAt: 90,
+    peakFlow: 3.5,
+    peakRain: 30,
+  },
+  {
+    id: 'lumberton2016',
+    name: 'Lumberton',
+    year: '2016',
+    diff: 'hard',
+    blurb: 'Hurricane Matthew. Lumber River jumps I-95. West Lumberton flooded.',
+    brief: 'October 8-14, 2016. Hurricane Matthew stalled over eastern NC and dumped 12-14 inches. The Lumber River, normally 13 ft at flood stage, crested at 24.15 ft. West Lumberton flooded for the first time in recorded history because water breached through a CSX railroad underpass — an opening nobody had planned for. Close the gap, or the town drowns.',
+    budget: 5500,
+    duration: 200,
+    mapScale: 1.1,
+    amc: 0.7,
+    stormProfile: t => ({
+      rain: 20 + 18 * Math.sin(Math.PI * t / 120) + 5 * Math.sin(t * 0.08),
+      inflow: 0.4 + 2.2 * Math.max(0, Math.sin(Math.PI * (t - 40) / 140)),
+    }),
+    terrain: generateValley,
+    townBox: { x: 0.52, y: 0.55, w: 18, h: 11 },
+    hospital: { x: 0.55, y: 0.50 },
+    school: { x: 0.64, y: 0.62 },
+    winDamage: 45,
+    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'evac', 'breach'],
+    peakAt: 110,
+    peakFlow: 2.5,
+    peakRain: 30,
+  },
+  {
+    id: 'localstorm',
+    name: 'Local Design Storm',
+    year: 'Your City',
+    diff: 'normal',
+    blurb: 'SCS Type II 24-hr storm using your selected city\'s rainfall depth.',
+    brief: 'A dimensionless SCS Type II rainfall distribution scaled by the 100-year 24-hour precipitation depth for your selected city (set in Settings). River inflow follows an SCS triangular unit hydrograph lagged to represent a small urban watershed. Change your city in the menu to see how different climates stress your design.',
+    budget: 5000,
+    duration: 240,
+    mapScale: 1.1,
+    stormProfile: t => localStormProfile(t, 240),
+    terrain: generateValley,
+    townBox: { x: 0.50, y: 0.55, w: 16, h: 10 },
+    hospital: { x: 0.53, y: 0.50 },
+    school: { x: 0.62, y: 0.60 },
+    winDamage: 40,
+    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'evac', 'breach'],
+    peakAt: 120,
+    peakFlow: 3.5,
+    peakRain: 80,
+  },
+  {
+    id: 'sandbox',
+    name: 'Sandbox',
+    year: 'Free Play',
+    diff: 'easy',
+    blurb: 'Unlimited budget. Experiment with the physics against a hard storm.',
+    brief: 'Free-play sandbox mode. Unlimited budget, all tools available, no objectives — but the storm is serious so you have something to work against. Watch how channels route flow, how levees fail under sustained load, how soil saturates.',
+    budget: 999999,
+    duration: 600,
+    mapScale: 1.0,
+    stormProfile: t => ({
+      rain: 35 + 45 * Math.max(0, Math.sin(Math.PI * t / 260)) + 12 * Math.sin(t * 0.07),
+      inflow: 1.0 + 4.0 * Math.max(0, Math.sin(Math.PI * (t - 50) / 240)),
+    }),
+    terrain: generateValley,
+    townBox: { x: 0.50, y: 0.55, w: 14, h: 9 },
+    hospital: null,
+    school: null,
+    winDamage: 100,
+    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'spillway', 'evac', 'breach'],
+    peakAt: 180,
+    peakFlow: 5.0,
+    peakRain: 90,
+    sandbox: true,
+  },
+  {
+    id: 'daily',
+    name: 'Daily Challenge',
+    year: 'Today',
+    diff: 'normal',
+    blurb: 'Seeded scenario, resets every day. Compete for the best score.',
+    brief: 'A procedurally generated scenario with a seed based on today\'s date. Everyone who plays today faces the same storm. Compare your score tomorrow, when the seed rolls over.',
+    budget: 5000,
+    duration: 180,
+    mapScale: 1.0,
+    stormProfile: t => dailyStormProfile(t),
+    terrain: generateValley,
+    townBox: { x: 0.50, y: 0.55, w: 14, h: 9 },
+    hospital: { x: 0.55, y: 0.50 },
+    school: null,
+    winDamage: 40,
+    tools: ['sandbag', 'levee', 'channel', 'pump', 'pond', 'evac'],
+    peakAt: 90,
+    peakFlow: 2.5,
+    peakRain: 35,
+    daily: true,
+  },
+  {
+    id: 'endless',
+    name: 'Endless Storm',
+    year: '∞',
+    diff: 'extreme',
+    blurb: 'Procedural storms forever. How many rounds can you hold?',
+    brief: 'Survive waves of escalating storms. Each round the rain falls harder, the river rises faster, and your budget is smaller. Run: how long can you hold?',
+    budget: 4000,
+    duration: 600,
+    mapScale: 1.3,
+    stormProfile: t => ({
+      rain: 15 + 10 * Math.sin(t * 0.05) + (t / 60) * 3,
+      inflow: 0.4 + 0.8 * Math.abs(Math.sin(t * 0.04)) + (t / 120),
+    }),
+    terrain: generateValley,
+    townBox: { x: 0.45, y: 0.50, w: 16, h: 10 },
+    hospital: { x: 0.48, y: 0.47 },
+    school: { x: 0.55, y: 0.55 },
+    winDamage: 80,
+    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'evac', 'breach'],
+    peakAt: 300,
+    peakFlow: 5,
+    peakRain: 50,
+  },
+];
+
+// ---------- Global state ----------
+const state = {
+  scenario: null,
+  cell: 10,
+  elev: null,
+  water: null,
+  waterNext: null,
+  type: null,
+  structH: null,
+  damage: null,
+  stress: null,        // Levee stress (time above water level) — drives breach
+  flow: null,          // Last-step flux magnitude (for visual)
+  soilSat: null,       // Soil saturation 0..1; reduces infiltration
+  soilType: null,      // 0=loam, 1=sand (fast drain), 2=clay (slow drain)
+  reinforced: null,    // Uint8Array, 1 if levee is reinforced (2× breach threshold)
+  countdown: 0,        // Pre-storm countdown seconds
+  windX: 0,            // Wind vector (cells/sec)
+  showHeatmap: false,
+  fireworks: [],       // Victory particles
+  watershedQ: 0,       // Lagged virtual upstream runoff (game units)
+  tailwaterStage: 0,   // Current downstream tailwater elevation
+  outflowQ: 0,         // Total flux into outlet row last tick
+  prepTimer: 30,       // Seconds before storm auto-starts
+  nextEventAt: 0,      // Next mid-storm random event time
+  eventInflowSpike: 0, // Temporary inflow multiplier from events
+  activeChallenges: new Set(),
+  view: 'iso',         // 'top' or 'iso'
+  cam: { x: 0, y: 0 }, // Iso camera offset
+  zoom: 1.6,
+  _camInit: false,
+  time: 0,
+  budget: 0,
+  spent: 0,
+  tool: 'sandbag',
+  storming: false,
+  gameOver: false,
+  won: false,
+  speed: 1,
+  rainParticles: [],
+  lightningT: 0,
+  flashT: 0,
+  toasts: [],
+  currentRain: 0,
+  currentInflow: 0,
+  stage: 0,
+  breachEvents: [],
+  objectives: [],
+  stats: { peakDamage: 0, breaches: 0, evacuated: 0, pumped: 0 },
+  hydrographHistory: [],
+};
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const hydroCanvas = document.getElementById('hydrograph');
+const hctx = hydroCanvas.getContext('2d');
+
+function idx(x, y) { return y * COLS + x; }
+
+// ---------- Terrain generators ----------
+function generateValley(elev) {
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      const slope = (ROWS - y) * 0.15 + Math.abs(x - COLS * 0.5) * 0.04;
+      const river = -3.0 * Math.exp(-Math.pow((x - (COLS * 0.3 + Math.sin(y * 0.2) * 10)) / 4, 2));
+      const noise = Math.sin(x * 0.3) * 0.3 + Math.cos(y * 0.25) * 0.3 + Math.sin((x + y) * 0.15) * 0.2;
+      elev[i] = 6 + slope + river + noise;
+    }
+  }
+}
+
+function generateFlatBasin(elev) {
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      // Very flat, gentle slope to bottom-right
+      const slope = (ROWS - y) * 0.03 + x * 0.02;
+      // Multiple bayous
+      const b1 = -1.5 * Math.exp(-Math.pow((x - COLS * 0.25 - Math.sin(y * 0.15) * 6) / 3, 2));
+      const b2 = -1.2 * Math.exp(-Math.pow((x - COLS * 0.75 - Math.cos(y * 0.18) * 5) / 3, 2));
+      const noise = Math.sin(x * 0.2) * 0.2 + Math.cos(y * 0.2) * 0.2;
+      elev[i] = 4 + slope + b1 + b2 + noise;
+    }
+  }
+}
+
+function generateNarrowValley(elev) {
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      const slope = (ROWS - y) * 0.25;
+      const valleyWall = Math.pow(Math.abs(x - COLS * 0.5) / (COLS * 0.4), 2) * 8;
+      const river = -2.5 * Math.exp(-Math.pow((x - COLS * 0.5) / 3, 2));
+      const noise = Math.sin(x * 0.4) * 0.3 + Math.cos(y * 0.3) * 0.3;
+      elev[i] = 5 + slope + valleyWall + river + noise;
+    }
+  }
+}
+
+function generateWideRiver(elev) {
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      // Wide, shallow river channel down the middle
+      const slope = (ROWS - y) * 0.08;
+      const river = -2.8 * Math.exp(-Math.pow((x - COLS * 0.35) / 10, 2));
+      const noise = Math.sin(x * 0.2) * 0.25 + Math.cos(y * 0.2) * 0.25;
+      elev[i] = 4 + slope + river + noise;
+    }
+  }
+}
+
+function generateDamReservoir(elev) {
+  // Reservoir top-third, dam crest as a narrow barrier, valley below
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      let base;
+      if (y < ROWS * 0.3) {
+        base = 1.5; // reservoir bed
+      } else if (y < ROWS * 0.35) {
+        base = 12; // dam crest
+      } else {
+        base = 8 - (y - ROWS * 0.35) * 0.25; // valley sloping down
+      }
+      const spillway = (y >= ROWS * 0.30 && y <= ROWS * 0.35 && x > COLS * 0.15 && x < COLS * 0.20) ? -8 : 0;
+      const noise = Math.sin(x * 0.15) * 0.2 + Math.cos(y * 0.2) * 0.2;
+      elev[i] = base + spillway + noise;
+    }
+  }
+}
+
+function generateCascadeValley(elev) {
+  // Two reservoirs stacked: upper (~y=0.2), mid (~y=0.5), town at y=0.7
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      let base;
+      if (y < ROWS * 0.15) base = 2.5;              // upper reservoir
+      else if (y < ROWS * 0.20) base = 10;          // upper dam
+      else if (y < ROWS * 0.40) base = 8 - (y - ROWS * 0.20) * 0.15; // transition
+      else if (y < ROWS * 0.45) base = 2.0;         // middle reservoir
+      else if (y < ROWS * 0.50) base = 8;           // middle dam
+      else base = 6 - (y - ROWS * 0.50) * 0.18;     // downstream valley
+      const wall = Math.pow(Math.abs(x - COLS * 0.5) / (COLS * 0.4), 2) * 4;
+      const noise = Math.sin(x * 0.25) * 0.2 + Math.cos(y * 0.25) * 0.2;
+      elev[i] = base + wall + noise;
+    }
+  }
+}
+
+function generateSubSeaLevel(elev) {
+  // Much of the map below sea level; lake to the north
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      let base;
+      if (y < ROWS * 0.25) base = 0; // lake
+      else if (y < ROWS * 0.35) base = 4; // levee ridge
+      else base = 1 + (y - ROWS * 0.35) * 0.03; // bowl below sea level
+      const noise = Math.sin(x * 0.15) * 0.15 + Math.cos(y * 0.2) * 0.2;
+      elev[i] = base + noise;
+    }
+  }
+}
+
+// ---------- Scenario init ----------
+function startScenario(sc) {
+  state.scenario = sc;
+  // Apply per-scenario map scale (default 1.0 = 180x108). Scales both axes;
+  // bigger storms get bigger catchments, cheaper scenarios get smaller maps
+  // so placement feels appropriate to the stakes.
+  const scale = sc.mapScale ?? 1.0;
+  COLS = Math.round(180 * scale);
+  ROWS = Math.round(108 * scale);
+  // Keep even for clean iso rendering
+  if (COLS % 2) COLS++;
+  if (ROWS % 2) ROWS++;
+  state.elev = new Float32Array(COLS * ROWS);
+  state.water = new Float32Array(COLS * ROWS);
+  state.waterNext = new Float32Array(COLS * ROWS);
+  state.type = new Uint8Array(COLS * ROWS);
+  state.structH = new Float32Array(COLS * ROWS);
+  state.damage = new Float32Array(COLS * ROWS);
+  state.stress = new Float32Array(COLS * ROWS);
+  state.flow = new Float32Array(COLS * ROWS);
+  state.soilSat = new Float32Array(COLS * ROWS);
+  state.soilType = new Uint8Array(COLS * ROWS);
+  state.reinforced = new Uint8Array(COLS * ROWS);
+  state.time = 0;
+  const settings = loadSettings();
+  // Reset and apply active challenge modifiers
+  delete sc._budgetMod; delete sc._noLevees; delete sc._noEvac; delete sc._durationMod; delete sc._noPump;
+  state.activeChallenges = new Set(state_challenges);
+  for (const cid of state.activeChallenges) CHALLENGES[cid].apply(sc);
+  const budgetMult = (sc._budgetMod ?? 1) * settings.diff;
+  // FEMA grant is scaled down so wallet (carried over from prior scenarios) matters.
+  const femaGrant = Math.round(sc.budget * budgetMult * 0.6);
+  const walletContribution = sc.sandbox ? 0 : loadWallet();
+  state.scenarioFEMA = femaGrant;
+  state.scenarioWalletStart = walletContribution;
+  state.budget = sc.sandbox ? sc.budget : (femaGrant + walletContribution);
+  sc._effectiveDuration = sc.duration * (sc._durationMod ?? 1);
+  state.spent = 0;
+  state.storming = false;
+  state.gameOver = false;
+  state.won = false;
+  state.speed = 1;
+  state.currentRain = 0;
+  state.currentInflow = 0;
+  state.breachEvents = [];
+  state.countdown = 0;
+  state.fireworks = [];
+  state.windX = 0;
+  state.nextEventAt = 30 + Math.random() * 25;
+  state.eventInflowSpike = 0;
+  state.watershedQ = 0;
+  state.tailwaterStage = 4.0;
+  state.outflowQ = 0;
+  state.prepTimer = sc.sandbox ? 0 : 15;
+  state._camInit = false;
+  state.stats = { peakDamage: 0, breaches: 0, evacuated: 0, pumped: 0 };
+  state.hydrographHistory = [];
+  state.rainParticles = [];
+  state.toasts = [];
+  state.tool = sc.tools[0];
+  state.tutorialShown = {};
+
+  sc.terrain(state.elev);
+
+  // Carve town footprint into a proper floodplain: low, flat ground near the river.
+  // This guarantees the town actually floods when the river rises above its crest.
+  if (sc.townBox) {
+    const tb = sc.townBox;
+    const floodplainElev = 4.3;
+    const tcx = Math.floor(tb.x * COLS + tb.w / 2);
+    const tcy = Math.floor(tb.y * ROWS + tb.h / 2);
+    const radius = Math.max(tb.w, tb.h) + 4;
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const dx = x - tcx, dy = y - tcy;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < radius) {
+          const blend = Math.max(0, 1 - d / radius);
+          const i = idx(x, y);
+          // Pull elevation toward floodplain level, preserving river depths
+          if (state.elev[i] > floodplainElev - 0.5) {
+            state.elev[i] = state.elev[i] * (1 - blend * 0.8) + floodplainElev * (blend * 0.8);
+          }
+        }
+      }
+    }
+  }
+
+  // Antecedent soil moisture — soaked ground from prior weeks/days of rain
+  // means less effective infiltration capacity, matching real AMC II/III conditions.
+  const amc = sc.amc ?? 0.4;
+  for (let i = 0; i < state.soilSat.length; i++) {
+    state.soilSat[i] = Math.min(1, amc * (0.85 + Math.random() * 0.3));
+  }
+
+  // Generate soil regions: bands of sand/clay/loam from low-freq noise
+  const seed = hashCode(sc.id);
+  const rng = mulberry32(seed);
+  const off1x = rng() * 1000, off1y = rng() * 1000;
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const n = Math.sin((x + off1x) * 0.12) * Math.cos((y + off1y) * 0.10) + Math.sin((x + y) * 0.05);
+      const i = idx(x, y);
+      if (n > 0.6) state.soilType[i] = 1;       // sand
+      else if (n < -0.6) state.soilType[i] = 2; // clay
+      else state.soilType[i] = 0;                // loam
+    }
+  }
+
+  // Town — layout with road grid every 3rd row/column
+  const tb = sc.townBox;
+  for (let y = 0; y < tb.h; y++) {
+    for (let x = 0; x < tb.w; x++) {
+      const cx = Math.floor(tb.x * COLS + x);
+      const cy = Math.floor(tb.y * ROWS + y);
+      if (cx > 0 && cx < COLS - 1 && cy > 0 && cy < ROWS - 1) {
+        const isRoad = (x % 3 === 0) || (y % 3 === 0);
+        state.type[idx(cx, cy)] = isRoad ? T.ROAD : T.TOWN;
+      }
+    }
+  }
+
+  // Hospital (3×3)
+  if (sc.hospital) {
+    const hx = Math.floor(sc.hospital.x * COLS);
+    const hy = Math.floor(sc.hospital.y * ROWS);
+    for (let dy = 0; dy < 3; dy++) for (let dx = 0; dx < 3; dx++) {
+      state.type[idx(hx + dx, hy + dy)] = T.HOSPITAL;
+    }
+  }
+
+  // School (2×2)
+  if (sc.school) {
+    const sx = Math.floor(sc.school.x * COLS);
+    const sy = Math.floor(sc.school.y * ROWS);
+    for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 2; dx++) {
+      state.type[idx(sx + dx, sy + dy)] = T.SCHOOL;
+    }
+  }
+
+  // Rivers & outlets
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      if (state.elev[i] < 3.5 && state.type[i] === T.GRASS) state.type[i] = T.RIVER;
+      if (y === ROWS - 1) state.type[i] = T.OUTLET;
+    }
+  }
+  // River baseflow — fill all river cells to a stage of ~4.0 m so there's
+  // always visible water in the channel before the storm starts.
+  const baseStage = 4.0;
+  for (let i = 0; i < state.water.length; i++) {
+    if (state.type[i] === T.RIVER) {
+      state.water[i] = Math.max(0.3, baseStage - state.elev[i]);
+    }
+  }
+  // Katrina-specific: big lake up top
+  if (sc.id === 'katrina2005') {
+    for (let y = 0; y < ROWS * 0.25; y++) {
+      for (let x = 0; x < COLS; x++) {
+        state.water[idx(x, y)] = 1.5;
+      }
+    }
+  }
+
+  buildObjectives();
+  buildToolPanel();
+  document.getElementById('scenarioName').textContent = `${sc.name} — ${sc.year}`;
+  document.getElementById('briefing').textContent = sc.brief;
+  renderChallengePanel();
+  document.getElementById('overlay').style.display = 'none';
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('startBtn').textContent = 'Start Storm';
+  updateHUD();
+}
+
+function buildObjectives() {
+  const sc = state.scenario;
+  state.objectives = [
+    { id: 'damage', label: `Keep town damage below ${sc.winDamage}%`, check: () => getDamagePct() < sc.winDamage },
+    { id: 'survive', label: `Survive ${formatTime(sc.duration)}`, check: () => state.time >= sc.duration },
+  ];
+  if (sc.hospital) state.objectives.push({
+    id: 'hospital', label: 'Protect the hospital',
+    check: () => getInfraDamage(T.HOSPITAL) < 30,
+  });
+  if (sc.school) state.objectives.push({
+    id: 'school', label: 'Protect the school',
+    check: () => getInfraDamage(T.SCHOOL) < 50,
+  });
+  renderObjectives();
+}
+
+// ---------- Physics ----------
+function step(dt) {
+  const sc = state.scenario;
+
+  // Storm profile
+  const profile = sc.stormProfile(state.time);
+  state.currentRain = state.storming ? profile.rain : 0;
+  state.currentInflow = state.storming ? profile.inflow * (1 + state.eventInflowSpike) : 1.5;
+
+  // Decay event spike
+  state.eventInflowSpike = Math.max(0, state.eventInflowSpike - dt * 0.15);
+
+  // Roll for mid-storm events
+  if (state.storming && state.time >= state.nextEventAt) {
+    triggerRandomEvent();
+    state.nextEventAt = state.time + 25 + Math.random() * 25;
+  }
+
+  // ---- Flux-based shallow water (8-neighbor gradient flux) ----
+  // Water flux follows the true steepest-descent gradient, not just N/S/E/W.
+  // Diagonal flux is scaled by 1/√2 ≈ 0.707 to account for the longer
+  // cell-to-cell distance (√2 times the cardinal step).
+  state.waterNext.set(state.water);
+  state.flow.fill(0);
+  const W = state.water, WN = state.waterNext, EL = state.elev, SH = state.structH, TY = state.type, FL = state.flow;
+  const COLS_ = COLS;
+  const DIAG = 0.7071;
+  const K_BASE = 0.22, K_CHAN = 0.45, K_SPILL = 0.35;
+
+  for (let y = 1; y < ROWS - 1; y++) {
+    const rowStart = y * COLS_ + 1;
+    const rowEnd = rowStart + COLS_ - 2;
+    for (let i = rowStart; i < rowEnd; i++) {
+      const wi = W[i];
+      if (wi < 0.0005) continue;
+      const ti = TY[i];
+      const hi = EL[i] + SH[i] + wi;
+
+      // 8 neighbor indices
+      const iE  = i + 1,         iW  = i - 1;
+      const iS  = i + COLS_,     iN  = i - COLS_;
+      const iSE = i + COLS_ + 1, iSW = i + COLS_ - 1;
+      const iNE = i - COLS_ + 1, iNW = i - COLS_ - 1;
+
+      const hE  = EL[iE]  + SH[iE]  + W[iE];
+      const hW  = EL[iW]  + SH[iW]  + W[iW];
+      const hS  = EL[iS]  + SH[iS]  + W[iS];
+      const hN  = EL[iN]  + SH[iN]  + W[iN];
+      const hSE = EL[iSE] + SH[iSE] + W[iSE];
+      const hSW = EL[iSW] + SH[iSW] + W[iSW];
+      const hNE = EL[iNE] + SH[iNE] + W[iNE];
+      const hNW = EL[iNW] + SH[iNW] + W[iNW];
+
+      const kFor = (ta, tb) =>
+        (ta === T.CHANNEL || tb === T.CHANNEL) ? K_CHAN :
+        (ta === T.SPILLWAY || tb === T.SPILLWAY) ? K_SPILL : K_BASE;
+
+      let fE = 0, fW = 0, fS = 0, fN = 0;
+      let fSE = 0, fSW = 0, fNE = 0, fNW = 0;
+      const dE = hi - hE;   if (dE > 0) fE = Math.min(wi, dE * kFor(ti, TY[iE]));
+      const dW = hi - hW;   if (dW > 0) fW = Math.min(wi, dW * kFor(ti, TY[iW]));
+      const dS = hi - hS;   if (dS > 0) fS = Math.min(wi, dS * kFor(ti, TY[iS]));
+      const dN = hi - hN;   if (dN > 0) fN = Math.min(wi, dN * kFor(ti, TY[iN]));
+      const dSE = hi - hSE; if (dSE > 0) fSE = Math.min(wi, dSE * kFor(ti, TY[iSE]) * DIAG);
+      const dSW = hi - hSW; if (dSW > 0) fSW = Math.min(wi, dSW * kFor(ti, TY[iSW]) * DIAG);
+      const dNE = hi - hNE; if (dNE > 0) fNE = Math.min(wi, dNE * kFor(ti, TY[iNE]) * DIAG);
+      const dNW = hi - hNW; if (dNW > 0) fNW = Math.min(wi, dNW * kFor(ti, TY[iNW]) * DIAG);
+
+      let total = fE + fW + fS + fN + fSE + fSW + fNE + fNW;
+      if (total > wi) {
+        const s = wi / total;
+        fE *= s; fW *= s; fS *= s; fN *= s;
+        fSE *= s; fSW *= s; fNE *= s; fNW *= s;
+        total = wi;
+      }
+      if (fE > 0)  WN[iE]  += fE;
+      if (fW > 0)  WN[iW]  += fW;
+      if (fS > 0)  WN[iS]  += fS;
+      if (fN > 0)  WN[iN]  += fN;
+      if (fSE > 0) WN[iSE] += fSE;
+      if (fSW > 0) WN[iSW] += fSW;
+      if (fNE > 0) WN[iNE] += fNE;
+      if (fNW > 0) WN[iNW] += fNW;
+      WN[i] -= total;
+      FL[i] = total;
+    }
+  }
+
+  // ---- Rain ----
+  // rain is mm/hr. Game-scaled so scenario storm profiles dominate the feel,
+  // rather than a global amplification making everything brutal.
+  const rainPerStep = (state.currentRain / 3600) * dt * 0.15;
+  if (rainPerStep > 0) {
+    for (let i = 0; i < state.waterNext.length; i++) {
+      if (state.type[i] !== T.OUTLET) state.waterNext[i] += rainPerStep;
+    }
+  }
+
+  // ---- River inflow (includes virtual upstream watershed runoff) ----
+  // The visible map is only a small portion of the real drainage area. Rain falling
+  // on the (off-map) upstream watershed produces lagged runoff entering the top of
+  // the river. We model that with a first-order reservoir: watershedQ rises with
+  // current rainfall and drains at a time constant τ, approximating watershed lag.
+  const watershedRatio = sc.watershedRatio ?? 5;  // virtual area / visible area
+  const inflowFromRain = state.currentRain * watershedRatio * 2e-5; // tuned
+  const tau = 18; // seconds of watershed lag
+  state.watershedQ += (inflowFromRain - state.watershedQ / tau) * dt;
+  const totalInflow = state.currentInflow + state.watershedQ;
+  for (let x = 0; x < COLS; x++) {
+    const i0 = idx(x, 0);
+    if (state.type[i0] === T.RIVER) state.waterNext[i0] += totalInflow * 0.35;
+    const i1 = idx(x, 1);
+    if (state.type[i1] === T.RIVER) state.waterNext[i1] += totalInflow * 0.20;
+  }
+
+  // ---- Katrina-specific: lake inflow ----
+  if (state.scenario.id === 'katrina2005') {
+    for (let x = 0; x < COLS; x++) {
+      for (let y = 0; y < ROWS * 0.25; y++) {
+        state.waterNext[idx(x, y)] += state.currentInflow * 0.15;
+      }
+    }
+  }
+
+  // ---- Pumps + Siphons ----
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x,y);
+      if (state.type[i] === T.PUMP) {
+        for (let dy = -2; dy <= 2; dy++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            const nx = x + dx, ny = y + dy;
+            if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
+              const j = idx(nx, ny);
+              const removed = Math.min(0.03, state.waterNext[j]);
+              state.waterNext[j] -= removed;
+              state.stats.pumped += removed;
+            }
+          }
+        }
+      } else if (state.type[i] === T.SIPHON) {
+        // Siphon: passive, needs standing water (>0.1m) at its cell to prime.
+        // Drains the 3x3 around it slowly. No power needed, can't flood out.
+        if (state.waterNext[i] > 0.1) {
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const nx = x + dx, ny = y + dy;
+              if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
+                const j = idx(nx, ny);
+                const removed = Math.min(0.012, state.waterNext[j]);
+                state.waterNext[j] -= removed;
+                state.stats.pumped += removed;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ---- Infiltration with soil type + saturation (Green-Ampt-ish) ----
+  // Rates tuned so infiltration is noticeable but not overwhelming relative to rain.
+  const SOIL_RATE = [0.0006, 0.0012, 0.0002]; // loam, sand, clay — tuned so rain wins during storms
+  for (let i = 0; i < state.waterNext.length; i++) {
+    if (state.type[i] === T.GRASS || state.type[i] === T.EVACUATED) {
+      const rate = SOIL_RATE[state.soilType[i]] * dt;
+      const capacity = 1 - state.soilSat[i];
+      const taken = Math.min(state.waterNext[i], rate * capacity);
+      state.waterNext[i] -= taken;
+      state.soilSat[i] = Math.min(1, state.soilSat[i] + taken * 2);
+      if (state.waterNext[i] < 0.005) {
+        state.soilSat[i] = Math.max(0, state.soilSat[i] - 0.01 * dt);
+      }
+    }
+  }
+
+  // ---- Outlets with tailwater boundary ----
+  // Measure discharge arriving at the outlet row (sum of water sitting in outlet cells
+  // before we apply the boundary condition). That discharge drives a rating curve.
+  let Q_in = 0;
+  for (let x = 0; x < COLS; x++) {
+    const i = idx(x, ROWS - 1);
+    if (state.type[i] === T.OUTLET) Q_in += state.waterNext[i];
+  }
+  state.outflowQ = state.outflowQ * 0.85 + Q_in * 0.15; // low-pass filter
+  // Stage-discharge rating. H_base sits just below the floodplain crest so
+  // there's always a visible standing pool at the outlet; storms push it up.
+  const H_base = 4.0;
+  const H_tw_target = H_base + 0.55 * Math.pow(Math.max(0, state.outflowQ), 0.7);
+  state.tailwaterStage = state.tailwaterStage * 0.9 + H_tw_target * 0.1;
+  // Hold outlet cells at tailwater stage (water depth = tw - terrain, clamped ≥ 0)
+  for (let x = 0; x < COLS; x++) {
+    const i = idx(x, ROWS - 1);
+    if (state.type[i] === T.OUTLET) {
+      const depth = Math.max(0, state.tailwaterStage - state.elev[i]);
+      state.waterNext[i] = depth;
+    }
+  }
+
+  // ---- Swap ----
+  [state.water, state.waterNext] = [state.waterNext, state.water];
+
+  // ---- Levee breach + sandbag erosion ----
+  // Stress increases when water level exceeds crest; breach when stress > threshold.
+  // Sandbags erode under sustained high flow.
+  if (state.storming) {
+    for (let y = 1; y < ROWS - 1; y++) {
+      for (let x = 1; x < COLS - 1; x++) {
+        const i = idx(x, y);
+        if (state.type[i] === T.LEVEE) {
+          const tile_height = state.elev[i] + state.structH[i];
+          let maxHead = 0;
+          const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+          for (const [dx, dy] of dirs) {
+            const j = idx(x + dx, y + dy);
+            const neighborLevel = state.elev[j] + state.structH[j] + state.water[j];
+            maxHead = Math.max(maxHead, neighborLevel - tile_height);
+          }
+          if (maxHead > 0) {
+            const rate = state.reinforced[i] ? 0.5 : 1.0;
+            state.stress[i] += dt * rate * (1 + maxHead * 3);
+            const threshold = state.reinforced[i] ? 10 : 5;
+            if (state.stress[i] > threshold) {
+              state.type[i] = T.BREACH;
+              state.structH[i] = -0.5;
+              state.elev[i] = Math.max(2, state.elev[i] - 0.5);
+              state.reinforced[i] = 0;
+              state.stats.breaches++;
+              state.breachEvents.push({ x, y, t: state.time, intensity: 1 });
+              toast(`Levee breached at (${x},${y})!`, 'danger');
+              sfx.breach();
+            }
+          } else {
+            state.stress[i] = Math.max(0, state.stress[i] - dt * 0.5);
+          }
+        } else if (state.type[i] === T.SANDBAG) {
+          // Sandbags erode under moderate flow
+          if (state.flow[i] > 0.15 || state.water[i] > 0.5) {
+            state.structH[i] = Math.max(0, state.structH[i] - dt * 0.08);
+            if (state.structH[i] < 0.1) {
+              state.type[i] = T.GRASS;
+              state.structH[i] = 0;
+              toast('Sandbags eroded away.', 'danger');
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ---- Pump failure when flooded ----
+  // Pumps fail when their own cell is flooded deeper than 0.4m during a storm.
+  if (state.storming) {
+    for (let i = 0; i < state.type.length; i++) {
+      if (state.type[i] === T.PUMP && state.water[i] > 0.4) {
+        state.type[i] = T.BREACH;
+        state.structH[i] = 0;
+        toast('Pump station flooded out!', 'danger');
+      }
+    }
+  }
+
+  // ---- Damage accumulation ----
+  if (state.storming) {
+    for (let i = 0; i < state.type.length; i++) {
+      const t = state.type[i];
+      const depth = state.water[i];
+      if (depth > 0.15) {
+        if (t === T.TOWN) state.damage[i] = Math.min(1, state.damage[i] + depth * 0.004);
+        else if (t === T.HOSPITAL) state.damage[i] = Math.min(1, state.damage[i] + depth * 0.006);
+        else if (t === T.SCHOOL) state.damage[i] = Math.min(1, state.damage[i] + depth * 0.005);
+      }
+    }
+  }
+
+  // ---- River stage (max water level along river column) ----
+  let maxStage = 0;
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      if (state.type[i] === T.RIVER) maxStage = Math.max(maxStage, state.water[i]);
+    }
+  }
+  state.stage = maxStage;
+
+  // ---- Wind (slow random walk) ----
+  state.windX += (Math.random() - 0.5) * dt * 30;
+  state.windX *= 0.99;
+  state.windX = Math.max(-200, Math.min(200, state.windX));
+
+  // ---- Rain particle updates (angled by wind) ----
+  if (state.currentRain > 0) {
+    const spawnN = Math.min(60, Math.floor(state.currentRain / 2));
+    for (let k = 0; k < spawnN; k++) {
+      state.rainParticles.push({
+        x: Math.random() * canvas.width - state.windX * 0.5,
+        y: -10,
+        vy: 700 + Math.random() * 300,
+        vx: state.windX + (Math.random() - 0.5) * 40,
+      });
+    }
+  }
+  for (let i = state.rainParticles.length - 1; i >= 0; i--) {
+    const p = state.rainParticles[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    if (p.y > canvas.height || p.x < -20 || p.x > canvas.width + 20) state.rainParticles.splice(i, 1);
+  }
+
+  // ---- Fireworks physics ----
+  for (let i = state.fireworks.length - 1; i >= 0; i--) {
+    const p = state.fireworks[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vy += 200 * dt; // gravity
+    p.life -= dt;
+    if (p.life <= 0) state.fireworks.splice(i, 1);
+  }
+
+  // ---- Lightning ----
+  if (state.storming && state.currentRain > 40 && Math.random() < dt * 0.15) {
+    state.flashT = 0.3;
+  }
+  state.flashT = Math.max(0, state.flashT - dt);
+
+  // ---- Hydrograph history ----
+  if (Math.floor(state.time * 10) !== Math.floor((state.time - dt) * 10)) {
+    state.hydrographHistory.push({
+      t: state.time,
+      rain: state.currentRain,
+      inflow: state.currentInflow,
+      stage: state.stage,
+      damage: getDamagePct(),
+    });
+    if (state.hydrographHistory.length > 800) state.hydrographHistory.shift();
+  }
+
+  // ---- Stats ----
+  state.stats.peakDamage = Math.max(state.stats.peakDamage, getDamagePct());
+}
+
+function getDamagePct() {
+  let tot = 0, dmg = 0;
+  for (let i = 0; i < state.type.length; i++) {
+    const t = state.type[i];
+    if (t === T.TOWN || t === T.HOSPITAL || t === T.SCHOOL) {
+      const w = t === T.HOSPITAL ? 3 : t === T.SCHOOL ? 2 : 1;
+      tot += w;
+      dmg += state.damage[i] * w;
+    }
+  }
+  return tot > 0 ? (100 * dmg / tot) : 0;
+}
+
+function getInfraDamage(tileType) {
+  let tot = 0, dmg = 0;
+  for (let i = 0; i < state.type.length; i++) {
+    if (state.type[i] === tileType) { tot++; dmg += state.damage[i]; }
+  }
+  return tot > 0 ? (100 * dmg / tot) : 0;
+}
+
+// ---------- Iso projection ----------
+const ISO = { sxScale: 1.0, syScale: 0.5, zScale: 2.5 };
+
+function isoCellSize(w, h) {
+  const sizeW = w / (COLS + ROWS);
+  const sizeH = (h - 60) / ((COLS + ROWS) * ISO.syScale + 30);
+  return Math.max(2, Math.min(sizeW, sizeH)) * state.zoom;
+}
+function isoProject(gx, gy, z) {
+  const cw = state.cell;
+  return {
+    x: (gx - gy) * cw * ISO.sxScale + state.cam.x,
+    y: (gx + gy) * cw * ISO.syScale - z * cw * ISO.zScale + state.cam.y,
+  };
+}
+function isoUnproject(sx, sy) {
+  // Derivation: for a cell at corner (gx, gy) and elevation z, the top-face
+  // CENTER projects to u_c = gx - gy, v_c = gx + gy + 1 - (zScale/syScale)*z,
+  // where u = (sx - cam.x)/(cw*sxScale), v = (sy - cam.y)/(cw*syScale).
+  // Inverting: gx = (u + v - 1 + Z*z) / 2,  gy = (v - u - 1 + Z*z) / 2.
+  // Where Z = zScale / syScale (constant, = 5 here).
+  const cw = state.cell;
+  const u = (sx - state.cam.x) / (cw * ISO.sxScale);
+  const v = (sy - state.cam.y) / (cw * ISO.syScale);
+  const Z = ISO.zScale / ISO.syScale;
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  if (!state.elev) {
+    return {
+      x: clamp(Math.floor((u + v - 1) / 2 + 0.5), 0, COLS - 1),
+      y: clamp(Math.floor((v - u - 1) / 2 + 0.5), 0, ROWS - 1),
+    };
+  }
+  // Scan elevations from 0 up; return the cell whose actual elevation matches
+  // the z guess (fixed point of the projection inverse).
+  let best = null;
+  for (let z = 0; z <= 18; z += 0.2) {
+    const Gx = (u + v - 1 + Z * z) / 2;
+    const Gy = (v - u - 1 + Z * z) / 2;
+    const gx = Math.floor(Gx + 0.5);
+    const gy = Math.floor(Gy + 0.5);
+    if (gx < 0 || gx >= COLS || gy < 0 || gy >= ROWS) continue;
+    const i = idx(gx, gy);
+    const realZ = state.elev[i] + state.structH[i] + state.water[i];
+    if (Math.abs(z - realZ) < 0.25) {
+      best = { x: gx, y: gy };
+    }
+  }
+  if (best) return best;
+  // Fallback — flat plane projection, clamped in bounds
+  return {
+    x: clamp(Math.floor((u + v - 1) / 2 + 0.5), 0, COLS - 1),
+    y: clamp(Math.floor((v - u - 1) / 2 + 0.5), 0, ROWS - 1),
+  };
+}
+
+// ---------- Cell color helper ----------
+function getCellColor(i) {
+  const e = state.elev[i] + state.structH[i];
+  const wv = state.water[i];
+  const t = state.type[i];
+
+  // Elevation-thematic palette: wetland → floodplain lush → valley grass →
+  // dry hills → rocky brown → bare gray → snowcap.
+  let r, g, b;
+  if (e < 3.0) {         // river bed / wetland
+    r = 50; g = 90; b = 100;
+  } else if (e < 5.0) {  // dark lush floodplain
+    r = 58; g = 105; b = 52;
+  } else if (e < 7.5) {  // river valley grassland
+    r = 95; g = 145; b = 70;
+  } else if (e < 10.5) { // rolling hills, drier grass
+    r = 150; g = 160; b = 85;
+  } else if (e < 13.5) { // brown rocky slopes
+    r = 165; g = 130; b = 80;
+  } else if (e < 16.0) { // bare rock gray
+    r = 160; g = 150; b = 140;
+  } else {                // snowcapped peaks
+    r = 240; g = 242; b = 250;
+  }
+
+  // Saturation tint: wet ground darkens
+  const sat = state.soilSat ? state.soilSat[i] : 0;
+  if (sat > 0.3 && e >= 3.0 && e < 13.5) {
+    const darkN = Math.min(0.35, (sat - 0.3) * 0.5);
+    r *= (1 - darkN); g *= (1 - darkN * 0.8); b *= (1 - darkN * 0.4);
+  }
+
+  if (t === T.GRASS) {
+    const st = state.soilType[i];
+    if (st === 1) { r += 20; g += 8; b -= 5; }         // sand (yellower)
+    else if (st === 2) { r -= 10; g -= 5; b += 10; }   // clay (bluer)
+  }
+  if (t === T.RIVER) {
+    r = 55; g = 120; b = 200;
+  }
+  if (t === T.ROAD) {
+    r = 75; g = 75; b = 82;
+  }
+  if (t === T.TOWN) {
+    const dmg = state.damage[i];
+    // Slight per-cell hue variation to read as individual buildings
+    const hash = ((i * 2654435761) >>> 0) % 100;
+    r = 230 - dmg * 120 + (hash - 50) * 0.4;
+    g = 200 - dmg * 170 + (hash - 50) * 0.3;
+    b = 90 + (hash - 50) * 0.2;
+  } else if (t === T.HOSPITAL) {
+    const dmg = state.damage[i];
+    r = 240 - dmg * 80; g = 80; b = 80;
+  } else if (t === T.SCHOOL) {
+    const dmg = state.damage[i];
+    r = 168 - dmg * 80; g = 85; b = 247 - dmg * 100;
+  } else if (t === T.SANDBAG) {
+    r = 212; g = 165; b = 106;
+  } else if (t === T.LEVEE) {
+    if (state.reinforced[i]) { r = 120; g = 95; b = 170; }
+    else { r = 139; g = 111; b = 71; }
+    const threshold = state.reinforced[i] ? 10 : 5;
+    const stressN = Math.min(1, state.stress[i] / threshold);
+    r += stressN * 60; g -= stressN * 40;
+    if (stressN > 0.6) {
+      const pulse = 0.5 + 0.5 * Math.sin(state.time * 8);
+      r = r * (1 - pulse * 0.4) + 255 * pulse * 0.4;
+    }
+  } else if (t === T.CHANNEL) {
+    r = 74; g = 85; b = 104;
+  } else if (t === T.PUMP) {
+    r = 220; g = 38 + Math.sin(state.time * 6) * 20; b = 38;
+  } else if (t === T.SIPHON) {
+    r = 6; g = 182; b = 212;
+  } else if (t === T.POND) {
+    r = 30; g = 64; b = 175;
+  } else if (t === T.SPILLWAY) {
+    r = 100; g = 116; b = 139;
+  } else if (t === T.EVACUATED) {
+    r = 40; g = 80; b = 40;
+  } else if (t === T.OUTLET) {
+    r = 15; g = 15; b = 30;
+  } else if (t === T.BREACH) {
+    r = 120; g = 60; b = 30;
+  }
+
+  if (wv > 0.005) {
+    const wN = Math.min(1, wv * 2 + 0.3);
+    const shimmer = Math.sin(state.time * 3 + (i % 31) * 0.5) * 0.05;
+    r = r * (1 - wN) + (60 + shimmer * 40) * wN;
+    g = g * (1 - wN) + (140 + shimmer * 30) * wN;
+    b = b * (1 - wN) + (225 + shimmer * 20) * wN;
+  }
+
+  const skyDarken = state.storming ? Math.min(0.6, state.currentRain / 80) : 0;
+  r *= (1 - skyDarken * 0.3);
+  g *= (1 - skyDarken * 0.3);
+  b *= (1 - skyDarken * 0.2);
+
+  return { r, g, b };
+}
+
+// ---------- Rendering ----------
+function render() {
+  // Size canvas from its layout
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w; canvas.height = h;
+  }
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, w, h);
+
+  if (!state.scenario || !state.elev) return;
+
+  if (state.view === 'iso') { renderIso(w, h); }
+  else { renderTop(w, h); }
+}
+
+function renderTop(w, h) {
+  const cw = w / COLS, ch = h / ROWS;
+  state.cell = Math.min(cw, ch);
+
+  const skyDarken = state.storming ? Math.min(0.6, state.currentRain / 80) : 0;
+
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      const e = state.elev[i] + state.structH[i];
+      const wv = state.water[i];
+      const t = state.type[i];
+
+      let r, g, b;
+      // Elevation-thematic palette (mirrored from getCellColor)
+      if (e < 3.0)         { r = 50; g = 90; b = 100; }
+      else if (e < 5.0)    { r = 58; g = 105; b = 52; }
+      else if (e < 7.5)    { r = 95; g = 145; b = 70; }
+      else if (e < 10.5)   { r = 150; g = 160; b = 85; }
+      else if (e < 13.5)   { r = 165; g = 130; b = 80; }
+      else if (e < 16.0)   { r = 160; g = 150; b = 140; }
+      else                  { r = 240; g = 242; b = 250; }
+      const sat = state.soilSat ? state.soilSat[i] : 0;
+      if (sat > 0.3 && e >= 3.0 && e < 13.5) {
+        const darkN = Math.min(0.35, (sat - 0.3) * 0.5);
+        r *= (1 - darkN); g *= (1 - darkN * 0.8); b *= (1 - darkN * 0.4);
+      }
+
+      // Soil type tint on grass tiles
+      if (t === T.GRASS) {
+        const st = state.soilType[i];
+        if (st === 1) { r += 25; g += 10; b -= 5; }        // sand (yellower)
+        else if (st === 2) { r -= 15; g -= 10; b += 10; }  // clay (bluer-gray)
+      }
+      if (t === T.RIVER) { r = 55; g = 120; b = 200; }
+
+      if (t === T.TOWN) {
+        const dmg = state.damage[i];
+        const hash = ((i * 2654435761) >>> 0) % 100;
+        r = 230 - dmg * 120 + (hash - 50) * 0.4;
+        g = 200 - dmg * 170 + (hash - 50) * 0.3;
+        b = 90 + (hash - 50) * 0.2;
+      }
+      else if (t === T.ROAD) {
+        r = 75; g = 75; b = 82;
+      } else if (t === T.HOSPITAL) {
+        const dmg = state.damage[i];
+        r = 240 - dmg * 80; g = 80; b = 80;
+      } else if (t === T.SCHOOL) {
+        const dmg = state.damage[i];
+        r = 168 - dmg * 80; g = 85; b = 247 - dmg * 100;
+      } else if (t === T.SANDBAG) {
+        r = 212; g = 165; b = 106;
+      } else if (t === T.LEVEE) {
+        if (state.reinforced[i]) { r = 120; g = 95; b = 170; }
+        else { r = 139; g = 111; b = 71; }
+        const threshold = state.reinforced[i] ? 10 : 5;
+        const stressN = Math.min(1, state.stress[i] / threshold);
+        r += stressN * 60; g -= stressN * 40;
+        if (stressN > 0.6) {
+          const pulse = 0.5 + 0.5 * Math.sin(state.time * 8);
+          r = r * (1 - pulse * 0.4) + 255 * pulse * 0.4;
+        }
+      } else if (t === T.CHANNEL) {
+        r = 74; g = 85; b = 104;
+      } else if (t === T.PUMP) {
+        r = 220; g = 38 + Math.sin(state.time * 6) * 20; b = 38;
+      } else if (t === T.SIPHON) {
+        r = 6; g = 182; b = 212;
+      } else if (t === T.POND) {
+        r = 30; g = 64; b = 175;
+      } else if (t === T.SPILLWAY) {
+        r = 100; g = 116; b = 139;
+      } else if (t === T.EVACUATED) {
+        r = 40; g = 80; b = 40;
+      } else if (t === T.OUTLET) {
+        r = 15; g = 15; b = 30;
+      } else if (t === T.BREACH) {
+        r = 120; g = 60; b = 30;
+      }
+
+      // Water overlay with shimmer
+      if (wv > 0.005) {
+        const wN = Math.min(1, wv * 2 + 0.3);
+        const shimmer = Math.sin(state.time * 3 + x * 0.5 + y * 0.3) * 0.05;
+        r = r * (1 - wN) + (60 + shimmer * 40) * wN;
+        g = g * (1 - wN) + (140 + shimmer * 30) * wN;
+        b = b * (1 - wN) + (225 + shimmer * 20) * wN;
+      }
+
+      // Storm darkening
+      r *= (1 - skyDarken * 0.3);
+      g *= (1 - skyDarken * 0.3);
+      b *= (1 - skyDarken * 0.2);
+
+      ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
+      ctx.fillRect(x * cw, y * ch, cw + 1, ch + 1);
+    }
+  }
+
+  // Damage heatmap overlay (toggle with H)
+  if (state.showHeatmap) {
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const i = idx(x, y);
+        const d = state.damage[i];
+        const sat = state.soilSat[i];
+        if (d > 0.01) {
+          ctx.fillStyle = `rgba(239,68,68,${Math.min(0.7, d)})`;
+          ctx.fillRect(x * cw, y * ch, cw + 1, ch + 1);
+        } else if (sat > 0.3 && (state.type[i] === T.GRASS || state.type[i] === T.EVACUATED)) {
+          ctx.fillStyle = `rgba(125,211,252,${(sat - 0.3) * 0.4})`;
+          ctx.fillRect(x * cw, y * ch, cw + 1, ch + 1);
+        }
+      }
+    }
+  }
+
+  // Rain particles
+  if (state.rainParticles.length > 0) {
+    ctx.strokeStyle = 'rgba(180,200,230,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (const p of state.rainParticles) {
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x + p.vx * 0.01, p.y + p.vy * 0.01);
+    }
+    ctx.stroke();
+  }
+
+  // Fireworks (victory)
+  for (const p of state.fireworks) {
+    ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${Math.max(0, p.life)})`;
+    ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+  }
+
+  // Lightning flash
+  if (state.flashT > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${state.flashT})`;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Cursor preview
+  if (state.mouseCell) {
+    const tool = TOOLS[state.tool];
+    if (tool) {
+      const { x, y } = state.mouseCell;
+      const affordable = state.budget >= tool.cost;
+      ctx.strokeStyle = affordable ? tool.color : '#ef4444';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x * cw, y * ch, cw, ch);
+      // Cost badge
+      ctx.fillStyle = affordable ? 'rgba(15,23,42,0.85)' : 'rgba(239,68,68,0.85)';
+      ctx.fillRect(x * cw + cw + 2, y * ch - 2, 44, 14);
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 10px Segoe UI';
+      ctx.fillText(`$${tool.cost}`, x * cw + cw + 6, y * ch + 9);
+    }
+  }
+
+  // Building sprites: draw little roofs and doors on town/hospital/school tiles
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      const t = state.type[i];
+      if (t !== T.TOWN && t !== T.HOSPITAL && t !== T.SCHOOL) continue;
+      const dmg = state.damage[i];
+      if (state.water[i] > 0.5) continue; // don't draw submerged buildings
+      const px = x * cw + 1, py = y * ch + 1;
+      const bw = cw - 2, bh = ch - 2;
+      // Roof (triangle)
+      ctx.fillStyle = t === T.HOSPITAL ? '#991b1b' : t === T.SCHOOL ? '#6b21a8' : '#7c2d12';
+      ctx.beginPath();
+      ctx.moveTo(px, py + bh * 0.4);
+      ctx.lineTo(px + bw / 2, py);
+      ctx.lineTo(px + bw, py + bh * 0.4);
+      ctx.closePath();
+      ctx.fill();
+      // Door
+      ctx.fillStyle = `rgba(30,20,10,${1 - dmg * 0.6})`;
+      ctx.fillRect(px + bw * 0.4, py + bh * 0.6, bw * 0.2, bh * 0.4);
+      // Damage cracks
+      if (dmg > 0.3) {
+        ctx.strokeStyle = `rgba(0,0,0,${Math.min(0.8, dmg)})`;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(px, py + bh * 0.5);
+        ctx.lineTo(px + bw * 0.5, py + bh * 0.3);
+        ctx.lineTo(px + bw, py + bh * 0.7);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Pump animation: rotating blade
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      if (state.type[idx(x, y)] === T.PUMP) {
+        const px = x * cw + cw / 2, py = y * ch + ch / 2;
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(state.time * 6);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-cw * 0.35, 0); ctx.lineTo(cw * 0.35, 0);
+        ctx.moveTo(0, -ch * 0.35); ctx.lineTo(0, ch * 0.35);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  }
+
+  // Breach wave ripples (decay over ~3 seconds)
+  ctx.strokeStyle = 'rgba(239,68,68,0.7)';
+  ctx.lineWidth = 2;
+  for (const be of state.breachEvents) {
+    const age = state.time - be.t;
+    if (age < 0 || age > 3) continue;
+    const radius = age * 40;
+    const alpha = 1 - age / 3;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(be.x * cw + cw / 2, be.y * ch + ch / 2, radius, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  state.breachEvents = state.breachEvents.filter(b => state.time - b.t < 3);
+
+  // Flow-direction tick marks on cells with significant flow
+  if (state.storming) {
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    for (let y = 1; y < ROWS - 1; y += 2) {
+      for (let x = 1; x < COLS - 1; x += 2) {
+        const i = idx(x, y);
+        if (state.flow[i] < 0.1 || state.water[i] < 0.1) continue;
+        // Find steepest downhill neighbor
+        const hi = state.elev[i] + state.structH[i] + state.water[i];
+        const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+        let bestDx = 0, bestDy = 0, bestDH = 0;
+        for (const [dx, dy] of dirs) {
+          const j = idx(x + dx, y + dy);
+          const dh = hi - (state.elev[j] + state.structH[j] + state.water[j]);
+          if (dh > bestDH) { bestDH = dh; bestDx = dx; bestDy = dy; }
+        }
+        if (bestDH > 0) {
+          const px = x * cw + cw / 2, py = y * ch + ch / 2;
+          ctx.beginPath();
+          ctx.arc(px + bestDx * cw * 0.3, py + bestDy * ch * 0.3, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+  }
+
+  // Countdown
+  if (state.countdown > 0) {
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 120px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText(state.countdown, w / 2, h / 2 + 30);
+    ctx.font = 'bold 20px Segoe UI';
+    ctx.fillText('BRACE FOR IMPACT', w / 2, h / 2 + 80);
+    ctx.textAlign = 'left';
+  }
+
+  // Storm phase banner
+  if (state.storming) {
+    const phase = stormPhase();
+    ctx.fillStyle = 'rgba(15,23,42,0.7)';
+    ctx.fillRect(w / 2 - 80, 8, 160, 26);
+    ctx.fillStyle = phase.color;
+    ctx.font = 'bold 13px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText(phase.label, w / 2, 25);
+    ctx.textAlign = 'left';
+  }
+}
+
+function renderIso(w, h) {
+  state.cell = isoCellSize(w, h);
+  if (!state._camInit) {
+    // Center camera on town (falls back to grid center)
+    const tb = state.scenario.townBox;
+    const tcx = tb ? (tb.x * COLS + tb.w / 2) : COLS / 2;
+    const tcy = tb ? (tb.y * ROWS + tb.h / 2) : ROWS / 2;
+    // Work backwards: we want isoProject(tcx, tcy, 5) to land at (w/2, h/2)
+    const cw = state.cell;
+    state.cam.x = w / 2 - (tcx - tcy) * cw * ISO.sxScale;
+    state.cam.y = h / 2 - (tcx + tcy) * cw * ISO.syScale + 5 * cw * ISO.zScale;
+    state._camInit = true;
+  }
+
+  // Back-to-front rendering (painter's algorithm)
+  for (let gy = 0; gy < ROWS; gy++) {
+    for (let gx = 0; gx < COLS; gx++) {
+      const i = idx(gx, gy);
+      const e = state.elev[i] + state.structH[i];
+      const wv = state.water[i];
+      const color = getCellColor(i);
+
+      const c_nw = isoProject(gx, gy, e);
+      const c_ne = isoProject(gx + 1, gy, e);
+      const c_se = isoProject(gx + 1, gy + 1, e);
+      const c_sw = isoProject(gx, gy + 1, e);
+
+      // Cull offscreen cells
+      if (c_ne.x < -20 || c_sw.x > w + 20 || c_se.y < -20 || c_nw.y > h + 20) continue;
+
+      // Top face
+      ctx.fillStyle = `rgb(${color.r|0},${color.g|0},${color.b|0})`;
+      ctx.beginPath();
+      ctx.moveTo(c_nw.x, c_nw.y);
+      ctx.lineTo(c_ne.x, c_ne.y);
+      ctx.lineTo(c_se.x, c_se.y);
+      ctx.lineTo(c_sw.x, c_sw.y);
+      ctx.closePath();
+      ctx.fill();
+
+      // South face if south neighbor is meaningfully lower
+      if (gy + 1 < ROWS) {
+        const js = idx(gx, gy + 1);
+        const se = state.elev[js] + state.structH[js];
+        if (e - se > 0.25) {
+          const p1 = isoProject(gx, gy + 1, se);
+          const p2 = isoProject(gx + 1, gy + 1, se);
+          ctx.fillStyle = `rgb(${(color.r * 0.62)|0},${(color.g * 0.62)|0},${(color.b * 0.62)|0})`;
+          ctx.beginPath();
+          ctx.moveTo(c_sw.x, c_sw.y);
+          ctx.lineTo(c_se.x, c_se.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+      // East face if east neighbor is meaningfully lower
+      if (gx + 1 < COLS) {
+        const je = idx(gx + 1, gy);
+        const ee = state.elev[je] + state.structH[je];
+        if (e - ee > 0.25) {
+          const p1 = isoProject(gx + 1, gy, ee);
+          const p2 = isoProject(gx + 1, gy + 1, ee);
+          ctx.fillStyle = `rgb(${(color.r * 0.78)|0},${(color.g * 0.78)|0},${(color.b * 0.78)|0})`;
+          ctx.beginPath();
+          ctx.moveTo(c_ne.x, c_ne.y);
+          ctx.lineTo(c_se.x, c_se.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      // Standing water surface (raised above terrain; exaggerated for visibility)
+      if (wv > 0.005) {
+        const ws = e + Math.max(0.15, wv * 1.5);
+        const wnw = isoProject(gx, gy, ws);
+        const wne = isoProject(gx + 1, gy, ws);
+        const wse = isoProject(gx + 1, gy + 1, ws);
+        const wsw = isoProject(gx, gy + 1, ws);
+        const shimmer = Math.sin(state.time * 3 + gx * 0.5 + gy * 0.3) * 15;
+        const alpha = Math.min(0.92, wv * 3 + 0.55);
+        // Shallow water = lighter, deeper = darker blue
+        const depth = Math.min(1, wv / 1.5);
+        const r = 60 + (1 - depth) * 50 + shimmer;
+        const g = 140 + (1 - depth) * 40 + shimmer;
+        const b = 220 + (1 - depth) * 15;
+        ctx.fillStyle = `rgba(${r|0},${g|0},${b|0},${alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(wnw.x, wnw.y);
+        ctx.lineTo(wne.x, wne.y);
+        ctx.lineTo(wse.x, wse.y);
+        ctx.lineTo(wsw.x, wsw.y);
+        ctx.closePath();
+        ctx.fill();
+        // Outline for sharp edge
+        ctx.strokeStyle = `rgba(30,80,200,${alpha * 0.5})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+
+      // Building roofs (peaked prism; varied height + markers)
+      const t = state.type[i];
+      if ((t === T.TOWN || t === T.HOSPITAL || t === T.SCHOOL) && wv < 0.5) {
+        const dmg = state.damage[i];
+        const hash = ((i * 2654435761) >>> 0) % 100;
+        // Per-building height variety (homes short, some mid-rise)
+        let bodyH = 0.5 + (hash / 100) * 1.2;
+        if (t === T.HOSPITAL) bodyH = 1.4;
+        if (t === T.SCHOOL) bodyH = 1.2;
+        const roofH = e + bodyH;
+        const peakH = roofH + 0.5 + (hash % 30) / 100;
+        const peakN = isoProject(gx + 0.5, gy + 0.5, peakH);
+        const roofNW = isoProject(gx, gy, roofH);
+        const roofNE = isoProject(gx + 1, gy, roofH);
+        const roofSE = isoProject(gx + 1, gy + 1, roofH);
+        const roofSW = isoProject(gx, gy + 1, roofH);
+        const rc = t === T.HOSPITAL ? '#991b1b' : t === T.SCHOOL ? '#6b21a8' : '#7c2d12';
+        // Wall color variation
+        const wallBrightness = 200 + (hash % 40);
+        ctx.fillStyle = `rgba(${wallBrightness},${wallBrightness - 10},${wallBrightness - 30},${1 - dmg * 0.5})`;
+        ctx.beginPath();
+        ctx.moveTo(c_sw.x, c_sw.y); ctx.lineTo(c_se.x, c_se.y);
+        ctx.lineTo(roofSE.x, roofSE.y); ctx.lineTo(roofSW.x, roofSW.y);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = `rgba(${wallBrightness - 25},${wallBrightness - 30},${wallBrightness - 50},${1 - dmg * 0.5})`;
+        ctx.beginPath();
+        ctx.moveTo(c_ne.x, c_ne.y); ctx.lineTo(c_se.x, c_se.y);
+        ctx.lineTo(roofSE.x, roofSE.y); ctx.lineTo(roofNE.x, roofNE.y);
+        ctx.closePath(); ctx.fill();
+        // Windows: small rectangles on south wall for mid-rise
+        if (bodyH > 1.0 && state.cell > 6) {
+          ctx.fillStyle = `rgba(120,160,200,${0.7 - dmg * 0.5})`;
+          const winTop = isoProject(gx + 0.2, gy + 1, e + bodyH * 0.7);
+          const winBot = isoProject(gx + 0.8, gy + 1, e + bodyH * 0.4);
+          ctx.fillRect(winTop.x, winTop.y, Math.abs(winBot.x - winTop.x), Math.abs(winBot.y - winTop.y));
+        }
+        // Two roof faces
+        ctx.fillStyle = rc;
+        ctx.beginPath();
+        ctx.moveTo(roofNW.x, roofNW.y); ctx.lineTo(roofNE.x, roofNE.y);
+        ctx.lineTo(peakN.x, peakN.y);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = `rgb(${(parseInt(rc.slice(1,3),16)*0.7)|0},${(parseInt(rc.slice(3,5),16)*0.7)|0},${(parseInt(rc.slice(5,7),16)*0.7)|0})`;
+        ctx.beginPath();
+        ctx.moveTo(roofSW.x, roofSW.y); ctx.lineTo(roofSE.x, roofSE.y);
+        ctx.lineTo(peakN.x, peakN.y);
+        ctx.closePath(); ctx.fill();
+        // Hospital red cross marker
+        if (t === T.HOSPITAL && state.cell > 5) {
+          const cxc = isoProject(gx + 0.5, gy + 0.5, peakH + 0.2);
+          const csz = state.cell * 0.4;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(cxc.x - csz / 4, cxc.y - csz, csz / 2, csz * 2);
+          ctx.fillRect(cxc.x - csz, cxc.y - csz / 4, csz * 2, csz / 2);
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(cxc.x - csz / 6, cxc.y - csz * 0.85, csz / 3, csz * 1.7);
+          ctx.fillRect(cxc.x - csz * 0.85, cxc.y - csz / 6, csz * 1.7, csz / 3);
+        }
+        // School flagpole
+        if (t === T.SCHOOL && state.cell > 5) {
+          const poleBase = isoProject(gx + 0.5, gy + 0.5, peakH);
+          const poleTop = isoProject(gx + 0.5, gy + 0.5, peakH + 0.8);
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(poleBase.x, poleBase.y); ctx.lineTo(poleTop.x, poleTop.y);
+          ctx.stroke();
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(poleTop.x, poleTop.y, state.cell * 0.6, state.cell * 0.25);
+        }
+      }
+
+      // Pump rotating blade at top
+      if (t === T.PUMP && wv < 0.4) {
+        const center = isoProject(gx + 0.5, gy + 0.5, e + 0.3);
+        ctx.save();
+        ctx.translate(center.x, center.y);
+        ctx.rotate(state.time * 6);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        const sz = state.cell * 0.9;
+        ctx.beginPath();
+        ctx.moveTo(-sz, 0); ctx.lineTo(sz, 0);
+        ctx.moveTo(0, -sz * 0.5); ctx.lineTo(0, sz * 0.5);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  }
+
+  // Breach wave ripples in iso (ellipses)
+  ctx.strokeStyle = 'rgba(239,68,68,0.7)';
+  ctx.lineWidth = 2;
+  for (const be of state.breachEvents) {
+    const age = state.time - be.t;
+    if (age < 0 || age > 3) continue;
+    const alpha = 1 - age / 3;
+    ctx.globalAlpha = alpha;
+    const center = isoProject(be.x + 0.5, be.y + 0.5,
+      state.elev[idx(be.x, be.y)] + state.structH[idx(be.x, be.y)]);
+    const rx = age * 30, ry = age * 15;
+    ctx.beginPath();
+    ctx.ellipse(center.x, center.y, rx, ry, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  state.breachEvents = state.breachEvents.filter(b => state.time - b.t < 3);
+
+  // Cursor preview diamond
+  if (state.mouseCell) {
+    const { x, y } = state.mouseCell;
+    if (x >= 0 && x < COLS && y >= 0 && y < ROWS) {
+      const i = idx(x, y);
+      const e = state.elev[i] + state.structH[i] + state.water[i];
+      const tool = TOOLS[state.tool];
+      if (tool) {
+        const affordable = state.budget >= tool.cost;
+        const p1 = isoProject(x, y, e + 0.08);
+        const p2 = isoProject(x + 1, y, e + 0.08);
+        const p3 = isoProject(x + 1, y + 1, e + 0.08);
+        const p4 = isoProject(x, y + 1, e + 0.08);
+        ctx.strokeStyle = affordable ? tool.color : '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+        ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y);
+        ctx.closePath(); ctx.stroke();
+        // Cost badge
+        ctx.fillStyle = affordable ? 'rgba(15,23,42,0.9)' : 'rgba(239,68,68,0.9)';
+        ctx.fillRect(p2.x + 4, p2.y - 6, 44, 14);
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = 'bold 10px Segoe UI';
+        ctx.fillText(`$${tool.cost}`, p2.x + 8, p2.y + 5);
+      }
+    }
+  }
+
+  // Rain particles (screen-space)
+  if (state.rainParticles.length > 0) {
+    ctx.strokeStyle = 'rgba(180,200,230,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (const p of state.rainParticles) {
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x + p.vx * 0.01, p.y + p.vy * 0.01);
+    }
+    ctx.stroke();
+  }
+
+  // Fireworks (screen-space)
+  for (const p of state.fireworks) {
+    ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${Math.max(0, p.life)})`;
+    ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+  }
+
+  // Lightning flash
+  if (state.flashT > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${state.flashT})`;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Countdown
+  if (state.countdown > 0) {
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 120px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText(state.countdown, w / 2, h / 2 + 30);
+    ctx.font = 'bold 20px Segoe UI';
+    ctx.fillText('BRACE FOR IMPACT', w / 2, h / 2 + 80);
+    ctx.textAlign = 'left';
+  }
+
+  // Storm phase banner
+  if (state.storming) {
+    const phase = stormPhase();
+    ctx.fillStyle = 'rgba(15,23,42,0.7)';
+    ctx.fillRect(w / 2 - 80, 8, 160, 26);
+    ctx.fillStyle = phase.color;
+    ctx.font = 'bold 13px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText(phase.label, w / 2, 25);
+    ctx.textAlign = 'left';
+  }
+}
+
+function triggerRandomEvent() {
+  // Skip early events
+  if (state.time < 20) return;
+  const roll = Math.random();
+  if (roll < 0.25) {
+    state.eventInflowSpike = 1.5;
+    toast('⚠ Upstream landslide — inflow spike incoming!', 'danger');
+    sfx.impact();
+  } else if (roll < 0.45) {
+    // Wind shift
+    state.windX = (Math.random() - 0.5) * 300;
+    toast('⚠ Sudden wind shift — rain direction changed.', 'info');
+  } else if (roll < 0.6) {
+    // Random pump goes offline
+    const pumps = [];
+    for (let i = 0; i < state.type.length; i++) if (state.type[i] === T.PUMP) pumps.push(i);
+    if (pumps.length > 0) {
+      const p = pumps[Math.floor(Math.random() * pumps.length)];
+      state.type[p] = T.BREACH;
+      toast('⚠ Pump failure — power lost at station.', 'danger');
+    }
+  } else if (roll < 0.75) {
+    // Rain burst
+    state.eventInflowSpike = Math.max(state.eventInflowSpike, 0.6);
+    toast('⚠ Rain band intensifying.', 'info');
+  } else {
+    // Breach risk: add stress to a random levee
+    const levees = [];
+    for (let i = 0; i < state.type.length; i++) if (state.type[i] === T.LEVEE) levees.push(i);
+    if (levees.length > 0) {
+      const l = levees[Math.floor(Math.random() * levees.length)];
+      state.stress[l] = Math.min(state.stress[l] + 2, (state.reinforced[l] ? 10 : 5) - 0.5);
+      toast('⚠ Piping failure detected in a levee — reinforce quickly!', 'danger');
+    }
+  }
+}
+
+function stormPhase() {
+  const sc = state.scenario;
+  const t = state.time;
+  const p = t / sc.duration;
+  const peakP = sc.peakAt / sc.duration;
+  if (p < peakP * 0.5) return { label: 'RISING', color: '#fbbf24' };
+  if (p < peakP * 0.95) return { label: 'ACCELERATING', color: '#fb923c' };
+  if (p < peakP * 1.1) return { label: 'PEAK', color: '#ef4444' };
+  if (p < peakP * 1.4) return { label: 'RECESSION', color: '#a78bfa' };
+  return { label: 'SUBSIDING', color: '#60a5fa' };
+}
+
+// ---------- Hydrograph ----------
+function renderHydrograph() {
+  const w = hydroCanvas.clientWidth, h = hydroCanvas.clientHeight;
+  if (hydroCanvas.width !== w || hydroCanvas.height !== h) {
+    hydroCanvas.width = w; hydroCanvas.height = h;
+  }
+  hctx.clearRect(0, 0, w, h);
+
+  if (!state.scenario) return;
+  const dur = state.scenario._effectiveDuration ?? state.scenario.duration;
+
+  // Predicted storm profile (the whole thing) + uncertainty bands
+  const rainMax = state.scenario.peakRain * 1.5;
+  hctx.fillStyle = 'rgba(125,211,252,0.08)';
+  hctx.beginPath();
+  let firstPt = true;
+  const rainSamples = [];
+  for (let t = 0; t <= dur; t += dur / 200) {
+    const p = state.scenario.stormProfile(t);
+    rainSamples.push({ t, v: p.rain });
+  }
+  // Upper band
+  for (const s of rainSamples) {
+    const x = (s.t / dur) * w;
+    const y = h - (s.v * 1.15 / rainMax) * h * 0.9;
+    if (firstPt) { hctx.moveTo(x, y); firstPt = false; } else hctx.lineTo(x, y);
+  }
+  // Lower band (reversed)
+  for (let i = rainSamples.length - 1; i >= 0; i--) {
+    const s = rainSamples[i];
+    const x = (s.t / dur) * w;
+    const y = h - (s.v * 0.85 / rainMax) * h * 0.9;
+    hctx.lineTo(x, y);
+  }
+  hctx.closePath();
+  hctx.fill();
+
+  hctx.strokeStyle = 'rgba(125,211,252,0.3)';
+  hctx.lineWidth = 1;
+  hctx.beginPath();
+  for (let k = 0; k < rainSamples.length; k++) {
+    const s = rainSamples[k];
+    const x = (s.t / dur) * w;
+    const y = h - (s.v / rainMax) * h * 0.9;
+    if (k === 0) hctx.moveTo(x, y); else hctx.lineTo(x, y);
+  }
+  hctx.stroke();
+
+  // Predicted inflow
+  hctx.strokeStyle = 'rgba(239,68,68,0.3)';
+  hctx.lineWidth = 1;
+  hctx.beginPath();
+  const flowMax = state.scenario.peakFlow * 1.3;
+  for (let t = 0; t <= dur; t += dur / 200) {
+    const p = state.scenario.stormProfile(t);
+    const x = (t / dur) * w;
+    const y = h - (p.inflow / flowMax) * h * 0.9;
+    if (t === 0) hctx.moveTo(x, y); else hctx.lineTo(x, y);
+  }
+  hctx.stroke();
+
+  // Actual history (solid)
+  if (state.hydrographHistory.length > 1) {
+    hctx.strokeStyle = '#7dd3fc';
+    hctx.lineWidth = 2;
+    hctx.beginPath();
+    for (let i = 0; i < state.hydrographHistory.length; i++) {
+      const s = state.hydrographHistory[i];
+      const x = (s.t / dur) * w;
+      const y = h - (s.rain / rainMax) * h * 0.9;
+      if (i === 0) hctx.moveTo(x, y); else hctx.lineTo(x, y);
+    }
+    hctx.stroke();
+
+    hctx.strokeStyle = '#ef4444';
+    hctx.lineWidth = 2;
+    hctx.beginPath();
+    for (let i = 0; i < state.hydrographHistory.length; i++) {
+      const s = state.hydrographHistory[i];
+      const x = (s.t / dur) * w;
+      const y = h - (s.inflow / flowMax) * h * 0.9;
+      if (i === 0) hctx.moveTo(x, y); else hctx.lineTo(x, y);
+    }
+    hctx.stroke();
+
+    // Damage (orange)
+    hctx.strokeStyle = '#fbbf24';
+    hctx.lineWidth = 2;
+    hctx.beginPath();
+    for (let i = 0; i < state.hydrographHistory.length; i++) {
+      const s = state.hydrographHistory[i];
+      const x = (s.t / dur) * w;
+      const y = h - (s.damage / 100) * h * 0.9;
+      if (i === 0) hctx.moveTo(x, y); else hctx.lineTo(x, y);
+    }
+    hctx.stroke();
+  }
+
+  // Ghost: previous best damage curve
+  const ghost = loadGhost(state.scenario.id);
+  if (ghost && ghost.length > 1) {
+    hctx.strokeStyle = 'rgba(251,191,36,0.25)';
+    hctx.lineWidth = 2;
+    hctx.setLineDash([3, 3]);
+    hctx.beginPath();
+    for (let i = 0; i < ghost.length; i++) {
+      const s = ghost[i];
+      const x = (s.t / dur) * w;
+      const y = h - (s.damage / 100) * h * 0.9;
+      if (i === 0) hctx.moveTo(x, y); else hctx.lineTo(x, y);
+    }
+    hctx.stroke();
+    hctx.setLineDash([]);
+  }
+
+  // "Now" cursor
+  const nowX = (state.time / dur) * w;
+  hctx.strokeStyle = '#ffffff';
+  hctx.lineWidth = 1;
+  hctx.setLineDash([4, 4]);
+  hctx.beginPath();
+  hctx.moveTo(nowX, 0);
+  hctx.lineTo(nowX, h);
+  hctx.stroke();
+  hctx.setLineDash([]);
+
+  // Labels
+  hctx.fillStyle = '#94a3b8';
+  hctx.font = '10px Segoe UI';
+  hctx.fillText('— Rainfall (mm/hr)', 8, 14);
+  hctx.fillStyle = '#ef4444';
+  hctx.fillText('— River inflow', 120, 14);
+  hctx.fillStyle = '#fbbf24';
+  hctx.fillText('— Damage %', 210, 14);
+  hctx.fillStyle = '#94a3b8';
+  hctx.fillText(formatTime(0), 2, h - 2);
+  hctx.fillText(formatTime(dur), w - 40, h - 2);
+  hctx.fillText('NOW', nowX + 3, h - 2);
+}
+
+// ---------- UI ----------
+function renderChallengePanel() {
+  let box = document.getElementById('challengeBox');
+  if (!box) {
+    const info = document.getElementById('infopanel');
+    const heading = document.createElement('h3');
+    heading.textContent = 'Challenges';
+    heading.style.marginTop = '16px';
+    info.appendChild(heading);
+    box = document.createElement('div');
+    box.id = 'challengeBox';
+    box.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;';
+    info.appendChild(box);
+  }
+  const locked = state.storming || state.countdown > 0 || state.gameOver;
+  const sc = state.scenario;
+  if (sc?.sandbox) { box.innerHTML = '<span class="minor">Sandbox: challenges disabled.</span>'; return; }
+  box.innerHTML = Object.entries(CHALLENGES).map(([id, c]) => {
+    const on = state_challenges.has(id);
+    return `<div class="challenge-chip" data-id="${id}" style="padding:5px 8px;font-size:10px;border-radius:4px;border:1px solid ${on ? '#fbbf24' : '#475569'};background:${on ? '#3b2f10' : '#1a2230'};cursor:${locked ? 'not-allowed' : 'pointer'};opacity:${locked && !on ? 0.5 : 1};">
+      <b style="color:${on ? '#fbbf24' : '#e6edf3'};">${c.name}</b>
+      <span style="color:#fbbf24;margin-left:4px;">+${c.bonus}★</span>
+      <div style="color:#94a3b8;font-size:9px;">${c.desc}</div>
+    </div>`;
+  }).join('');
+  if (!locked) {
+    box.querySelectorAll('.challenge-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const id = chip.dataset.id;
+        if (state_challenges.has(id)) state_challenges.delete(id);
+        else state_challenges.add(id);
+        renderChallengePanel();
+      });
+    });
+  }
+}
+
+function buildToolPanel() {
+  const el = document.getElementById('tools');
+  el.innerHTML = '';
+  const sc = state.scenario;
+  let tools = sc.tools.slice();
+  if (sc._noLevees) tools = tools.filter(t => t !== 'levee' && t !== 'reinforce');
+  if (sc._noEvac) tools = tools.filter(t => t !== 'evac');
+  if (sc._noPump) tools = tools.filter(t => t !== 'pump');
+  for (const id of tools) {
+    const tool = TOOLS[id];
+    const div = document.createElement('div');
+    div.className = 'tool' + (state.tool === id ? ' active' : '');
+    div.dataset.tool = id;
+    div.innerHTML = `
+      <div class="icon" style="background:${tool.color};color:white;">${tool.icon}</div>
+      <div>
+        <div><b>${tool.name}</b></div>
+        <div class="desc">${tool.desc}</div>
+      </div>
+      <div class="cost">$${tool.cost}</div>`;
+    div.addEventListener('click', () => {
+      document.querySelectorAll('.tool').forEach(e => e.classList.remove('active'));
+      div.classList.add('active');
+      state.tool = id;
+    });
+    el.appendChild(div);
+  }
+}
+
+function renderObjectives() {
+  const el = document.getElementById('objectives');
+  el.innerHTML = state.objectives.map(o => {
+    const met = o.check();
+    const cls = met ? 'done' : (state.gameOver ? 'fail' : '');
+    return `<div class="obj-item ${cls}"><span class="dot"></span>${o.label}</div>`;
+  }).join('');
+}
+
+function updateInfra() {
+  const el = document.getElementById('infraStatus');
+  if (!state.scenario) { el.innerHTML = '<div class="minor">Select a scenario to begin.</div>'; return; }
+  const townDmg = getInfraDamage(T.TOWN);
+  const hospDmg = getInfraDamage(T.HOSPITAL);
+  const schDmg = getInfraDamage(T.SCHOOL);
+  let html = `<div>Town: <b style="color:${colorForPct(townDmg)}">${townDmg.toFixed(0)}%</b></div>`;
+  if (state.scenario.hospital) html += `<div>Hospital: <b style="color:${colorForPct(hospDmg, 30)}">${hospDmg.toFixed(0)}%</b></div>`;
+  if (state.scenario.school) html += `<div>School: <b style="color:${colorForPct(schDmg, 50)}">${schDmg.toFixed(0)}%</b></div>`;
+  html += `<div>Breaches: <b>${state.stats.breaches}</b></div>`;
+  html += `<div>Pumped: <b>${state.stats.pumped.toFixed(1)} m³</b></div>`;
+  html += `<div>Evacuated: <b>${state.stats.evacuated}</b> cells</div>`;
+  el.innerHTML = html;
+}
+
+function colorForPct(p, thresh = 40) {
+  if (p < thresh * 0.5) return '#22c55e';
+  if (p < thresh) return '#fbbf24';
+  return '#ef4444';
+}
+
+function updateHUD() {
+  const sandbox = state.scenario?.sandbox;
+  document.getElementById('walletDisp').textContent = `$${loadWallet().toLocaleString()}`;
+  document.getElementById('budgetDisp').textContent = sandbox ? '∞' : `$${state.budget.toLocaleString()}`;
+  const startBtn = document.getElementById('startBtn');
+  if (startBtn && !startBtn.disabled && state.scenario && !sandbox && state.prepTimer > 0 && !state.storming && state.countdown === 0) {
+    startBtn.textContent = `Start Storm (${Math.ceil(state.prepTimer)}s)`;
+    startBtn.style.background = state.prepTimer < 10 ? '#b91c1c' : '#2563eb';
+  }
+  document.getElementById('timeDisp').textContent = formatTime(state.time);
+  document.getElementById('stageDisp').textContent = `${state.stage.toFixed(2)} m`;
+  document.getElementById('rainDisp').textContent = `${state.currentRain.toFixed(0)} mm/hr`;
+  document.getElementById('tailwaterDisp').textContent = `${state.tailwaterStage.toFixed(2)} m`;
+  const pct = state.scenario ? getDamagePct() : 0;
+  const dmgEl = document.getElementById('damageDisp');
+  dmgEl.textContent = `${pct.toFixed(0)}%`;
+  dmgEl.style.color = colorForPct(pct, state.scenario?.winDamage || 50);
+  if (state.scenario) { renderObjectives(); updateInfra(); }
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const ss = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${ss}`;
+}
+
+function toast(text, kind = 'info') {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  if (kind === 'danger') el.style.borderColor = 'var(--danger)';
+  if (kind === 'good') el.style.borderColor = 'var(--ok)';
+  el.textContent = text;
+  document.getElementById('canvaswrap').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ---------- Placement ----------
+let mouseDown = false;
+let mouseBtn = 0;
+let panning = false;
+let panStart = null;
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('mousedown', e => {
+  // Middle-mouse or Shift+Left = pan
+  if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+    panning = true;
+    panStart = { x: e.clientX, y: e.clientY, camX: state.cam.x, camY: state.cam.y };
+    canvas.style.cursor = 'grabbing';
+    e.preventDefault();
+    return;
+  }
+  mouseDown = true; mouseBtn = e.button;
+  if (e.button === 2) removeCell(e); else place(e);
+});
+canvas.addEventListener('mouseup', () => {
+  mouseDown = false;
+  panning = false;
+  canvas.style.cursor = 'crosshair';
+});
+canvas.addEventListener('mouseleave', () => {
+  mouseDown = false;
+  panning = false;
+  canvas.style.cursor = 'crosshair';
+  state.mouseCell = null;
+  const tt = document.getElementById('cellTooltip');
+  if (tt) tt.style.display = 'none';
+});
+canvas.addEventListener('mousemove', e => {
+  if (panning && panStart) {
+    const rect = canvas.getBoundingClientRect();
+    const scale = canvas.width / rect.width;
+    state.cam.x = panStart.camX + (e.clientX - panStart.x) * scale;
+    state.cam.y = panStart.camY + (e.clientY - panStart.y) * scale;
+    return;
+  }
+  state.mouseCell = mouseToCell(e);
+  if (mouseDown) {
+    if (mouseBtn === 2) removeCell(e); else place(e);
+  }
+  updateTooltip(e);
+});
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const scale = canvas.width / rect.width;
+  const mx = (e.clientX - rect.left) * scale;
+  const my = (e.clientY - rect.top) * scale;
+  const prev = state.zoom;
+  const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+  state.zoom = Math.max(0.4, Math.min(5, state.zoom * factor));
+  if (state.view === 'iso') {
+    // Zoom keeps mouse-focal point stable
+    const ratio = state.zoom / prev;
+    state.cam.x = mx - (mx - state.cam.x) * ratio;
+    state.cam.y = my - (my - state.cam.y) * ratio;
+  }
+}, { passive: false });
+
+function mouseToCell(e) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const sy = (e.clientY - rect.top) * (canvas.height / rect.height);
+  if (state.view === 'iso') {
+    return isoUnproject(sx, sy);
+  }
+  const cw = canvas.width / COLS, ch = canvas.height / ROWS;
+  return { x: Math.floor(sx / cw), y: Math.floor(sy / ch) };
+}
+
+function removeCell(e) {
+  const { x, y } = mouseToCell(e);
+  if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return;
+  const i = idx(x, y);
+  const t = state.type[i];
+  const removableCosts = {
+    [T.SANDBAG]: 50, [T.LEVEE]: 300, [T.CHANNEL]: 150,
+    [T.PUMP]: 800, [T.POND]: 400, [T.SPILLWAY]: 500, [T.SIPHON]: 250,
+  };
+  if (!(t in removableCosts)) return;
+  snapshotCell(i);
+  const refund = Math.floor(removableCosts[t] * 0.5);
+  state.budget += refund;
+  state.spent = Math.max(0, state.spent - refund);
+  state.type[i] = T.GRASS;
+  state.structH[i] = 0;
+  state.stress[i] = 0;
+  // Restore elevation for dug-out types
+  if (t === T.CHANNEL || t === T.POND) {
+    // Approximate restoration by recomputing from terrain function
+    const scratch = new Float32Array(COLS * ROWS);
+    state.scenario.terrain(scratch);
+    state.elev[i] = scratch[i];
+  }
+  updateHUD();
+  sfx.click();
+}
+
+function updateTooltip(e) {
+  let tt = document.getElementById('cellTooltip');
+  if (!tt) {
+    tt = document.createElement('div');
+    tt.id = 'cellTooltip';
+    tt.style.cssText = 'position:fixed;background:rgba(20,27,38,0.96);border:1px solid #334;padding:6px 10px;border-radius:4px;font-size:11px;pointer-events:none;z-index:60;color:#e6edf3;line-height:1.5;white-space:nowrap;';
+    document.body.appendChild(tt);
+  }
+  if (!state.mouseCell || !state.elev) { tt.style.display = 'none'; return; }
+  const { x, y } = state.mouseCell;
+  const i = idx(x, y);
+  const tileName = Object.keys(T).find(k => T[k] === state.type[i]) || '?';
+  const elev = (state.elev[i] + state.structH[i]).toFixed(2);
+  const depth = state.water[i].toFixed(2);
+  const sat = (state.soilSat[i] * 100).toFixed(0);
+  const soilNames = ['Loam', 'Sand', 'Clay'];
+  let html = `<b>${tileName}</b> (${x},${y})<br>` +
+    `Elev: ${elev} m · Depth: ${depth} m<br>` +
+    `${soilNames[state.soilType[i]]} · ${sat}% sat`;
+  if (state.type[i] === T.LEVEE) {
+    const threshold = state.reinforced[i] ? 10 : 5;
+    const stressPct = Math.min(100, (state.stress[i] / threshold) * 100);
+    const rlabel = state.reinforced[i] ? ' · Reinforced' : '';
+    html += `<br>Stress: <span style="color:${stressPct > 60 ? '#ef4444' : '#fbbf24'};">${stressPct.toFixed(0)}%</span>${rlabel}`;
+  }
+  if (state.damage[i] > 0) {
+    html += `<br>Damage: ${(state.damage[i] * 100).toFixed(0)}%`;
+  }
+  tt.innerHTML = html;
+  tt.style.display = 'block';
+  tt.style.left = (e.clientX + 14) + 'px';
+  tt.style.top = (e.clientY + 14) + 'px';
+}
+
+const undoStack = [];
+function snapshotCell(i) {
+  undoStack.push({
+    i,
+    type: state.type[i], elev: state.elev[i], structH: state.structH[i],
+    stress: state.stress[i], budget: state.budget, spent: state.spent,
+    evacuated: state.stats.evacuated,
+  });
+  if (undoStack.length > 50) undoStack.shift();
+}
+function undo() {
+  const u = undoStack.pop();
+  if (!u) return;
+  state.type[u.i] = u.type;
+  state.elev[u.i] = u.elev;
+  state.structH[u.i] = u.structH;
+  state.stress[u.i] = u.stress;
+  state.budget = u.budget;
+  state.spent = u.spent;
+  state.stats.evacuated = u.evacuated;
+  updateHUD();
+}
+
+function place(e) {
+  const { x, y } = mouseToCell(e);
+  if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return;
+  const i = idx(x, y);
+  const tool = TOOLS[state.tool];
+  if (!tool) return;
+
+  // Reinforce tool: only works on existing levees, clears stress + hardens
+  if (state.tool === 'reinforce') {
+    if (state.type[i] !== T.LEVEE) return;
+    const sb = state.scenario?.sandbox;
+    if (!sb && state.budget < tool.cost) return;
+    if (state.reinforced[i]) return; // already reinforced
+    snapshotCell(i);
+    state.reinforced[i] = 1;
+    state.stress[i] = 0;
+    state.structH[i] += 0.5;
+    if (!sb) { state.budget -= tool.cost; state.spent += tool.cost; }
+    updateHUD();
+    sfx.click();
+    return;
+  }
+
+  // Special: emergency breach works ON levees
+  if (state.tool === 'breach') {
+    if (state.type[i] !== T.LEVEE) return;
+    const sb = state.scenario?.sandbox;
+    if (!sb && state.budget < tool.cost) return;
+    snapshotCell(i);
+    state.type[i] = T.BREACH;
+    state.structH[i] = -0.5;
+    state.elev[i] = Math.max(2, state.elev[i] - 0.5);
+    if (!sb) { state.budget -= tool.cost; state.spent += tool.cost; }
+    toast('Emergency breach opened.', 'good');
+    updateHUD();
+    sfx.click();
+    return;
+  }
+
+  // Evacuate works only on town/hospital/school
+  if (state.tool === 'evac') {
+    if (![T.TOWN, T.HOSPITAL, T.SCHOOL].includes(state.type[i])) return;
+    const sb = state.scenario?.sandbox;
+    if (!sb && state.budget < tool.cost) return;
+    snapshotCell(i);
+    state.type[i] = T.EVACUATED;
+    state.stats.evacuated++;
+    if (!sb) { state.budget -= tool.cost; state.spent += tool.cost; }
+    updateHUD();
+    sfx.click();
+    return;
+  }
+
+  if ([T.TOWN, T.HOSPITAL, T.SCHOOL, T.OUTLET, T.EVACUATED].includes(state.type[i])) return;
+  if (state.type[i] === T.RIVER && state.tool !== 'channel') return;
+  if (state.budget < tool.cost) return;
+
+  snapshotCell(i);
+  const sandboxMode = state.scenario?.sandbox;
+  if (state.tool === 'sandbag') {
+    if (state.type[i] === T.SANDBAG) { state.structH[i] += 0.4; }
+    else { state.type[i] = T.SANDBAG; state.structH[i] = 0.8; }
+  } else if (state.tool === 'levee') {
+    state.type[i] = T.LEVEE; state.structH[i] = 3.5; state.stress[i] = 0;
+  } else if (state.tool === 'channel') {
+    state.type[i] = T.CHANNEL; state.structH[i] = -1.2; state.elev[i] = Math.max(2, state.elev[i] - 1);
+  } else if (state.tool === 'pump') {
+    state.type[i] = T.PUMP; state.structH[i] = 0.3;
+  } else if (state.tool === 'siphon') {
+    state.type[i] = T.SIPHON; state.structH[i] = 0.2;
+  } else if (state.tool === 'pond') {
+    state.type[i] = T.POND; state.structH[i] = -2.0; state.elev[i] = Math.max(1, state.elev[i] - 2);
+  } else if (state.tool === 'spillway') {
+    state.type[i] = T.SPILLWAY; state.structH[i] = 1.5;
+  }
+  if (!sandboxMode) {
+    state.budget -= tool.cost;
+    state.spent += tool.cost;
+  }
+  updateHUD();
+  sfx.click();
+}
+
+// ---------- Scenario select ----------
+function starsForPct(pct) {
+  if (pct < 10) return 3;
+  if (pct < 25) return 2;
+  if (pct < 40) return 1;
+  return 0;
+}
+
+function renderScenarioGrid() {
+  const el = document.getElementById('scenarioGrid');
+  const scores = loadScores();
+  const totalStars = totalStarsEarned();
+
+  // Show total stars at top
+  let totalLine = document.getElementById('totalStarLine');
+  if (!totalLine) {
+    totalLine = document.createElement('div');
+    totalLine.id = 'totalStarLine';
+    totalLine.style.cssText = 'margin-top:6px;color:#fbbf24;font-size:14px;';
+    el.parentNode.insertBefore(totalLine, el);
+  }
+  totalLine.innerHTML = `★ Total stars: <b>${totalStars}</b> · ${SCENARIOS.filter(s => isScenarioUnlocked(s.id)).length}/${SCENARIOS.length} scenarios unlocked`;
+
+  el.innerHTML = SCENARIOS.map(sc => {
+    const best = scores[sc.id];
+    const stars = best ? (best.stars ?? starsForPct(best.pct)) : 0;
+    const starDisplay = '★'.repeat(stars) + '☆'.repeat(Math.max(0, 3 - stars));
+    const unlocked = isScenarioUnlocked(sc.id);
+    const req = STAR_REQUIREMENTS[sc.id] ?? 0;
+    const lockHtml = unlocked ? '' :
+      `<div style="position:absolute;inset:0;background:rgba(10,14,20,0.8);display:flex;align-items:center;justify-content:center;flex-direction:column;border-radius:6px;">
+        <div style="font-size:28px;">🔒</div>
+        <div style="font-size:11px;color:#fbbf24;margin-top:4px;">Requires ${req} ★</div>
+      </div>`;
+    return `<div class="scenario-card ${unlocked ? '' : 'locked'}" data-id="${sc.id}" style="position:relative;">
+      <div class="yr">${sc.year}</div>
+      <h3>${sc.name}</h3>
+      <div class="diff ${sc.diff}">${sc.diff.toUpperCase()}</div>
+      <div class="blurb">${sc.blurb}</div>
+      <div class="best" style="color:${stars === 3 ? '#fbbf24' : stars > 0 ? '#e6edf3' : '#475569'};">${starDisplay} ${best ? best.pct.toFixed(0) + '% dmg' : 'Unplayed'}</div>
+      ${lockHtml}
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.scenario-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.dataset.id;
+      if (!isScenarioUnlocked(id)) {
+        toast(`Locked — earn ${STAR_REQUIREMENTS[id]} total stars to unlock.`, 'danger');
+        return;
+      }
+      const sc = SCENARIOS.find(s => s.id === id);
+      startScenario(sc);
+    });
+  });
+  renderAchievementsInMenu();
+}
+
+// ---------- Persistent wallet (campaign economy) ----------
+function loadWallet() {
+  const v = parseInt(localStorage.getItem('floodline_wallet') || '0', 10);
+  return isNaN(v) ? 0 : v;
+}
+function saveWallet(v) {
+  localStorage.setItem('floodline_wallet', String(Math.max(-99999, Math.min(9999999, v|0))));
+}
+
+function loadScores() {
+  try { return JSON.parse(localStorage.getItem('floodline_scores') || '{}'); }
+  catch { return {}; }
+}
+function saveScore(id, pct, time, stars) {
+  const scores = loadScores();
+  const prev = scores[id];
+  const prevStars = prev ? (prev.stars ?? starsForPct(prev.pct)) : 0;
+  if (!prev || stars > prevStars || (stars === prevStars && prev.pct > pct)) {
+    scores[id] = { pct, time, stars };
+    try {
+      const ghosts = JSON.parse(localStorage.getItem('floodline_ghosts') || '{}');
+      ghosts[id] = state.hydrographHistory.map(s => ({ t: s.t, damage: s.damage })).slice(-400);
+      localStorage.setItem('floodline_ghosts', JSON.stringify(ghosts));
+    } catch {}
+  }
+  localStorage.setItem('floodline_scores', JSON.stringify(scores));
+}
+function loadGhost(id) {
+  try { return (JSON.parse(localStorage.getItem('floodline_ghosts') || '{}'))[id]; }
+  catch { return null; }
+}
+
+// ---------- Achievements ----------
+const ACHIEVEMENTS = [
+  { id: 'first',     name: 'First Storm Weathered', desc: 'Complete any scenario', check: s => s.won },
+  { id: 'noBreach',  name: 'Rock Solid',             desc: 'Complete without any levee breaches', check: s => s.won && s.stats.breaches === 0 },
+  { id: 'noEvac',    name: 'Hold the Line',          desc: 'Win without evacuating anyone',       check: s => s.won && s.stats.evacuated === 0 },
+  { id: 'dryHosp',   name: 'Hippocratic',            desc: 'Keep hospital at 0% damage',          check: s => s.won && s.scenario.hospital && getInfraDamage(T.HOSPITAL) < 1 },
+  { id: 'frugal',    name: 'Frugal Engineer',        desc: 'Win with >50% budget unspent',        check: s => s.won && s.spent < s.scenario.budget * 0.5 },
+  { id: 'sGrade',    name: 'Masterwork',             desc: 'Earn an S grade on any scenario',     check: s => s.won && getDamagePct() < 10 },
+  { id: 'johnstown', name: 'Historic Save',          desc: 'Win the Johnstown scenario',          check: s => s.won && s.scenario.id === 'johnstown1889' },
+  { id: 'katrina',   name: 'Below Sea Level',        desc: 'Win the Katrina scenario',            check: s => s.won && s.scenario.id === 'katrina2005' },
+  { id: 'pump50',    name: 'Pump Master',            desc: 'Move 50 m³ of water',                 check: s => s.stats.pumped >= 50 },
+  { id: 'saturated', name: 'Soaked',                 desc: 'Cause any cell to reach 100% saturation', check: s => {
+      for (let i = 0; i < (s.soilSat?.length || 0); i++) if (s.soilSat[i] >= 0.99) return true;
+      return false;
+  }},
+  { id: 'perfectAll',name: 'Floodline Mastery',      desc: '3-star every base scenario',          check: s => {
+      const scores = loadScores();
+      const base = ['training', 'iowa2008', 'harvey2017', 'johnstown1889', 'katrina2005'];
+      return base.every(id => scores[id] && scores[id].pct < 10);
+  }},
+];
+
+function loadAchievements() {
+  try { return JSON.parse(localStorage.getItem('floodline_achievements') || '{}'); }
+  catch { return {}; }
+}
+function saveAchievements(obj) {
+  localStorage.setItem('floodline_achievements', JSON.stringify(obj));
+}
+function checkAchievements() {
+  const unlocked = loadAchievements();
+  let anyNew = false;
+  for (const a of ACHIEVEMENTS) {
+    if (!unlocked[a.id] && a.check(state)) {
+      unlocked[a.id] = Date.now();
+      anyNew = true;
+      showAchievement(a);
+    }
+  }
+  if (anyNew) saveAchievements(unlocked);
+}
+
+function showAchievement(a) {
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;top:80px;right:20px;background:linear-gradient(135deg,#1a2230,#2d1a3b);border:2px solid #fbbf24;padding:14px 18px;border-radius:8px;z-index:300;min-width:260px;animation:slideIn 0.4s ease-out;box-shadow:0 4px 20px rgba(251,191,36,0.3);';
+  div.innerHTML = `
+    <div style="color:#fbbf24;font-size:11px;font-weight:bold;letter-spacing:0.1em;">★ ACHIEVEMENT UNLOCKED</div>
+    <div style="color:#e6edf3;font-size:15px;font-weight:bold;margin-top:4px;">${a.name}</div>
+    <div style="color:#94a3b8;font-size:12px;margin-top:2px;">${a.desc}</div>`;
+  document.body.appendChild(div);
+  sfx.impact();
+  setTimeout(() => { div.style.transition = 'opacity 0.5s'; div.style.opacity = '0'; }, 4500);
+  setTimeout(() => div.remove(), 5000);
+}
+
+function renderAchievementsInMenu() {
+  const menuModal = document.getElementById('menuModal');
+  let box = document.getElementById('achBox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'achBox';
+    menuModal.appendChild(box);
+  }
+  const unlocked = loadAchievements();
+  const count = Object.keys(unlocked).length;
+  const settings = loadSettings();
+  const currentLoc = loadLocation();
+  const cityOptions = CITIES.map(c =>
+    `<option value="${c.id}" ${c.id === currentLoc.id ? 'selected' : ''}>${c.name} — ${c.P24in.toFixed(1)}"</option>`
+  ).join('');
+  box.innerHTML = `
+    <h2>Settings</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;">
+      <div>
+        <label style="font-size:12px;color:var(--dim);">Difficulty (budget multiplier)</label>
+        <div style="display:flex;gap:4px;margin-top:4px;" class="diffSet">
+          <button data-d="0.7" class="ghost${settings.diff === 0.7 ? ' active' : ''}" style="flex:1;">Hard</button>
+          <button data-d="1.0" class="ghost${settings.diff === 1.0 ? ' active' : ''}" style="flex:1;">Normal</button>
+          <button data-d="1.4" class="ghost${settings.diff === 1.4 ? ' active' : ''}" style="flex:1;">Easy</button>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--dim);">Audio volume: <b id="volVal">${Math.round(settings.volume * 100)}%</b></label>
+        <input id="volSlider" type="range" min="0" max="100" value="${Math.round(settings.volume * 100)}" style="width:100%;margin-top:6px;">
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <label style="font-size:12px;color:var(--dim);">Design location (drives Local Storm P<sub>24</sub>)</label>
+      <select id="locSelect" style="width:100%;margin-top:4px;padding:6px;background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:4px;">${cityOptions}</select>
+      <div id="locInfo" style="font-size:11px;color:var(--dim);margin-top:4px;">
+        <b style="color:#7dd3fc;">${currentLoc.name}</b> · ${currentLoc.country} · 100-yr 24-hr rainfall: ${currentLoc.P24in.toFixed(1)} in (${(currentLoc.P24in * 25.4).toFixed(0)} mm)
+      </div>
+    </div>
+    <h2>Achievements (${count} / ${ACHIEVEMENTS.length})</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;">
+    ${ACHIEVEMENTS.map(a => {
+      const got = !!unlocked[a.id];
+      return `<div style="padding:8px;background:${got ? '#1e2c42' : '#1a2230'};border-radius:4px;border:1px solid ${got ? '#fbbf24' : '#334'};opacity:${got ? 1 : 0.5};">
+        <div style="font-size:12px;font-weight:bold;color:${got ? '#fbbf24' : '#94a3b8'};">${got ? '★ ' : '◯ '}${a.name}</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${a.desc}</div>
+      </div>`;
+    }).join('')}
+    </div>
+    <h2>Controls</h2>
+    <div style="font-size:11px;color:var(--dim);line-height:1.7;">
+      <b>Left-click</b> place · <b>Right-click</b> remove (50% refund) · <b>Hover</b> inspect cell<br>
+      <b>1–9</b> tool · <b>Space</b> pause · <b>[ / ]</b> speed · <b>Ctrl+Z</b> undo · <b>H</b> heatmap · <b>V</b> view · <b>R</b> replay · <b>Esc</b> menu<br>
+      <b>Wheel</b> zoom · <b>Shift+Drag</b> or <b>Middle-drag</b> pan · <b>Arrows</b> nudge · <b>+ / −</b> zoom · <b>0</b> reset view
+    </div>
+    <div style="margin-top:16px;padding:12px;background:var(--panel2);border-radius:4px;font-size:11px;color:var(--dim);line-height:1.5;">
+      <b style="color:var(--accent);">About:</b> Water uses a mass-conserving shallow-water cellular automaton. Infiltration follows a Green-Ampt-like decay. Levee breach models overtopping stress accumulation. Historical scenario parameters approximate real events but are simplified for play. Built in the tradition of dam engineering — Prof. John Wieland would frown at some shortcuts.
+    </div>`;
+
+  // Wire difficulty buttons
+  box.querySelectorAll('.diffSet button').forEach(b => {
+    b.addEventListener('click', () => {
+      const s = loadSettings();
+      s.diff = parseFloat(b.dataset.d);
+      saveSettings(s);
+      renderAchievementsInMenu();
+    });
+  });
+  // Wire volume
+  const vs = box.querySelector('#volSlider');
+  vs.addEventListener('input', e => {
+    const s = loadSettings();
+    s.volume = parseInt(e.target.value) / 100;
+    saveSettings(s);
+    sfx.setVolume(s.volume);
+    box.querySelector('#volVal').textContent = e.target.value + '%';
+  });
+  // Wire location selector
+  const ls = box.querySelector('#locSelect');
+  if (ls) {
+    ls.addEventListener('change', e => {
+      saveLocation(e.target.value);
+      const loc = loadLocation();
+      box.querySelector('#locInfo').innerHTML =
+        `<b style="color:#7dd3fc;">${loc.name}</b> · ${loc.country} · 100-yr 24-hr rainfall: ${loc.P24in.toFixed(1)} in (${(loc.P24in * 25.4).toFixed(0)} mm)`;
+    });
+  }
+}
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('floodline_settings') || '{}');
+    return { diff: s.diff ?? 1.0, volume: s.volume ?? 1.0 };
+  } catch { return { diff: 1.0, volume: 1.0 }; }
+}
+function saveSettings(s) {
+  localStorage.setItem('floodline_settings', JSON.stringify(s));
+}
+
+// ---------- Control bindings ----------
+document.getElementById('startBtn').addEventListener('click', () => {
+  document.getElementById('startBtn').disabled = true;
+  startCountdown();
+});
+
+function startCountdown() {
+  state.countdown = 3;
+  toast('Storm incoming...', 'info');
+  renderChallengePanel();
+  const iv = setInterval(() => {
+    state.countdown -= 1;
+    if (state.countdown > 0) {
+      sfx.click();
+    } else {
+      clearInterval(iv);
+      state.countdown = 0;
+      state.storming = true;
+      sfx.impact();
+      toast('STORM STARTED — hold the line.', 'danger');
+    }
+  }, 1000);
+}
+document.getElementById('menuBtn').addEventListener('click', () => {
+  document.getElementById('overlay').style.display = 'flex';
+  renderScenarioGrid();
+});
+document.getElementById('undoBtn').addEventListener('click', () => undo());
+document.getElementById('viewBtn').addEventListener('click', () => toggleView());
+function toggleView() {
+  state.view = state.view === 'iso' ? 'top' : 'iso';
+  state._camInit = false;
+  document.getElementById('viewBtn').textContent = state.view === 'iso' ? 'Iso' : '2D';
+}
+let _audioOn = true;
+document.getElementById('muteBtn').addEventListener('click', () => {
+  _audioOn = !_audioOn;
+  sfx.enable(_audioOn);
+  if (!_audioOn) sfx.setRain(0);
+  document.getElementById('muteBtn').textContent = _audioOn ? '🔊' : '🔇';
+});
+document.querySelectorAll('.speed-btns button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.speed-btns button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.speed = parseFloat(b.dataset.spd);
+  });
+});
+
+// ---------- Endgame ----------
+function endGame() {
+  const pct = getDamagePct();
+  const allMet = state.objectives.every(o => o.check());
+  state.gameOver = true;
+  state.storming = false;
+  state.won = allMet;
+  // Compute effective stars including challenge bonuses
+  let bonus = 0;
+  if (allMet && state.activeChallenges) {
+    for (const cid of state.activeChallenges) bonus += CHALLENGES[cid].bonus;
+  }
+  const effectiveStars = Math.min(5, starsForPct(pct) + bonus);
+  if (!state.scenario.sandbox) saveScore(state.scenario.id, pct, state.time, effectiveStars);
+  // Campaign economy: wallet = unspent + FEMA reimb - damage + bonus
+  // (Since scenario budget = FEMA + wallet, unspent already accounts for wallet carryover.)
+  const econ = computeEconomics(pct, allMet);
+  state.lastEcon = econ;
+  if (!state.scenario.sandbox) {
+    saveWallet(econ.finalWallet);
+  }
+  checkAchievements();
+  showResults(allMet, pct);
+}
+
+function computeEconomics(dmgPct, won) {
+  const sc = state.scenario;
+  const fema = state.scenarioFEMA;
+  const walletStart = state.scenarioWalletStart;
+  const totalSpent = state.spent;
+  // FEMA gets spent first; overflow comes out of wallet
+  const spentFema = Math.min(totalSpent, fema);
+  const spentWallet = Math.max(0, totalSpent - fema);
+  const femaReturned = Math.max(0, fema - totalSpent); // unused grant returns to FEMA
+  const damageCost = Math.round(dmgPct * 120);
+  const femaReimb = Math.round(damageCost * 0.60);
+  const performanceBonus = won ? Math.max(0, Math.round((sc.winDamage - dmgPct) * 40)) : 0;
+  const walletRemaining = Math.max(0, walletStart - spentWallet);
+  const net = walletRemaining + femaReimb - damageCost + performanceBonus;
+  const finalWallet = Math.max(0, net);
+  return {
+    fema, walletStart, spentFema, spentWallet, femaReturned,
+    damageCost, femaReimb, performanceBonus,
+    walletRemaining, finalWallet,
+    netChange: finalWallet - walletStart,
+  };
+}
+
+function showResults(allMet, pct) {
+  const sc = state.scenario;
+  const townDmg = getInfraDamage(T.TOWN);
+  const hospDmg = getInfraDamage(T.HOSPITAL);
+  const schDmg = getInfraDamage(T.SCHOOL);
+  const score = Math.max(0, Math.round(10000 - pct * 100 - state.stats.breaches * 200 + (sc.budget - state.spent) * 0.1));
+
+  document.getElementById('resultsTitle').textContent = allMet ? 'Victory' : 'Scenario Failed';
+  document.getElementById('resultsTitle').style.color = allMet ? 'var(--ok)' : 'var(--danger)';
+  let grade;
+  if (pct < 10) grade = 'S';
+  else if (pct < 25) grade = 'A';
+  else if (pct < 40) grade = 'B';
+  else if (pct < 60) grade = 'C';
+  else grade = 'F';
+
+  const baseStars = starsForPct(pct);
+  let bonusStars = 0;
+  if (allMet && state.activeChallenges) {
+    for (const cid of state.activeChallenges) bonusStars += CHALLENGES[cid].bonus;
+  }
+  const stars = Math.min(5, baseStars + bonusStars);
+  const starRow = '★'.repeat(stars) + '☆'.repeat(Math.max(0, 3 - stars));
+
+  const rows = [
+    ['Grade', `<b style="font-size:32px;color:var(--accent);">${grade}</b>`],
+    ['Stars', `<span style="font-size:22px;color:#fbbf24;display:inline-block;animation:starBurst 0.6s;">${starRow}</span>`],
+    ['Score', score.toLocaleString()],
+    ['Overall damage', `${pct.toFixed(1)}%`],
+    ['Town damage', `${townDmg.toFixed(0)}%`],
+  ];
+  if (sc.hospital) rows.push(['Hospital damage', `${hospDmg.toFixed(0)}%`]);
+  if (sc.school) rows.push(['School damage', `${schDmg.toFixed(0)}%`]);
+  rows.push(
+    ['Levee breaches', state.stats.breaches],
+    ['Cells evacuated', state.stats.evacuated],
+    ['Water pumped', `${state.stats.pumped.toFixed(1)} m³`],
+    ['Budget spent', `$${state.spent} / $${sc.budget}`],
+  );
+  const historyNote = HISTORY_NOTES[sc.id];
+  const econ = state.lastEcon;
+  const econHtml = econ && !sc.sandbox ? `
+    <div style="margin-top:16px; padding:12px; background:var(--panel2); border-radius:4px;">
+      <div style="font-size:11px; color:#22c55e; font-weight:bold; letter-spacing:0.05em; text-transform:uppercase;">FEMA settlement</div>
+      <table style="width:100%; border-collapse:collapse; margin-top:6px; font-size:12px;">
+        <tr><td style="color:var(--dim);">Wallet at start</td><td style="text-align:right;">$${econ.walletStart.toLocaleString()}</td></tr>
+        <tr><td style="color:var(--dim);">FEMA grant</td><td style="text-align:right;">$${econ.fema.toLocaleString()}</td></tr>
+        <tr><td style="color:var(--dim);">Total spent</td><td style="text-align:right;">−$${(econ.spentFema + econ.spentWallet).toLocaleString()}</td></tr>
+        <tr><td style="padding-left:12px;color:var(--dim);font-size:11px;">↳ from FEMA grant</td><td style="text-align:right;color:#64748b;font-size:11px;">$${econ.spentFema.toLocaleString()}</td></tr>
+        <tr><td style="padding-left:12px;color:var(--dim);font-size:11px;">↳ from wallet</td><td style="text-align:right;color:#64748b;font-size:11px;">$${econ.spentWallet.toLocaleString()}</td></tr>
+        <tr><td style="color:var(--dim);">FEMA unused (returned)</td><td style="text-align:right;color:#64748b;">$${econ.femaReturned.toLocaleString()}</td></tr>
+        <tr><td style="color:var(--dim);">Damage repair</td><td style="text-align:right;color:#ef4444;">−$${econ.damageCost.toLocaleString()}</td></tr>
+        <tr><td style="color:var(--dim);">FEMA reimbursement (60%)</td><td style="text-align:right;color:#22c55e;">+$${econ.femaReimb.toLocaleString()}</td></tr>
+        ${econ.performanceBonus > 0 ? `<tr><td style="color:var(--dim);">Performance bonus</td><td style="text-align:right;color:#fbbf24;">+$${econ.performanceBonus.toLocaleString()}</td></tr>` : ''}
+        <tr style="border-top:1px solid #475569;"><td style="padding-top:6px;"><b>Wallet after</b></td><td style="text-align:right;padding-top:6px;color:${econ.netChange >= 0 ? '#22c55e' : '#ef4444'};"><b>$${econ.finalWallet.toLocaleString()}</b> (${econ.netChange >= 0 ? '+' : ''}$${econ.netChange.toLocaleString()})</td></tr>
+      </table>
+    </div>` : '';
+  document.getElementById('resultsBody').innerHTML =
+    '<table style="width:100%; border-collapse:collapse;">' +
+    rows.map(([k,v]) => `<tr><td style="padding:4px 0; color:var(--dim);">${k}</td><td style="text-align:right; color:var(--text);">${v}</td></tr>`).join('') +
+    '</table>' +
+    econHtml +
+    (historyNote ? `<div style="margin-top:16px; padding:12px; background:var(--panel2); border-left:3px solid var(--accent); border-radius:4px;">
+      <div style="font-size:11px; color:var(--accent); font-weight:bold; letter-spacing:0.05em; text-transform:uppercase;">What really happened</div>
+      <div style="font-size:12px; color:#cbd5e1; margin-top:6px; line-height:1.5;">${historyNote}</div>
+    </div>` : '');
+  document.getElementById('resultsOverlay').style.display = 'flex';
+  sfx.impact();
+
+  // Victory fireworks for 2+ stars
+  if (stars >= 2) {
+    const colors = [[255,180,40],[125,211,252],[251,191,36],[34,197,94],[168,85,247]];
+    for (let b = 0; b < 5; b++) {
+      setTimeout(() => {
+        const cx = canvas.clientWidth * (0.2 + Math.random() * 0.6);
+        const cy = canvas.clientHeight * (0.2 + Math.random() * 0.4);
+        const [r,g,bl] = colors[b % colors.length];
+        for (let k = 0; k < 30; k++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 80 + Math.random() * 120;
+          state.fireworks.push({
+            x: cx, y: cy,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 50,
+            life: 1.2 + Math.random() * 0.8,
+            r, g, b: bl,
+          });
+        }
+        sfx.impact();
+      }, b * 400);
+    }
+  }
+}
+
+const HISTORY_NOTES = {
+  iowa2008: 'Cedar Rapids crested at 31.12 ft — 11.7 ft above the previous record and nearly 20 ft above flood stage. The city had no main-stem levees. 1,126 blocks flooded; 10 sq miles inundated. Response drove a decade of floodwall construction and strategic property buyouts. Total damages: $5–6 billion.',
+  harvey2017: 'Harvey dropped 60.58 in. at Nederland, TX — the largest rainfall total from a single storm ever recorded in the continental US. Stalled for four days over SE Texas. Addicks and Barker reservoirs, built for flood control in the 1940s, reached levels that forced controlled releases flooding thousands of homes. 68 direct deaths, 107 total. $125 billion in damages.',
+  johnstown1889: 'South Fork Dam, owned by the South Fork Fishing and Hunting Club (members included Carnegie, Mellon, Frick), was poorly maintained and had inadequate spillway capacity. After 24 hours of heavy rain, overtopping began at 11:00 AM. The dam breached at 3:10 PM. 20 million tons of water reached Johnstown in under an hour, killing 2,209. The ASCE investigation that followed shaped US dam safety law for a century.',
+  katrina2005: 'Katrina was a Category 3 at landfall but generated surge heights up to 27.8 ft. The levee system — designed for a weaker "Standard Project Hurricane" — failed in at least 50 locations. Subsequent forensic analysis (ILIT, IPET) found many breaches were due to foundation failure, not overtopping. $125 billion in damages, 1,392 deaths. The system was rebuilt as the HSDRRS at a cost of $14.5 billion.',
+  mississippi1927: 'The greatest natural disaster in US history up to that point. 246 dead, 700,000 displaced, $400 million in 1927 dollars ($7 billion today). The Army Corps dynamited the Caernarvon levee on April 29 to save New Orleans, flooding St. Bernard and Plaquemines parishes. Residents were promised restitution — most never received it. The disaster drove the Flood Control Act of 1928 and the modern Mississippi River & Tributaries Project.',
+  oroville2017: 'Mid-release at 55,000 cfs on Feb 7, 2017, a section of the main spillway disintegrated, exposing underlying rock. Engineers switched to the never-before-used emergency spillway on Feb 11. Within 24 hours, erosion threatened to undercut the spillway weir — which would have released a 30-foot wall of water into the Feather River. 188,000 were evacuated. Reconstruction cost $1.1 billion.',
+  lumberton2016: 'Hurricane Matthew flooded West Lumberton through a CSX railroad underpass — an opening local officials had never identified as a flood risk. The Lumber River crested at 24.15 ft, 11 ft above flood stage. Nearly 1,500 homes flooded. Two years later, Hurricane Florence flooded the same neighborhood again. The underpass has since been closed with an emergency floodgate.',
+  edenville2020: 'Edenville Dam had been ordered to upgrade its spillway capacity for 14 years before failing. FERC revoked its hydropower license in 2018 for non-compliance. When it failed on May 19, 2020, water surged into Sanford Lake; Sanford Dam overtopped and its spillway was destroyed. The Tittabawassee River crested at 35.05 ft in Midland — 10 ft above its previous record. Remarkably, no one died.',
+};
+
+document.getElementById('resultsReplay').addEventListener('click', () => {
+  document.getElementById('resultsOverlay').style.display = 'none';
+  startScenario(state.scenario);
+});
+document.getElementById('resultsMenu').addEventListener('click', () => {
+  document.getElementById('resultsOverlay').style.display = 'none';
+  document.getElementById('overlay').style.display = 'flex';
+  renderScenarioGrid();
+});
+document.getElementById('resultsNext').addEventListener('click', () => {
+  // Find next unlocked scenario after current
+  const idx = SCENARIOS.findIndex(s => s.id === state.scenario.id);
+  for (let k = 1; k <= SCENARIOS.length; k++) {
+    const cand = SCENARIOS[(idx + k) % SCENARIOS.length];
+    if (isScenarioUnlocked(cand.id) && cand.id !== state.scenario.id) {
+      document.getElementById('resultsOverlay').style.display = 'none';
+      startScenario(cand);
+      return;
+    }
+  }
+  toast('No other scenarios unlocked yet.', 'info');
+});
+
+// ---------- Tutorial (training only) ----------
+const TUTORIAL_HINTS = [
+  { at: 2,  text: 'Rain is starting. Watch the hydrograph — the peak is around 1:00.' },
+  { at: 25, text: 'Water flows downhill using real physics. Place LEVEES between the river and the town.' },
+  { at: 55, text: 'Peak rain. Levees build stress when overtopped — pulsing orange means trouble.' },
+  { at: 85, text: 'Storm easing. Use PUMPS (if you have budget) to clear ponded water in the town.' },
+];
+
+function runTutorial() {
+  if (state.scenario?.id !== 'training') return;
+  for (const h of TUTORIAL_HINTS) {
+    if (!state.tutorialShown[h.at] && state.time >= h.at) {
+      state.tutorialShown[h.at] = true;
+      toast(h.text, 'info');
+    }
+  }
+}
+
+// ---------- Main loop ----------
+let lastT = performance.now();
+function loop(t) {
+  const dt = Math.min(0.1, (t - lastT) / 1000) * state.speed;
+  lastT = t;
+
+  if (!state.gameOver && state.storming) {
+    state.time += dt;
+    step(dt);
+    runTutorial();
+    if (state.time >= (state.scenario._effectiveDuration ?? state.scenario.duration)) endGame();
+  } else if (!state.storming) {
+    // Prep phase: count down to auto-start, unless countdown is already running
+    if (state.scenario && !state.gameOver && state.countdown === 0 && state.prepTimer > 0) {
+      state.prepTimer = Math.max(0, state.prepTimer - dt);
+      if (state.prepTimer === 0) {
+        document.getElementById('startBtn').disabled = true;
+        startCountdown();
+      }
+    }
+    state.rainParticles = [];
+  }
+
+  render();
+  renderHydrograph();
+  if (state.scenario) updateHUD();
+
+  requestAnimationFrame(loop);
+}
+
+// ---------- Audio (procedural) ----------
+const sfx = (() => {
+  let ctx = null;
+  let master = null;
+  let rainNode = null, rainGain = null, rainFilter = null;
+  let enabled = true;
+  let volume = 1.0;
+  function ensure() {
+    if (ctx) return ctx;
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      master = ctx.createGain();
+      master.gain.value = volume;
+      master.connect(ctx.destination);
+    } catch { enabled = false; }
+    return ctx;
+  }
+  function click() {
+    if (!enabled || !ensure()) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.frequency.value = 400;
+    o.type = 'square';
+    g.gain.value = 0.08;
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+    o.connect(g); g.connect(master);
+    o.start(); o.stop(ctx.currentTime + 0.05);
+  }
+  function thunder() {
+    if (!enabled || !ensure()) return;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 1.5, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) {
+      const t = i / ctx.sampleRate;
+      d[i] = (Math.random() * 2 - 1) * Math.exp(-t * 1.5);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 300;
+    const g = ctx.createGain();
+    g.gain.value = 0.4;
+    src.connect(filter); filter.connect(g); g.connect(master);
+    src.start();
+  }
+  function impact() {
+    if (!enabled || !ensure()) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.frequency.value = 120;
+    o.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.3);
+    g.gain.value = 0.3;
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    o.connect(g); g.connect(master);
+    o.start(); o.stop(ctx.currentTime + 0.3);
+  }
+  function breach() {
+    if (!enabled || !ensure()) return;
+    // Big boom: noise burst + sub-bass drop
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.8, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) {
+      const t = i / ctx.sampleRate;
+      d[i] = (Math.random() * 2 - 1) * Math.exp(-t * 2.5);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 200;
+    const g1 = ctx.createGain(); g1.gain.value = 0.6;
+    src.connect(filter); filter.connect(g1); g1.connect(master);
+    src.start();
+    // Sub-bass swoop
+    const o = ctx.createOscillator();
+    o.frequency.value = 80;
+    o.frequency.exponentialRampToValueAtTime(25, ctx.currentTime + 0.6);
+    const g2 = ctx.createGain();
+    g2.gain.value = 0.35;
+    g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    o.connect(g2); g2.connect(master);
+    o.start(); o.stop(ctx.currentTime + 0.6);
+  }
+  function setRain(intensity) {
+    if (!enabled || !ensure()) return;
+    if (!rainNode && intensity > 0) {
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      rainNode = ctx.createBufferSource();
+      rainNode.buffer = buf;
+      rainNode.loop = true;
+      rainFilter = ctx.createBiquadFilter();
+      rainFilter.type = 'bandpass';
+      rainFilter.frequency.value = 2000;
+      rainFilter.Q.value = 0.5;
+      rainGain = ctx.createGain();
+      rainGain.gain.value = 0;
+      rainNode.connect(rainFilter); rainFilter.connect(rainGain); rainGain.connect(master);
+      rainNode.start();
+    }
+    if (rainGain) {
+      const target = Math.min(0.15, intensity / 400);
+      rainGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.3);
+    }
+  }
+  function setVolume(v) {
+    volume = Math.max(0, Math.min(1, v));
+    if (master) master.gain.value = volume;
+  }
+
+  // Procedural ambient drone (storm atmosphere)
+  let droneOsc1 = null, droneOsc2 = null, droneGain = null;
+  function setDrone(intensity) {
+    if (!enabled || !ensure()) return;
+    if (!droneOsc1 && intensity > 0) {
+      droneOsc1 = ctx.createOscillator();
+      droneOsc2 = ctx.createOscillator();
+      droneOsc1.type = 'sine';
+      droneOsc2.type = 'triangle';
+      droneOsc1.frequency.value = 55;
+      droneOsc2.frequency.value = 82.4;
+      droneGain = ctx.createGain();
+      droneGain.gain.value = 0;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 400;
+      droneOsc1.connect(filter);
+      droneOsc2.connect(filter);
+      filter.connect(droneGain);
+      droneGain.connect(master);
+      droneOsc1.start();
+      droneOsc2.start();
+    }
+    if (droneGain) {
+      const target = Math.min(0.08, intensity / 800);
+      droneGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.5);
+    }
+  }
+
+  return { click, thunder, impact, breach, setRain, setDrone, setVolume, enable: v => enabled = v };
+})();
+
+// ---------- Keyboard shortcuts ----------
+const TOOL_KEYS = ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'spillway', 'evac', 'breach'];
+document.addEventListener('keydown', e => {
+  if (e.key >= '1' && e.key <= '9') {
+    const id = TOOL_KEYS[parseInt(e.key) - 1];
+    if (id && state.scenario && state.scenario.tools.includes(id)) {
+      state.tool = id;
+      document.querySelectorAll('.tool').forEach(el => {
+        el.classList.toggle('active', el.dataset.tool === id);
+      });
+    }
+  } else if (e.key === ' ') {
+    e.preventDefault();
+    state.speed = state.speed === 0 ? 1 : 0;
+    document.querySelectorAll('.speed-btns button').forEach(b => {
+      b.classList.toggle('active', parseFloat(b.dataset.spd) === state.speed);
+    });
+  } else if (e.key === ']') {
+    const speeds = [0, 1, 2, 4];
+    const i = speeds.indexOf(state.speed);
+    state.speed = speeds[Math.min(3, i + 1)];
+    document.querySelectorAll('.speed-btns button').forEach(b => {
+      b.classList.toggle('active', parseFloat(b.dataset.spd) === state.speed);
+    });
+  } else if (e.key === '[') {
+    const speeds = [0, 1, 2, 4];
+    const i = speeds.indexOf(state.speed);
+    state.speed = speeds[Math.max(0, i - 1)];
+    document.querySelectorAll('.speed-btns button').forEach(b => {
+      b.classList.toggle('active', parseFloat(b.dataset.spd) === state.speed);
+    });
+  } else if (e.key === 'r' || e.key === 'R') {
+    if (state.scenario) startScenario(state.scenario);
+  } else if (e.key === 'Escape') {
+    document.getElementById('overlay').style.display = 'flex';
+    renderScenarioGrid();
+  } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+    e.preventDefault();
+    undo();
+  } else if (e.key === 'h' || e.key === 'H') {
+    state.showHeatmap = !state.showHeatmap;
+    toast(state.showHeatmap ? 'Heatmap on' : 'Heatmap off', 'info');
+  } else if (e.key === 'v' || e.key === 'V') {
+    toggleView();
+  } else if (e.key === 'ArrowLeft')  { state.cam.x += 40; e.preventDefault(); }
+    else if (e.key === 'ArrowRight') { state.cam.x -= 40; e.preventDefault(); }
+    else if (e.key === 'ArrowUp')    { state.cam.y += 40; e.preventDefault(); }
+    else if (e.key === 'ArrowDown')  { state.cam.y -= 40; e.preventDefault(); }
+    else if (e.key === '+' || e.key === '=') { state.zoom = Math.min(5, state.zoom * 1.2); }
+    else if (e.key === '-' || e.key === '_') { state.zoom = Math.max(0.4, state.zoom / 1.2); }
+    else if (e.key === '0') { state.zoom = 1; state._camInit = false; }
+});
+
+// Rain + drone intensity follows storm
+let _lastThunderT = 0;
+setInterval(() => {
+  sfx.setRain(state.currentRain || 0);
+  sfx.setDrone(state.storming ? (state.currentRain + state.currentInflow * 20) : 0);
+  if (state.flashT > 0 && performance.now() - _lastThunderT > 800) {
+    _lastThunderT = performance.now();
+    setTimeout(() => sfx.thunder(), 200 + Math.random() * 400);
+  }
+}, 200);
+
+// ---------- Boot ----------
+sfx.setVolume(loadSettings().volume);
+renderScenarioGrid();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

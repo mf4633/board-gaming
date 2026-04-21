@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bonneville Spillway Operator — Prototype</title>
+<style>
+  :root {
+    --bg: #0e1418;
+    --panel: #161e24;
+    --panel2: #1e2830;
+    --ink: #cfd8dc;
+    --dim: #78909c;
+    --accent: #26a69a;
+    --warn: #ffb300;
+    --bad: #ef5350;
+    --good: #66bb6a;
+    --water: #2e6a8a;
+    --water-lite: #4aa3c7;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: "Consolas", "Menlo", monospace; }
+  body { display: flex; flex-direction: column; min-height: 100vh; align-items: center; padding: 12px; }
+  #app { width: 1400px; max-width: 100%; }
+  header { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 10px; border-bottom: 1px solid #2a3640; margin-bottom: 8px; }
+  header h1 { font-size: 14px; margin: 0; letter-spacing: 2px; color: var(--accent); }
+  header .sub { font-size: 11px; color: var(--dim); }
+  #hud { display: flex; gap: 14px; font-size: 12px; }
+  #hud .cell { padding: 2px 6px; }
+  #hud .label { color: var(--dim); }
+  #hud .val { color: var(--ink); font-weight: bold; }
+
+  #grid { display: grid; grid-template-columns: 1fr 340px; gap: 10px; }
+  .panel { background: var(--panel); border: 1px solid #22303a; padding: 10px; }
+  .panel h2 { font-size: 11px; letter-spacing: 3px; color: var(--dim); margin: 0 0 8px 0; text-transform: uppercase; font-weight: normal; }
+
+  canvas { display: block; width: 100%; background: #0a0f13; border: 1px solid #1a242c; }
+
+  .controls .slider { margin-bottom: 10px; }
+  .controls .slider .row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
+  .controls .slider .row .name { color: var(--ink); }
+  .controls .slider .row .val { color: var(--accent); font-weight: bold; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+
+  .meter { margin-bottom: 10px; }
+  .meter .mrow { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
+  .bar { position: relative; height: 16px; background: #0a1014; border: 1px solid #22303a; overflow: hidden; }
+  .bar .fill { position: absolute; top: 0; bottom: 0; left: 0; background: var(--accent); transition: width 0.1s linear, background 0.2s; opacity: 0.18; }
+  .bar .zone { position: absolute; top: 0; bottom: 0; pointer-events: none; }
+  .bar .zone-good { background: rgba(102, 187, 106, 0.30); }
+  .bar .zone-warn { background: rgba(255, 179, 0, 0.22); }
+  .bar .zone-bad  { background: rgba(239, 83, 80, 0.32); }
+  .bar .mark { position: absolute; top: -3px; bottom: -3px; width: 3px; background: #ffffff; box-shadow: 0 0 4px rgba(0,0,0,0.9); pointer-events: none; transition: left 0.08s linear; }
+  .bar .mark.target { width: 2px; background: #ffeb3b; box-shadow: 0 0 4px rgba(0,0,0,0.9); }
+
+  #dashboard { display: grid; grid-template-columns: 1fr 360px; gap: 10px; margin-top: 10px; }
+  #dashboard canvas { background: #0a0f13; border: 1px solid #1a242c; }
+  #fish-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; font-size: 11px; }
+  #fish-stats .box { background: var(--panel2); padding: 6px 8px; text-align: center; }
+  #fish-stats .lbl { color: var(--dim); font-size: 9px; letter-spacing: 2px; }
+  #fish-stats .num { font-size: 20px; font-weight: bold; }
+  #fish-stats .num.good { color: var(--good); }
+  #fish-stats .num.bad { color: var(--bad); }
+
+  .forecast { font-size: 11px; line-height: 1.5; }
+  .forecast .item { padding: 4px 6px; border-left: 3px solid var(--dim); margin-bottom: 4px; background: var(--panel2); }
+  .forecast .item.warn { border-color: var(--warn); }
+  .forecast .item.bad { border-color: var(--bad); }
+
+  #log { font-size: 11px; color: var(--dim); height: 70px; overflow-y: auto; border: 1px solid #22303a; padding: 4px 8px; background: #0a0f13; }
+  #log .entry { margin: 1px 0; }
+  #log .entry.good { color: var(--good); }
+  #log .entry.warn { color: var(--warn); }
+  #log .entry.bad { color: var(--bad); }
+
+  #footer { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); margin-top: 8px; }
+  button { background: var(--panel2); color: var(--ink); border: 1px solid #30424e; padding: 6px 14px; font-family: inherit; font-size: 11px; letter-spacing: 2px; cursor: pointer; }
+  button:hover { background: #263540; }
+  .btn-speed { padding: 4px 8px; margin-left: 2px; }
+  .btn-speed.active { background: var(--accent); color: #0a0f13; border-color: var(--accent); }
+
+  #overlay { position: fixed; inset: 0; background: rgba(10,15,19,0.94); display: none; align-items: center; justify-content: center; z-index: 10; }
+  #overlay.show { display: flex; }
+  #overlay .card { background: var(--panel); border: 1px solid #30424e; padding: 24px 36px; max-width: 560px; }
+  #overlay h2 { color: var(--accent); letter-spacing: 3px; margin: 0 0 12px 0; font-size: 14px; }
+  #overlay .scorebox { margin: 12px 0; font-size: 12px; line-height: 1.7; }
+  #overlay .scorebox .k { color: var(--dim); display: inline-block; width: 180px; }
+  #overlay .scorebox .v { color: var(--ink); font-weight: bold; }
+  #overlay .final { font-size: 16px; color: var(--accent); margin-top: 14px; padding-top: 10px; border-top: 1px solid #2a3640; }
+</style>
+</head>
+<body>
+<style id="siteNav-css">
+  #siteNav { position: sticky; top: 0; z-index: 99999; background: rgba(16,20,28,0.96); border-bottom: 1px solid #2a3540; font-family: Georgia, "Times New Roman", serif; box-shadow: 0 2px 10px rgba(0,0,0,0.6); color: #d8d0c0; }
+  #siteNav * { box-sizing: border-box; }
+  #siteNav .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; max-width: 1400px; margin: 0 auto; gap: 12px; }
+  #siteNav .nav-home { color: #d8d0c0; text-decoration: none; font-size: 0.82em; letter-spacing: 2px; padding: 5px 12px; border: 1px solid #3a5060; border-radius: 3px; white-space: nowrap; }
+  #siteNav .nav-home:hover { background: #1e2838; color: #f0e0b0; }
+  #siteNav .nav-title { color: #f0d89c; font-size: 0.95em; letter-spacing: 3px; font-weight: bold; text-align: center; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #siteNav .nav-toggle { background: none; border: 1px solid #3a5060; color: #d8d0c0; font-size: 0.85em; letter-spacing: 2px; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  #siteNav .nav-toggle:hover { background: #1e2838; color: #f0e0b0; }
+  #siteNav .nav-menu { display: none; background: #0f141c; border-top: 1px solid #2a4050; padding: 14px 16px; max-width: 1400px; margin: 0 auto; }
+  #siteNav .nav-menu.open { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  #siteNav .nav-cat { min-width: 0; }
+  #siteNav .nav-cat-label { color: #8098a8; font-size: 0.72em; letter-spacing: 4px; padding: 4px 0 8px 0; border-bottom: 1px solid #2a3540; margin-bottom: 6px; }
+  #siteNav .nav-cat a { display: block; padding: 6px 10px; color: #a8b0c0; text-decoration: none; font-size: 0.88em; border-radius: 3px; }
+  #siteNav .nav-cat a:hover { background: #1e2838; color: #f0e0b0; }
+  #siteNav .nav-cat a.current { color: #f0d89c; font-weight: bold; background: #1e2838; }
+  @media (max-width: 640px) {
+    #siteNav .nav-menu.open { grid-template-columns: 1fr; gap: 14px; }
+    #siteNav .nav-title { font-size: 0.82em; letter-spacing: 2px; }
+    #siteNav .nav-home,
+    #siteNav .nav-toggle { font-size: 0.74em; padding: 4px 8px; }
+  }
+</style>
+<div id="siteNav">
+  <div class="nav-bar">
+    <a href="index.html" class="nav-home">HOME</a>
+    <span class="nav-title">Bonneville Spillway</span>
+    <button class="nav-toggle" onclick="document.querySelector('#siteNav .nav-menu').classList.toggle('open')">GAMES &#9776;</button>
+  </div>
+  <div class="nav-menu">
+    <div class="nav-cat">
+      <div class="nav-cat-label">BOARD GAMES</div>
+      <a href="Agora.html">Agora</a>
+      <a href="Aresia.html">Aresia</a>
+      <a href="Backgammon.html">Backgammon</a>
+      <a href="Bisque.html">Bisque</a>
+      <a href="Chess.html">Chess</a>
+      <a href="Convergence.html">Convergence</a>
+      <a href="Go.html">Go</a>
+      <a href="Mancala.html">Mancala</a>
+      <a href="Odyssey.html">Odyssey</a>
+      <a href="Othello.html">Othello</a>
+      <a href="PenteGrammai.html">Pente Grammai</a>
+      <a href="Senet.html">Senet</a>
+      <a href="Tidelands.html">Tidelands</a>
+      <a href="Ur.html">Ur</a>
+    </div>
+    <div class="nav-cat">
+      <div class="nav-cat-label">SIMULATIONS</div>
+      <a href="Apoapsis.html">Apoapsis</a>
+      <a href="BonnevilleSpillwayOperator.html" class="current">Bonneville Spillway</a>
+      <a href="Floodline.html">Floodline</a>
+      <a href="SimEarth.html">SimEarth</a>
+      <a href="Tower.html">Tower</a>
+    </div>
+  </div>
+</div>
+<div id="app">
+  <header>
+    <h1>BONNEVILLE SPILLWAY OPERATOR</h1>
+    <div id="hud">
+      <div class="cell"><span class="label">SHIFT</span> <span class="val" id="hud-shift">—</span></div>
+      <div class="cell"><span class="label">TIME</span> <span class="val" id="hud-time">00:00</span></div>
+      <div class="cell"><span class="label">CASH</span> <span class="val" id="hud-cash">$0</span></div>
+      <div class="cell"><span class="label">REV</span> <span class="val" id="hud-rev">$0</span></div>
+      <div class="cell"><span class="label">FISH</span> <span class="val" id="hud-fish">0</span></div>
+    </div>
+    <div class="sub" id="hud-status">v0.4 — campaign</div>
+  </header>
+
+  <div id="grid">
+    <div class="panel">
+      <h2>Plan View — Columbia River, RM 146 (N ↑, flow →)</h2>
+      <canvas id="canvas-plan" width="1040" height="300"></canvas>
+      <h2 style="margin-top:10px;">Dam Cross-Section (Isometric)</h2>
+      <canvas id="canvas" width="1040" height="480"></canvas>
+      <div id="log"></div>
+    </div>
+
+    <div>
+      <div class="panel controls">
+        <h2>Gate Controls</h2>
+        <div class="slider">
+          <div class="row"><span class="name">TURBINES</span><span><span class="val" id="val-turb">120</span> kcfs</span></div>
+          <input type="range" id="ctl-turb" min="0" max="260" step="1" value="120">
+        </div>
+        <div class="slider">
+          <div class="row"><span class="name">SPILLWAY</span><span><span class="val" id="val-spill">40</span> kcfs</span></div>
+          <input type="range" id="ctl-spill" min="0" max="400" step="1" value="40">
+        </div>
+        <div class="slider">
+          <div class="row"><span class="name">FISH LADDER</span><span><span class="val" id="val-lad">4.0</span> kcfs</span></div>
+          <input type="range" id="ctl-lad" min="0" max="10" step="0.1" value="4.0">
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Plant Meters</h2>
+        <div class="meter">
+          <div class="mrow"><span>RESERVOIR <span id="m-elev-v">75.0</span> ft</span><span style="color:var(--dim)">target <span id="m-elev-band-v">72–77</span></span></div>
+          <div class="bar" id="bar-elev">
+            <div class="zone zone-bad"  id="z-elev-lo"></div>
+            <div class="zone zone-warn" id="z-elev-wlo"></div>
+            <div class="zone zone-good" id="z-elev-good"></div>
+            <div class="zone zone-warn" id="z-elev-whi"></div>
+            <div class="zone zone-bad"  id="z-elev-hi"></div>
+            <div class="mark" id="mk-elev"></div>
+          </div>
+        </div>
+        <div class="meter">
+          <div class="mrow"><span>GENERATION <span id="m-mw-v">0</span> MW</span><span style="color:var(--dim)">demand <span id="m-dem-v">0</span> MW</span></div>
+          <div class="bar" id="bar-mw">
+            <div class="zone zone-bad"  id="z-mw-lo"></div>
+            <div class="zone zone-warn" id="z-mw-wlo"></div>
+            <div class="zone zone-good" id="z-mw-good"></div>
+            <div class="zone zone-warn" id="z-mw-whi"></div>
+            <div class="zone zone-bad"  id="z-mw-hi"></div>
+            <div class="mark target" id="mk-mw-tgt"></div>
+            <div class="mark" id="mk-mw"></div>
+          </div>
+        </div>
+        <div class="meter">
+          <div class="mrow"><span>GRID <span id="m-hz-v">60.00</span> Hz</span><span style="color:var(--dim)">target 60.00 ±0.3</span></div>
+          <div class="bar" id="bar-hz">
+            <div class="zone zone-bad"  style="left:0;width:10%;"></div>
+            <div class="zone zone-warn" style="left:10%;width:20%;"></div>
+            <div class="zone zone-good" style="left:30%;width:40%;"></div>
+            <div class="zone zone-warn" style="left:70%;width:20%;"></div>
+            <div class="zone zone-bad"  style="left:90%;width:10%;"></div>
+            <div class="mark target" style="left:50%;"></div>
+            <div class="mark" id="mk-hz"></div>
+          </div>
+        </div>
+        <div class="meter">
+          <div class="mrow"><span>TDG <span id="m-tdg-v">105</span>%</span><span style="color:var(--dim)">WQ cap 120% · fail 130%</span></div>
+          <div class="bar" id="bar-tdg">
+            <div class="zone zone-good" style="left:0;width:50%;"></div>
+            <div class="zone zone-warn" style="left:50%;width:17%;"></div>
+            <div class="zone zone-bad"  style="left:67%;width:33%;"></div>
+            <div class="mark" id="mk-tdg"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Forecast &amp; Orders</h2>
+        <div class="forecast" id="forecast"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboard">
+    <div class="panel">
+      <h2>Dashboard Dials</h2>
+      <canvas id="dials-canvas" width="1020" height="200"></canvas>
+    </div>
+    <div class="panel">
+      <h2>Fish Passage Status</h2>
+      <div id="fish-stats">
+        <div class="box"><div class="lbl">PASSED</div><div class="num good" id="fish-passed">0</div></div>
+        <div class="box"><div class="lbl">KILLED</div><div class="num bad" id="fish-killed">0</div></div>
+      </div>
+      <canvas id="fish-canvas" width="336" height="100"></canvas>
+    </div>
+  </div>
+
+  <div id="footer">
+    <div>
+      <button id="btn-pause">PAUSE</button> &nbsp;
+      <button id="btn-restart">RESTART</button> &nbsp;
+      <span style="color:var(--dim);font-size:10px;letter-spacing:2px;margin-left:10px;">SPEED</span>
+      <button class="btn-speed" data-speed="1">1×</button>
+      <button class="btn-speed" data-speed="3">3×</button>
+      <button class="btn-speed" data-speed="10">10×</button>
+    </div>
+    <div>SPACE pause &nbsp;|&nbsp; Q/A turbines &nbsp;|&nbsp; W/S spillway &nbsp;|&nbsp; E/D ladder &nbsp;|&nbsp; scroll = zoom &nbsp;|&nbsp; right-drag = pan</div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div class="card">
+    <h2 id="over-title">SHIFT COMPLETE</h2>
+    <div id="over-msg" style="font-size:12px;color:var(--ink);line-height:1.5;"></div>
+    <div class="scorebox" id="over-score"></div>
+    <div class="final" id="over-final"></div>
+    <div style="margin-top:16px;">
+      <button id="over-btn">CONTINUE</button>
+      <button id="over-retry" style="display:none;">RETRY SHIFT</button>
+    </div>
+  </div>
+</div>
+
+<div id="shop">
+  <div class="card" style="width:720px;max-width:95%;">
+    <h2 id="shop-title">ENGINEERING OFFICE</h2>
+    <div id="shop-sub" style="font-size:12px;color:var(--dim);margin-bottom:10px;"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:6px 8px;background:var(--panel2);">
+      <div style="font-size:12px;"><span style="color:var(--dim);">CASH ON HAND</span> &nbsp; <span id="shop-cash" style="color:var(--good);font-weight:bold;font-size:14px;"></span></div>
+      <div style="font-size:11px;color:var(--dim);">Click an upgrade to purchase. One-shot purchases disappear after buying.</div>
+    </div>
+    <div id="shop-list" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:360px;overflow-y:auto;"></div>
+    <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
+      <div id="shop-plant" style="font-size:11px;color:var(--dim);"></div>
+      <button id="shop-begin">BEGIN NEXT SHIFT →</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  #shop { position: fixed; inset: 0; background: rgba(10,15,19,0.94); display: none; align-items: center; justify-content: center; z-index: 11; }
+  #shop.show { display: flex; }
+  #shop .upg { border: 1px solid #30424e; background: var(--panel2); padding: 8px 10px; cursor: pointer; transition: background 0.1s, border 0.1s; }
+  #shop .upg:hover { background: #263540; border-color: var(--accent); }
+  #shop .upg.disabled { opacity: 0.45; cursor: not-allowed; }
+  #shop .upg.disabled:hover { background: var(--panel2); border-color: #30424e; }
+  #shop .upg .name { color: var(--accent); font-size: 12px; font-weight: bold; margin-bottom: 3px; }
+  #shop .upg .cat { color: var(--dim); font-size: 9px; letter-spacing: 2px; float: right; }
+  #shop .upg .desc { color: var(--ink); font-size: 11px; line-height: 1.4; margin-bottom: 5px; }
+  #shop .upg .cost { color: var(--warn); font-size: 11px; font-weight: bold; }
+  #shop .upg.owned { opacity: 0.35; text-decoration: line-through; }
+</style>
+
+<script>
+// ============================================================
+// BONNEVILLE SPILLWAY OPERATOR — prototype core loop
+// Real-ish physics for reservoir balance, power, TDG, fish.
+// Units: flow in kcfs, power in MW, elev in ft, time in minutes.
+// ============================================================
+
+const CANVAS = document.getElementById('canvas');
+const CTX = CANVAS.getContext('2d');
+const CANVAS_PLAN = document.getElementById('canvas-plan');
+const CTX_PLAN = CANVAS_PLAN.getContext('2d');
+
+// ----- Plant constants (Bonneville-ish, simplified) -----
+const PLANT = {
+  elevMin: 71.5, elevMax: 77.5,         // operating band (ft)
+  elevLow: 72.0, elevHigh: 77.0,        // preferred band
+  tailwaterBase: 12.0,                   // ft (datum)
+  reservoirAreaAcres: 20000,             // Lake Bonneville ~ 20k acres
+  headLossPerKcfs: 0.015,                // ft head loss per kcfs turbine flow
+  turbineEff: 0.89,
+  maxTurbineKcfs: 260,
+  maxSpillKcfs: 400,
+  nameplateMW: 1077,
+  energyPriceBase: 42,                   // $/MWh
+};
+
+// Convert: 1 kcfs for 1 min = 1000 * 60 cu ft = 60000 cf = 1.377 acre-ft
+const KCFS_MIN_TO_AF = 1000 * 60 / 43560;
+
+// Power: P(MW) = ρ g Q h η / 1e6, with Q in m³/s, h in m, ρ=1000, g=9.81
+// Easier: P(MW) ≈ Q(kcfs) * h(ft) * 0.0846 * η
+function hydroPowerMW(kcfs, headFt, eff) {
+  return kcfs * headFt * 0.0846 * (eff ?? PLANT_STATE.turbineEff);
+}
+
+// ----- Plant configuration state (persists across shifts; purchased via Shop) -----
+const PLANT_STATE = {
+  shift: 1,
+  cash: 300_000,                  // starting capital for shift-1 upgrades
+  turbines: 1,                    // count; each unit adds 60 kcfs capacity
+  kcfsPerTurbine: 60,
+  turbineEff: 0.86,               // Francis baseline
+  spillGates: 2,
+  kcfsPerGate: 40,
+  hasLadder: false,
+  hasLock: false,
+  hasDeflector: false,
+  hasAGC: false,
+  hasJuvenileBypass: false,
+  damRaises: 0,                   // each +5 ft crest and +3 ft max pool
+  ownedIds: new Set(),            // track one-shot purchases
+
+  get maxTurbineKcfs() { return this.turbines * this.kcfsPerTurbine; },
+  get maxSpillKcfs()   { return this.spillGates * this.kcfsPerGate; },
+  get tdgCoef()        { return this.hasDeflector ? 1.00 : 1.50; },
+  get fishPassMult()   { return (this.hasJuvenileBypass ? 2.0 : 1.0); },
+  get poolMax()        { return PLANT.elevMax + this.damRaises * 3; },
+  get poolHigh()       { return PLANT.elevHigh + this.damRaises * 3; },
+  get crestFt()        { return 82 + this.damRaises * 5; },
+  get reservoirAcres() { return 2000 + this.turbines * 1000 + this.damRaises * 800; },
+};
+
+const UPGRADES = [
+  { id: 'turb',   cat: 'POWERHOUSE', name: 'Francis Turbine Unit',        cost:   250_000, desc: '+60 kcfs turbine capacity, η 0.86',
+    avail: s => s.turbines < 20,
+    apply: s => { s.turbines += 1; } },
+  { id: 'kaplan', cat: 'POWERHOUSE', name: 'Kaplan Retrofit (all units)', cost: 1_200_000, desc: 'Higher η 0.90, +15 kcfs per unit',
+    avail: s => s.turbines >= 3 && !s.ownedIds.has('kaplan'),
+    apply: s => { s.turbineEff = 0.90; s.kcfsPerTurbine = 75; } },
+  { id: 'gate',   cat: 'SPILLWAY',   name: 'Tainter Spillway Gate',       cost:   150_000, desc: '+40 kcfs spill capacity, +1 bay',
+    avail: s => s.spillGates < 18,
+    apply: s => { s.spillGates += 1; } },
+  { id: 'defl',   cat: 'SPILLWAY',   name: 'Flip-lip Deflectors',         cost: 1_200_000, desc: 'TDG = 100 + 1.0·√Q (was 1.5·√Q)',
+    avail: s => !s.hasDeflector,
+    apply: s => { s.hasDeflector = true; } },
+  { id: 'lad',    cat: 'FISH',       name: 'Fish Ladder',                 cost:   400_000, desc: 'Unlock salmon passage + $/fish income',
+    avail: s => !s.hasLadder,
+    apply: s => { s.hasLadder = true; } },
+  { id: 'bypass', cat: 'FISH',       name: 'Juvenile Bypass System',      cost: 2_000_000, desc: '2× pass rate, mostly immune to TDG',
+    avail: s => s.hasLadder && !s.hasJuvenileBypass,
+    apply: s => { s.hasJuvenileBypass = true; } },
+  { id: 'lock',   cat: 'NAV',        name: 'Navigation Lock',             cost: 3_000_000, desc: 'Unlock barge commerce + lockage events',
+    avail: s => !s.hasLock,
+    apply: s => { s.hasLock = true; } },
+  { id: 'raise',  cat: 'STRUCTURE',  name: 'Raise Dam 5 ft',              cost: 2_000_000, desc: '+5 ft crest, +3 ft pool max, +head',
+    avail: s => s.damRaises < 3,
+    apply: s => { s.damRaises += 1; } },
+  { id: 'agc',    cat: 'GRID',       name: 'Automatic Generation Control',cost: 1_500_000, desc: 'Auto-trims Hz drift within safe band',
+    avail: s => !s.hasAGC,
+    apply: s => { s.hasAGC = true; } },
+];
+
+// ----- Game state -----
+let S = null;
+
+function shiftScenario(shift) {
+  // Scale scenario intensity with shift number; scale to plant capacity so it's always challenging.
+  const capMW = hydroPowerMW(PLANT_STATE.maxTurbineKcfs, 60);  // rough max MW at default head
+  const f = Math.pow(1.5, shift - 1);
+  const sc = {
+    label: ['Commissioning', 'First Snowmelt', 'Spring Smolt Run', 'Summer Peak', 'Gorge Wind Integration',
+            'Barge Commerce', 'Heat Dome', 'Winter Storm', 'Federal Audit', 'Full Bonneville'][Math.min(shift-1, 9)] ?? 'Ongoing Ops',
+    shiftLen: 120 + shift * 10,
+    inflow0: Math.max(40, 60 * f),
+    demand0: capMW * 0.35,
+    demandPeak: capMW * 0.85,
+    windBase: shift >= 5 ? capMW * 0.4 : 0,
+    windLow:  shift >= 5 ? capMW * 0.1 : 0,
+    needsFishPass: shift >= 3 && PLANT_STATE.hasLadder,
+    fishMandate:  shift >= 3 && !PLANT_STATE.hasLadder,
+    scheduleLockages: PLANT_STATE.hasLock && shift >= 4,
+    scheduleWindSwings: shift >= 5,
+    scheduleFishPulse: shift >= 3,
+    scheduleInflowBump: shift >= 2,
+  };
+  return sc;
+}
+
+function resetState() {
+  const sc = shiftScenario(PLANT_STATE.shift);
+  S = {
+    t: 0,
+    shiftLen: sc.shiftLen,
+    speed: 1,                            // sim-min per real-sec at 1× (shift 120 min → ~2 real-min)
+    paused: false,
+    gameOver: false,
+    scenario: sc,
+
+    elev: Math.min(PLANT_STATE.poolHigh - 1, 75.5 + PLANT_STATE.damRaises * 3),
+    tdg: 102,
+    hz: 60.00,
+
+    turbQ: Math.min(PLANT_STATE.maxTurbineKcfs * 0.5, 30),
+    spillQ: Math.min(PLANT_STATE.maxSpillKcfs * 0.2, 10),
+    ladQ: PLANT_STATE.hasLadder ? 3.5 : 0,
+
+    inflow: sc.inflow0,
+    windMW: sc.windBase,
+    windTarget: sc.windBase,
+    demandMW: sc.demand0,
+    demandTarget: sc.demand0,
+
+    events: [],
+    log: [],
+    fishPassed: 0,
+    fishKilled: 0,
+    revenue: 0,
+    tdgPenalty: 0,
+    brownoutMin: 0,
+    fishFines: 0,
+    lockageRevenue: 0,
+  };
+  scheduleShiftEvents();
+  log(`Shift ${PLANT_STATE.shift} — ${sc.label}. Inflow ${Math.round(sc.inflow0)} kcfs, demand climbing.`, 'dim');
+  if (sc.fishMandate) log('⚠ NOAA fish-passage mandate in effect. No ladder — every shift incurs fines.', 'bad');
+  if (!PLANT_STATE.hasLadder && !sc.fishMandate) log('Objective: match demand, keep pool in band.', 'dim');
+  else log(`Objective: match demand, keep pool ${PLANT.elevLow.toFixed(0)}–${PLANT_STATE.poolHigh.toFixed(0)} ft, pass salmon.`, 'dim');
+  // Sync slider ranges to plant capability
+  syncSliderRanges();
+}
+
+// ----- Event scheduler: dynamic per shift + plant state -----
+function scheduleShiftEvents() {
+  const sc = S.scenario;
+  const evs = [];
+  // Morning demand ramp scales with plant capacity
+  evs.push({ at: 20, kind: 'demandRamp', to: sc.demandPeak, over: 15,
+             label: `Load ramp: demand climbing toward ${Math.round(sc.demandPeak)} MW peak` });
+
+  if (sc.scheduleWindSwings) {
+    evs.push({ at: 45, kind: 'windRamp', to: sc.windLow, over: 20,
+               label: `Wind forecast: Gorge calm in 20 min (-${Math.round(sc.windBase - sc.windLow)} MW)` });
+    evs.push({ at: 130, kind: 'windRamp', to: sc.windBase * 1.3, over: 10,
+               label: `Wind returning strong: +${Math.round(sc.windBase * 0.3 + (sc.windBase - sc.windLow))} MW in 10 min` });
+  }
+  if (sc.scheduleLockages) {
+    evs.push({ at: 65, kind: 'lockage', duration: 4, draw: Math.min(30, PLANT_STATE.maxTurbineKcfs * 0.2),
+               name: 'HEARTLAND VENTURE', dir: 'downbound', fee: 8000,
+               label: 'Navigation lock: barge HEARTLAND VENTURE downbound, 4-min cycle' });
+    evs.push({ at: 145, kind: 'lockage', duration: 4, draw: Math.min(30, PLANT_STATE.maxTurbineKcfs * 0.2),
+               name: 'WILLAMETTE PRIDE', dir: 'upbound', fee: 8000,
+               label: 'Navigation lock: tug WILLAMETTE PRIDE upbound, 4-min cycle' });
+  }
+  if (sc.scheduleFishPulse && PLANT_STATE.hasLadder) {
+    evs.push({ at: 80, kind: 'fishPulse', mag: 2.0, over: 25,
+               label: 'Smolt pulse detected — attraction flow critical (next 25 min)' });
+  }
+  if (sc.scheduleInflowBump) {
+    evs.push({ at: 105, kind: 'inflowRamp', to: sc.inflow0 * 1.6, over: 20,
+               label: `Upstream release from The Dalles: +${Math.round(sc.inflow0 * 0.6)} kcfs in 20 min` });
+  }
+  evs.push({ at: sc.shiftLen - 30, kind: 'demandRamp', to: sc.demand0 * 0.8, over: 20,
+             label: 'Evening load shed — demand dropping' });
+  S.events = evs;
+}
+
+function advanceEvents(dt) {
+  // Smooth ramps toward targets
+  const k = dt * 0.05;
+  S.windMW += (S.windTarget - S.windMW) * Math.min(1, k);
+  S.demandMW += (S.demandTarget - S.demandMW) * Math.min(1, k);
+
+  for (const ev of S.events) {
+    if (ev.fired) continue;
+    if (S.t >= ev.at) {
+      ev.fired = true;
+      log('📡 ' + ev.label, 'warn');
+      if (ev.kind === 'demandRamp') S.demandTarget = ev.to;
+      else if (ev.kind === 'windRamp') S.windTarget = ev.to;
+      else if (ev.kind === 'inflowRamp') S._inflowTarget = ev.to;
+      else if (ev.kind === 'fishPulse') { S._fishPulseUntil = S.t + ev.over; S._fishPulseMag = ev.mag; }
+      else if (ev.kind === 'lockage') {
+        S._lockageUntil = S.t + ev.duration;
+        S._lockDraw = ev.draw;
+        S._lockBoat = { name: ev.name, dir: ev.dir, until: S.t + ev.duration };
+        S.lockageRevenue += ev.fee || 0;
+      }
+    }
+  }
+  if (S._inflowTarget != null) {
+    S.inflow += (S._inflowTarget - S.inflow) * Math.min(1, dt * 0.03);
+  }
+}
+
+// ----- Physics step (dt in simulated minutes) -----
+function step(dt) {
+  advanceEvents(dt);
+
+  // Lockage forces a navigation-lock chamber cycle — water and one powerhouse unit are committed,
+  // reducing effective turbine capacity. Player must ride it out; ignoring it = Coast Guard complaint.
+  const lockActive = S._lockageUntil && S.t < S._lockageUntil;
+  const turbCap = lockActive ? (PLANT.maxTurbineKcfs - S._lockDraw) : PLANT.maxTurbineKcfs;
+  const effTurbQ = Math.min(S.turbQ, turbCap);
+  if (lockActive && S.turbQ > turbCap + 1 && !S._lockageWarned) {
+    log('⚓ Lock chamber active — powerhouse units 1-2 tripped offline by dispatch override.', 'warn');
+    S._lockageWarned = true;
+  }
+  if (!lockActive && S._lockageWarned) S._lockageWarned = false;
+
+  // Tailwater rises with total downstream outflow (rating curve, linearized + capped).
+  const totalOutflow = effTurbQ + S.spillQ + S.ladQ;
+  const tailwater = Math.min(24, PLANT.tailwaterBase + totalOutflow / 40);
+  const head = Math.max(0, S.elev - tailwater);
+  const effHead = Math.max(0, head - PLANT.headLossPerKcfs * effTurbQ);
+  S._tailwater = tailwater;
+  S._effTurbQ = effTurbQ;
+
+  const pHydro = hydroPowerMW(effTurbQ, effHead, PLANT_STATE.turbineEff);
+  const genMW = Math.min(pHydro, PLANT.nameplateMW);
+
+  // Grid balance: (hydro + wind) − demand => Hz drift. AGC trims drift within safe band.
+  const balance = (genMW + S.windMW) - S.demandMW;
+  const agcTrim = PLANT_STATE.hasAGC && Math.abs(S.hz - 60) < 0.3 ? 0.08 : 0.02;
+  S.hz += (balance * 0.00005 - (S.hz - 60) * agcTrim) * dt;
+
+  // Reservoir mass balance — uses effective turbine flow; area scales with plant size
+  const netQ = S.inflow - effTurbQ - S.spillQ - S.ladQ;
+  const dAF = netQ * KCFS_MIN_TO_AF * dt;
+  S.elev += dAF / PLANT_STATE.reservoirAcres;
+
+  // TDG: supersaturation rises with spill. Flip-lip deflectors soften the curve.
+  const tdgTarget = 100 + PLANT_STATE.tdgCoef * Math.sqrt(Math.max(0, S.spillQ));
+  S.tdg += (tdgTarget - S.tdg) * Math.min(1, dt * 0.12);
+
+  // Fish passage — only if ladder is installed
+  if (PLANT_STATE.hasLadder) {
+    const attract = clamp(S.ladQ / 3.5, 0, 1.2);
+    let tdgHarm = clamp((S.tdg - 115) / 10, 0, 1);
+    if (PLANT_STATE.hasJuvenileBypass) tdgHarm *= 0.2; // bypass routes fish around spillway
+    const pulse = (S._fishPulseUntil && S.t < S._fishPulseUntil) ? S._fishPulseMag : 1.0;
+    const mult = PLANT_STATE.fishPassMult;
+    const passRate = attract * (1 - tdgHarm) * pulse * 6 * mult;
+    const killRate = attract * tdgHarm * pulse * 6;
+    S.fishPassed += passRate * dt;
+    S.fishKilled += killRate * dt;
+  } else if (S.scenario.fishMandate) {
+    // NOAA fines accrue while mandate is in effect without a ladder
+    S.fishFines += dt * 1200; // $1200/min ≈ $216K/shift
+  }
+
+  // Revenue + penalties
+  S.revenue += genMW * (dt / 60) * PLANT.energyPriceBase;
+  const drift = Math.abs(S.hz - 60);
+  if (drift > 0.3) S.brownoutMin += dt;
+  if (S.tdg > 120) S.tdgPenalty += (S.tdg - 120) * dt * 30;
+
+  // Failure conditions (poolMax is dynamic with dam raises)
+  if (S.elev < PLANT.elevMin) return failShift('POOL DRAWDOWN — reservoir below minimum, intakes cavitating. Plant trip.');
+  if (S.elev > PLANT_STATE.poolMax) return failShift('POOL OVERTOP — emergency spillway engaged, downstream flooding declared.');
+  if (Math.abs(S.hz - 60) > 0.55) return failShift('GRID SEPARATION — frequency excursion outside ±0.5 Hz. BPA ordered you offline.');
+  if (S.tdg > 130) return failShift('TDG EMERGENCY — EPA/ODEQ violation, fisheries shut plant down.');
+
+  // Shift complete
+  if (S.t >= S.shiftLen) return endShift();
+}
+
+function failShift(msg) {
+  S.gameOver = true;
+  log('⚠ ' + msg, 'bad');
+  showOverlay('SHIFT ABORTED', msg, true);
+}
+function endShift() {
+  S.gameOver = true;
+  log('✓ Shift complete. Relief operator on console.', 'good');
+  showOverlay('SHIFT COMPLETE', `Shift ${PLANT_STATE.shift} (${S.scenario.label}) held to relief.`, false);
+}
+
+function computeShiftEarnings() {
+  const fishBonus = PLANT_STATE.hasLadder ? Math.floor(S.fishPassed) * 30 : 0;
+  const gross = S.revenue + S.lockageRevenue + fishBonus;
+  const deductions = S.tdgPenalty + S.brownoutMin * 2000 + S.fishFines;
+  return { gross, fishBonus, deductions, net: Math.max(0, gross - deductions) };
+}
+
+// ----- Rendering (isometric) -----
+// World axes: x = along river flow (upstream → downstream), y = across river
+// (south bank → north bank), z = elevation (ft above river bed datum).
+// Screen projection: 30°/30° iso with z pointing up.
+const ISO = {
+  CX: CANVAS.width / 2, CY: CANVAS.height * 0.58,
+  SX: 1.05, SY: 0.52, SZ: 1.05,
+};
+function iso(x, y, z) {
+  return {
+    sx: ISO.CX + (x - y) * ISO.SX,
+    sy: ISO.CY + (x + y) * ISO.SY - z * ISO.SZ,
+  };
+}
+function quad(p1, p2, p3, p4, fill, stroke) {
+  CTX.beginPath();
+  CTX.moveTo(p1.sx, p1.sy);
+  CTX.lineTo(p2.sx, p2.sy);
+  CTX.lineTo(p3.sx, p3.sy);
+  CTX.lineTo(p4.sx, p4.sy);
+  CTX.closePath();
+  if (fill)   { CTX.fillStyle = fill; CTX.fill(); }
+  if (stroke) { CTX.strokeStyle = stroke; CTX.stroke(); }
+}
+function isoBox(x0, x1, y0, y1, z0, z1, topColor, frontColor, sideColor, stroke) {
+  // Top
+  quad(iso(x0,y0,z1), iso(x1,y0,z1), iso(x1,y1,z1), iso(x0,y1,z1), topColor, stroke);
+  // Downstream face (x1) — most visible in our view
+  quad(iso(x1,y0,z1), iso(x1,y1,z1), iso(x1,y1,z0), iso(x1,y0,z0), sideColor, stroke);
+  // South face (y0)
+  quad(iso(x0,y0,z1), iso(x1,y0,z1), iso(x1,y0,z0), iso(x0,y0,z0), frontColor, stroke);
+}
+
+// ----- 2D Plan view (top-down) -----
+function drawPlan() {
+  const ctx = CTX_PLAN;
+  const W = CANVAS_PLAN.width, H = CANVAS_PLAN.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Gorge background
+  ctx.fillStyle = '#0e1418';
+  ctx.fillRect(0, 0, W, H);
+
+  // Layout: flow left→right, N is up
+  const damX = W * 0.48;
+  const damW = Math.max(18, W * 0.022);
+  const bankTop = H * 0.06;
+  const bankBot = H * 0.94;
+  const riverTop = H * 0.22;
+  const riverBot = H * 0.82;
+
+  // Forested banks (land)
+  ctx.fillStyle = '#243230';
+  ctx.fillRect(0, 0, W, riverTop);
+  ctx.fillRect(0, riverBot, W, H - riverBot);
+  // Tree specks, deterministic so they don't shimmer
+  ctx.fillStyle = '#18221f';
+  for (let i = 0; i < 120; i++) {
+    const seed = i * 9301;
+    const x = (seed % W);
+    const y = ((seed * 7) % Math.floor(riverTop * 0.95));
+    ctx.beginPath(); ctx.arc(x, y, 2 + (i % 3), 0, Math.PI * 2); ctx.fill();
+  }
+  for (let i = 0; i < 120; i++) {
+    const seed = i * 4021 + 17;
+    const x = (seed % W);
+    const y = riverBot + ((seed * 3) % Math.floor((H - riverBot) * 0.95));
+    ctx.beginPath(); ctx.arc(x, y, 2 + (i % 3), 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Upstream reservoir pool
+  const poolGrad = ctx.createLinearGradient(0, riverTop, damX, riverBot);
+  poolGrad.addColorStop(0, '#2f7b9e');
+  poolGrad.addColorStop(1, '#163043');
+  ctx.fillStyle = poolGrad;
+  ctx.fillRect(0, riverTop, damX, riverBot - riverTop);
+  // Flood tint if pool is elevated
+  if (S.elev > PLANT.elevHigh + 0.3) {
+    ctx.fillStyle = `rgba(239,83,80,${Math.min(0.35, (S.elev - PLANT.elevHigh) * 0.2)})`;
+    ctx.fillRect(0, riverTop, damX, riverBot - riverTop);
+  }
+
+  // Tailrace (downstream)
+  ctx.fillStyle = '#1a4458';
+  ctx.fillRect(damX + damW, riverTop, W - damX - damW, riverBot - riverTop);
+
+  // Surface wave striations — gentle animation for life
+  ctx.strokeStyle = '#5fa8c855'; ctx.lineWidth = 1;
+  for (let i = 0; i < 7; i++) {
+    const wx = (S.t * 3 + i * 90) % damX;
+    ctx.beginPath();
+    ctx.moveTo(wx, riverTop + 10 + i * 18);
+    ctx.lineTo(wx + 55, riverTop + 10 + i * 18);
+    ctx.stroke();
+  }
+
+  // Dam body across the full river
+  ctx.fillStyle = '#5a6570';
+  ctx.fillRect(damX, bankTop, damW, bankBot - bankTop);
+  ctx.strokeStyle = '#1a2128'; ctx.lineWidth = 1;
+  ctx.strokeRect(damX, bankTop, damW, bankBot - bankTop);
+
+  // Powerhouse (south bank side) + turbine units
+  const phTop = riverTop + (riverBot - riverTop) * 0.55;
+  const phBot = riverBot - 4;
+  ctx.fillStyle = '#3b4650';
+  ctx.fillRect(damX - damW * 0.4, phTop, damW * 1.8, phBot - phTop);
+  ctx.strokeRect(damX - damW * 0.4, phTop, damW * 1.8, phBot - phTop);
+  const nUnits = PLANT_STATE.turbines;
+  const unitW = (damW * 1.8) / nUnits;
+  const effQ = S._effTurbQ ?? S.turbQ;
+  for (let i = 0; i < nUnits; i++) {
+    const ux = damX - damW * 0.4 + i * unitW;
+    const unitActive = effQ > (i * PLANT_STATE.maxTurbineKcfs / nUnits);
+    ctx.fillStyle = unitActive ? '#8a99a8' : '#2b333b';
+    ctx.fillRect(ux + 2, phTop + 3, unitW - 4, phBot - phTop - 6);
+    if (unitActive) {
+      ctx.fillStyle = 'rgba(255, 210, 90, 0.7)';
+      ctx.beginPath();
+      ctx.arc(ux + unitW / 2, phTop + 7, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Spillway bays (middle of dam) — open gates glow blue
+  const spwTop = riverTop + (riverBot - riverTop) * 0.20;
+  const spwBot = riverTop + (riverBot - riverTop) * 0.52;
+  const nBays = PLANT_STATE.spillGates;
+  const bayH = (spwBot - spwTop) / nBays;
+  const spillFrac = clamp(S.spillQ / Math.max(1, PLANT_STATE.maxSpillKcfs), 0, 1);
+  const activeBays = Math.min(nBays, Math.ceil(spillFrac * nBays + 0.001));
+  for (let i = 0; i < nBays; i++) {
+    const by = spwTop + i * bayH;
+    const open = i < activeBays;
+    ctx.fillStyle = open ? '#7fc6dc' : '#2c3540';
+    ctx.fillRect(damX, by + 1, damW, bayH - 2);
+    ctx.strokeStyle = '#1a2128'; ctx.strokeRect(damX, by + 1, damW, bayH - 2);
+    if (open) {
+      const gf = clamp(spillFrac * nBays - i, 0.15, 1);
+      const jetLen = 40 + gf * 90;
+      const alpha = 0.3 + gf * 0.5;
+      ctx.fillStyle = `rgba(130, 205, 235, ${alpha})`;
+      ctx.beginPath();
+      ctx.moveTo(damX + damW, by + 2);
+      ctx.lineTo(damX + damW + jetLen, by + 3);
+      ctx.lineTo(damX + damW + jetLen, by + bayH - 3);
+      ctx.lineTo(damX + damW, by + bayH - 2);
+      ctx.closePath(); ctx.fill();
+      for (let f = 0; f < 4; f++) {
+        const fx = damX + damW + (f + 0.5) * jetLen / 4 + ((S.t * 20 + f * 7) % 10);
+        const fy = by + 2 + ((i + f) % 3) * (bayH / 3);
+        ctx.fillStyle = `rgba(230, 240, 245, ${0.25 + ((f + i) % 3) * 0.15})`;
+        ctx.beginPath(); ctx.arc(fx, fy, 1.3, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+  }
+
+  // Fish ladder (north bank) — zigzag structure
+  if (PLANT_STATE.hasLadder) {
+    const fladY = riverTop + 2;
+    const fladH = Math.max(18, (riverBot - riverTop) * 0.13);
+    const fladX0 = damX - 80, fladX1 = damX + damW + 80;
+    ctx.fillStyle = S.ladQ > 1 ? `rgba(100, 180, 220, ${Math.min(0.85, 0.32 + S.ladQ / 10)})` : '#1c2a34';
+    ctx.fillRect(fladX0, fladY, fladX1 - fladX0, fladH);
+    ctx.strokeStyle = '#2a3540'; ctx.lineWidth = 1;
+    const steps = 16;
+    for (let i = 0; i < steps; i++) {
+      const sx = fladX0 + i * (fladX1 - fladX0) / steps;
+      ctx.beginPath();
+      ctx.moveTo(sx, fladY);
+      ctx.lineTo(sx + (fladX1 - fladX0) / steps / 2, fladY + fladH);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#26a69a'; ctx.font = '9px Consolas'; ctx.textAlign = 'left';
+    ctx.fillText('FISH LADDER', fladX0, fladY - 3);
+  }
+
+  // Nav lock on far-north bank
+  if (PLANT_STATE.hasLock) {
+    const lockY = bankTop + 6;
+    const lockH = riverTop - bankTop - 12;
+    const lockX0 = damX - 80, lockX1 = damX + damW + 80;
+    ctx.fillStyle = '#4a5560';
+    ctx.fillRect(lockX0, lockY, lockX1 - lockX0, lockH);
+    ctx.strokeStyle = '#1a2128'; ctx.strokeRect(lockX0, lockY, lockX1 - lockX0, lockH);
+    const lockActive = S._lockageUntil && S.t < S._lockageUntil;
+    ctx.fillStyle = lockActive ? '#2e6a8a' : '#1d4558';
+    ctx.fillRect(lockX0 + 2, lockY + 2, lockX1 - lockX0 - 4, lockH - 4);
+    if (lockActive && S._lockBoat) {
+      const remaining = S._lockageUntil - S.t;
+      const p = clamp(1 - remaining / 4, 0, 1);
+      const bx = S._lockBoat.dir === 'downbound' ? (lockX0 + 10 + p * (lockX1 - lockX0 - 28)) : (lockX1 - 18 - p * (lockX1 - lockX0 - 28));
+      const by = lockY + lockH / 2;
+      ctx.fillStyle = '#a1887f';
+      ctx.fillRect(bx - 9, by - 4, 18, 8);
+      ctx.fillStyle = '#ffecb3';
+      ctx.fillRect(bx - 2, by - 5, 4, 3);
+    }
+    ctx.fillStyle = '#26a69a'; ctx.font = '9px Consolas'; ctx.textAlign = 'left';
+    ctx.fillText('NAV LOCK', lockX0, lockY - 3);
+  }
+
+  // Flow arrows
+  drawFlowArrow(ctx, 20, (riverTop + riverBot) / 2, 120, (riverTop + riverBot) / 2,
+                S.inflow, PLANT_STATE.maxTurbineKcfs + PLANT_STATE.maxSpillKcfs, `INFLOW ${S.inflow.toFixed(0)}`);
+  drawFlowArrow(ctx, damX + damW + 2, (phTop + phBot) / 2, damX + damW + 120, (phTop + phBot) / 2,
+                effQ, PLANT_STATE.maxTurbineKcfs, `TURB ${effQ.toFixed(0)}`);
+  if (PLANT_STATE.hasLadder && S.ladQ > 0.3) {
+    drawFlowArrow(ctx, damX + 70, riverTop + 10, damX - 70, riverTop + 10,
+                  S.ladQ, 10, `LADDER ${S.ladQ.toFixed(1)}`);
+  }
+  const totalOut = effQ + S.spillQ + S.ladQ;
+  drawFlowArrow(ctx, W - 140, (riverTop + riverBot) / 2, W - 30, (riverTop + riverBot) / 2,
+                totalOut, PLANT_STATE.maxTurbineKcfs + PLANT_STATE.maxSpillKcfs,
+                `→ PACIFIC ${totalOut.toFixed(0)}`);
+
+  // Fish swimming in tailrace (live = white, TDG-stressed = red)
+  const liveN = Math.min(30, Math.floor(S.fishPassed / 40));
+  for (let i = 0; i < liveN; i++) {
+    const fx = damX + damW + 20 + ((S.t * 8 + i * 23) % (W - damX - damW - 40));
+    const fy = riverTop + 20 + (i * 17) % (riverBot - riverTop - 40);
+    ctx.fillStyle = S.tdg > 115 ? '#ef535099' : '#cfd8dc';
+    ctx.beginPath(); ctx.ellipse(fx, fy, 3, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  // Dead fish belly-up on tailrace — visible count scaled by mortality
+  const deadN = Math.min(18, Math.floor(S.fishKilled / 15));
+  for (let i = 0; i < deadN; i++) {
+    const fx = damX + damW + 40 + ((i * 71) % (W - damX - damW - 60));
+    const fy = riverTop + 12 + (i * 29) % (riverBot - riverTop - 24);
+    ctx.save(); ctx.translate(fx, fy);
+    ctx.fillStyle = '#6d2f2e';
+    ctx.strokeStyle = '#ef5350';
+    ctx.beginPath(); ctx.ellipse(0, 0, 4, 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // Tail
+    ctx.beginPath();
+    ctx.moveTo(3.2, 0); ctx.lineTo(6, -2); ctx.lineTo(6, 2); ctx.closePath(); ctx.fill();
+    // X eye
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(-3, -1); ctx.lineTo(-1, 1);
+    ctx.moveTo(-1, -1); ctx.lineTo(-3, 1);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Compass rose (top-right)
+  ctx.save();
+  ctx.translate(W - 36, 30);
+  ctx.strokeStyle = '#78909c'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(0, 14); ctx.moveTo(-14, 0); ctx.lineTo(14, 0); ctx.stroke();
+  ctx.fillStyle = '#cfd8dc'; ctx.font = 'bold 10px Consolas'; ctx.textAlign = 'center';
+  ctx.fillText('N', 0, -17);
+  ctx.restore();
+
+  // Labels
+  ctx.fillStyle = '#26a69a'; ctx.font = 'bold 10px Consolas'; ctx.textAlign = 'center';
+  ctx.fillText('BONNEVILLE DAM', damX + damW / 2, bankTop - 3);
+  ctx.fillStyle = '#78909c'; ctx.font = '10px Consolas';
+  ctx.textAlign = 'left';  ctx.fillText('COLUMBIA R. ← upstream', 10, riverTop - 5);
+  ctx.textAlign = 'right'; ctx.fillText('downstream →', W - 10, riverTop - 5);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#5fa8c8'; ctx.font = '9px Consolas';
+  ctx.fillText(`POOL ${S.elev.toFixed(2)} ft`, 12, riverTop + 14);
+  ctx.fillStyle = '#78909c';
+  ctx.fillText(`TAIL ${(S._tailwater ?? PLANT.tailwaterBase).toFixed(1)} ft`, W - 120, riverTop + 14);
+
+  // Flood warning band on tailrace bank if pool is over target
+  if (S.elev > PLANT.elevHigh + 0.3) {
+    ctx.fillStyle = 'rgba(239,83,80,0.75)';
+    ctx.font = 'bold 11px Consolas'; ctx.textAlign = 'center';
+    ctx.fillText('⚠ POOL ABOVE BAND — FLOOD RISK', damX / 2, (riverTop + riverBot) / 2);
+  }
+  if (S.tdg > 120) {
+    ctx.fillStyle = 'rgba(239,83,80,0.85)';
+    ctx.font = 'bold 11px Consolas'; ctx.textAlign = 'center';
+    ctx.fillText(`⚠ TDG ${S.tdg.toFixed(0)}% — FISH KILL`, (damX + W) / 2, (riverTop + riverBot) / 2);
+  }
+}
+
+function drawFlowArrow(ctx, x1, y1, x2, y2, q, qMax, label) {
+  const mag = clamp(q / Math.max(1, qMax), 0, 1);
+  if (mag < 0.015) return;
+  const thick = 2 + mag * 9;
+  ctx.strokeStyle = `rgba(100, 200, 230, ${0.45 + mag * 0.45})`;
+  ctx.fillStyle = ctx.strokeStyle;
+  ctx.lineWidth = thick;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const headLen = 7 + mag * 6;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - Math.cos(angle - Math.PI / 6) * headLen, y2 - Math.sin(angle - Math.PI / 6) * headLen);
+  ctx.lineTo(x2 - Math.cos(angle + Math.PI / 6) * headLen, y2 - Math.sin(angle + Math.PI / 6) * headLen);
+  ctx.closePath(); ctx.fill();
+  ctx.lineCap = 'butt';
+  if (label) {
+    ctx.fillStyle = '#cfd8dc'; ctx.font = '9px Consolas'; ctx.textAlign = 'center';
+    ctx.fillText(label, (x1 + x2) / 2, Math.min(y1, y2) - 6);
+  }
+}
+
+function render() {
+  const W = CANVAS.width, H = CANVAS.height;
+  CTX.clearRect(0, 0, W, H);
+
+  // ===== Sky =====
+  const sky = CTX.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#0a1420');
+  sky.addColorStop(0.6, '#162030');
+  sky.addColorStop(1, '#0c1218');
+  CTX.fillStyle = sky; CTX.fillRect(0, 0, W, H);
+
+  // Distant mountains (screen-space, not iso)
+  CTX.fillStyle = '#1a2430';
+  CTX.beginPath(); CTX.moveTo(0, 110);
+  for (let i = 0; i <= 10; i++) {
+    CTX.lineTo(i * W / 10, 110 - 22 - Math.sin(i * 1.3) * 14 - (i % 2) * 10);
+  }
+  CTX.lineTo(W, 110); CTX.lineTo(W, 130); CTX.lineTo(0, 130); CTX.fill();
+
+  // ===== World geometry =====
+  const tw = S._tailwater ?? PLANT.tailwaterBase;
+  const DAM_X0 = 0, DAM_X1 = 22;
+  const Y_MIN = -95, Y_MAX = 95;
+  const CREST = PLANT_STATE.crestFt, BED = 0;
+
+  // ===== Banks (ground outside river y-range) =====
+  quad(
+    iso(-220, Y_MIN - 40, BED), iso(150, Y_MIN - 40, BED),
+    iso(150, Y_MIN, BED),       iso(-220, Y_MIN, BED),
+    '#2b3641', null
+  );
+  quad(
+    iso(-220, Y_MAX, BED), iso(150, Y_MAX, BED),
+    iso(150, Y_MAX + 40, BED), iso(-220, Y_MAX + 40, BED),
+    '#2b3641', null
+  );
+
+  // ===== Upstream reservoir =====
+  const RX0 = -220, RX1 = DAM_X0 - 0.5;
+  const resTop = iso(RX0, (Y_MIN + Y_MAX) / 2, S.elev);
+  const resGrad = CTX.createLinearGradient(0, resTop.sy, 0, resTop.sy + 80);
+  resGrad.addColorStop(0, '#3784a6'); resGrad.addColorStop(1, '#163043');
+  quad(
+    iso(RX0, Y_MIN, S.elev), iso(RX1, Y_MIN, S.elev),
+    iso(RX1, Y_MAX, S.elev), iso(RX0, Y_MAX, S.elev),
+    resGrad, null
+  );
+  // Wave striations — gentle surface texture
+  CTX.strokeStyle = '#5fa8c855';
+  for (let r = 0; r < 6; r++) {
+    const wx = RX0 + 25 + r * 35 + (S.t * 0.6) % 30;
+    const a = iso(wx, Y_MIN + 10, S.elev);
+    const b = iso(wx, Y_MAX - 10, S.elev);
+    CTX.beginPath(); CTX.moveTo(a.sx, a.sy); CTX.lineTo(b.sx, b.sy); CTX.stroke();
+  }
+  // Upstream face of reservoir (vertical water edge at dam)
+  quad(
+    iso(RX1, Y_MIN, S.elev), iso(RX1, Y_MAX, S.elev),
+    iso(RX1, Y_MAX, BED),    iso(RX1, Y_MIN, BED),
+    '#16405888', null
+  );
+
+  // ===== Dam body (2 wings flanking the spillway block) =====
+  // South wing (y=-95 to -40)
+  isoBox(DAM_X0, DAM_X1, Y_MIN, -40, BED, CREST,
+         '#5a6570', '#3b4650', '#4a5560', '#1a2128');
+  // Spillway block (y=-40 to +40) — slightly lower crest, gates set into it
+  isoBox(DAM_X0, DAM_X1, -40, 40, BED, CREST - 4,
+         '#52606b', '#354049', '#424e58', '#1a2128');
+  // North wing (y=+40 to +95)
+  isoBox(DAM_X0, DAM_X1, 40, Y_MAX, BED, CREST,
+         '#5a6570', '#3b4650', '#4a5560', '#1a2128');
+
+  // ===== Spillway bays (count driven by owned gates) =====
+  const nBays = PLANT_STATE.spillGates;
+  const bayY0 = -40, bayY1 = 40;
+  const bayW = (bayY1 - bayY0) / nBays;
+  const spillFrac = clamp(S.spillQ / Math.max(1, PLANT_STATE.maxSpillKcfs), 0, 1);
+  const activeBays = Math.min(nBays, Math.ceil(spillFrac * nBays + 0.001));
+  for (let i = 0; i < nBays; i++) {
+    const y0 = bayY0 + i * bayW + 1.2;
+    const y1 = y0 + bayW - 2.4;
+    const open = i < activeBays;
+    // Pier cap between gates (short wall)
+    quad(
+      iso(DAM_X0, y1, CREST - 4), iso(DAM_X1, y1, CREST - 4),
+      iso(DAM_X1, y1 + 1.0, CREST - 4), iso(DAM_X0, y1 + 1.0, CREST - 4),
+      '#6a7580', null
+    );
+    // Gate slot top (dark indent when open, solid when closed)
+    const slotZ = open ? CREST - 14 : CREST - 6;
+    quad(
+      iso(DAM_X0, y0, slotZ), iso(DAM_X1, y0, slotZ),
+      iso(DAM_X1, y1, slotZ), iso(DAM_X0, y1, slotZ),
+      open ? '#0d1a24' : '#2c3540', '#1a2128'
+    );
+    // Water curtain down the downstream face
+    if (open) {
+      const gateFrac = clamp(spillFrac * nBays - i, 0.15, 1);
+      const alpha = 0.30 + gateFrac * 0.45;
+      CTX.fillStyle = `rgba(130, 205, 235, ${alpha})`;
+      const t1 = iso(DAM_X1,     y0 + 0.3, slotZ);
+      const t2 = iso(DAM_X1,     y1 - 0.3, slotZ);
+      const b1 = iso(DAM_X1 + 4, y0 + 0.3, tw + 1);
+      const b2 = iso(DAM_X1 + 4, y1 - 0.3, tw + 1);
+      CTX.beginPath();
+      CTX.moveTo(t1.sx, t1.sy);
+      CTX.quadraticCurveTo(t1.sx + 2, (t1.sy + b1.sy) / 2 + 4, b1.sx, b1.sy);
+      CTX.lineTo(b2.sx, b2.sy);
+      CTX.quadraticCurveTo(t2.sx + 2, (t2.sy + b2.sy) / 2 + 4, t2.sx, t2.sy);
+      CTX.closePath(); CTX.fill();
+    }
+  }
+
+  // ===== Powerhouse (south wing): generator units on crest, count = turbines owned =====
+  const phY0 = -90, phY1 = -45;
+  const nUnits = PLANT_STATE.turbines;
+  for (let i = 0; i < nUnits; i++) {
+    const uy = phY0 + (phY1 - phY0) * (i + 0.5) / nUnits;
+    const unitActive = (S._effTurbQ ?? S.turbQ) > (i * PLANT_STATE.maxTurbineKcfs / nUnits);
+    // Small generator bump sitting on the dam crest
+    isoBox(DAM_X0 + 3, DAM_X1 - 3, uy - 3.2, uy + 3.2, CREST, CREST + 7,
+           unitActive ? '#8a99a8' : '#3b4650',
+           unitActive ? '#64727f' : '#2b333b',
+           unitActive ? '#76859a' : '#34404a',
+           '#14191e');
+    if (unitActive) {
+      const c = iso((DAM_X0 + DAM_X1) / 2, uy, CREST + 9);
+      CTX.fillStyle = 'rgba(255, 210, 90, 0.45)';
+      CTX.beginPath(); CTX.arc(c.sx, c.sy, 4.5, 0, Math.PI * 2); CTX.fill();
+    }
+  }
+
+  // ===== Navigation lock (only if built) =====
+  const lockActive = S._lockageUntil && S.t < S._lockageUntil;
+  if (PLANT_STATE.hasLock) {
+    const lockY0 = 50, lockY1 = 80;
+    const lockFloor = CREST - 18;
+    isoBox(-45, 45, lockY0, lockY0 + 2, BED, CREST, '#4a5560', '#2f3842', '#3b4650', '#14191e');
+    isoBox(-45, 45, lockY1 - 2, lockY1, BED, CREST, '#4a5560', '#2f3842', '#3b4650', '#14191e');
+    isoBox(-45, -42, lockY0, lockY1, BED, CREST, '#4a5560', '#2f3842', '#3b4650', '#14191e');
+    isoBox( 42,  45, lockY0, lockY1, BED, CREST, '#4a5560', '#2f3842', '#3b4650', '#14191e');
+    const lockLvl = lockActive ? lockFloor + 2 : lockFloor - 4;
+    quad(
+      iso(-42, lockY0 + 2, lockLvl), iso(42, lockY0 + 2, lockLvl),
+      iso(42, lockY1 - 2, lockLvl),  iso(-42, lockY1 - 2, lockLvl),
+      '#1d4558', null
+    );
+    if (lockActive && S._lockBoat) {
+      const remaining = S._lockageUntil - S.t;
+      const p = clamp(1 - remaining / 4, 0, 1);
+      const bx = S._lockBoat.dir === 'downbound' ? (-38 + p * 76) : (38 - p * 76);
+      const byc = (lockY0 + lockY1) / 2;
+      isoBox(bx - 6, bx + 14, byc - 6, byc + 6, lockLvl, lockLvl + 3,
+             '#a1887f', '#6d4c41', '#8d6e63', '#3e2723');
+      isoBox(bx + 4, bx + 9, byc - 3, byc + 3, lockLvl + 3, lockLvl + 7,
+             '#ffecb3', '#a1887f', '#c3a374', '#5d4037');
+    }
+  }
+
+  // ===== Fish ladder (only if built) =====
+  if (PLANT_STATE.hasLadder) {
+    const fladY0 = Y_MIN - 18, fladY1 = Y_MIN - 4;
+    const steps = 10;
+    for (let i = 0; i < steps; i++) {
+      const p = i / steps;
+      const stepX0 = -20 + p * 50;
+      const stepX1 = stepX0 + 6;
+      const stepZ = CREST - 8 - p * (CREST - 14);
+      const bandColor = S.ladQ > 1 ? `rgba(100, 180, 220, ${Math.min(0.85, 0.3 + S.ladQ / 8)})` : '#1c2a34';
+      quad(
+        iso(stepX0, fladY0, stepZ), iso(stepX1, fladY0, stepZ),
+        iso(stepX1, fladY1, stepZ), iso(stepX0, fladY1, stepZ),
+        bandColor, '#2a3540'
+      );
+    }
+  }
+
+  // ===== Tailrace water =====
+  quad(
+    iso(DAM_X1, Y_MIN, tw), iso(150, Y_MIN, tw),
+    iso(150, Y_MAX, tw),    iso(DAM_X1, Y_MAX, tw),
+    '#1a4458', null
+  );
+  // Foam at spill plunge
+  if (S.spillQ > 10) {
+    const n = Math.min(80, Math.floor(S.spillQ / 3));
+    for (let i = 0; i < n; i++) {
+      const fx = DAM_X1 + 2 + Math.random() * 14;
+      const fy = bayY0 + Math.random() * (bayY1 - bayY0);
+      const p = iso(fx, fy, tw + 1);
+      CTX.fillStyle = `rgba(230, 240, 245, ${0.2 + Math.random() * 0.45})`;
+      CTX.beginPath(); CTX.arc(p.sx, p.sy, 1 + Math.random() * 1.6, 0, Math.PI * 2); CTX.fill();
+    }
+  }
+
+  // ===== Fish in tailrace =====
+  const fishN = Math.min(40, Math.floor(S.fishPassed / 70));
+  for (let i = 0; i < fishN; i++) {
+    const fx = DAM_X1 + 8 + ((S.t * 3 + i * 17) % 130);
+    const fy = -70 + (i * 11) % 140;
+    const p = iso(fx, fy, tw + 0.5);
+    CTX.fillStyle = S.tdg > 115 ? '#ef535099' : '#cfd8dc';
+    CTX.beginPath(); CTX.ellipse(p.sx, p.sy, 2.4, 1, 0, 0, Math.PI * 2); CTX.fill();
+  }
+
+  // ===== Downstream town =====
+  for (let i = 0; i < 10; i++) {
+    const tx = 140, ty = -80 + i * 18;
+    const h = 6 + (i % 3) * 5;
+    const base = iso(tx, ty, BED);
+    const top  = iso(tx, ty, h);
+    CTX.fillStyle = '#0e1620';
+    CTX.fillRect(base.sx - 2, top.sy, 4, base.sy - top.sy);
+    if ((i + Math.floor(S.t / 3)) % 2 === 0) {
+      CTX.fillStyle = 'rgba(255, 179, 0, 0.7)';
+      CTX.fillRect(base.sx - 1, top.sy + 2, 1, 1);
+    }
+  }
+  // Flood warning band on town shore if pool too high
+  if (S.elev > PLANT.elevHigh + 0.3) {
+    const t0 = iso(140, -80, tw), t1 = iso(140, 100, tw);
+    CTX.strokeStyle = 'rgba(239,83,80,0.55)'; CTX.lineWidth = 3;
+    CTX.beginPath(); CTX.moveTo(t0.sx, t0.sy); CTX.lineTo(t1.sx, t1.sy); CTX.stroke();
+    CTX.lineWidth = 1;
+  }
+
+  // ===== Screen-space labels =====
+  CTX.font = '10px Consolas';
+  CTX.fillStyle = '#78909c';
+  CTX.fillText(`POOL  ${S.elev.toFixed(2)} ft`, 8, 14);
+  CTX.fillText(`INFLOW  ${S.inflow.toFixed(0)} kcfs`, 8, 28);
+  CTX.fillText(`TAIL  ${tw.toFixed(1)} ft`, 8, 42);
+  CTX.fillStyle = '#ffb30099';
+  CTX.fillText(`WIND  ${S.windMW.toFixed(0)} MW`, W - 140, 14);
+  CTX.fillText(`DEMAND  ${S.demandMW.toFixed(0)} MW`, W - 140, 28);
+  const gen = hydroPowerMW(S._effTurbQ ?? S.turbQ,
+                            Math.max(0, S.elev - tw - PLANT.headLossPerKcfs * (S._effTurbQ ?? S.turbQ)));
+  CTX.fillStyle = '#26a69a';
+  CTX.fillText(`GEN  ${gen.toFixed(0)} MW`, W - 140, 42);
+
+  if (lockActive) {
+    const remaining = S._lockageUntil - S.t;
+    CTX.font = 'bold 11px Consolas';
+    CTX.fillStyle = '#ffb300';
+    CTX.fillText(`LOCK ACTIVE — ${S._lockBoat.name} (${S._lockBoat.dir}) — T-${Math.ceil(remaining)}m — −${S._lockDraw} kcfs turbine cap`, 10, H - 10);
+  }
+}
+
+// ----- UI updates -----
+function updateUI() {
+  document.getElementById('hud-shift').textContent = `${PLANT_STATE.shift} — ${S.scenario?.label ?? ''}`;
+  document.getElementById('hud-time').textContent = fmtTime(S.t);
+  document.getElementById('hud-cash').textContent = '$' + PLANT_STATE.cash.toLocaleString();
+  document.getElementById('hud-rev').textContent = '$' + Math.floor(S.revenue + S.lockageRevenue).toLocaleString();
+  document.getElementById('hud-fish').textContent = Math.floor(S.fishPassed).toLocaleString();
+
+  document.getElementById('val-turb').textContent = S.turbQ.toFixed(0);
+  document.getElementById('val-spill').textContent = S.spillQ.toFixed(0);
+  document.getElementById('val-lad').textContent = S.ladQ.toFixed(1);
+
+  // Reservoir: bar range 70 → poolMax+2, zones dynamic with dam raises
+  const poolMin = 70, poolMax = PLANT_STATE.poolMax + 2;
+  const pRange = poolMax - poolMin;
+  const pct = v => clamp((v - poolMin) / pRange, 0, 1) * 100;
+  const pElevMin = pct(PLANT.elevMin);
+  const pElevLow = pct(PLANT.elevLow);
+  const pElevHi  = pct(PLANT_STATE.poolHigh);
+  const pElevMax = pct(PLANT_STATE.poolMax);
+  setZone('z-elev-lo',   0,         pElevMin);
+  setZone('z-elev-wlo',  pElevMin,  pElevLow);
+  setZone('z-elev-good', pElevLow,  pElevHi);
+  setZone('z-elev-whi',  pElevHi,   pElevMax);
+  setZone('z-elev-hi',   pElevMax,  100);
+  document.getElementById('mk-elev').style.left = pct(S.elev) + '%';
+  document.getElementById('m-elev-v').textContent = S.elev.toFixed(2);
+  document.getElementById('m-elev-band-v').textContent =
+    `${PLANT.elevLow.toFixed(0)}–${PLANT_STATE.poolHigh.toFixed(0)}`;
+
+  // Power bar: 0 → plantMaxMW, green band = demand ±5%, warn ±15%
+  const eff = S._effTurbQ ?? S.turbQ;
+  const tw = S._tailwater ?? PLANT.tailwaterBase;
+  const head = Math.max(0, S.elev - tw - PLANT.headLossPerKcfs*eff);
+  const mw = hydroPowerMW(eff, head);
+  const plantMaxMW = Math.max(50, hydroPowerMW(PLANT_STATE.maxTurbineKcfs, 60));
+  const demandNet = Math.max(0, S.demandMW - S.windMW); // hydro must serve this
+  const mwPct = v => clamp(v / plantMaxMW, 0, 1) * 100;
+  const tol = Math.max(20, demandNet * 0.05);
+  const warnTol = Math.max(40, demandNet * 0.15);
+  const pDemLo = mwPct(demandNet - tol);
+  const pDemHi = mwPct(demandNet + tol);
+  const pWLo   = mwPct(demandNet - warnTol);
+  const pWHi   = mwPct(demandNet + warnTol);
+  setZone('z-mw-lo',   0,      pWLo);
+  setZone('z-mw-wlo',  pWLo,   pDemLo);
+  setZone('z-mw-good', pDemLo, pDemHi);
+  setZone('z-mw-whi',  pDemHi, pWHi);
+  setZone('z-mw-hi',   pWHi,   100);
+  document.getElementById('mk-mw').style.left      = mwPct(mw) + '%';
+  document.getElementById('mk-mw-tgt').style.left  = mwPct(demandNet) + '%';
+  document.getElementById('m-mw-v').textContent = mw.toFixed(0);
+  document.getElementById('m-dem-v').textContent = demandNet.toFixed(0);
+
+  const turbLabel = document.getElementById('val-turb');
+  if (S._lockageUntil && S.t < S._lockageUntil && S.turbQ > PLANT_STATE.maxTurbineKcfs - S._lockDraw) {
+    turbLabel.style.color = 'var(--warn)';
+    turbLabel.textContent = S.turbQ.toFixed(0) + '→' + (PLANT_STATE.maxTurbineKcfs - S._lockDraw).toFixed(0);
+  } else {
+    turbLabel.style.color = 'var(--accent)';
+    turbLabel.textContent = S.turbQ.toFixed(0);
+  }
+
+  // Hz marker (bar fixed zones, range 59-61)
+  const hzPct = clamp((S.hz - 59) / 2, 0, 1) * 100;
+  document.getElementById('mk-hz').style.left = hzPct + '%';
+  document.getElementById('m-hz-v').textContent = S.hz.toFixed(2);
+
+  // TDG marker (bar fixed zones, range 100-130)
+  const tPct = clamp((S.tdg - 100) / 30, 0, 1) * 100;
+  document.getElementById('mk-tdg').style.left = tPct + '%';
+  document.getElementById('m-tdg-v').textContent = S.tdg.toFixed(0);
+
+  // Dials + fish
+  drawDials(mw, plantMaxMW, demandNet);
+  renderFish();
+
+  // Forecast
+  const fc = document.getElementById('forecast');
+  const upcoming = S.events.filter(e => !e.fired).slice(0, 3);
+  if (upcoming.length === 0) {
+    fc.innerHTML = '<div class="item">No scheduled changes. Shift ends at ' + fmtTime(S.shiftLen) + '.</div>';
+  } else {
+    fc.innerHTML = upcoming.map(e => {
+      const mins = Math.max(0, e.at - S.t);
+      const kind = e.kind === 'windRamp' ? 'warn' : (e.kind === 'fishPulse' ? '' : (e.kind === 'demandRamp' ? 'warn' : ''));
+      return `<div class="item ${kind}">T-${mins.toFixed(0)}m &nbsp; ${e.label}</div>`;
+    }).join('');
+  }
+}
+
+function setZone(id, leftPct, rightPct) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const l = Math.max(0, Math.min(100, leftPct));
+  const w = Math.max(0, Math.min(100, rightPct) - l);
+  el.style.left  = l + '%';
+  el.style.width = w + '%';
+}
+
+// ---- Dashboard dials (5 circular gauges) ----
+function drawDials(mw, plantMaxMW, demandNet) {
+  const c = document.getElementById('dials-canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const dials = [
+    { label: 'POOL', unit: 'ft', val: S.elev, prec: 2,
+      min: 70, max: PLANT_STATE.poolMax + 2,
+      good: [PLANT.elevLow, PLANT_STATE.poolHigh],
+      warn: [PLANT.elevMin, PLANT_STATE.poolMax] },
+    { label: 'GEN', unit: 'MW', val: mw, prec: 0,
+      min: 0, max: plantMaxMW,
+      good: [Math.max(0, demandNet - Math.max(20, demandNet*0.05)), demandNet + Math.max(20, demandNet*0.05)],
+      warn: [Math.max(0, demandNet - Math.max(40, demandNet*0.15)), demandNet + Math.max(40, demandNet*0.15)],
+      target: demandNet },
+    { label: 'GRID', unit: 'Hz', val: S.hz, prec: 2,
+      min: 59.0, max: 61.0,
+      good: [59.85, 60.15],
+      warn: [59.5, 60.5],
+      target: 60.00 },
+    { label: 'TDG', unit: '%', val: S.tdg, prec: 0,
+      min: 100, max: 130,
+      good: [100, 115],
+      warn: [100, 120] },
+    { label: 'INFLOW', unit: 'kcfs', val: S.inflow, prec: 0,
+      min: 0, max: Math.max(300, S.inflow * 1.4),
+      good: [0, PLANT_STATE.maxTurbineKcfs + PLANT_STATE.maxSpillKcfs*0.25],
+      warn: [0, PLANT_STATE.maxTurbineKcfs + PLANT_STATE.maxSpillKcfs*0.75] },
+  ];
+
+  const n = dials.length;
+  const slotW = W / n;
+  const r = Math.min(slotW * 0.38, H * 0.42);
+  dials.forEach((d, i) => {
+    const cx = slotW * (i + 0.5);
+    const cy = H * 0.48;
+    drawDial(ctx, cx, cy, r, d);
+  });
+}
+
+function drawDial(ctx, cx, cy, r, d) {
+  const a0 = Math.PI * 0.75, a1 = Math.PI * 2.25;
+  const span = a1 - a0;
+  const ang = v => a0 + span * clamp((v - d.min) / (d.max - d.min), 0, 1);
+
+  // Base track
+  ctx.lineWidth = Math.max(6, r * 0.18);
+  ctx.strokeStyle = '#1a2128';
+  ctx.beginPath(); ctx.arc(cx, cy, r, a0, a1); ctx.stroke();
+
+  // Warn band
+  if (d.warn) {
+    ctx.strokeStyle = 'rgba(255,179,0,0.45)';
+    ctx.beginPath(); ctx.arc(cx, cy, r, ang(d.warn[0]), ang(d.warn[1])); ctx.stroke();
+  }
+  // Good band (draw on top of warn)
+  if (d.good) {
+    ctx.strokeStyle = 'rgba(102,187,106,0.70)';
+    ctx.beginPath(); ctx.arc(cx, cy, r, ang(d.good[0]), ang(d.good[1])); ctx.stroke();
+  }
+
+  // Tick marks at min/max
+  ctx.strokeStyle = '#455a64'; ctx.lineWidth = 1;
+  [a0, a1].forEach(a => {
+    const x1 = cx + Math.cos(a) * (r - 10);
+    const y1 = cy + Math.sin(a) * (r - 10);
+    const x2 = cx + Math.cos(a) * (r + 4);
+    const y2 = cy + Math.sin(a) * (r + 4);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  });
+
+  // Target marker (yellow tick)
+  if (d.target != null) {
+    const ta = ang(d.target);
+    ctx.strokeStyle = '#ffeb3b'; ctx.lineWidth = 2;
+    const tx1 = cx + Math.cos(ta) * (r - 12);
+    const ty1 = cy + Math.sin(ta) * (r - 12);
+    const tx2 = cx + Math.cos(ta) * (r + 6);
+    const ty2 = cy + Math.sin(ta) * (r + 6);
+    ctx.beginPath(); ctx.moveTo(tx1, ty1); ctx.lineTo(tx2, ty2); ctx.stroke();
+  }
+
+  // Needle
+  const na = ang(d.val);
+  const inGood = d.good && d.val >= d.good[0] && d.val <= d.good[1];
+  const inWarn = d.warn && d.val >= d.warn[0] && d.val <= d.warn[1];
+  const needleColor = inGood ? '#66bb6a' : (inWarn ? '#ffb300' : '#ef5350');
+  ctx.strokeStyle = needleColor;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(cx + Math.cos(na + Math.PI) * 6, cy + Math.sin(na + Math.PI) * 6);
+  ctx.lineTo(cx + Math.cos(na) * (r - 4), cy + Math.sin(na) * (r - 4));
+  ctx.stroke();
+  ctx.fillStyle = '#cfd8dc';
+  ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, Math.PI * 2); ctx.fill();
+
+  // Labels
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#78909c';
+  ctx.font = '9px Consolas';
+  ctx.fillText(d.label, cx, cy - r - 4);
+  ctx.fillStyle = needleColor;
+  ctx.font = 'bold 13px Consolas';
+  ctx.fillText(d.val.toFixed(d.prec ?? 1), cx, cy + 5);
+  ctx.fillStyle = '#78909c';
+  ctx.font = '9px Consolas';
+  ctx.fillText(d.unit, cx, cy + 18);
+}
+
+// ---- Fish passage graphic ----
+function renderFish() {
+  document.getElementById('fish-passed').textContent = Math.floor(S.fishPassed).toLocaleString();
+  document.getElementById('fish-killed').textContent = Math.floor(S.fishKilled).toLocaleString();
+
+  const c = document.getElementById('fish-canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const killed = Math.floor(S.fishKilled);
+  const passed = Math.floor(S.fishPassed);
+
+  // Large dead-fish hero icon on the left, sized/colored by kill count
+  const killSeverity = clamp(killed / 100, 0, 1);
+  const heroX = 50, heroY = H * 0.5;
+  drawFish(ctx, heroX, heroY, 28, true, 1 + killSeverity * 0.4);
+
+  // Severity flash
+  if (killSeverity > 0.05) {
+    ctx.fillStyle = `rgba(239, 83, 80, ${0.15 + killSeverity * 0.35})`;
+    ctx.beginPath();
+    ctx.arc(heroX, heroY, 38 + killSeverity * 12, 0, Math.PI * 2);
+    ctx.fill();
+    drawFish(ctx, heroX, heroY, 28, true, 1 + killSeverity * 0.4);
+  }
+
+  // Row of small dead-fish icons, one per ~20 fish killed (capped)
+  const smallPer = 20;
+  const smallN = Math.min(18, Math.floor(killed / smallPer));
+  for (let i = 0; i < smallN; i++) {
+    const sx = 100 + (i % 9) * 26;
+    const sy = 22 + Math.floor(i / 9) * 38;
+    drawFish(ctx, sx, sy, 9, true, 1);
+  }
+
+  // Live fish if nothing killed yet — hopeful state
+  if (killed === 0 && passed > 0) {
+    for (let i = 0; i < 4; i++) {
+      const sx = 110 + i * 30 + Math.sin((S.t + i) * 0.8) * 4;
+      const sy = H * 0.5 + Math.sin((S.t + i) * 0.5) * 6;
+      drawFish(ctx, sx, sy, 11, false, 1);
+    }
+  }
+
+  // Label under the hero
+  ctx.fillStyle = killed > 0 ? '#ef5350' : '#66bb6a';
+  ctx.font = 'bold 10px Consolas';
+  ctx.textAlign = 'center';
+  ctx.fillText(killed > 0 ? 'MORTALITY' : 'HEALTHY', heroX, H - 4);
+}
+
+function drawFish(ctx, cx, cy, size, dead, scale) {
+  const s = size * (scale || 1);
+  ctx.save();
+  ctx.translate(cx, cy);
+  // Body (ellipse)
+  ctx.fillStyle = dead ? '#6d2f2e' : '#4aa3c7';
+  ctx.strokeStyle = dead ? '#ef5350' : '#2e6a8a';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, s, s * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill(); ctx.stroke();
+  // Tail (triangle on right)
+  ctx.beginPath();
+  ctx.moveTo(s * 0.85, 0);
+  ctx.lineTo(s * 1.5, -s * 0.55);
+  ctx.lineTo(s * 1.5,  s * 0.55);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  // Dead belly-up: flip vertically
+  if (dead) {
+    // Mouth slightly open, drooping
+    ctx.strokeStyle = '#ef5350';
+    ctx.beginPath();
+    ctx.moveTo(-s, 0.05 * s);
+    ctx.lineTo(-s * 1.15, 0.15 * s);
+    ctx.stroke();
+  }
+  // Eye(s)
+  const eyeX = -s * 0.55, eyeY = -s * 0.1;
+  if (dead) {
+    // X eye
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = Math.max(1, s * 0.08);
+    const es = s * 0.22;
+    ctx.beginPath();
+    ctx.moveTo(eyeX - es, eyeY - es); ctx.lineTo(eyeX + es, eyeY + es);
+    ctx.moveTo(eyeX + es, eyeY - es); ctx.lineTo(eyeX - es, eyeY + es);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = '#0a0f13';
+    ctx.beginPath();
+    ctx.arc(eyeX, eyeY, Math.max(1, s * 0.12), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function fmtTime(min) {
+  const startHour = 6;
+  const totalMin = startHour*60 + min;
+  const h = Math.floor(totalMin/60) % 24;
+  const m = Math.floor(totalMin%60);
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
+
+function log(msg, cls='') {
+  const box = document.getElementById('log');
+  const d = document.createElement('div');
+  d.className = 'entry ' + cls;
+  d.textContent = `[${fmtTime(S.t)}] ${msg}`;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+  while (box.children.length > 80) box.removeChild(box.firstChild);
+}
+
+function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+
+// ----- Slider range sync (changes with plant capacity) -----
+function syncSliderRanges() {
+  const tmax = Math.max(20, PLANT_STATE.maxTurbineKcfs);
+  const smax = Math.max(20, PLANT_STATE.maxSpillKcfs);
+  const tEl = document.getElementById('ctl-turb');
+  const sEl = document.getElementById('ctl-spill');
+  const lEl = document.getElementById('ctl-lad');
+  tEl.max = tmax; sEl.max = smax;
+  tEl.value = Math.min(S.turbQ, tmax);
+  sEl.value = Math.min(S.spillQ, smax);
+  lEl.disabled = !PLANT_STATE.hasLadder;
+  if (!PLANT_STATE.hasLadder) { lEl.value = 0; S.ladQ = 0; }
+}
+
+// ----- End-of-shift overlay -----
+function showOverlay(title, msg, failed) {
+  const e = computeShiftEarnings();
+  document.getElementById('over-title').textContent = title;
+  document.getElementById('over-msg').textContent = msg;
+  const rows = [];
+  rows.push(`<div><span class="k">Energy revenue</span><span class="v">$${Math.floor(S.revenue).toLocaleString()}</span></div>`);
+  if (PLANT_STATE.hasLock && S.lockageRevenue > 0)
+    rows.push(`<div><span class="k">Lockage fees</span><span class="v">$${Math.floor(S.lockageRevenue).toLocaleString()}</span></div>`);
+  if (PLANT_STATE.hasLadder)
+    rows.push(`<div><span class="k">Fish bonus (${Math.floor(S.fishPassed)} @ $30)</span><span class="v">$${e.fishBonus.toLocaleString()}</span></div>`);
+  if (S.tdgPenalty > 0)
+    rows.push(`<div><span class="k">TDG penalties</span><span class="v" style="color:var(--bad);">−$${Math.floor(S.tdgPenalty).toLocaleString()}</span></div>`);
+  if (S.brownoutMin > 0.1)
+    rows.push(`<div><span class="k">Brownout penalties</span><span class="v" style="color:var(--bad);">−$${Math.floor(S.brownoutMin * 2000).toLocaleString()}</span></div>`);
+  if (S.fishFines > 0)
+    rows.push(`<div><span class="k">NOAA fish-passage fines</span><span class="v" style="color:var(--bad);">−$${Math.floor(S.fishFines).toLocaleString()}</span></div>`);
+  document.getElementById('over-score').innerHTML = rows.join('');
+
+  const overBtn = document.getElementById('over-btn');
+  const retryBtn = document.getElementById('over-retry');
+  if (failed) {
+    document.getElementById('over-final').textContent = `SHIFT FAILED — no earnings banked.`;
+    overBtn.style.display = 'none';
+    retryBtn.style.display = 'inline-block';
+  } else {
+    document.getElementById('over-final').textContent = `NET EARNINGS  $${Math.floor(e.net).toLocaleString()}  →  added to cash on hand`;
+    overBtn.style.display = 'inline-block';
+    retryBtn.style.display = 'none';
+    overBtn.textContent = 'TO ENGINEERING OFFICE →';
+    PLANT_STATE.cash += Math.floor(e.net);
+  }
+  document.getElementById('overlay').classList.add('show');
+}
+
+// ----- Shop modal -----
+function openShop() {
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('shop-title').textContent = `ENGINEERING OFFICE — End of Shift ${PLANT_STATE.shift}`;
+  document.getElementById('shop-sub').textContent = 'Invest revenue in plant expansion. Purchases are permanent.';
+  refreshShop();
+  document.getElementById('shop').classList.add('show');
+}
+function refreshShop() {
+  document.getElementById('shop-cash').textContent = '$' + PLANT_STATE.cash.toLocaleString();
+  document.getElementById('shop-plant').textContent = plantSummary();
+  const list = document.getElementById('shop-list');
+  list.innerHTML = '';
+  for (const up of UPGRADES) {
+    if (!up.avail(PLANT_STATE)) continue;
+    const canAfford = PLANT_STATE.cash >= up.cost;
+    const el = document.createElement('div');
+    el.className = 'upg' + (canAfford ? '' : ' disabled');
+    el.innerHTML = `
+      <div class="cat">${up.cat}</div>
+      <div class="name">${up.name}</div>
+      <div class="desc">${up.desc}</div>
+      <div class="cost">$${up.cost.toLocaleString()}</div>
+    `;
+    if (canAfford) el.addEventListener('click', () => {
+      PLANT_STATE.cash -= up.cost;
+      up.apply(PLANT_STATE);
+      PLANT_STATE.ownedIds.add(up.id);
+      refreshShop();
+    });
+    list.appendChild(el);
+  }
+}
+function plantSummary() {
+  const bits = [
+    `Turbines: ${PLANT_STATE.turbines} × ${PLANT_STATE.kcfsPerTurbine} kcfs (η=${PLANT_STATE.turbineEff.toFixed(2)})`,
+    `Spillgates: ${PLANT_STATE.spillGates} × ${PLANT_STATE.kcfsPerGate} kcfs`,
+    PLANT_STATE.hasLadder ? 'Ladder✓' : null,
+    PLANT_STATE.hasJuvenileBypass ? 'Bypass✓' : null,
+    PLANT_STATE.hasLock ? 'Lock✓' : null,
+    PLANT_STATE.hasDeflector ? 'Deflector✓' : null,
+    PLANT_STATE.hasAGC ? 'AGC✓' : null,
+    PLANT_STATE.damRaises ? `Crest +${PLANT_STATE.damRaises * 5}ft` : null,
+  ].filter(Boolean);
+  return bits.join('  |  ');
+}
+function beginNextShift() {
+  PLANT_STATE.shift += 1;
+  document.getElementById('shop').classList.remove('show');
+  resetState();
+  setSpeed(S.speed);
+}
+
+function setSpeed(s) {
+  S.speed = s;
+  document.querySelectorAll('.btn-speed').forEach(b => {
+    b.classList.toggle('active', parseFloat(b.dataset.speed) === s);
+  });
+}
+
+// ----- Input wiring -----
+function wireControls() {
+  const link = (id, field, parse=parseFloat) => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => { S[field] = parse(el.value); });
+  };
+  link('ctl-turb', 'turbQ');
+  link('ctl-spill', 'spillQ');
+  link('ctl-lad', 'ladQ');
+
+  document.getElementById('btn-pause').addEventListener('click', () => { S.paused = !S.paused; });
+  document.getElementById('btn-restart').addEventListener('click', () => { document.getElementById('overlay').classList.remove('show'); resetState(); });
+  document.querySelectorAll('.btn-speed').forEach(btn => {
+    btn.addEventListener('click', () => setSpeed(parseFloat(btn.dataset.speed)));
+  });
+  document.getElementById('over-btn').addEventListener('click', openShop);
+  document.getElementById('over-retry').addEventListener('click', () => { document.getElementById('overlay').classList.remove('show'); resetState(); });
+  document.getElementById('shop-begin').addEventListener('click', beginNextShift);
+
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space') { S.paused = !S.paused; e.preventDefault(); }
+    const bump = (field, elId, d, min, max) => {
+      S[field] = clamp(S[field] + d, min, max);
+      document.getElementById(elId).value = S[field];
+    };
+    if (e.key === 'q') bump('turbQ','ctl-turb', +10, 0, PLANT_STATE.maxTurbineKcfs);
+    if (e.key === 'a') bump('turbQ','ctl-turb', -10, 0, PLANT_STATE.maxTurbineKcfs);
+    if (e.key === 'w') bump('spillQ','ctl-spill', +10, 0, PLANT_STATE.maxSpillKcfs);
+    if (e.key === 's') bump('spillQ','ctl-spill', -10, 0, PLANT_STATE.maxSpillKcfs);
+    if (PLANT_STATE.hasLadder) {
+      if (e.key === 'e') bump('ladQ','ctl-lad', +0.5, 0, 10);
+      if (e.key === 'd') bump('ladQ','ctl-lad', -0.5, 0, 10);
+    }
+  });
+
+  // Zoom (mouse wheel) + Pan (right-drag) on canvas
+  CANVAS.addEventListener('wheel', e => {
+    e.preventDefault();
+    const f = e.deltaY < 0 ? 1.12 : 0.89;
+    ISO.SX = clamp(ISO.SX * f, 0.25, 2.8);
+    ISO.SY = clamp(ISO.SY * f, 0.125, 1.4);
+    ISO.SZ = clamp(ISO.SZ * f, 0.25, 2.8);
+  }, { passive: false });
+  let dragging = false, dragX = 0, dragY = 0;
+  CANVAS.addEventListener('mousedown', e => {
+    if (e.button === 2 || e.button === 1) { dragging = true; dragX = e.clientX; dragY = e.clientY; e.preventDefault(); }
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    ISO.CX += e.clientX - dragX;
+    ISO.CY += e.clientY - dragY;
+    dragX = e.clientX; dragY = e.clientY;
+  });
+  window.addEventListener('mouseup', () => { dragging = false; });
+  CANVAS.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+// ----- Main loop -----
+let lastTs = 0;
+function loop(ts) {
+  requestAnimationFrame(loop);
+  const realDt = Math.min(0.05, (ts - lastTs) / 1000 || 0.016);
+  lastTs = ts;
+
+  if (!S.paused && !S.gameOver) {
+    const simDt = realDt * S.speed;       // sim minutes elapsed this frame
+    // Substep for stability
+    const steps = 4;
+    for (let i=0;i<steps;i++) {
+      if (S.gameOver) break;
+      step(simDt / steps);
+      S.t += simDt / steps;
+    }
+  }
+  render();
+  drawPlan();
+  updateUI();
+}
+
+// ----- Boot -----
+resetState();
+wireControls();
+setSpeed(1);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,3489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SimEarth</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127757;</text></svg>">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E0; min-height: 100vh; overflow: hidden; user-select: none; }
+
+#gameNav { display: block; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: #0A0A1A; border-bottom: 1px solid #1A2A40; font-family: Georgia, serif; }
+#gameNav .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 18px; max-width: 1200px; margin: 0 auto; position: relative; }
+#gameNav .nav-title { color: #B0C8E0; font-size: 0.9em; letter-spacing: 1px; }
+#gameNav .nav-toggle { background: none; border: 1px solid #1A2A40; color: #B0C8E0; font-size: 1.1em; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-family: Georgia, serif; }
+#gameNav .nav-toggle:hover { background: #0E1428; }
+#gameNav .nav-menu { display: none; position: absolute; right: 18px; top: 100%; background: #0A0A1A; border: 1px solid #1A2A40; border-top: none; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 10000; }
+#gameNav .nav-menu.open { display: block; }
+#gameNav .nav-menu a { display: block; padding: 10px 18px; color: #6080A0; text-decoration: none; font-size: 0.85em; border-bottom: 1px solid #0E1428; }
+#gameNav .nav-menu a:last-child { border-bottom: none; }
+#gameNav .nav-menu a:hover { background: #0E1428; color: #4080D0; }
+#gameNav .nav-menu a.current { color: #B0C8E0; font-weight: bold; }
+@media (max-width: 768px) {
+  #gameNav .nav-bar { padding: 6px 14px; }
+  #gameNav .nav-menu { position: static; right: auto; min-width: 0; border: none; border-top: 1px solid #1A2A40; box-shadow: none; }
+}
+
+#globeCanvas { display: block; width: 100vw; height: calc(100vh - 34px); margin-top: 34px; cursor: grab; }
+#globeCanvas.dragging { cursor: grabbing; }
+#globeCanvas.brushing { cursor: crosshair; }
+
+.panel { position: fixed; background: rgba(10,10,26,0.88); border: 1px solid #1A2A40; border-radius: 6px; padding: 10px 12px; z-index: 100; backdrop-filter: blur(4px); }
+.panel h4 { color: #4080D0; font-size: 0.68em; margin-bottom: 6px; letter-spacing: 1.5px; font-family: Georgia, serif; }
+.panel .row { display: flex; justify-content: space-between; padding: 1px 0; color: #8098B0; font-size: 0.74em; gap: 12px; }
+.panel .row b { color: #B0C8E0; font-weight: normal; }
+.panel .row b.hot { color: #FF9060; }
+.panel .row b.cold { color: #60A0FF; }
+.panel .row b.good { color: #80D080; }
+
+#statsPanel  { top: 50px; left: 16px; min-width: 200px; }
+#lifePanel   { top: 50px; right: 16px; min-width: 190px; }
+#viewPanel   { top: 215px; right: 16px; min-width: 190px; }
+#infoPanel   { bottom: 84px; right: 16px; min-width: 230px; max-width: 260px; }
+#legend      { bottom: 84px; left: 16px; max-width: 240px; }
+#toolPanel   { top: 340px; left: 16px; min-width: 210px; max-width: 210px; max-height: calc(100vh - 380px); overflow-y: auto; }
+#toolPanel::-webkit-scrollbar { width: 6px; }
+#toolPanel::-webkit-scrollbar-thumb { background: #1A2A40; border-radius: 3px; }
+#toolPanel::-webkit-scrollbar-track { background: transparent; }
+#actionBar   { bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; padding: 6px 10px; align-items: center; }
+
+.view-btn, .tool-btn { display: block; width: 100%; padding: 4px 8px; margin: 2px 0; background: #0E1428; border: 1px solid #1A2A40; color: #B0C8E0; cursor: pointer; font-family: 'Courier New', monospace; font-size: 0.72em; text-align: left; border-radius: 3px; }
+.tool-group { font-size: 0.62em; color: #4080D0; letter-spacing: 1.5px; margin: 6px 0 2px; font-family: Georgia, serif; }
+.scenario-select { width: 100%; padding: 5px 8px; background: #0E1428; border: 1px solid #1A2A40; color: #B0C8E0; font-family: 'Courier New', monospace; font-size: 0.72em; border-radius: 3px; cursor: pointer; }
+.scenario-select:hover { border-color: #4080D0; }
+.scenario-select option { background: #0A0A1A; color: #B0C8E0; }
+.view-btn:hover, .tool-btn:hover { background: #1A2848; border-color: #4080D0; }
+.view-btn.active, .tool-btn.active { background: #1A2848; border-color: #4080D0; color: #FFD040; }
+
+.speed-btn, .dis-btn { padding: 5px 11px; background: #0E1428; border: 1px solid #1A2A40; color: #B0C8E0; cursor: pointer; font-family: 'Courier New', monospace; font-size: 0.78em; border-radius: 3px; min-width: 42px; }
+.speed-btn.active { background: #1A2848; border-color: #40D080; color: #80F0A0; }
+.speed-btn:hover, .dis-btn:hover { background: #1A2848; border-color: #4080D0; }
+.dis-btn { border-color: #D06040; color: #E09080; }
+.dis-btn:hover { background: #3A1818; border-color: #FF6040; }
+
+#yearDisplay { min-width: 150px; padding: 0 10px; color: #8098B0; font-size: 0.78em; text-align: center; border-left: 1px solid #1A2A40; border-right: 1px solid #1A2A40; margin: 0 6px; }
+#yearDisplay b { color: #FFD040; }
+
+#legend .swatch { display: inline-block; width: 11px; height: 11px; vertical-align: middle; margin-right: 6px; border: 1px solid #1A2A40; }
+#legend .leg-row { font-size: 0.7em; color: #8098B0; padding: 1px 0; }
+
+#lifePanel .stage-name { color: #FFD040; font-size: 0.88em; font-family: Georgia, serif; letter-spacing: 1px; margin-bottom: 2px; }
+#lifePanel .stage-desc { color: #6080A0; font-size: 0.68em; font-style: italic; margin-bottom: 6px; }
+.stage-dots { display: flex; gap: 3px; margin-top: 4px; }
+.stage-dot { width: 14px; height: 6px; background: #1A2A40; border-radius: 1px; }
+.stage-dot.done { background: #40D080; }
+.stage-dot.current { background: #FFD040; }
+
+#toolPanel .brush-row { display: flex; align-items: center; gap: 6px; margin-top: 5px; font-size: 0.7em; color: #6080A0; }
+#toolPanel input[type=range] { flex: 1; }
+#toolPanel .dis-row { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+#toolPanel .dis-row .dis-btn { flex: 1; font-size: 0.7em; padding: 4px 6px; min-width: 0; }
+
+#title { position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 200; pointer-events: none; transition: opacity 1.2s; }
+#title h1 { font-family: Georgia, serif; font-size: 3.8em; color: #4080D0; letter-spacing: 10px; text-shadow: 0 0 30px rgba(64,128,208,0.4); }
+#title .subtitle { font-family: 'Courier New', monospace; font-size: 0.9em; color: #6080A0; margin-top: 8px; letter-spacing: 3px; }
+#title.fade { opacity: 0; }
+
+#loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #4080D0; font-family: Georgia, serif; font-size: 1.2em; letter-spacing: 3px; z-index: 300; }
+
+#eventFeed { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); z-index: 110; pointer-events: none; text-align: center; }
+.event-msg { display: inline-block; padding: 6px 16px; margin: 3px 0; background: rgba(10,10,26,0.9); border: 1px solid #4080D0; border-radius: 3px; color: #FFD040; font-family: Georgia, serif; font-size: 0.85em; letter-spacing: 1px; animation: fadeDown 6s forwards; }
+.event-msg.warn { border-color: #D06040; color: #FF9060; }
+.event-msg.good { border-color: #40D080; color: #80F0A0; }
+.event-msg.achievement { border-color: #FFD040; color: #FFE890; background: rgba(28,22,4,0.96); padding: 8px 18px; font-size: 0.95em; box-shadow: 0 0 16px rgba(255,208,64,0.25); }
+@keyframes fadeDown { 0%{opacity:0; transform:translateY(-10px);} 10%{opacity:1; transform:translateY(0);} 85%{opacity:1;} 100%{opacity:0; transform:translateY(10px);} }
+
+#helpOverlay { position: fixed; inset: 0; z-index: 9998; background: rgba(2,4,10,0.78); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 48px 20px; }
+#helpOverlay.open { display: flex; }
+#helpOverlay .help-content { position: relative; background: #0A0F20; border: 1px solid #2A3858; border-radius: 8px; max-width: 980px; width: 100%; max-height: calc(100vh - 100px); overflow-y: auto; padding: 26px 34px; color: #B0C8E0; font-size: 0.82em; line-height: 1.55; box-shadow: 0 10px 60px rgba(64,128,208,0.18); }
+#helpOverlay h2 { font-family: Georgia, serif; color: #FFD040; font-size: 1.6em; margin-bottom: 4px; letter-spacing: 2px; }
+#helpOverlay .help-sub { color: #6080A0; font-size: 0.78em; margin-bottom: 18px; font-family: 'Courier New', monospace; }
+#helpOverlay h3 { color: #4080D0; font-family: Georgia, serif; font-size: 1em; letter-spacing: 1.5px; margin: 14px 0 6px; border-bottom: 1px solid #1A2A40; padding-bottom: 3px; }
+#helpOverlay .help-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px 34px; }
+#helpOverlay ul { list-style: none; padding: 0; }
+#helpOverlay li { padding: 2px 0; }
+#helpOverlay kbd { display: inline-block; padding: 1px 7px; background: #1A2848; border: 1px solid #3A5078; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 0.85em; color: #FFD040; margin-right: 4px; min-width: 20px; text-align: center; }
+#helpOverlay b { color: #E0E8F0; font-weight: normal; }
+#helpOverlay .help-close { position: absolute; top: 10px; right: 14px; background: none; border: 1px solid #2A3858; border-radius: 4px; color: #8098B0; width: 30px; height: 30px; font-size: 18px; cursor: pointer; }
+#helpOverlay .help-close:hover { color: #FFD040; border-color: #4080D0; }
+#helpOverlay .help-footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #1A2A40; color: #6080A0; font-size: 0.72em; font-style: italic; }
+
+#mainMenu { position: fixed; inset: 0; z-index: 9997; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(8,12,28,0.55) 0%, rgba(2,4,10,0.92) 70%); backdrop-filter: blur(2px); transition: opacity 0.6s; }
+#mainMenu.hidden { opacity: 0; pointer-events: none; }
+#mainMenu .menu-card { text-align: center; padding: 36px 48px; background: rgba(8,10,24,0.65); border: 1px solid #2A3858; border-radius: 10px; box-shadow: 0 16px 80px rgba(64,128,208,0.18); min-width: 360px; }
+#mainMenu .mm-title { font-family: Georgia, serif; font-size: 4.5em; color: #4080D0; letter-spacing: 14px; text-shadow: 0 0 30px rgba(64,128,208,0.55); margin-bottom: 6px; }
+#mainMenu .mm-sub { color: #6080A0; font-size: 0.9em; letter-spacing: 4px; margin-bottom: 28px; font-family: 'Courier New', monospace; }
+#mainMenu .mm-btn { display: block; width: 100%; padding: 11px 20px; margin: 8px 0; background: rgba(14,20,40,0.7); border: 1px solid #1A2A40; color: #B0C8E0; cursor: pointer; font-family: Georgia, serif; font-size: 1.05em; letter-spacing: 4px; border-radius: 4px; transition: all 0.12s; }
+#mainMenu .mm-btn:hover { background: rgba(26,40,72,0.9); border-color: #4080D0; color: #FFD040; letter-spacing: 6px; }
+#mainMenu .mm-btn.primary { border-color: #4080D0; color: #FFD040; background: rgba(20,30,60,0.8); }
+#mainMenu .mm-btn.primary:hover { background: rgba(40,60,110,0.9); }
+#mainMenu .mm-foot { color: #4060A0; font-size: 0.65em; margin-top: 22px; letter-spacing: 2px; }
+
+#settingsPanel { position: fixed; inset: 0; z-index: 9998; background: rgba(2,4,10,0.78); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; }
+#settingsPanel.open { display: flex; }
+#settingsPanel .set-card { background: #0A0F20; border: 1px solid #2A3858; border-radius: 8px; padding: 26px 32px; min-width: 360px; max-width: 460px; color: #B0C8E0; position: relative; }
+#settingsPanel h2 { font-family: Georgia, serif; color: #FFD040; font-size: 1.4em; letter-spacing: 2px; margin-bottom: 14px; }
+#settingsPanel .set-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; gap: 14px; font-size: 0.85em; }
+#settingsPanel .set-row label { color: #B0C8E0; flex: 1; }
+#settingsPanel .set-row input[type=range] { flex: 1; }
+#settingsPanel .set-row input[type=checkbox] { width: 18px; height: 18px; accent-color: #4080D0; cursor: pointer; }
+#settingsPanel .set-close { position: absolute; top: 8px; right: 12px; background: none; border: 1px solid #2A3858; border-radius: 4px; color: #8098B0; width: 30px; height: 30px; font-size: 18px; cursor: pointer; }
+#settingsPanel .set-close:hover { color: #FFD040; border-color: #4080D0; }
+
+#slotPicker { position: fixed; inset: 0; z-index: 9999; background: rgba(2,4,10,0.78); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; }
+#slotPicker.open { display: flex; }
+#slotPicker .slot-card { background: #0A0F20; border: 1px solid #2A3858; border-radius: 8px; padding: 24px 32px; min-width: 420px; max-width: 520px; }
+#slotPicker h2 { color: #FFD040; font-family: Georgia, serif; font-size: 1.3em; margin-bottom: 14px; letter-spacing: 2px; }
+.slot-row { display: flex; align-items: center; padding: 10px 12px; margin: 6px 0; background: #0E1428; border: 1px solid #1A2A40; border-radius: 5px; cursor: pointer; color: #B0C8E0; transition: all 0.1s; }
+.slot-row:hover { border-color: #4080D0; background: #1A2848; }
+.slot-row .slot-n { color: #FFD040; font-family: Georgia, serif; font-size: 1.15em; margin-right: 16px; min-width: 80px; letter-spacing: 1px; }
+.slot-row .slot-info { flex: 1; font-size: 0.82em; color: #B0C8E0; }
+.slot-row .slot-info small { color: #6080A0; font-size: 0.82em; display: block; margin-top: 2px; font-family: 'Courier New', monospace; }
+.slot-row.empty .slot-info { font-style: italic; color: #4A6080; }
+.slot-cancel { margin-top: 10px; width: 100%; padding: 8px; background: #0E1428; border: 1px solid #1A2A40; color: #8098B0; cursor: pointer; border-radius: 4px; font-family: 'Courier New', monospace; letter-spacing: 2px; }
+.slot-cancel:hover { color: #FFD040; border-color: #4080D0; }
+
+#firstRun { position: fixed; inset: 0; z-index: 9996; background: rgba(2,4,10,0.65); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 30px; }
+#firstRun.open { display: flex; }
+#firstRun .fr-card { background: #0A0F20; border: 1px solid #4080D0; border-radius: 10px; padding: 28px 36px; max-width: 560px; color: #B0C8E0; box-shadow: 0 12px 60px rgba(64,128,208,0.3); }
+#firstRun h2 { color: #FFD040; font-family: Georgia, serif; font-size: 1.5em; letter-spacing: 2px; margin-bottom: 6px; }
+#firstRun .fr-sub { color: #6080A0; font-size: 0.85em; margin-bottom: 18px; font-style: italic; }
+#firstRun .fr-list { font-size: 0.88em; line-height: 1.7; }
+#firstRun .fr-list .fr-row { padding: 4px 0; border-bottom: 1px solid #1A2A40; }
+#firstRun .fr-list b { color: #FFD040; }
+#firstRun .fr-btn { display: block; width: 100%; padding: 10px 18px; margin-top: 18px; background: rgba(20,30,60,0.8); border: 1px solid #4080D0; color: #FFD040; cursor: pointer; font-family: Georgia, serif; font-size: 1em; letter-spacing: 4px; border-radius: 4px; }
+#firstRun .fr-btn:hover { background: rgba(40,60,110,0.9); letter-spacing: 6px; }
+
+#banner { position: fixed; inset: 0; z-index: 8000; display: none; align-items: center; justify-content: center; pointer-events: none; }
+#banner.open { display: flex; pointer-events: auto; }
+#banner .banner-card { background: rgba(5,8,18,0.95); border: 2px solid #FFD040; padding: 40px 60px; text-align: center; border-radius: 12px; box-shadow: 0 0 80px rgba(255,208,64,0.35); animation: bannerIn 0.55s ease-out; cursor: pointer; max-width: 600px; }
+#banner.warn .banner-card { border-color: #E06040; box-shadow: 0 0 80px rgba(224,96,64,0.35); }
+#banner.good .banner-card { border-color: #60D080; box-shadow: 0 0 80px rgba(96,208,128,0.35); }
+#banner h1 { font-family: Georgia, serif; font-size: 2.6em; letter-spacing: 10px; color: #FFD040; margin-bottom: 12px; }
+#banner.warn h1 { color: #FF8060; }
+#banner.good h1 { color: #80E898; }
+#banner p { font-size: 0.95em; color: #B0C8E0; letter-spacing: 2px; font-family: Georgia, serif; }
+#banner .banner-hint { font-size: 0.7em; color: #6080A0; margin-top: 16px; font-style: italic; letter-spacing: 1px; font-family: 'Courier New', monospace; }
+@keyframes bannerIn { 0% { opacity: 0; transform: scale(0.82); } 100% { opacity: 1; transform: scale(1); } }
+
+#tutorial { display: none; position: fixed; inset: 0; z-index: 9990; pointer-events: none; }
+#tutTooltip { position: fixed; max-width: 380px; background: #0A0F20; border: 1px solid #FFD040; border-radius: 6px; padding: 14px 20px; color: #B0C8E0; font-size: 0.9em; line-height: 1.5; pointer-events: auto; box-shadow: 0 8px 40px rgba(255,208,64,0.3); }
+#tutStep { color: #FFD040; font-size: 0.72em; letter-spacing: 2px; margin-bottom: 6px; font-family: 'Courier New', monospace; }
+#tutText b { color: #FFD040; }
+.tut-actions { margin-top: 12px; display: flex; justify-content: space-between; gap: 10px; }
+.tut-actions button { padding: 6px 16px; background: #0E1428; border: 1px solid #1A2A40; color: #B0C8E0; cursor: pointer; font-family: 'Courier New', monospace; font-size: 0.76em; border-radius: 3px; letter-spacing: 2px; }
+.tut-actions button.primary { border-color: #FFD040; color: #FFD040; }
+.tut-actions button:hover { background: #1A2848; border-color: #4080D0; }
+.tut-highlight { outline: 2px solid #FFD040 !important; outline-offset: 3px; box-shadow: 0 0 30px rgba(255,208,64,0.55) !important; transition: all 0.25s; }
+</style>
+</head>
+<body>
+<style id="siteNav-css">
+  #siteNav { position: sticky; top: 0; z-index: 99999; background: rgba(16,20,28,0.96); border-bottom: 1px solid #2a3540; font-family: Georgia, "Times New Roman", serif; box-shadow: 0 2px 10px rgba(0,0,0,0.6); color: #d8d0c0; }
+  #siteNav * { box-sizing: border-box; }
+  #siteNav .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; max-width: 1400px; margin: 0 auto; gap: 12px; }
+  #siteNav .nav-home { color: #d8d0c0; text-decoration: none; font-size: 0.82em; letter-spacing: 2px; padding: 5px 12px; border: 1px solid #3a5060; border-radius: 3px; white-space: nowrap; }
+  #siteNav .nav-home:hover { background: #1e2838; color: #f0e0b0; }
+  #siteNav .nav-title { color: #f0d89c; font-size: 0.95em; letter-spacing: 3px; font-weight: bold; text-align: center; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #siteNav .nav-toggle { background: none; border: 1px solid #3a5060; color: #d8d0c0; font-size: 0.85em; letter-spacing: 2px; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  #siteNav .nav-toggle:hover { background: #1e2838; color: #f0e0b0; }
+  #siteNav .nav-menu { display: none; background: #0f141c; border-top: 1px solid #2a4050; padding: 14px 16px; max-width: 1400px; margin: 0 auto; }
+  #siteNav .nav-menu.open { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  #siteNav .nav-cat { min-width: 0; }
+  #siteNav .nav-cat-label { color: #8098a8; font-size: 0.72em; letter-spacing: 4px; padding: 4px 0 8px 0; border-bottom: 1px solid #2a3540; margin-bottom: 6px; }
+  #siteNav .nav-cat a { display: block; padding: 6px 10px; color: #a8b0c0; text-decoration: none; font-size: 0.88em; border-radius: 3px; }
+  #siteNav .nav-cat a:hover { background: #1e2838; color: #f0e0b0; }
+  #siteNav .nav-cat a.current { color: #f0d89c; font-weight: bold; background: #1e2838; }
+  @media (max-width: 640px) {
+    #siteNav .nav-menu.open { grid-template-columns: 1fr; gap: 14px; }
+    #siteNav .nav-title { font-size: 0.82em; letter-spacing: 2px; }
+    #siteNav .nav-home,
+    #siteNav .nav-toggle { font-size: 0.74em; padding: 4px 8px; }
+  }
+</style>
+<div id="siteNav">
+  <div class="nav-bar">
+    <a href="index.html" class="nav-home">HOME</a>
+    <span class="nav-title">SimEarth</span>
+    <button class="nav-toggle" onclick="document.querySelector('#siteNav .nav-menu').classList.toggle('open')">GAMES &#9776;</button>
+  </div>
+  <div class="nav-menu">
+    <div class="nav-cat">
+      <div class="nav-cat-label">BOARD GAMES</div>
+      <a href="Agora.html">Agora</a>
+      <a href="Aresia.html">Aresia</a>
+      <a href="Backgammon.html">Backgammon</a>
+      <a href="Bisque.html">Bisque</a>
+      <a href="Chess.html">Chess</a>
+      <a href="Convergence.html">Convergence</a>
+      <a href="Go.html">Go</a>
+      <a href="Mancala.html">Mancala</a>
+      <a href="Odyssey.html">Odyssey</a>
+      <a href="Othello.html">Othello</a>
+      <a href="PenteGrammai.html">Pente Grammai</a>
+      <a href="Senet.html">Senet</a>
+      <a href="Tidelands.html">Tidelands</a>
+      <a href="Ur.html">Ur</a>
+    </div>
+    <div class="nav-cat">
+      <div class="nav-cat-label">SIMULATIONS</div>
+      <a href="Apoapsis.html">Apoapsis</a>
+      <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
+      <a href="Floodline.html">Floodline</a>
+      <a href="SimEarth.html" class="current">SimEarth</a>
+      <a href="Tower.html">Tower</a>
+    </div>
+  </div>
+</div>
+
+<div id="gameNav">
+  <div class="nav-bar">
+    <span class="nav-title">SimEarth</span>
+    <button class="nav-toggle" onclick="document.querySelector('#gameNav .nav-menu').classList.toggle('open')">&#9776;</button>
+  </div>
+  <div class="nav-menu">
+    <a href="Agora.html">Agora</a>
+    <a href="Apoapsis.html">Apoapsis</a>
+    <a href="Aresia.html">Aresia</a>
+    <a href="Backgammon.html">Backgammon</a>
+    <a href="Bisque.html">Bisque</a>
+    <a href="Chess.html">Chess</a>
+    <a href="Convergence.html">Convergence</a>
+    <a href="Go.html">Go</a>
+    <a href="Mancala.html">Mancala</a>
+    <a href="Odyssey.html">Odyssey</a>
+    <a href="Othello.html">Othello</a>
+    <a href="PenteGrammai.html">Pente Grammai</a>
+    <a href="Senet.html">Senet</a>
+    <a href="SimEarth.html" class="current">SimEarth</a>
+    <a href="Tidelands.html">Tidelands</a>
+    <a href="Ur.html">Ur</a>
+  </div>
+</div>
+
+<canvas id="globeCanvas"></canvas>
+<div id="loading">GENERATING WORLD&hellip;</div>
+<div id="eventFeed"></div>
+<div id="fpsCounter" style="position:fixed;top:38px;left:16px;z-index:50;background:rgba(10,10,26,0.7);padding:1px 7px;font-family:'Courier New',monospace;font-size:0.66em;color:#80D080;border:1px solid #1A2A40;border-radius:3px;display:none;letter-spacing:0.5px">&mdash; FPS</div>
+
+<div id="mainMenu">
+  <div class="menu-card">
+    <div class="mm-title">SIMEARTH</div>
+    <div class="mm-sub">a coupled Earth-system simulator</div>
+    <input type="text" id="mmSeed" placeholder="seed (optional)" maxlength="32" style="width:100%;padding:8px 14px;background:rgba(14,20,40,0.7);border:1px solid #1A2A40;border-radius:4px;color:#B0C8E0;font-family:'Courier New',monospace;font-size:0.85em;letter-spacing:1px;text-align:center;margin-bottom:8px;outline:none">
+    <button class="mm-btn primary" id="mmNew">NEW EARTH</button>
+    <button class="mm-btn" id="mmContinue" style="display:none">CONTINUE</button>
+    <button class="mm-btn" id="mmScenarios">SCENARIOS</button>
+    <button class="mm-btn" id="mmHelp">CONTROLS &amp; PHYSICS</button>
+    <button class="mm-btn" id="mmSettings">SETTINGS</button>
+    <div class="mm-foot">v0.3 &middot; press ? in-game for help</div>
+  </div>
+</div>
+
+<div id="tutorial">
+  <div id="tutTooltip">
+    <div id="tutStep">1 / 7</div>
+    <div id="tutText"></div>
+    <div class="tut-actions">
+      <button id="tutSkip">SKIP</button>
+      <button id="tutNext" class="primary">NEXT</button>
+    </div>
+  </div>
+</div>
+
+<div id="slotPicker">
+  <div class="slot-card">
+    <h2 id="slotTitle">Save world</h2>
+    <div id="slotList"></div>
+    <button class="slot-cancel" id="slotCancel">CANCEL</button>
+  </div>
+</div>
+
+<div id="banner">
+  <div class="banner-card">
+    <h1 id="bannerTitle"></h1>
+    <p id="bannerText"></p>
+    <div class="banner-hint">click to dismiss</div>
+  </div>
+</div>
+
+<div id="firstRun">
+  <div class="fr-card">
+    <h2>WELCOME</h2>
+    <div class="fr-sub">A few things before you begin</div>
+    <div class="fr-list">
+      <div class="fr-row"><b>Time</b> &mdash; the &#9654; buttons start the simulation. Press <b>1&ndash;5</b> to set speed. Space pauses.</div>
+      <div class="fr-row"><b>Views</b> &mdash; on the right, switch between elevation, temperature, biomes, plates, winds, rivers, vegetation. Press <b>v</b> to cycle.</div>
+      <div class="fr-row"><b>Tools</b> &mdash; on the left, sculpt terrain, seed life, place a <b>monolith</b>, or run a preset <b>scenario</b>.</div>
+      <div class="fr-row"><b>Climate experiments</b> &mdash; the <b>solar</b> and <b>CO&#8322; forcing</b> sliders let you dim the sun or industrialize a planet and watch the cascade.</div>
+      <div class="fr-row"><b>Help</b> &mdash; press <b>?</b> any time for the full controls + physics reference.</div>
+    </div>
+    <button class="fr-btn" id="frClose">BEGIN</button>
+  </div>
+</div>
+
+<div id="settingsPanel">
+  <div class="set-card">
+    <button class="set-close" id="setClose">&times;</button>
+    <h2>Settings</h2>
+    <div class="set-row"><label>Music volume</label><input type="range" id="setVol" min="0" max="100" value="22"><span id="setVolLabel" style="min-width:40px;text-align:right">22%</span></div>
+    <div class="set-row"><label>Show clouds</label><input type="checkbox" id="setClouds" checked></div>
+    <div class="set-row"><label>Show meteors</label><input type="checkbox" id="setMeteors" checked></div>
+    <div class="set-row"><label>Show city lights (civilization)</label><input type="checkbox" id="setCities" checked></div>
+    <div class="set-row"><label>Day-night rotation</label><input type="checkbox" id="setDayNight" checked></div>
+    <div class="set-row"><label>Polar aurora</label><input type="checkbox" id="setAurora" checked></div>
+    <div class="set-row"><label>Tile hover highlight</label><input type="checkbox" id="setHover" checked></div>
+    <div class="set-row"><label>Sound effects</label><input type="checkbox" id="setSfx" checked></div>
+    <div class="set-row"><label>Auto-save every 5 min</label><input type="checkbox" id="setAutosave"></div>
+    <div class="set-row"><label>Show FPS counter</label><input type="checkbox" id="setFps"></div>
+    <div style="margin-top:14px;font-size:0.7em;color:#6080A0;font-style:italic">Settings persist in this browser.</div>
+  </div>
+</div>
+
+<div id="helpOverlay">
+  <div class="help-content">
+    <button class="help-close" id="helpClose" title="close (Esc)">&times;</button>
+    <h2>SIMEARTH</h2>
+    <div class="help-sub">a coupled Earth-system simulator</div>
+    <div class="help-cols">
+
+      <div>
+        <h3>Keyboard</h3>
+        <ul>
+          <li><kbd>Space</kbd> pause / resume</li>
+          <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> <kbd>5</kbd> speed: paused / slow / med / fast / turbo</li>
+          <li><kbd>v</kbd> cycle view modes</li>
+          <li><kbd>m</kbd> toggle ambient music</li>
+          <li><kbd>s</kbd> toggle auto-rotation</li>
+          <li><kbd>r</kbd> reset world (regenerate)</li>
+          <li><kbd>?</kbd> open this help</li>
+          <li><kbd>Esc</kbd> close help</li>
+        </ul>
+        <h3>View modes</h3>
+        <ul>
+          <li><b>Elevation</b> &mdash; topography; ice caps in white</li>
+          <li><b>Temperature</b> &mdash; surface temp with seasonal overlay</li>
+          <li><b>Moisture</b> &mdash; atmospheric water vapor</li>
+          <li><b>Rivers</b> &mdash; steepest-descent runoff accumulation</li>
+          <li><b>Wind</b> &mdash; zonal (east-west) wind component</li>
+          <li><b>Biomes</b> &mdash; Holdridge-style life zones</li>
+          <li><b>Plates</b> &mdash; tectonic plate IDs + motion arrows</li>
+          <li><b>Vegetation</b> &mdash; plant cover on land</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Tools (left panel)</h3>
+        <ul>
+          <li><b>Info</b> &mdash; click a tile to inspect it</li>
+          <li><b>Raise / Lower</b> &mdash; sculpt terrain</li>
+          <li><b>Flood</b> &mdash; drop terrain below sea level</li>
+          <li><b>Heat / Cool</b> &mdash; change local temperature, melt/form ice</li>
+          <li><b>Grass / Forest / Jungle</b> &mdash; seed vegetation</li>
+          <li><b>Animals</b> &mdash; introduce fauna (requires plants)</li>
+          <li><b>Monolith</b> &mdash; black obelisk that advances evolution one stage</li>
+          <li><b>Meteor</b> &mdash; crater + global cooling event</li>
+          <li><b>Volcano</b> &mdash; local uplift + CO&#8322; release</li>
+          <li><b>Industry</b> &mdash; deforests + injects CO&#8322;</li>
+          <li><b>Deforest</b> &mdash; strip vegetation, demote forest biomes</li>
+        </ul>
+        <h3>Sliders</h3>
+        <ul>
+          <li><b>Radius</b> &mdash; brush area (1&ndash;10 rings)</li>
+          <li><b>Solar &times;</b> &mdash; multiplier on the faint-young-sun curve (0.5&ndash;1.5)</li>
+          <li><b>CO&#8322; forcing</b> &mdash; ppm added every 100 Ky step (industrial emission)</li>
+          <li><b>Axial tilt</b> &mdash; 0&ndash;45&deg;; drives season amplitude</li>
+          <li><b>Seasons</b> &mdash; enable seasonal T overlay in the temperature view</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Climate physics</h3>
+        <ul>
+          <li><b>Energy balance</b>: insolation &times; (1&minus;albedo), damped by relaxation + neighbor diffusion.</li>
+          <li><b>Greenhouse</b>: CO&#8322; log forcing (&sim;3 K / doubling), CH&#8324; log forcing, amplified by water-vapor feedback (Clausius-Clapeyron).</li>
+          <li><b>Wind</b>: 3-cell zonal pattern &mdash; trade easterlies 0&ndash;30&deg;, westerlies 30&ndash;60&deg;, polar easterlies &gt;60&deg;. Advects moisture.</li>
+          <li><b>Precipitation</b>: condenses when atmospheric moisture exceeds saturation capacity; orographic lift forces rain on windward slopes.</li>
+          <li><b>Rivers</b>: precipitation routed downhill by steepest descent.</li>
+          <li><b>Tectonics</b>: plates with angular velocity &omega;&times;r; convergent boundaries uplift, divergent ones thin crust.</li>
+          <li><b>Wildfires</b>: ignition &prop; veg &times; heat &times; dryness &times; O&#8322;; release CO&#8322; + CH&#8324;, consume O&#8322;.</li>
+          <li><b>Ocean CO&#8322;</b>: warm oceans outgas (Henry's law).</li>
+          <li><b>Permafrost</b>: warms above 5&deg;C releases CH&#8324;.</li>
+        </ul>
+        <h3>Life stages</h3>
+        <ul>
+          <li>Lifeless &rarr; Prokaryotes &rarr; Eukaryotes &rarr; Multicellular &rarr; Land plants &rarr; Animals &rarr; Sapients &rarr; Civilization. Each gated by O&#8322;, age, and climate stability.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Achievements</h3>
+        <div id="helpAchievements" style="font-size:0.78em;line-height:1.5"></div>
+      </div>
+
+    </div>
+    <div class="help-footer">
+      Tip: you can run climate-change experiments. Reach civilization, then drag the CO&#8322; forcing slider up and watch the cascade &mdash; H&#8322;O vapor amplifies, permafrost releases CH&#8324;, wildfires kick in, ice caps shrink, sea level rises.
+    </div>
+  </div>
+</div>
+
+<div id="title">
+  <h1>SIMEARTH</h1>
+  <div class="subtitle">a living world</div>
+</div>
+
+<div class="panel" id="statsPanel" style="display:none">
+  <h4>PLANET</h4>
+  <div class="row"><span>Tiles</span><b id="stTiles">&mdash;</b></div>
+  <div class="row"><span>Land area</span><b id="stLand">&mdash;</b></div>
+  <div class="row"><span>Sea level</span><b id="stSea">&mdash;</b></div>
+  <div class="row"><span>Avg temp</span><b id="stTemp">&mdash;</b></div>
+  <div class="row"><span>CO&#8322;</span><b id="stCO2">&mdash;</b></div>
+  <div class="row"><span>CH&#8324;</span><b id="stCH4">&mdash;</b></div>
+  <div class="row"><span>H&#8322;O vapor</span><b id="stH2O">&mdash;</b></div>
+  <div class="row"><span>O&#8322;</span><b id="stO2">&mdash;</b></div>
+  <div class="row"><span>Solar</span><b id="stSun">&mdash;</b></div>
+  <div class="row"><span>Ice</span><b id="stIce">&mdash;</b></div>
+  <div class="row"><span>Fires</span><b id="stFires">&mdash;</b></div>
+  <div class="row"><span>Plates</span><b id="stPlates">&mdash;</b></div>
+  <div class="row"><span>Seed</span><b id="stSeed">random</b></div>
+  <canvas id="histChart" width="200" height="66" style="margin-top:6px;display:block;background:#060A16;border:1px solid #1A2A40;width:100%;height:66px"></canvas>
+  <div style="font-size:0.62em;color:#6080A0;margin-top:2px;text-align:center;letter-spacing:0.5px">
+    <span style="color:#FF9060">T</span> &middot; <span style="color:#80D080">O&#8322;</span> &middot; <span style="color:#D0A060">CO&#8322;</span> &middot; <span style="color:#80B0FF">ice</span>
+  </div>
+</div>
+
+<div class="panel" id="lifePanel" style="display:none">
+  <h4>LIFE</h4>
+  <div class="stage-name" id="lifeName">Lifeless</div>
+  <div class="stage-desc" id="lifeDesc">A sterile young world.</div>
+  <div class="row"><span>Biomass</span><b id="lifeMass">&mdash;</b></div>
+  <div class="row"><span>Vegetation</span><b id="lifeVeg">&mdash;</b></div>
+  <div class="stage-dots" id="stageDots"></div>
+</div>
+
+<div class="panel" id="viewPanel" style="display:none">
+  <h4>VIEW MODE</h4>
+  <button class="view-btn active" data-view="elevation">Elevation</button>
+  <button class="view-btn" data-view="temperature">Temperature</button>
+  <button class="view-btn" data-view="moisture">Moisture</button>
+  <button class="view-btn" data-view="rivers">Rivers</button>
+  <button class="view-btn" data-view="wind">Winds</button>
+  <button class="view-btn" data-view="biome">Biomes</button>
+  <button class="view-btn" data-view="plate">Tectonic plates</button>
+  <button class="view-btn" data-view="vegetation">Vegetation</button>
+</div>
+
+<div class="panel" id="toolPanel" style="display:none">
+  <h4>TOOLS</h4>
+  <button class="tool-btn active" data-tool="info">Info (inspect)</button>
+  <div class="tool-group">SCENARIO</div>
+  <select id="scenarioSelect" class="scenario-select">
+    <option value="">&mdash; choose preset &mdash;</option>
+    <option value="archean">Archean Earth (4 Gy)</option>
+    <option value="modern">Modern Earth (pre-industrial)</option>
+    <option value="bau2100">2100 Business-as-usual</option>
+    <option value="snowball">Snowball Earth</option>
+    <option value="carbon">Carboniferous (high O&#8322;)</option>
+    <option value="venus">Venus runaway</option>
+    <option value="iceage">Pleistocene ice age</option>
+  </select>
+  <div class="tool-group">TERRAIN</div>
+  <button class="tool-btn" data-tool="raise">Raise</button>
+  <button class="tool-btn" data-tool="lower">Lower</button>
+  <button class="tool-btn" data-tool="water">Flood</button>
+  <button class="tool-btn" data-tool="heat">Heat</button>
+  <button class="tool-btn" data-tool="cool">Cool / ice</button>
+  <div class="tool-group">LIFE</div>
+  <button class="tool-btn" data-tool="grass">Seed grass</button>
+  <button class="tool-btn" data-tool="forest">Seed forest</button>
+  <button class="tool-btn" data-tool="jungle">Seed jungle</button>
+  <button class="tool-btn" data-tool="animals">Seed animals</button>
+  <button class="tool-btn" data-tool="monolith">Place monolith</button>
+  <div class="tool-group">IMPACTS</div>
+  <button class="tool-btn" data-tool="meteor">Meteor impact</button>
+  <button class="tool-btn" data-tool="volcano">Volcano</button>
+  <button class="tool-btn" data-tool="factory">Industry (CO&#8322;)</button>
+  <button class="tool-btn" data-tool="deforest">Deforest</button>
+  <div class="brush-row"><span>radius</span><input type="range" id="brushRadius" min="1" max="10" value="3"><span id="brushLabel">3</span></div>
+  <div class="brush-row"><span>solar &times;</span><input type="range" id="sunSlider" min="50" max="150" value="100"><span id="sunLabel">1.00</span></div>
+  <div class="brush-row"><span>CO&#8322; forcing</span><input type="range" id="co2Slider" min="0" max="100" value="0"><span id="co2Label">0</span></div>
+  <div class="brush-row"><span>axial tilt</span><input type="range" id="tiltSlider" min="0" max="45" value="23"><span id="tiltLabel">23&deg;</span></div>
+  <div class="brush-row"><label style="cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" id="seasonToggle" checked>seasons</label></div>
+  <div class="brush-row"><span>DISASTERS</span></div>
+  <div class="dis-row">
+    <button class="dis-btn" id="disIceAge">Ice age</button>
+    <button class="dis-btn" id="disGreenhouse">Greenhouse</button>
+    <button class="dis-btn" id="disExtinct">Extinction</button>
+    <button class="dis-btn" id="disReset">Reset</button>
+  </div>
+</div>
+
+<div class="panel" id="infoPanel" style="display:none">
+  <h4>SELECTED TILE</h4>
+  <div id="tileInfo" style="font-size:0.75em;color:#8098B0">Click any tile.</div>
+</div>
+
+<div class="panel" id="legend" style="display:none">
+  <h4>LEGEND</h4>
+  <div id="legendBody"></div>
+</div>
+
+<div class="panel" id="actionBar" style="display:none">
+  <button class="speed-btn active" data-speed="0">||</button>
+  <button class="speed-btn" data-speed="1">&#9654;</button>
+  <button class="speed-btn" data-speed="2">&#9654;&#9654;</button>
+  <button class="speed-btn" data-speed="3">&#9654;&#9654;&#9654;</button>
+  <button class="speed-btn" data-speed="4">&#9207;</button>
+  <div id="yearDisplay"><b id="yrVal">0</b> years / age <b id="ageVal">0.00 Gy</b></div>
+  <button class="speed-btn" id="btnSpin" title="toggle rotation">&#8635;</button>
+  <button class="speed-btn" id="btnMusic" title="toggle ambient music">&#9834;</button>
+  <button class="speed-btn" id="btnSave" title="save world">SAVE</button>
+  <button class="speed-btn" id="btnLoad" title="load world">LOAD</button>
+  <button class="speed-btn" id="btnHelp" title="help (?)">?</button>
+  <button class="speed-btn" id="btnMenu" title="menu (Esc)">&#9776;</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// =============================================================
+// SimEarth  -  full sim
+// Goldberg polyhedron (subdivided icosahedron dual) at freq-32
+// Dynamic tectonics / energy-balance climate / hydrology /
+// Holdridge biomes / life evolution / player tools
+// =============================================================
+
+// ---------- Vector math ----------
+function vSub(a,b){return [a[0]-b[0],a[1]-b[1],a[2]-b[2]];}
+function vScale(a,s){return [a[0]*s,a[1]*s,a[2]*s];}
+function vDot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+function vCross(a,b){return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];}
+function vLen(a){return Math.sqrt(vDot(a,a));}
+function vNorm(a){var l=vLen(a);return l<1e-12?[0,0,0]:[a[0]/l,a[1]/l,a[2]/l];}
+function clamp(x,lo,hi){return x<lo?lo:(x>hi?hi:x);}
+function lerp(a,b,t){return a+(b-a)*t;}
+function lerpRgb(a,b,t){return [lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t)];}
+
+// ---------- Icosahedron ----------
+var PHI = (1+Math.sqrt(5))/2;
+var ICO_VERTS = [
+  [-1, PHI, 0],[ 1, PHI, 0],[-1,-PHI, 0],[ 1,-PHI, 0],
+  [ 0,-1, PHI],[ 0, 1, PHI],[ 0,-1,-PHI],[ 0, 1,-PHI],
+  [ PHI, 0,-1],[ PHI, 0, 1],[-PHI, 0,-1],[-PHI, 0, 1]
+].map(vNorm);
+var ICO_FACES = [
+  [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],
+  [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+  [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
+  [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]
+];
+
+function subdivide(N) {
+  var verts = [];
+  var faces = [];
+  var keyMap = new Map();
+  function add(v) {
+    var n = vNorm(v);
+    var key = Math.round(n[0]*1e6)+'_'+Math.round(n[1]*1e6)+'_'+Math.round(n[2]*1e6);
+    var idx = keyMap.get(key);
+    if (idx !== undefined) return idx;
+    idx = verts.length;
+    verts.push(n);
+    keyMap.set(key, idx);
+    return idx;
+  }
+  for (var fi = 0; fi < ICO_FACES.length; fi++) {
+    var f = ICO_FACES[fi];
+    var A = ICO_VERTS[f[0]], B = ICO_VERTS[f[1]], C = ICO_VERTS[f[2]];
+    var grid = [];
+    for (var i = 0; i <= N; i++) {
+      grid[i] = [];
+      for (var j = 0; j <= N - i; j++) {
+        var k = N - i - j;
+        grid[i][j] = add([(i*A[0]+j*B[0]+k*C[0])/N, (i*A[1]+j*B[1]+k*C[1])/N, (i*A[2]+j*B[2]+k*C[2])/N]);
+      }
+    }
+    for (var i = 0; i < N; i++) {
+      for (var j = 0; j < N - i; j++) {
+        faces.push([grid[i][j], grid[i+1][j], grid[i][j+1]]);
+        if (j < N - i - 1) faces.push([grid[i+1][j], grid[i+1][j+1], grid[i][j+1]]);
+      }
+    }
+  }
+  return { verts: verts, faces: faces };
+}
+
+function buildTiles(verts, faces) {
+  var n = verts.length;
+  var vertFaces = new Array(n);
+  for (var i = 0; i < n; i++) vertFaces[i] = [];
+  for (var fi = 0; fi < faces.length; fi++) {
+    var f = faces[fi];
+    vertFaces[f[0]].push(fi);
+    vertFaces[f[1]].push(fi);
+    vertFaces[f[2]].push(fi);
+  }
+  var faceCentroids = new Array(faces.length);
+  for (var fi = 0; fi < faces.length; fi++) {
+    var f = faces[fi];
+    var a = verts[f[0]], b = verts[f[1]], c = verts[f[2]];
+    faceCentroids[fi] = vNorm([(a[0]+b[0]+c[0])/3, (a[1]+b[1]+c[1])/3, (a[2]+b[2]+c[2])/3]);
+  }
+  var tiles = new Array(n);
+  for (var vi = 0; vi < n; vi++) {
+    var center = verts[vi];
+    var fs = vertFaces[vi];
+    var nrm = center;
+    var c0 = faceCentroids[fs[0]];
+    var t0 = vSub(c0, vScale(nrm, vDot(c0, nrm)));
+    var u = vNorm(t0);
+    var v = vCross(nrm, u);
+    var ang = new Array(fs.length);
+    for (var k = 0; k < fs.length; k++) {
+      var c = faceCentroids[fs[k]];
+      var t = vSub(c, vScale(nrm, vDot(c, nrm)));
+      ang[k] = { fi: fs[k], a: Math.atan2(vDot(t, v), vDot(t, u)) };
+    }
+    ang.sort(function(p, q){ return p.a - q.a; });
+    var L = ang.length;
+    var poly = new Array(L);
+    for (var k = 0; k < L; k++) poly[k] = faceCentroids[ang[k].fi];
+    // edgeNeighbor[k] = tile across polygon edge (poly[k] -> poly[k+1])
+    var edgeNeighbor = new Array(L);
+    for (var k = 0; k < L; k++) {
+      var f1 = faces[ang[k].fi];
+      var f2 = faces[ang[(k+1) % L].fi];
+      var nb = -1;
+      for (var a = 0; a < 3; a++) {
+        if (f1[a] === vi) continue;
+        if (f2[0] === f1[a] || f2[1] === f1[a] || f2[2] === f1[a]) { nb = f1[a]; break; }
+      }
+      edgeNeighbor[k] = nb;
+    }
+    var lat = Math.asin(clamp(center[1], -1, 1));
+    var lon = Math.atan2(center[2], center[0]);
+    tiles[vi] = {
+      center: center, verts: poly, neighbors: [], edgeNeighbor: edgeNeighbor,
+      lat: lat, lon: lon
+    };
+  }
+
+  var seen = new Set();
+  for (var fi = 0; fi < faces.length; fi++) {
+    var f = faces[fi];
+    for (var e = 0; e < 3; e++) {
+      var x = f[e], y = f[(e+1)%3];
+      var lo = x < y ? x : y, hi = x < y ? y : x;
+      var k = lo*1000003 + hi;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      tiles[x].neighbors.push(y);
+      tiles[y].neighbors.push(x);
+    }
+  }
+
+  // Wind field (simplified 3-cell atmospheric circulation) + upwind neighbor per tile.
+  // Zonal wind from latitude: trade easterlies 0-30 deg, westerlies 30-60, polar easterlies >60.
+  // Converted to a 3D tangent vector via the east/north basis at each tile.
+  function zonalWind(lat) {
+    var aL = Math.abs(lat), sgn = lat < 0 ? -1 : 1;
+    if (aL < Math.PI/6)       return [-0.75, -sgn * 0.25];   // trade winds
+    else if (aL < Math.PI/3)  return [ 0.95,  sgn * 0.30];   // westerlies
+    else                      return [-0.45, -sgn * 0.20];   // polar easterlies
+  }
+  for (var vi2 = 0; vi2 < tiles.length; vi2++) {
+    var t = tiles[vi2];
+    var la = t.lat, lo = t.lon;
+    var uv = zonalWind(la);
+    var cla = Math.cos(la), sla = Math.sin(la);
+    var clo = Math.cos(lo), slo = Math.sin(lo);
+    var eastHat  = [ -slo,        0,      clo       ];
+    var northHat = [ -sla*clo,    cla,   -sla*slo   ];
+    t.wind = [
+      uv[0]*eastHat[0] + uv[1]*northHat[0],
+      uv[0]*eastHat[1] + uv[1]*northHat[1],
+      uv[0]*eastHat[2] + uv[1]*northHat[2]
+    ];
+    t.windSpeed = Math.sqrt(uv[0]*uv[0] + uv[1]*uv[1]);
+    var nbs = t.neighbors, bestD = -Infinity, bestNb = -1;
+    for (var j = 0; j < nbs.length; j++) {
+      var dir = vSub(tiles[nbs[j]].center, t.center);
+      var len = vLen(dir);
+      if (len < 1e-9) continue;
+      var dot = -((t.wind[0]*dir[0] + t.wind[1]*dir[1] + t.wind[2]*dir[2]) / len);
+      if (dot > bestD) { bestD = dot; bestNb = nbs[j]; }
+    }
+    t.upwind = bestNb >= 0 ? bestNb : (nbs.length > 0 ? nbs[0] : vi2);
+  }
+  return tiles;
+}
+
+// =============================================================
+// Initial world generation
+// =============================================================
+// Seeded PRNG (Mulberry32) keyed by a string. WORLD_RNG defaults to Math.random;
+// when WORLD_SEED is set, the same seed reproduces the same continents and plates.
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    var t = seed;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function strToSeed(s) {
+  var h = 2166136261;
+  for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+var WORLD_SEED = '';
+var WORLD_RNG = Math.random;
+function setWorldSeed(seed) {
+  WORLD_SEED = seed || '';
+  WORLD_RNG = seed ? mulberry32(strToSeed(seed)) : Math.random;
+}
+
+function generateInitialWorld(tiles) {
+  var rand = WORLD_RNG;
+  var n = tiles.length;
+  var K = 14;
+  var seeds = [];
+  var used = new Set();
+  while (seeds.length < K) {
+    var s = (rand()*n)|0;
+    if (!used.has(s)) { used.add(s); seeds.push(s); }
+  }
+  var plates = new Int16Array(n);
+  for (var i = 0; i < n; i++) {
+    var c = tiles[i].center;
+    var bestD = -2, bestK = 0;
+    for (var k = 0; k < K; k++) {
+      var s = tiles[seeds[k]].center;
+      var d = c[0]*s[0]+c[1]*s[1]+c[2]*s[2];
+      if (d > bestD) { bestD = d; bestK = k; }
+    }
+    plates[i] = bestK;
+  }
+  var plateInfo = [];
+  for (var k = 0; k < K; k++) {
+    var axis = vNorm([rand()*2-1, rand()*2-1, rand()*2-1]);
+    var rate = (rand()*0.9 + 0.4) * 1e-9 * (rand() < 0.5 ? -1 : 1);
+    plateInfo.push({
+      axis: axis, rate: rate, oceanic: rand() < 0.58,
+      seedTile: seeds[k]
+    });
+  }
+  var bedrock = new Float32Array(n);
+  for (var i = 0; i < n; i++) {
+    bedrock[i] = plateInfo[plates[i]].oceanic ? -0.45 : 0.12;
+  }
+  for (var h = 0; h < 25; h++) {
+    var ct = (rand()*n)|0;
+    var hc = tiles[ct].center;
+    var str = (rand()*0.5 + 0.15) * (rand() < 0.4 ? -1 : 1);
+    var fall = 0.15 + rand()*0.3;
+    for (var i = 0; i < n; i++) {
+      var c = tiles[i].center;
+      var d = Math.acos(clamp(c[0]*hc[0]+c[1]*hc[1]+c[2]*hc[2], -1, 1));
+      bedrock[i] += str * Math.exp(-(d*d)/(fall*fall));
+    }
+  }
+  // Smooth
+  var sm = new Float32Array(n);
+  for (var pass = 0; pass < 2; pass++) {
+    for (var i = 0; i < n; i++) {
+      var s = bedrock[i] * 3, w = 3;
+      var nbs = tiles[i].neighbors;
+      for (var j = 0; j < nbs.length; j++) { s += bedrock[nbs[j]]; w += 1; }
+      sm[i] = s / w;
+    }
+    var tmp = bedrock; bedrock = sm; sm = tmp;
+  }
+  // Per-tile arrays
+  var iceDepth   = new Float32Array(n);
+  var temperature = new Float32Array(n);
+  var moisture   = new Float32Array(n);
+  var vegetation = new Float32Array(n);
+  var riverFlow  = new Float32Array(n);
+  var biome      = new Int8Array(n);
+  // Initial temperature: hot young Earth
+  for (var i = 0; i < n; i++) temperature[i] = 40 - 30 * Math.pow(Math.sin(tiles[i].lat), 2);
+  return {
+    plates: plates, plateInfo: plateInfo, plateCount: K,
+    bedrock: bedrock, iceDepth: iceDepth,
+    temperature: temperature, moisture: moisture, vegetation: vegetation,
+    riverFlow: riverFlow, biome: biome
+  };
+}
+
+// =============================================================
+// Simulation
+// =============================================================
+var SIM = null;
+function resetSim() {
+  SIM = {
+    year: 0,              // years since t0
+    age: 0,               // billions of years since planet formed
+    speed: 0,             // 0 paused, 1..4 speed levels
+    co2: 2500,            // ppm (archean)
+    o2: 0.002,            // fraction (trace)
+    seaLevel: 0.0,
+    sunLum: 0.78,         // faint young sun
+    lifeStage: 0,
+    globalTemp: 30,
+    landFrac: 0,
+    iceFrac: 0,
+    vegFrac: 0,
+    biomass: 0,
+    monoliths: [],
+    sunOverride: 1.0,       // slider multiplier on faint-young-sun curve
+    co2Forcing: 0,          // extra ppm per 100 Ky step (industrial forcing slider)
+    ch4: 700,               // atmospheric methane (ppb)
+    h2o: 1.0,               // relative atmospheric water vapor vs 14°C reference (Clausius-Clapeyron)
+    fireCount: 0,           // wildfires per step
+    fireCarbon: 0,          // ppm CO2 released by wildfires (transient, consumed in stepGlobal)
+    fireO2: 0,              // O2 fraction consumed by wildfires per step
+    firesEverLit: 0,        // cumulative
+    axialTilt: 0.41,        // rad (~23.5 degrees), adjustable via slider
+    seasonPhase: 0,         // radians, 0..2pi; 0=NH vernal equinox, pi/2=NH summer solstice
+    showSeasons: true,      // overlay seasonal T in the temperature view
+    geothermal: 0.35,       // K baseline heat flux added to T_eq
+    lastEventYear: {},
+    history: []
+  };
+}
+resetSim();
+
+var STEPS_PER_FRAME = [0, 1, 3, 10, 30];
+var SIM_DT_YEARS = 100000;  // 100 Ky per base step
+
+// Scratch buffers reused across hot simulation passes (allocated once per world build)
+var BUF = { tEq: null, Tswap: null, Mswap: null, Precip: null, R: null, order: null };
+function ensureBuffers(n) {
+  if (BUF.tEq && BUF.tEq.length === n) return;
+  BUF.tEq    = new Float32Array(n);
+  BUF.Tswap  = new Float32Array(n);
+  BUF.Mswap  = new Float32Array(n);
+  BUF.Precip = new Float32Array(n);
+  BUF.R      = new Float32Array(n);
+  BUF.order  = new Int32Array(n);
+}
+
+var STAGES = [
+  { name: 'Lifeless',     desc: 'A sterile young world.' },
+  { name: 'Prokaryotes',  desc: 'Single-celled life stirs the seas.' },
+  { name: 'Eukaryotes',   desc: 'Complex cells appear.' },
+  { name: 'Multicellular',desc: 'Colonies give way to bodies.' },
+  { name: 'Land Plants',  desc: 'Green invades the continents.' },
+  { name: 'Animals',      desc: 'Fauna spreads and diversifies.' },
+  { name: 'Sapients',     desc: 'Minds emerge.' },
+  { name: 'Civilization', desc: 'A thinking species shapes the world.' }
+];
+
+// ----- Tectonics -----
+function stepTectonics(W, dtY) {
+  var tiles = W.tiles, n = tiles.length;
+  var d = W.data;
+  var plates = d.plates, pi = d.plateInfo;
+  // Convergence uplift / divergence subsidence at plate boundaries
+  var UPLIFT = 6e-9;      // units per unit-convergence per year (mountain-building rate)
+  var TRENCH = 4e-9;      // seabed deepening at subduction
+  for (var i = 0; i < n; i++) {
+    var piA = plates[i];
+    var pA = pi[piA];
+    var nbs = tiles[i].neighbors;
+    var ci = tiles[i].center;
+    var maxConv = 0;
+    var otherOceanic = false;
+    for (var j = 0; j < nbs.length; j++) {
+      var nb = nbs[j];
+      var piB = plates[nb];
+      if (piB === piA) continue;
+      var pB = pi[piB];
+      var cj = tiles[nb].center;
+      // Plate velocity at each tile: omega × r
+      var vi = vCross(pA.axis, ci); vi[0]*=pA.rate; vi[1]*=pA.rate; vi[2]*=pA.rate;
+      var vj = vCross(pB.axis, cj); vj[0]*=pB.rate; vj[1]*=pB.rate; vj[2]*=pB.rate;
+      var rel = vSub(vi, vj);
+      // edge direction in i's tangent plane
+      var tan = vSub(cj, vScale(ci, vDot(cj, ci)));
+      var edgeDir = vNorm(tan);
+      var conv = -vDot(rel, edgeDir) / Math.max(1e-12, Math.abs(pA.rate) + Math.abs(pB.rate));
+      if (conv > maxConv) { maxConv = conv; otherOceanic = pB.oceanic; }
+    }
+    if (maxConv > 0) {
+      // continental-continental -> mountains; continental-oceanic -> arc + trench; oceanic-oceanic -> island arc
+      var mag = maxConv * dtY;
+      if (!pA.oceanic && !otherOceanic)      d.bedrock[i] += UPLIFT * mag * 2.4;
+      else if (!pA.oceanic &&  otherOceanic) d.bedrock[i] += UPLIFT * mag * 1.1;
+      else if ( pA.oceanic && !otherOceanic) d.bedrock[i] -= TRENCH * mag * 1.0;
+      else                                   d.bedrock[i] += UPLIFT * mag * 0.5;
+    } else if (maxConv < -0.05) {
+      // divergent -> thin crust / spreading
+      d.bedrock[i] -= 0.25 * UPLIFT * (-maxConv) * dtY;
+    }
+  }
+  // Erosion: scales strongly with height; isostatic drift toward plate-type baseline
+  var EROSION = 6e-9;
+  var ISOSTAT = 3e-10;
+  for (var i = 0; i < n; i++) {
+    var e = d.bedrock[i];
+    var base = pi[plates[i]].oceanic ? -0.45 : 0.10;
+    if (e > 0) d.bedrock[i] -= EROSION * e * e * dtY;
+    d.bedrock[i] -= ISOSTAT * (e - base) * dtY;
+    d.bedrock[i] = clamp(d.bedrock[i], -0.75, 1.5);
+  }
+  // Hotspot event: local uplift paired with a compensating dome of subsidence outside so globe mass is conserved
+  if (Math.random() < 2e-4 * dtY / 100000) {
+    var ct = (Math.random()*n)|0;
+    var hc = tiles[ct].center;
+    var r = 0.10 + Math.random()*0.08;
+    var amp = 0.08 + Math.random()*0.10;
+    var sumW = 0, sumUp = 0;
+    var w = new Float32Array(n);
+    for (var i = 0; i < n; i++) {
+      var c = tiles[i].center;
+      var dd = Math.acos(clamp(c[0]*hc[0]+c[1]*hc[1]+c[2]*hc[2], -1, 1));
+      w[i] = Math.exp(-(dd*dd)/(r*r));
+      sumUp += w[i] * amp;
+      sumW += 1;
+    }
+    var comp = sumUp / sumW;  // uniform subsidence to conserve mass
+    for (var i = 0; i < n; i++) d.bedrock[i] += amp * w[i] - comp;
+    SIM.co2 += 40;
+  }
+  // Global mass-conservation trim: pull mean bedrock back toward target if it drifts
+  var mean = 0;
+  for (var i = 0; i < n; i++) mean += d.bedrock[i];
+  mean /= n;
+  var drift = mean - (-0.18);  // target mean (~70% ocean)
+  if (Math.abs(drift) > 0.005) {
+    var pull = drift * 0.02;
+    for (var i = 0; i < n; i++) d.bedrock[i] -= pull;
+  }
+}
+
+// ----- Climate (energy-balance-ish) -----
+function stepClimate(W, dtY) {
+  var tiles = W.tiles, n = tiles.length;
+  var d = W.data;
+  var SEA = SIM.seaLevel;
+  var sun = SIM.sunLum;
+  var co2 = SIM.co2;
+  // Greenhouse forcing: CO2 and CH4 as primary drivers, amplified by water-vapor feedback.
+  // Water vapor follows Clausius-Clapeyron (saturation pressure grows ~7%/°C) and ties
+  // feedback gain to *current* global temperature, so warming self-amplifies.
+  var es      = 6.112 * Math.exp(17.67 * SIM.globalTemp / (SIM.globalTemp + 243.5));
+  var es_ref  = 6.112 * Math.exp(17.67 * 14 / (14 + 243.5));
+  SIM.h2o = clamp(es / es_ref * Math.max(0.05, 1 - 0.6 * SIM.iceFrac), 0.02, 8.0);
+  var co2F   = 5.2 * Math.log(Math.max(10, co2) / 280) / Math.log(2);
+  var ch4F   = 0.6 * Math.log(Math.max(100, SIM.ch4) / 700) / Math.log(2);
+  var h2oAmp = 1 + 0.32 * (SIM.h2o - 1);  // ~1.0 at present, >1 in warmer worlds
+  var ghFactor = (co2F + ch4F) * h2oAmp;
+  ensureBuffers(n);
+  // Albedo-aware equilibrium temperature per tile (reused scratch buffer)
+  var tEqArr = BUF.tEq;
+  var globalAlbedo = 0, gCount = 0, globalT = 0, landCount = 0, iceCount = 0, vegSum = 0;
+  for (var i = 0; i < n; i++) {
+    var tile = tiles[i];
+    var lat = tile.lat;
+    var elev = d.bedrock[i];
+    var isOcean = (elev + d.iceDepth[i]) <= SEA && d.iceDepth[i] < 0.05;
+    var ice = d.iceDepth[i];
+    var alb;
+    if (ice > 0.02) alb = 0.62;
+    else if (isOcean) alb = 0.08;
+    else {
+      // vegetation lowers albedo
+      var veg = d.vegetation[i];
+      alb = BIOMES[d.biome[i]].albedo * (1 - 0.4 * veg);
+    }
+    globalAlbedo += alb; gCount++;
+    // zonal-mean insolation approx (Legendre P2)
+    var s2 = Math.sin(lat); s2 = s2*s2;
+    var insol = 1.0 * (1 - 0.477 * (1.5*s2 - 0.5));
+    var T_eq = -14 + 60 * insol * sun * (1 - alb) + ghFactor + (SIM.geothermal || 0);
+    if (elev > 0) T_eq -= elev * 32;           // lapse rate
+    if (isOcean) T_eq -= 3 * (elev < -0.3 ? 0 : 0);  // no-op, oceans already mild
+    tEqArr[i] = T_eq;
+    if (!isOcean) { landCount++; }
+    if (ice > 0.02) iceCount++;
+    vegSum += d.vegetation[i];
+  }
+  // Relaxation toward T_eq, then neighbor diffusion
+  var tau = 60000;  // yrs
+  var relax = 1 - Math.exp(-dtY / tau);
+  var T = d.temperature;
+  for (var i = 0; i < n; i++) {
+    T[i] += (tEqArr[i] - T[i]) * relax;
+  }
+  // One diffusion pass (reused scratch)
+  var T2 = BUF.Tswap;
+  for (var i = 0; i < n; i++) {
+    var s = T[i] * 3, w = 3;
+    var nbs = tiles[i].neighbors;
+    for (var j = 0; j < nbs.length; j++) { s += T[nbs[j]]; w += 1; }
+    T2[i] = s / w;
+  }
+  for (var i = 0; i < n; i++) {
+    T[i] = T2[i];
+    globalT += T[i];
+  }
+  SIM.globalTemp  = globalT / n;
+  SIM.landFrac    = landCount / n;
+  SIM.iceFrac     = iceCount / n;
+  SIM.vegFrac     = vegSum / n;
+}
+
+// ----- Hydrology: moisture diffusion + ice + sea level -----
+// Hydrology: wind-advected moisture with evaporation / condensation / precipitation.
+// - Oceans evaporate as a function of temperature; output is atmospheric moisture.
+// - Moisture is advected each step along each tile's wind vector (upwind neighbor supplies air).
+// - Air parcels have a temperature-dependent holding capacity (Clausius-Clapeyron). Excess condenses as precipitation.
+// - Orographic lift (gain in elevation relative to upwind neighbor) forces additional precipitation on windward slopes.
+// - Precipitation drives river flow; river accumulation uses steepest descent over bedrock.
+function stepHydrology(W, dtY) {
+  ensureBuffers(W.tiles.length);
+  var tiles = W.tiles, n = tiles.length;
+  var d = W.data;
+  var SEA = SIM.seaLevel;
+  var step = dtY / 100000;
+  var m = d.moisture;
+  var m2 = BUF.Mswap;
+  var P  = BUF.Precip;
+  for (var i = 0; i < n; i++) P[i] = 0;
+
+  for (var pass = 0; pass < 2; pass++) {
+    for (var i = 0; i < n; i++) {
+      var eff = d.bedrock[i] + d.iceDepth[i];
+      var isOcean = eff <= SEA && d.iceDepth[i] < 0.05;
+      var T = d.temperature[i];
+      var up = tiles[i].upwind;
+      var mUp = (up >= 0) ? m[up] : m[i];
+      var ws = tiles[i].windSpeed;
+      // Advection: blend self toward upwind
+      var adv = m[i] * (1 - 0.55 * ws) + mUp * (0.55 * ws);
+      // Temperature-dependent saturation capacity (normalized; ref ~= 1 at T=15)
+      var capacity = clamp(0.15 * Math.exp(0.06 * (T - 5)), 0.04, 3.0);
+      var precip = 0;
+      var mNew;
+      if (isOcean) {
+        // Evaporation: warmer ocean -> more atmospheric moisture supply
+        var evap = 0.28 * clamp((T + 2) / 28, 0, 1.2);
+        mNew = clamp(adv + evap * step * 2, 0, 1.2);
+      } else {
+        // Orographic lift: rising over topography reduces effective capacity, forcing condensation
+        var elHere = d.bedrock[i];
+        var elUp   = up >= 0 ? d.bedrock[up] : elHere;
+        var lift   = Math.max(0, elHere - elUp) * 5.5;
+        var effCap = Math.max(0.03, capacity - lift);
+        if (adv > effCap) {
+          precip = (adv - effCap) * (0.55 + ws * 0.45);
+          mNew = effCap;
+        } else {
+          // Background drizzle from humid air
+          var drizzle = adv > 0.45 ? (adv - 0.45) * 0.10 * step : 0;
+          precip = drizzle;
+          mNew = Math.max(0, adv - drizzle);
+        }
+        // Hot desert enhancement: very hot + dry winds scrub moisture away
+        if (T > 30 && adv < 0.25) mNew *= 0.92;
+      }
+      m2[i] = clamp(mNew, 0, 1.3);
+      if (pass === 1) P[i] = precip;  // only record precip on the second, converged pass
+    }
+    // swap buffers (read <- write) without losing handles
+    for (var i = 0; i < n; i++) m[i] = m2[i];
+  }
+
+  // Ice: accumulation / melt driven by temperature and (for land) by precipitation in sub-freezing air
+  var iceVolOld = 0, iceVolNew = 0;
+  var ice = d.iceDepth;
+  for (var i = 0; i < n; i++) iceVolOld += ice[i];
+  for (var i = 0; i < n; i++) {
+    var T2v = d.temperature[i];
+    var isLand = d.bedrock[i] > SEA;
+    var prev = ice[i];
+    if (T2v < -4) {
+      var growth = 0.04 * (-(T2v + 4) / 20) * step + P[i] * 0.5 * step;
+      ice[i] = clamp(prev + growth, 0, isLand ? 0.6 : 0.12);
+    } else if (T2v > 1) {
+      var melt = 0.06 * (T2v - 1) / 20 * step;
+      ice[i] = Math.max(0, prev - melt);
+    }
+    iceVolNew += ice[i];
+  }
+  var diceVol = iceVolNew - iceVolOld;
+  SIM.seaLevel = clamp(SIM.seaLevel - diceVol * 0.008, -0.10, 0.10);
+
+  // Precipitation drives rivers — recompute accumulation every ~5 sim steps.
+  if ((SIM.year % 500000 | 0) === 0) computeRivers(W);
+}
+
+function computeRivers(W) {
+  var tiles = W.tiles, n = tiles.length;
+  var d = W.data;
+  // Steepest descent: sort tiles by elevation desc, accumulate flow
+  ensureBuffers(n);
+  var order = BUF.order;
+  for (var i = 0; i < n; i++) order[i] = i;
+  var bed = d.bedrock;
+  var SEA = SIM.seaLevel;
+  // Simple insertion by bucket would be faster, but a comparator sort is adequate at 10K.
+  Array.prototype.sort.call(order, function(a, b){ return bed[b] - bed[a]; });
+  var flow = d.riverFlow;
+  for (var i = 0; i < n; i++) flow[i] = 0;
+  for (var k = 0; k < n; k++) {
+    var i = order[k];
+    if (bed[i] <= SEA) continue;
+    flow[i] += Math.max(0, (BUF.Precip ? BUF.Precip[i] : d.moisture[i] * 0.08)) * 8.0;
+    var nbs = tiles[i].neighbors;
+    var best = -1, lowestE = bed[i];
+    for (var j = 0; j < nbs.length; j++) {
+      var nb = nbs[j];
+      if (bed[nb] < lowestE) { lowestE = bed[nb]; best = nb; }
+    }
+    if (best >= 0) flow[best] += flow[i];
+  }
+}
+
+// ----- Biomes -----
+function stepBiomes(W) {
+  var n = W.tiles.length;
+  var d = W.data;
+  var SEA = SIM.seaLevel;
+  for (var i = 0; i < n; i++) {
+    var eff = d.bedrock[i] + d.iceDepth[i];
+    if (d.iceDepth[i] > 0.03 || (eff <= SEA && d.iceDepth[i] > 0.02)) { d.biome[i] = 1; continue; }
+    if (eff <= SEA) { d.biome[i] = 0; continue; }
+    var T = d.temperature[i];
+    var M = d.moisture[i];
+    if (T < -8) d.biome[i] = 1;
+    else if (T < 2) d.biome[i] = 2;
+    else if (M < 0.18) d.biome[i] = 3;
+    else if (M < 0.38) d.biome[i] = 4;
+    else if (T < 8) d.biome[i] = 5;
+    else if (T < 22) d.biome[i] = 6;
+    else d.biome[i] = 7;
+  }
+}
+
+// ----- Global cycles: sun, CO2, CH4, O2, ocean outgas, wildfire accounting -----
+function stepGlobal(W, dtY) {
+  var step = dtY / 100000;  // per 100 Ky step
+  var baseSun = 0.75 + 0.25 * Math.min(1, SIM.age / 4.57);
+  SIM.sunLum = baseSun * (SIM.sunOverride != null ? SIM.sunOverride : 1.0);
+  var T = SIM.globalTemp;
+
+  // --- Methane (CH4, ppb) ---
+  // Sources: wetlands (scale with vegetation under wet conditions), permafrost thaw (temp-gated
+  // release from current ice fraction), livestock from civilization. Sink: atmospheric oxidation
+  // (short lifetime relative to our step, so we treat CH4 as near-steady-state relaxation).
+  var ch4Source = 0;
+  if (SIM.lifeStage >= 4) ch4Source += 240 * SIM.vegFrac;        // wetland emission (ppb/step)
+  ch4Source += 1800 * clamp((T - 5) / 15, 0, 1) * SIM.iceFrac;    // permafrost thaw spike
+  if (SIM.lifeStage >= 7) ch4Source += 600;                      // livestock (civilization)
+  var ch4Sink = 0.35 * (SIM.ch4 - 700);                          // relaxation toward background
+  SIM.ch4 = clamp(SIM.ch4 + (ch4Source - ch4Sink) * step, 200, 25000);
+  // CH4 that oxidizes becomes atmospheric CO2 (molecule-for-molecule), in ppm/step
+  var ch4ToCo2 = 0.35 * (SIM.ch4 - 700) * step * 1e-3;
+
+  // --- Ocean CO2 solubility (Henry's law) ---
+  // Warm oceans outgas, cold oceans absorb; reference ~15 degC neutral.
+  var oceanOutgas = (T - 15) * 0.10;
+
+  // --- CO2 balance ---
+  var volc = 3.0;
+  var weath = T > 0 ? 0.18 * T + 0.004 * T * T : 0;
+  var plantDraw = SIM.lifeStage >= 4 ? 4.0 * SIM.vegFrac : 0;
+  var fireC = SIM.fireCarbon || 0;  // ppm released this step by wildfires
+  SIM.fireCarbon = 0;
+  var dco2 = (volc - weath - plantDraw + oceanOutgas) * step + ch4ToCo2 + fireC;
+  var maxDelta = Math.max(2, SIM.co2 * 0.04);
+  dco2 = clamp(dco2, -maxDelta, maxDelta);
+  SIM.co2 = clamp(SIM.co2 + dco2 + (SIM.co2Forcing || 0) * step, 60, 25000);
+
+  // --- O2: photosynthesis - oxidation sink - wildfire consumption ---
+  if (SIM.lifeStage >= 1) {
+    var prod = (SIM.lifeStage >= 4 ? 9e-5 : 2e-5) * (0.25 + SIM.vegFrac);
+    SIM.o2 += prod * step;
+  }
+  SIM.o2 -= 5e-6 * step;
+  SIM.o2 -= (SIM.fireO2 || 0);
+  SIM.fireO2 = 0;
+  SIM.o2 = clamp(SIM.o2, 0, 0.28);
+}
+
+// ----- Wildfires -----
+// Per-tile ignition probability from dryness + heat + vegetation, with O2 as master gate.
+// Below 13% O2 nothing burns; above ~25% even damp biomes spontaneously combust (Carboniferous).
+// Each tile that ignites dumps its carbon store as CO2 + CH4, consumes O2, and regrows as grass.
+function stepWildfires(W, dtY) {
+  SIM.fireCount = 0;
+  if (SIM.lifeStage < 4 || SIM.o2 < 0.13) return;
+  var tiles = W.tiles, n = tiles.length;
+  var d = W.data;
+  var step = dtY / 100000;
+  var o2Mult = 1.0;
+  if (SIM.o2 > 0.25) o2Mult = 1.0 + 25 * (SIM.o2 - 0.25);  // explosive fire regime
+  else if (SIM.o2 < 0.17) o2Mult = (SIM.o2 - 0.13) / 0.04; // smolder regime
+  var SEA = SIM.seaLevel;
+  var fires = 0, burnedVeg = 0;
+  var n50 = Math.min(n, 12000);  // cap to keep rng cheap at high speed
+  for (var i = 0; i < n50; i++) {
+    if (d.bedrock[i] <= SEA) continue;
+    var veg = d.vegetation[i];
+    if (veg < 0.2) continue;
+    var T = d.temperature[i];
+    if (T < 6) continue;
+    var dry = clamp(1 - d.moisture[i], 0, 1);
+    var p = 0.0016 * veg * clamp((T - 6) / 28, 0, 1) * dry * o2Mult * step;
+    if (Math.random() < p) {
+      burnedVeg += veg;
+      d.vegetation[i] = 0;
+      if (d.biome[i] >= 5 && d.biome[i] <= 7) d.biome[i] = 4;
+      fires++;
+    }
+  }
+  SIM.fireCount = fires;
+  SIM.firesEverLit = (SIM.firesEverLit || 0) + fires;
+  // Accounting (consumed by stepGlobal): each fire unit of burned biomass releases CO2 + CH4, consumes O2.
+  SIM.fireCarbon = burnedVeg * 0.04;       // ppm CO2 released
+  SIM.ch4 += burnedVeg * 1.2;              // ppb CH4 released
+  SIM.fireO2 = burnedVeg * 1.0e-6;         // O2 fraction consumed
+  if (fires > 80) notifyEvent(fires + ' tiles ablaze.', 'warn');
+}
+
+// ----- Life evolution -----
+// ----- Random world events -----
+// Periodic dice-roll: most steps nothing happens; occasionally one of these fires
+// to give long simulations narrative beats. Each event picks an effect and announces
+// itself in the event feed. Events are rate-limited via stepEventsCooldown so they
+// don't pile up at high simulation speeds.
+var stepEventsCooldown = 0;
+var EVENTS = [
+  { name: 'Asteroid shower',         kind: 'warn', minStage: 0, weight: 1.0,
+    effect: function() {
+      var d = WORLD.data;
+      SIM.co2 = clamp(SIM.co2 + 200, 60, 25000);
+      var hits = 6 + ((Math.random()*8)|0);
+      for (var k = 0; k < hits; k++) {
+        var ti = (Math.random()*d.bedrock.length)|0;
+        d.bedrock[ti] -= 0.05;
+        d.temperature[ti] -= 6;
+        d.vegetation[ti] = Math.max(0, d.vegetation[ti] - 0.4);
+      }
+      var avgT = 0; for (var i = 0; i < d.temperature.length; i++) avgT += (d.temperature[i] -= 0.6);
+      SIM.globalTemp = avgT / d.temperature.length;
+    }
+  },
+  { name: 'Solar flare warms the surface', kind: 'warn', minStage: 0, weight: 0.8,
+    effect: function() {
+      var d = WORLD.data;
+      for (var i = 0; i < d.temperature.length; i++) d.temperature[i] += 1.6;
+    }
+  },
+  { name: 'Supervolcano erupts', kind: 'warn', minStage: 0, weight: 0.6,
+    effect: function() {
+      var d = WORLD.data;
+      SIM.co2 = clamp(SIM.co2 + 500, 60, 25000);
+      SIM.ch4 = clamp(SIM.ch4 + 250, 200, 25000);
+      // Aerosol cooling — initial dimming
+      for (var i = 0; i < d.temperature.length; i++) d.temperature[i] -= 4;
+      // Local uplift at one tile
+      var ti = (Math.random()*d.bedrock.length)|0;
+      d.bedrock[ti] += 0.18;
+    }
+  },
+  { name: 'Magnetic field reversal', kind: '', minStage: 1, weight: 0.5,
+    effect: function() { /* cosmetic only */ }
+  },
+  { name: 'Cambrian-style radiation event', kind: 'good', minStage: 3, weight: 0.4,
+    effect: function() {
+      var d = WORLD.data;
+      for (var i = 0; i < d.vegetation.length; i++) d.vegetation[i] = Math.max(d.vegetation[i], 0.2);
+    }
+  },
+  { name: 'Mass coral bleaching', kind: 'warn', minStage: 4, weight: 0.4,
+    effect: function() {
+      // Visual marker only; future hook for ocean ecosystem
+    }
+  },
+  { name: 'Pandemic strikes', kind: 'warn', minStage: 7, weight: 0.5,
+    effect: function() {
+      // Civilization setback
+      SIM.firesEverLit = SIM.firesEverLit; // no-op placeholder
+      notifyEvent('Civilization recovers slowly.', '');
+    }
+  },
+  { name: 'Industrial breakthrough', kind: 'good', minStage: 7, weight: 0.5,
+    effect: function() {
+      // Slight CO2 jump as a side effect of progress
+      SIM.co2 = clamp(SIM.co2 + 80, 60, 25000);
+    }
+  },
+  { name: 'Snowball Earth begins', kind: 'warn', minStage: 0, weight: 0.15,
+    effect: function() {
+      var d = WORLD.data;
+      for (var i = 0; i < d.temperature.length; i++) d.temperature[i] -= 12;
+      SIM.sunOverride = Math.max(0.85, SIM.sunOverride - 0.04);
+    }
+  }
+];
+
+function stepEvents(dtY) {
+  if (!WORLD || SIM.year < 200000) return;
+  if (stepEventsCooldown > 0) { stepEventsCooldown--; return; }
+  // ~0.6% chance per step of an event firing; cooldown then prevents back-to-back
+  if (Math.random() > 0.006) return;
+  var elig = [];
+  for (var i = 0; i < EVENTS.length; i++) {
+    var e = EVENTS[i];
+    if (SIM.lifeStage >= (e.minStage || 0)) elig.push(e);
+  }
+  if (!elig.length) return;
+  var totalW = 0;
+  for (var i = 0; i < elig.length; i++) totalW += elig[i].weight;
+  var roll = Math.random() * totalW;
+  var picked = elig[0], acc = 0;
+  for (var i = 0; i < elig.length; i++) {
+    acc += elig[i].weight;
+    if (roll <= acc) { picked = elig[i]; break; }
+  }
+  picked.effect();
+  notifyEvent(picked.name, picked.kind);
+  if (picked.kind === 'warn') sfxDisaster();
+  else sfxEvent();
+  stepEventsCooldown = 30;  // ~3 My min between events
+}
+
+function stepLife(W, dtY) {
+  var n = W.tiles.length;
+  var d = W.data;
+  var age = SIM.age;
+  var SEA = SIM.seaLevel;
+  // Vegetation growth per tile (requires plants stage)
+  var canVegetate = SIM.lifeStage >= 4;
+  var veg = d.vegetation;
+  var biomass = 0;
+  for (var i = 0; i < n; i++) {
+    var bi = d.biome[i];
+    var T = d.temperature[i];
+    var M = d.moisture[i];
+    var onLand = d.bedrock[i] > SEA;
+    var growable = canVegetate && onLand && T > 2 && T < 40 && M > 0.15 && bi >= 4 && bi <= 7;
+    var rate = growable ? 0.35 * (1 - veg[i]) * (M - 0.1) : 0;
+    var decay = (onLand && (T < -5 || T > 45)) ? 0.2 : 0.02;
+    veg[i] += (rate * dtY / 1e5) - (decay * veg[i] * dtY / 1e5);
+    veg[i] = clamp(veg[i], 0, 1);
+    if (onLand) biomass += veg[i];
+  }
+  SIM.biomass = biomass / n;
+
+  // Stage advancement
+  var st = SIM.lifeStage;
+  var anyLiquid = (SIM.globalTemp > 0 && SIM.globalTemp < 55);
+  var tryAdvance = function(to, desc) {
+    if (st < to) {
+      SIM.lifeStage = to;
+      notifyEvent(desc, 'good');
+    }
+  };
+  if (st === 0 && anyLiquid && age > 0.5) tryAdvance(1, 'Prokaryotes emerge in the primordial seas.');
+  if (st === 1 && SIM.o2 > 0.003 && age > 2.0) tryAdvance(2, 'Eukaryotes appear &mdash; cells within cells.');
+  if (st === 2 && SIM.o2 > 0.03 && age > 2.7) tryAdvance(3, 'Multicellular life proliferates.');
+  if (st === 3 && SIM.o2 > 0.12 && age > 3.5 && SIM.landFrac > 0.15) tryAdvance(4, 'Plants colonize the land.');
+  if (st === 4 && age > 4.0 && SIM.vegFrac > 0.08) tryAdvance(5, 'Animals diversify across the continents.');
+  if (st === 5 && age > 4.4 && Math.abs(SIM.globalTemp - 14) < 12) tryAdvance(6, 'A sapient species is born.');
+  if (st === 6 && age > 4.52) tryAdvance(7, 'Civilization rises.');
+
+  // Extinctions on extreme conditions
+  if ((SIM.globalTemp > 55 || SIM.globalTemp < -25) && SIM.lifeStage > 0 && Math.random() < 0.001) {
+    SIM.lifeStage = Math.max(1, SIM.lifeStage - 2);
+    notifyEvent('Mass extinction event!', 'warn');
+  }
+}
+
+// =============================================================
+// One simulation tick
+// =============================================================
+function simStep() {
+  var dtY = SIM_DT_YEARS;
+  SIM.year += dtY;
+  SIM.age += dtY / 1e9;
+  stepTectonics(WORLD, dtY);
+  stepClimate(WORLD, dtY);
+  stepHydrology(WORLD, dtY);
+  stepBiomes(WORLD);
+  stepWildfires(WORLD, dtY);
+  stepGlobal(WORLD, dtY);
+  stepLife(WORLD, dtY);
+  stepEvents(dtY);
+  checkAchievements();
+  checkBanners();
+  if ((SIM.year % 10000000) === 0) recordHistory();
+}
+
+// Full-screen banner for dramatic state transitions. Each banner fires once per session/world.
+var BANNER_FLAGS = {};
+var lastBannerLifeStage = -1;
+function resetBannerFlags() { BANNER_FLAGS = {}; lastBannerLifeStage = -1; }
+function showBanner(title, text, kind) {
+  var el = document.getElementById('banner');
+  if (!el) return;
+  document.getElementById('bannerTitle').textContent = title;
+  document.getElementById('bannerText').innerHTML = text;
+  el.className = ''; if (kind) el.classList.add(kind);
+  el.classList.add('open');
+  sfxUnlock();
+  var dismiss = function() { el.classList.remove('open'); el.removeEventListener('click', dismiss); };
+  el.addEventListener('click', dismiss);
+  setTimeout(dismiss, 9000);
+}
+function checkBanners() {
+  if (!SIM) return;
+  if (lastBannerLifeStage < 0) lastBannerLifeStage = SIM.lifeStage;
+  if (SIM.lifeStage === 7 && !BANNER_FLAGS.civ) {
+    showBanner('CIVILIZATION', 'A thinking species shapes the world.', 'good');
+    BANNER_FLAGS.civ = true;
+  }
+  if (SIM.lifeStage < lastBannerLifeStage - 1 && !BANNER_FLAGS.extinct) {
+    showBanner('MASS EXTINCTION', 'Life on your planet has collapsed.', 'warn');
+    BANNER_FLAGS.extinct = true;
+  }
+  if (SIM.globalTemp > 65 && !BANNER_FLAGS.runaway) {
+    showBanner('RUNAWAY GREENHOUSE', 'Surface conditions no longer permit life.', 'warn');
+    BANNER_FLAGS.runaway = true;
+  }
+  if (SIM.iceFrac > 0.88 && !BANNER_FLAGS.snowball) {
+    showBanner('SNOWBALL EARTH', 'The entire surface has frozen.', 'warn');
+    BANNER_FLAGS.snowball = true;
+  }
+  lastBannerLifeStage = SIM.lifeStage;
+}
+
+function recordHistory() {
+  SIM.history.push({
+    age: SIM.age, temp: SIM.globalTemp, co2: SIM.co2, o2: SIM.o2,
+    ice: SIM.iceFrac, veg: SIM.vegFrac, life: SIM.lifeStage
+  });
+  if (SIM.history.length > 500) SIM.history.shift();
+}
+
+// =============================================================
+// Player tools
+// =============================================================
+function tilesInRadius(centerTile, radius) {
+  var out = [centerTile];
+  var visited = new Set(); visited.add(centerTile);
+  var frontier = [centerTile];
+  for (var step = 0; step < radius; step++) {
+    var next = [];
+    for (var k = 0; k < frontier.length; k++) {
+      var nbs = WORLD.tiles[frontier[k]].neighbors;
+      for (var j = 0; j < nbs.length; j++) {
+        if (!visited.has(nbs[j])) { visited.add(nbs[j]); out.push(nbs[j]); next.push(nbs[j]); }
+      }
+    }
+    frontier = next;
+  }
+  return out;
+}
+
+function applyBrush(centerTile, tool, radius) {
+  // Monolith is a single-tile, one-per-click action, not an area brush.
+  if (tool === 'monolith') {
+    if (!SIM.monoliths) SIM.monoliths = [];
+    if (SIM.monoliths.indexOf(centerTile) < 0) SIM.monoliths.push(centerTile);
+    buildMonolithGroup();
+    // Monoliths push life forward: each placement nudges to the next stage if prereqs met.
+    if (SIM.lifeStage < 7) {
+      var anyLand = SIM.landFrac > 0.05;
+      var anyLiquid = SIM.globalTemp > 0 && SIM.globalTemp < 55;
+      // Relax thresholds a bit — the monolith is a forcing function.
+      if (SIM.lifeStage === 0 && anyLiquid) SIM.lifeStage = 1;
+      else if (SIM.lifeStage === 1) { SIM.o2 = Math.max(SIM.o2, 0.004); SIM.lifeStage = 2; }
+      else if (SIM.lifeStage === 2) { SIM.o2 = Math.max(SIM.o2, 0.04);  SIM.lifeStage = 3; }
+      else if (SIM.lifeStage === 3 && anyLand) { SIM.o2 = Math.max(SIM.o2, 0.14); SIM.lifeStage = 4; }
+      else if (SIM.lifeStage === 4 && SIM.vegFrac > 0.02) SIM.lifeStage = 5;
+      else if (SIM.lifeStage === 5) SIM.lifeStage = 6;
+      else if (SIM.lifeStage === 6) SIM.lifeStage = 7;
+      notifyEvent('The monolith sings. Evolution quickens.', 'good');
+    }
+    return;
+  }
+
+  var area = tilesInRadius(centerTile, radius);
+  var d = WORLD.data;
+  for (var k = 0; k < area.length; k++) {
+    var i = area[k];
+    switch (tool) {
+      case 'raise':  d.bedrock[i] += 0.04; break;
+      case 'lower':  d.bedrock[i] -= 0.04; break;
+      case 'water':  d.bedrock[i] = Math.min(d.bedrock[i], SIM.seaLevel - 0.02); d.iceDepth[i] = 0; break;
+      case 'heat':   d.temperature[i] += 8; d.iceDepth[i] = Math.max(0, d.iceDepth[i] - 0.1); break;
+      case 'cool':   d.temperature[i] -= 8; d.iceDepth[i] += 0.05; break;
+      case 'grass':
+        if (d.bedrock[i] > SIM.seaLevel) d.vegetation[i] = Math.max(d.vegetation[i], 0.35);
+        break;
+      case 'forest':
+        if (d.bedrock[i] > SIM.seaLevel) d.vegetation[i] = Math.max(d.vegetation[i], 0.75);
+        break;
+      case 'jungle':
+        if (d.bedrock[i] > SIM.seaLevel && d.temperature[i] > 12) d.vegetation[i] = 1;
+        break;
+      case 'animals':
+        // animals raise local life pressure without painting the tile
+        break;
+      case 'deforest':
+        d.vegetation[i] = 0;
+        if (d.biome[i] >= 5 && d.biome[i] <= 7) d.biome[i] = 4;
+        break;
+      case 'factory':
+        d.vegetation[i] = Math.max(0, d.vegetation[i] - 0.35);
+        d.temperature[i] += 0.5;
+        break;
+      case 'meteor':
+        d.bedrock[i] -= 0.15;
+        d.temperature[i] -= 4;
+        d.vegetation[i] = 0;
+        break;
+      case 'volcano':
+        d.bedrock[i] += 0.10;
+        d.temperature[i] += 3;
+        SIM.co2 += 8;
+        break;
+    }
+  }
+  if (tool === 'meteor') {
+    SIM.globalTemp -= 2;
+    for (var i = 0; i < d.temperature.length; i++) d.temperature[i] -= 2;
+    notifyEvent('Meteor impact &mdash; global cooling.', 'warn');
+  } else if (tool === 'factory') {
+    // Industrial brush: local + a burst of global CO2 proportional to affected area
+    SIM.co2 += 8 * area.length / 100;
+    notifyEvent('Industrial activity &mdash; CO&#8322; rising.', 'warn');
+  } else if (tool === 'animals') {
+    if (SIM.lifeStage < 5 && SIM.vegFrac > 0.02) {
+      SIM.lifeStage = 5;
+      notifyEvent('Animals introduced.', 'good');
+    }
+  }
+}
+
+function disasterIceAge() {
+  var d = WORLD.data;
+  for (var i = 0; i < d.temperature.length; i++) d.temperature[i] -= 22;
+  SIM.sunLum *= 0.95;
+  notifyEvent('Ice age begins!', 'warn');
+}
+function disasterGreenhouse() {
+  SIM.co2 = Math.min(20000, SIM.co2 * 3 + 800);
+  notifyEvent('Runaway greenhouse forcing.', 'warn');
+}
+function disasterExtinction() {
+  if (SIM.lifeStage > 0) SIM.lifeStage = Math.max(1, SIM.lifeStage - 2);
+  var d = WORLD.data;
+  for (var i = 0; i < d.vegetation.length; i++) d.vegetation[i] *= 0.1;
+  notifyEvent('Mass extinction imposed.', 'warn');
+}
+function disasterReset() {
+  resetSim();
+  resetBannerFlags();
+  buildAndAttachWorld();
+}
+
+// =============================================================
+// Achievements: persistent (per-browser) milestones unlocked across runs.
+// Shown as gold toast in the event feed and listed in the help overlay.
+// =============================================================
+var ACHIEVEMENTS_KEY = 'simearth_achievements_v1';
+var ACHIEVEMENTS_STATE = {};
+try { ACHIEVEMENTS_STATE = JSON.parse(localStorage.getItem(ACHIEVEMENTS_KEY) || '{}'); } catch (e) {}
+
+var ACHIEVEMENTS = [
+  { id: 'spark',         name: 'Spark of Life',     desc: 'Prokaryotes emerge.',                 check: function(){ return SIM.lifeStage >= 1; } },
+  { id: 'eukaryotes',    name: 'Greater Cells',     desc: 'Eukaryotes appear.',                  check: function(){ return SIM.lifeStage >= 2; } },
+  { id: 'multicellular', name: 'Together',          desc: 'Multicellular life.',                 check: function(){ return SIM.lifeStage >= 3; } },
+  { id: 'plants',        name: 'Greener Pastures',  desc: 'Land plants colonize the continents.',check: function(){ return SIM.lifeStage >= 4; } },
+  { id: 'animals',       name: 'Animal Kingdom',    desc: 'Animals diversify.',                  check: function(){ return SIM.lifeStage >= 5; } },
+  { id: 'sapients',      name: 'Awakening',         desc: 'Sapience emerges.',                   check: function(){ return SIM.lifeStage >= 6; } },
+  { id: 'civilization',  name: 'Civilization',      desc: 'A thinking species shapes the world.',check: function(){ return SIM.lifeStage >= 7; } },
+  { id: 'snowball',      name: 'Snowball Earth',    desc: 'Survive a fully-glaciated planet.',   check: function(){ return SIM.iceFrac > 0.7; } },
+  { id: 'hothouse',      name: 'Hothouse',          desc: 'Reach a global mean of 35 \u00B0C.',  check: function(){ return SIM.globalTemp > 35; } },
+  { id: 'oxygen_rich',   name: 'Oxygen-Rich',       desc: 'Atmospheric O\u2082 exceeds 25%.',     check: function(){ return SIM.o2 > 0.25; } },
+  { id: 'methane_rich',  name: 'Methane Spike',     desc: 'CH\u2084 exceeds 5000 ppb.',           check: function(){ return SIM.ch4 > 5000; } },
+  { id: 'biome_octet',   name: 'Eight Biomes',      desc: 'All eight biomes present at once.',
+    check: function() {
+      if (!WORLD) return false;
+      var seen = 0, mask = 0, b = WORLD.data.biome;
+      for (var i = 0; i < b.length; i++) { var bit = 1 << b[i]; if (!(mask & bit)) { mask |= bit; seen++; if (seen === 8) return true; } }
+      return false;
+    } },
+  { id: 'monolith_5',    name: 'Black Pillars',     desc: 'Place 5 monoliths.',                  check: function(){ return (SIM.monoliths||[]).length >= 5; } },
+  { id: 'wildfires_500', name: 'Burning World',     desc: 'Witness 500 wildfires.',              check: function(){ return (SIM.firesEverLit||0) >= 500; } },
+  { id: 'deep_time',     name: 'Deep Time',         desc: 'Reach planet age 4.5 Gy.',            check: function(){ return SIM.age >= 4.5; } }
+];
+
+function checkAchievements() {
+  if (!SIM) return;
+  var anyNew = false;
+  for (var i = 0; i < ACHIEVEMENTS.length; i++) {
+    var a = ACHIEVEMENTS[i];
+    if (ACHIEVEMENTS_STATE[a.id]) continue;
+    try {
+      if (a.check()) {
+        ACHIEVEMENTS_STATE[a.id] = Date.now();
+        anyNew = true;
+        showAchievement(a);
+      }
+    } catch (e) { /* skip broken check */ }
+  }
+  if (anyNew) {
+    try { localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(ACHIEVEMENTS_STATE)); } catch (e) {}
+  }
+}
+
+function showAchievement(a) {
+  var feed = document.getElementById('eventFeed');
+  if (!feed) return;
+  var msg = document.createElement('div');
+  msg.className = 'event-msg achievement';
+  msg.innerHTML = '\u2605 ' + a.name + ' &mdash; <span style="opacity:.8;font-style:italic">' + a.desc + '</span>';
+  feed.appendChild(msg);
+  sfxUnlock();
+  setTimeout(function(){ if (msg.parentNode) msg.parentNode.removeChild(msg); }, 8000);
+}
+
+// =============================================================
+// Scenario presets — initial climate state snapshots. The underlying
+// terrain stays as-generated; only atmospheric / thermal / biotic state
+// is forced into the preset, then a few climate iterations let things settle.
+// =============================================================
+function applyScenario(name) {
+  if (!WORLD) return;
+  var d = WORLD.data, n = d.bedrock.length;
+  switch (name) {
+    case 'archean':
+      SIM.age = 0.6;
+      SIM.co2 = 3500; SIM.ch4 = 1200; SIM.o2 = 0.001;
+      SIM.sunOverride = 1.0;
+      SIM.co2Forcing = 0;
+      SIM.lifeStage = 0;
+      for (var i = 0; i < n; i++) {
+        d.temperature[i] = 35 - 20 * Math.pow(Math.sin(WORLD.tiles[i].lat), 2);
+        d.vegetation[i] = 0;
+        d.iceDepth[i] = 0;
+      }
+      break;
+    case 'modern':
+      SIM.age = 4.54;
+      SIM.co2 = 280; SIM.ch4 = 700; SIM.o2 = 0.21;
+      SIM.sunOverride = 1.0;
+      SIM.co2Forcing = 0;
+      SIM.lifeStage = 6;
+      for (var i = 0; i < n; i++) {
+        var lat = WORLD.tiles[i].lat;
+        d.temperature[i] = 22 - 44 * Math.pow(Math.sin(lat), 2) - Math.max(0, d.bedrock[i]) * 25;
+        if (Math.abs(lat) > 1.35) d.iceDepth[i] = 0.25;
+      }
+      break;
+    case 'bau2100':
+      SIM.age = 4.54;
+      SIM.co2 = 550; SIM.ch4 = 2500; SIM.o2 = 0.21;
+      SIM.sunOverride = 1.0;
+      SIM.co2Forcing = 40;
+      SIM.lifeStage = 7;
+      break;
+    case 'snowball':
+      SIM.co2 = 120; SIM.ch4 = 400; SIM.o2 = 0.02;
+      SIM.sunOverride = 0.90;
+      SIM.co2Forcing = 0;
+      SIM.lifeStage = Math.min(SIM.lifeStage, 1);
+      for (var i = 0; i < n; i++) {
+        d.temperature[i] = -35;
+        d.iceDepth[i] = d.bedrock[i] > SIM.seaLevel ? 0.45 : 0.1;
+        d.vegetation[i] = 0;
+      }
+      break;
+    case 'carbon':
+      SIM.age = 3.9;
+      SIM.co2 = 350; SIM.ch4 = 900; SIM.o2 = 0.30;  // high O2 -> easy wildfires
+      SIM.sunOverride = 1.0;
+      SIM.co2Forcing = 0;
+      SIM.lifeStage = 5;
+      for (var i = 0; i < n; i++) {
+        if (d.bedrock[i] > SIM.seaLevel && d.temperature[i] > 2 && d.moisture[i] > 0.28) d.vegetation[i] = 1;
+      }
+      break;
+    case 'venus':
+      SIM.co2 = 25000; SIM.ch4 = 200; SIM.o2 = 0.005;
+      SIM.sunOverride = 1.15;
+      SIM.co2Forcing = 0;
+      SIM.lifeStage = 0;
+      for (var i = 0; i < n; i++) {
+        d.temperature[i] = 350;
+        d.iceDepth[i] = 0; d.vegetation[i] = 0; d.moisture[i] = 0;
+      }
+      break;
+    case 'iceage':
+      SIM.age = 4.54;
+      SIM.co2 = 180; SIM.ch4 = 450; SIM.o2 = 0.21;
+      SIM.sunOverride = 0.98;
+      SIM.co2Forcing = 0;
+      SIM.lifeStage = 6;
+      for (var i = 0; i < n; i++) {
+        var lat = WORLD.tiles[i].lat;
+        d.temperature[i] = 10 - 50 * Math.pow(Math.sin(lat), 2);
+        if (Math.abs(lat) > 0.8) d.iceDepth[i] = 0.4;
+      }
+      break;
+  }
+  // Let the climate engine take a few settle steps so viewed state is self-consistent
+  for (var k = 0; k < 6; k++) {
+    stepClimate(WORLD, 100000);
+    stepHydrology(WORLD, 100000);
+  }
+  stepBiomes(WORLD);
+  computeRivers(WORLD);
+  updateMeshPositions();
+  recolorAll();
+  geometry.attributes.position.needsUpdate = true;
+  geometry.attributes.color.needsUpdate = true;
+  refreshAllUI();
+  notifyEvent('Scenario loaded: ' + name, 'good');
+}
+
+// =============================================================
+// Rendering
+// =============================================================
+// name / color / base albedo (before vegetation/ice overrides)
+var BIOMES = [
+  { name: 'Ocean',            color: [0.10, 0.22, 0.50], albedo: 0.08 },
+  { name: 'Ice',              color: [0.92, 0.96, 0.99], albedo: 0.62 },
+  { name: 'Tundra',           color: [0.62, 0.68, 0.60], albedo: 0.30 },
+  { name: 'Desert',           color: [0.86, 0.78, 0.50], albedo: 0.36 },
+  { name: 'Grassland',        color: [0.55, 0.70, 0.38], albedo: 0.24 },
+  { name: 'Taiga',            color: [0.22, 0.42, 0.28], albedo: 0.18 },
+  { name: 'Temperate Forest', color: [0.30, 0.55, 0.30], albedo: 0.17 },
+  { name: 'Tropical Forest',  color: [0.16, 0.42, 0.18], albedo: 0.15 }
+];
+
+function elevationColor(e) {
+  if (e <= 0) {
+    var t = clamp((e + 0.6) / 0.6, 0, 1);
+    return lerpRgb([0.02,0.04,0.16], [0.18,0.36,0.55], t);
+  }
+  if (e < 0.25) return lerpRgb([0.55,0.66,0.40], [0.45,0.55,0.30], e/0.25);
+  if (e < 0.55) return lerpRgb([0.55,0.45,0.30], [0.65,0.55,0.40], (e-0.25)/0.30);
+  if (e < 0.85) return lerpRgb([0.55,0.50,0.45], [0.78,0.74,0.70], (e-0.55)/0.30);
+  return lerpRgb([0.85,0.85,0.88], [1.0,1.0,1.0], Math.min(1,(e-0.85)/0.4));
+}
+function tempColor(t) {
+  var x = clamp((t + 40) / 85, 0, 1);
+  if (x < 0.5) return lerpRgb([0.18,0.28,0.72], [0.88,0.93,0.96], x*2);
+  return lerpRgb([0.88,0.93,0.96], [0.85,0.15,0.10], (x-0.5)*2);
+}
+function moistureColor(m) { return lerpRgb([0.85,0.78,0.55], [0.14,0.38,0.62], clamp(m,0,1)); }
+function vegColor(v) { return lerpRgb([0.62,0.54,0.38], [0.10,0.48,0.18], clamp(v,0,1)); }
+
+function hslToRgb(h, s, l) {
+  function f(n) { var k=(n+h*12)%12; return l - s*Math.min(l,1-l)*Math.max(-1,Math.min(Math.min(k-3,9-k),1)); }
+  return [f(0), f(8), f(4)];
+}
+var PLATE_COLORS = [];
+for (var i = 0; i < 32; i++) PLATE_COLORS.push(hslToRgb((i*137.508 % 360)/360, 0.55, 0.55));
+
+function colorForTile(i, mode, d) {
+  var eff = d.bedrock[i] + d.iceDepth[i];
+  var isOcean = eff <= SIM.seaLevel && d.iceDepth[i] < 0.02;
+  switch (mode) {
+    case 'elevation':
+      if (d.iceDepth[i] > 0.02) return [0.92, 0.95, 0.99];
+      return elevationColor(d.bedrock[i] - SIM.seaLevel);
+    case 'temperature':
+      var Tdisp = d.temperature[i];
+      if (SIM.showSeasons && WORLD && WORLD.tiles[i]) {
+        var amp = (SIM.axialTilt || 0.41) * 42;   // ~17 K swing at extreme latitudes
+        Tdisp += amp * Math.sin(SIM.seasonPhase || 0) * Math.sin(WORLD.tiles[i].lat);
+      }
+      return tempColor(Tdisp);
+    case 'moisture':    return moistureColor(d.moisture[i]);
+    case 'rivers':
+      if (isOcean) return [0.10, 0.22, 0.50];
+      if (d.iceDepth[i] > 0.02) return [0.92, 0.95, 0.99];
+      var elevBase = elevationColor(d.bedrock[i] - SIM.seaLevel);
+      var flow = d.riverFlow[i];
+      if (flow > 0.4) {
+        var intensity = clamp(Math.log(flow) / 5, 0, 0.9);
+        return lerpRgb(elevBase, [0.15, 0.55, 0.95], intensity);
+      }
+      return elevBase;
+    case 'biome':
+      if (d.iceDepth[i] > 0.02 && !isOcean) return BIOMES[1].color;
+      var bc = BIOMES[d.biome[i]].color;
+      if (!isOcean && d.vegetation[i] > 0.15) {
+        return lerpRgb(bc, [0.10, 0.42, 0.18], clamp(d.vegetation[i]*0.6, 0, 0.7));
+      }
+      return bc;
+    case 'plate':       return PLATE_COLORS[d.plates[i] % PLATE_COLORS.length];
+    case 'vegetation':
+      if (isOcean) return [0.10, 0.22, 0.50];
+      return vegColor(d.vegetation[i]);
+    case 'wind':
+      var tile = WORLD && WORLD.tiles[i];
+      if (!tile || !tile.wind) return [0.3, 0.3, 0.5];
+      var lon = tile.lon;
+      var eastHatWx = -Math.sin(lon), eastHatWz = Math.cos(lon);
+      var u = eastHatWx * tile.wind[0] + eastHatWz * tile.wind[2];
+      // Zonal color encoding: westerlies (u>0, west-to-east) blue, easterlies red, calm gray
+      var t = clamp((u + 1) / 2, 0, 1);
+      var base = lerpRgb([0.78, 0.30, 0.25], [0.22, 0.50, 0.85], t);
+      var sat = clamp(tile.windSpeed, 0.3, 1);
+      return lerpRgb([0.45, 0.48, 0.52], base, sat);
+  }
+  return [1,0,1];
+}
+
+function buildMeshTopology(tiles) {
+  // Per tile: ne top-face triangles + ne*2 skirt triangles (always allocated; emitted as degenerates when this tile is not the "higher" side).
+  var triCount = 0;
+  for (var i = 0; i < tiles.length; i++) triCount += tiles[i].verts.length * 3;
+  var positions = new Float32Array(triCount * 9);
+  var colors    = new Float32Array(triCount * 9);
+  var tileOfTri = new Int32Array(triCount);
+  var tileTriStart = new Int32Array(tiles.length);
+  var tileTriCount = new Int32Array(tiles.length);
+  var tileEdgeCount = new Int32Array(tiles.length);
+  var ti = 0;
+  for (var t = 0; t < tiles.length; t++) {
+    tileTriStart[t] = ti;
+    var ne = tiles[t].verts.length;
+    tileEdgeCount[t] = ne;
+    for (var i = 0; i < ne * 3; i++) tileOfTri[ti++] = t;
+    tileTriCount[t] = ti - tileTriStart[t];
+  }
+  return { positions: positions, colors: colors, tileOfTri: tileOfTri,
+           tileTriStart: tileTriStart, tileTriCount: tileTriCount,
+           tileEdgeCount: tileEdgeCount };
+}
+
+var ELEV_SCALE = 0.06;
+function tileRadius(t) {
+  var d = WORLD.data;
+  var elev = d.bedrock[t];
+  var ice = d.iceDepth[t];
+  var SEA = SIM.seaLevel;
+  var r = elev <= SEA ? 1 + SEA * ELEV_SCALE : 1 + elev * ELEV_SCALE;
+  if (ice > 0.02) r += ice * ELEV_SCALE * 0.5;
+  return r;
+}
+
+function updateMeshPositions() {
+  var tiles = WORLD.tiles, mesh = WORLD.mesh;
+  var pos = mesh.positions;
+  var n = tiles.length;
+  ensureBuffers(n);
+  var R = BUF.R;
+  for (var t = 0; t < n; t++) R[t] = tileRadius(t);
+  for (var t = 0; t < n; t++) {
+    var tile = tiles[t];
+    var r = R[t];
+    var c = tile.center;
+    var cx = c[0]*r, cy = c[1]*r, cz = c[2]*r;
+    var vs = tile.verts;
+    var ne = vs.length;
+    var en = tile.edgeNeighbor;
+    var start = mesh.tileTriStart[t];
+    // Top face (ne triangles)
+    for (var i = 0; i < ne; i++) {
+      var v0 = vs[i], v1 = vs[(i+1) % ne];
+      var off = (start + i) * 9;
+      pos[off+0]=cx;        pos[off+1]=cy;        pos[off+2]=cz;
+      pos[off+3]=v0[0]*r;   pos[off+4]=v0[1]*r;   pos[off+5]=v0[2]*r;
+      pos[off+6]=v1[0]*r;   pos[off+7]=v1[1]*r;   pos[off+8]=v1[2]*r;
+    }
+    // Skirts: 2 tris per edge, emitted only when this tile is strictly higher than neighbor (avoids coincident walls)
+    var skirtBase = start + ne;
+    for (var i = 0; i < ne; i++) {
+      var v0 = vs[i], v1 = vs[(i+1) % ne];
+      var nb = en[i];
+      var rN = nb >= 0 ? R[nb] : r;
+      var base = (skirtBase + i * 2) * 9;
+      if (r > rN + 1e-6) {
+        var v0ax=v0[0]*r, v0ay=v0[1]*r, v0az=v0[2]*r;
+        var v1ax=v1[0]*r, v1ay=v1[1]*r, v1az=v1[2]*r;
+        var v0bx=v0[0]*rN, v0by=v0[1]*rN, v0bz=v0[2]*rN;
+        var v1bx=v1[0]*rN, v1by=v1[1]*rN, v1bz=v1[2]*rN;
+        pos[base+0]=v0ax; pos[base+1]=v0ay; pos[base+2]=v0az;
+        pos[base+3]=v1ax; pos[base+4]=v1ay; pos[base+5]=v1az;
+        pos[base+6]=v1bx; pos[base+7]=v1by; pos[base+8]=v1bz;
+        pos[base+9]=v0ax; pos[base+10]=v0ay; pos[base+11]=v0az;
+        pos[base+12]=v1bx; pos[base+13]=v1by; pos[base+14]=v1bz;
+        pos[base+15]=v0bx; pos[base+16]=v0by; pos[base+17]=v0bz;
+      } else {
+        for (var k = 0; k < 18; k++) pos[base+k] = 0;
+      }
+    }
+  }
+}
+
+function recolorAll() {
+  var d = WORLD.data;
+  var mesh = WORLD.mesh;
+  var n = mesh.tileTriCount.length;
+  var colors = mesh.colors;
+  for (var t = 0; t < n; t++) {
+    var c = colorForTile(t, currentMode, d);
+    var r = c[0], g = c[1], b = c[2];
+    var start = mesh.tileTriStart[t];
+    var cnt = mesh.tileTriCount[t];
+    for (var i = 0; i < cnt; i++) {
+      var off = (start + i) * 9;
+      colors[off+0]=r; colors[off+1]=g; colors[off+2]=b;
+      colors[off+3]=r; colors[off+4]=g; colors[off+5]=b;
+      colors[off+6]=r; colors[off+7]=g; colors[off+8]=b;
+    }
+  }
+}
+
+// =============================================================
+// Three.js setup
+// =============================================================
+var renderer, scene, camera, threeMesh, geometry;
+var WORLD = null;
+var currentMode = 'elevation';
+var currentTool = 'info';
+var brushRadius = 3;
+var selectedTile = -1;
+var autoSpin = false;
+var outlineLine = null, outlineGeo = null;
+var hoverLine = null, hoverGeo = null;
+var hoverTile = -1;
+var plateArrows = null;
+var monolithGroup = null;
+var planetGroup = null;
+var auroraLines = null;
+var MONOLITH_H = 0.045;
+var starLayer = null, atmosphere = null;
+var frameCount = 0;
+
+function init() {
+  var canvas = document.getElementById('globeCanvas');
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight - 34);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x04060E);
+
+  camera = new THREE.PerspectiveCamera(40, window.innerWidth / (window.innerHeight - 34), 0.01, 400);
+  camera.position.set(0, 0, 3.4);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  var sun = new THREE.DirectionalLight(0xffffff, 0.85);
+  sun.position.set(5, 3, 4);
+  scene.add(sun);
+  var fill = new THREE.DirectionalLight(0x6080A0, 0.25);
+  fill.position.set(-3, -2, -4);
+  scene.add(fill);
+
+  addSpace();
+  addAtmosphereShell();
+  addCloudLayer();
+  // Planet group: rotates for the day-night cycle without moving cosmic background
+  planetGroup = new THREE.Group();
+  scene.add(planetGroup);
+  addAurora();
+
+  setTimeout(function() {
+    buildAndAttachWorld();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('statsPanel').style.display = '';
+    document.getElementById('lifePanel').style.display = '';
+    document.getElementById('viewPanel').style.display = '';
+    document.getElementById('toolPanel').style.display = '';
+    document.getElementById('infoPanel').style.display = '';
+    document.getElementById('legend').style.display = '';
+    document.getElementById('actionBar').style.display = 'flex';
+    setTimeout(function(){ document.getElementById('title').classList.add('fade'); }, 800);
+    setTimeout(function(){ document.getElementById('title').style.display = 'none'; }, 2200);
+  }, 30);
+
+  setupInput(canvas);
+  setupUI();
+  window.addEventListener('resize', onResize);
+  animate();
+}
+
+function buildAndAttachWorld() {
+  resetSim();
+  console.time('subdivide');
+  var sub = subdivide(32);
+  console.timeEnd('subdivide');
+  console.time('tiles');
+  var tiles = buildTiles(sub.verts, sub.faces);
+  console.timeEnd('tiles');
+  console.time('init-world');
+  var data = generateInitialWorld(tiles);
+  console.timeEnd('init-world');
+  var meshData = buildMeshTopology(tiles);
+  WORLD = { tiles: tiles, data: data, mesh: meshData };
+  // Initial climate/biome settle: run enough iterations that the first render
+  // shows equilibrium temperatures rather than the hot-initialization seed
+  for (var i = 0; i < 10; i++) {
+    stepClimate(WORLD, 100000);
+    stepHydrology(WORLD, 100000);
+  }
+  stepBiomes(WORLD);
+  computeRivers(WORLD);
+  updateMeshPositions();
+  recolorAll();
+
+  if (threeMesh) { planetGroup.remove(threeMesh); geometry.dispose(); }
+  geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(meshData.positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(meshData.colors, 3));
+  // flatShading derives per-face normals in the fragment shader via dFdx/dFdy,
+  // so we skip the expensive computeVertexNormals() entirely
+  var mat = new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.DoubleSide, flatShading: true, shininess: 6, specular: 0x222840 });
+  threeMesh = new THREE.Mesh(geometry, mat);
+  planetGroup.add(threeMesh);
+
+  if (!outlineLine) {
+    outlineGeo = new THREE.BufferGeometry();
+    outlineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(60), 3));
+    outlineLine = new THREE.LineLoop(outlineGeo, new THREE.LineBasicMaterial({ color: 0xFFD040 }));
+    outlineLine.visible = false;
+    planetGroup.add(outlineLine);
+  }
+  if (!hoverLine) {
+    hoverGeo = new THREE.BufferGeometry();
+    hoverGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(60), 3));
+    hoverLine = new THREE.LineLoop(hoverGeo, new THREE.LineBasicMaterial({ color: 0x60C0FF, transparent: true, opacity: 0.7 }));
+    hoverLine.visible = false;
+    planetGroup.add(hoverLine);
+  }
+  selectedTile = -1;
+  outlineLine.visible = false;
+
+  buildPlateArrows();
+  buildMonolithGroup();
+  refreshAllUI();
+}
+
+function buildPlateArrows() {
+  if (plateArrows) { planetGroup.remove(plateArrows); plateArrows = null; }
+  plateArrows = new THREE.Group();
+  var d = WORLD.data;
+  for (var k = 0; k < d.plateCount; k++) {
+    var pinfo = d.plateInfo[k];
+    var c = WORLD.tiles[pinfo.seedTile].center;
+    var v = vCross(pinfo.axis, c);
+    var sign = pinfo.rate < 0 ? -1 : 1;
+    v = vScale(vNorm(v), sign);
+    var origin = new THREE.Vector3(c[0]*1.10, c[1]*1.10, c[2]*1.10);
+    var color = pinfo.oceanic ? 0x60A0D0 : 0xFFD060;
+    var len = 0.10 + Math.abs(pinfo.rate) / 1.5e-9 * 0.03;
+    var arrow = new THREE.ArrowHelper(new THREE.Vector3(v[0], v[1], v[2]).normalize(), origin, len, color, len*0.35, len*0.22);
+    plateArrows.add(arrow);
+  }
+  plateArrows.visible = (currentMode === 'plate');
+  planetGroup.add(plateArrows);
+}
+
+function buildMonolithGroup() {
+  if (monolithGroup) { planetGroup.remove(monolithGroup); monolithGroup = null; }
+  monolithGroup = new THREE.Group();
+  planetGroup.add(monolithGroup);
+  if (!SIM.monoliths) return;
+  for (var i = 0; i < SIM.monoliths.length; i++) {
+    var ti = SIM.monoliths[i];
+    if (ti == null || ti < 0 || !WORLD.tiles[ti]) continue;
+    var tile = WORLD.tiles[ti];
+    var r = tileRadius(ti);
+    var mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.014, MONOLITH_H, 0.005),
+      new THREE.MeshPhongMaterial({ color: 0x020408, shininess: 180, specular: 0x99AACC })
+    );
+    var mid = vScale(tile.center, r + MONOLITH_H * 0.5);
+    mesh.position.set(mid[0], mid[1], mid[2]);
+    var n = new THREE.Vector3(tile.center[0], tile.center[1], tile.center[2]).normalize();
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
+    monolithGroup.add(mesh);
+  }
+}
+
+function updateMonolithPositions() {
+  if (!monolithGroup || !SIM.monoliths) return;
+  for (var i = 0; i < SIM.monoliths.length && i < monolithGroup.children.length; i++) {
+    var ti = SIM.monoliths[i];
+    var tile = WORLD.tiles[ti];
+    if (!tile) continue;
+    var r = tileRadius(ti);
+    var mid = vScale(tile.center, r + MONOLITH_H * 0.5);
+    monolithGroup.children[i].position.set(mid[0], mid[1], mid[2]);
+  }
+}
+
+// Realistic deep-space background as seen from near-Earth orbit:
+//   - a visible Sun disc with additive coronal halos, placed along the directional
+//     light vector so illumination and the rendered Sun agree
+//   - the Milky Way as a denser great-circle band of stars at ~27 degree tilt
+//   - a sparse, uniform bed of faint background stars
+var SPACE = { sun: null, sunHalo: null, milkyway: null, stars: null };
+
+function addSpace() {
+  var sunDir = vNorm([5, 3, 4]);       // shared with directional light
+  var sunDist = 95, sunR = 2.6;
+  var sunPos = new THREE.Vector3(sunDir[0]*sunDist, sunDir[1]*sunDist, sunDir[2]*sunDist);
+  var sunMesh = new THREE.Mesh(new THREE.SphereGeometry(sunR, 32, 24),
+    new THREE.MeshBasicMaterial({ color: 0xFFF4D0 }));
+  sunMesh.position.copy(sunPos);
+  scene.add(sunMesh);
+  SPACE.sun = sunMesh;
+  // Coronal halos (additive blending)
+  var haloSpecs = [ [3.8, 0.40, 0xFFE090], [6.2, 0.18, 0xFFD060], [11.0, 0.06, 0xFFB830] ];
+  for (var i = 0; i < haloSpecs.length; i++) {
+    var h = new THREE.Mesh(
+      new THREE.SphereGeometry(haloSpecs[i][0], 32, 24),
+      new THREE.MeshBasicMaterial({ color: haloSpecs[i][2], transparent: true,
+        opacity: haloSpecs[i][1], depthWrite: false, blending: THREE.AdditiveBlending })
+    );
+    h.position.copy(sunPos);
+    scene.add(h);
+    if (i === 0) SPACE.sunHalo = h;
+  }
+
+  // Milky Way band: Gaussian latitude density on a tilted great circle
+  var mwCount = 6000;
+  var mwPos = new Float32Array(mwCount * 3);
+  var mwCol = new Float32Array(mwCount * 3);
+  var tilt = 0.48, ct = Math.cos(tilt), st = Math.sin(tilt);
+  for (var i = 0; i < mwCount; i++) {
+    var theta = Math.random() * Math.PI * 2;
+    var y = ((Math.random() + Math.random() + Math.random() + Math.random()) - 2) * 0.09;
+    y += (Math.random() - 0.5) * 0.05;
+    y = clamp(y, -0.95, 0.95);
+    var rr = Math.sqrt(Math.max(0, 1 - y*y));
+    var x = rr * Math.cos(theta), z = rr * Math.sin(theta);
+    var y2 = y * ct - z * st, z2 = y * st + z * ct;
+    var R = 95;
+    mwPos[i*3]=x*R; mwPos[i*3+1]=y2*R; mwPos[i*3+2]=z2*R;
+    var inBand = Math.abs(y) < 0.07;
+    if (inBand)                    { mwCol[i*3]=1.00; mwCol[i*3+1]=0.92; mwCol[i*3+2]=0.78; }
+    else if (Math.random() < 0.20) { mwCol[i*3]=1.00; mwCol[i*3+1]=0.84; mwCol[i*3+2]=0.62; }
+    else if (Math.random() < 0.12) { mwCol[i*3]=0.80; mwCol[i*3+1]=0.88; mwCol[i*3+2]=1.00; }
+    else                           { mwCol[i*3]=0.94; mwCol[i*3+1]=0.94; mwCol[i*3+2]=0.98; }
+  }
+  var mwg = new THREE.BufferGeometry();
+  mwg.setAttribute('position', new THREE.BufferAttribute(mwPos, 3));
+  mwg.setAttribute('color',    new THREE.BufferAttribute(mwCol, 3));
+  SPACE.milkyway = new THREE.Points(mwg, new THREE.PointsMaterial({
+    size: 0.15, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.92 }));
+  scene.add(SPACE.milkyway);
+
+  // Galactic bulge: dim glow at the heart of the Milky Way band
+  var bulgeDir = [Math.cos(-1.1)*0.99, 0, Math.sin(-1.1)*0.99];  // arbitrary bright direction along the band
+  var by = 0, bz = bulgeDir[2];
+  var by2 = by * ct - bz * st, bz2 = by * st + bz * ct;
+  var bulge = new THREE.Mesh(new THREE.SphereGeometry(8.5, 24, 18),
+    new THREE.MeshBasicMaterial({ color: 0xFFDDAA, transparent: true, opacity: 0.10, depthWrite: false, blending: THREE.AdditiveBlending }));
+  bulge.position.set(bulgeDir[0]*95, by2*95, bz2*95);
+  scene.add(bulge);
+
+  // Sparse background stars
+  var bgCount = 1100;
+  var bgPos = new Float32Array(bgCount * 3);
+  for (var i = 0; i < bgCount; i++) {
+    var v = vNorm([Math.random()*2-1, Math.random()*2-1, Math.random()*2-1]);
+    var R2 = 140;
+    bgPos[i*3]=v[0]*R2; bgPos[i*3+1]=v[1]*R2; bgPos[i*3+2]=v[2]*R2;
+  }
+  var bgg = new THREE.BufferGeometry();
+  bgg.setAttribute('position', new THREE.BufferAttribute(bgPos, 3));
+  SPACE.stars = new THREE.Points(bgg, new THREE.PointsMaterial({
+    color: 0xE0E8F0, size: 0.08, sizeAttenuation: true, transparent: true, opacity: 0.55 }));
+  scene.add(SPACE.stars);
+}
+function addAtmosphereShell() {
+  var g = new THREE.SphereGeometry(1.06, 48, 32);
+  var m = new THREE.MeshBasicMaterial({ color: 0x4080D0, transparent: true, opacity: 0.06, side: THREE.BackSide, depthWrite: false });
+  atmosphere = new THREE.Mesh(g, m);
+  scene.add(atmosphere);
+}
+
+var clouds = null;
+var meteors = [];
+var cityLights = null;
+var lastCityBuildFrame = -1e9;
+
+function spawnMeteor() {
+  var start = vNorm([Math.random()*2-1, Math.random()*2-1, Math.random()*2-1]);
+  var R = 55;
+  start = vScale(start, R);
+  var dirRaw = vNorm([Math.random()*2-1, Math.random()*2-1, Math.random()*2-1]);
+  // project direction onto plane tangent to radial (so meteor sweeps across the sky, not radially)
+  var dotR = (dirRaw[0]*start[0] + dirRaw[1]*start[1] + dirRaw[2]*start[2]) / (R*R);
+  var dir = vNorm([dirRaw[0] - start[0]*dotR, dirRaw[1] - start[1]*dotR, dirRaw[2] - start[2]*dotR]);
+  var tail = 0.6;
+  var end = [start[0] + dir[0]*tail, start[1] + dir[1]*tail, start[2] + dir[2]*tail];
+  var pos = new Float32Array([start[0], start[1], start[2], end[0], end[1], end[2]]);
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  var mat = new THREE.LineBasicMaterial({ color: 0xFFF0C0, transparent: true, opacity: 1 });
+  var line = new THREE.Line(geo, mat);
+  scene.add(line);
+  meteors.push({ line: line, dir: dir, speed: 0.35 + Math.random()*0.3, life: 1.0 });
+}
+
+function animateMeteors() {
+  if (meteors.length < 3 && Math.random() < 0.003) spawnMeteor();
+  for (var i = meteors.length - 1; i >= 0; i--) {
+    var m = meteors[i];
+    m.life -= 0.022;
+    if (m.life <= 0) {
+      scene.remove(m.line);
+      m.line.geometry.dispose();
+      m.line.material.dispose();
+      meteors.splice(i, 1);
+      continue;
+    }
+    m.line.material.opacity = m.life;
+    var arr = m.line.geometry.attributes.position.array;
+    arr[3] += m.dir[0]*m.speed;
+    arr[4] += m.dir[1]*m.speed;
+    arr[5] += m.dir[2]*m.speed;
+    m.line.geometry.attributes.position.needsUpdate = true;
+  }
+}
+
+// Civilization city lights: tiny warm point lights on temperate, vegetated land tiles
+// once the lifeStage reaches 6 (sapients). Rebuilt occasionally because underlying
+// climate and vegetation shift over time.
+function rebuildCityLights() {
+  if (cityLights) {
+    planetGroup.remove(cityLights);
+    cityLights.geometry.dispose();
+    cityLights.material.dispose();
+    cityLights = null;
+  }
+  if (!WORLD || !SIM || SIM.lifeStage < 6) return;
+  var d = WORLD.data;
+  var n = d.bedrock.length;
+  var positions = [];
+  for (var i = 0; i < n; i++) {
+    var T = d.temperature[i], M = d.moisture[i];
+    if (d.bedrock[i] > SIM.seaLevel + 0.02 &&
+        d.iceDepth[i] < 0.03 &&
+        T > 5 && T < 28 &&
+        M > 0.20 &&
+        d.vegetation[i] > 0.20 &&
+        Math.random() < 0.35) {
+      var r = tileRadius(i) + 0.003;
+      var c = WORLD.tiles[i].center;
+      positions.push(c[0]*r, c[1]*r, c[2]*r);
+    }
+  }
+  if (!positions.length) return;
+  var pos = new Float32Array(positions);
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  var mat = new THREE.PointsMaterial({ color: 0xFFD880, size: 0.012, sizeAttenuation: true,
+    transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending });
+  cityLights = new THREE.Points(geo, mat);
+  planetGroup.add(cityLights);
+}
+
+// Polar aurora: two translucent rings at high latitudes that pulse with solar
+// activity (stronger when SIM.sunOverride > 1 or when solar flare events fire).
+function addAurora() {
+  auroraLines = new THREE.Group();
+  for (var p = 0; p < 2; p++) {
+    var sign = p === 0 ? 1 : -1;
+    for (var r = 0; r < 3; r++) {
+      var latRing = (70 + r * 4) * Math.PI / 180 * sign;
+      var segs = 128;
+      var pos = new Float32Array((segs + 1) * 3);
+      var R = 1.09 + r * 0.01;
+      for (var i = 0; i <= segs; i++) {
+        var a = (i / segs) * Math.PI * 2;
+        pos[i*3]   = R * Math.cos(latRing) * Math.cos(a);
+        pos[i*3+1] = R * Math.sin(latRing);
+        pos[i*3+2] = R * Math.cos(latRing) * Math.sin(a);
+      }
+      var geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      var col = r === 0 ? 0x80FFB0 : (r === 1 ? 0x40C0FF : 0xC080FF);
+      var mat = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false });
+      auroraLines.add(new THREE.Line(geo, mat));
+    }
+  }
+  planetGroup.add(auroraLines);
+}
+
+function addCloudLayer() {
+  // Procedural cloud texture drawn onto a 2D canvas, wrapped on a slightly-larger sphere
+  // and slowly rotated for drift. Cheap trick but reads as clouds from orbit distance.
+  var canvas = document.createElement('canvas');
+  canvas.width = 1024; canvas.height = 512;
+  var cx = canvas.getContext('2d');
+  cx.fillStyle = 'rgba(0,0,0,0)';
+  cx.fillRect(0, 0, canvas.width, canvas.height);
+  // Bands biased to mid-latitudes + ITCZ, plus scattered wisps.
+  for (var b = 0; b < 3; b++) {
+    var yCenter = canvas.height * (b === 0 ? 0.30 : b === 1 ? 0.50 : 0.70);
+    for (var i = 0; i < 220; i++) {
+      var x = Math.random() * canvas.width;
+      var y = yCenter + (Math.random() - 0.5) * 80;
+      var r = 14 + Math.random() * 32;
+      var a = 0.10 + Math.random() * 0.22;
+      var g1 = cx.createRadialGradient(x, y, 0, x, y, r);
+      g1.addColorStop(0, 'rgba(255,255,255,' + a + ')');
+      g1.addColorStop(1, 'rgba(255,255,255,0)');
+      cx.fillStyle = g1;
+      cx.beginPath(); cx.arc(x, y, r, 0, Math.PI * 2); cx.fill();
+    }
+  }
+  // A few scattered cells anywhere
+  for (var i = 0; i < 500; i++) {
+    var x = Math.random() * canvas.width;
+    var y = Math.random() * canvas.height;
+    var r = 4 + Math.random() * 18;
+    var a = 0.05 + Math.random() * 0.15;
+    cx.fillStyle = 'rgba(255,255,255,' + a + ')';
+    cx.beginPath(); cx.arc(x, y, r, 0, Math.PI * 2); cx.fill();
+  }
+  var tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  var geo = new THREE.SphereGeometry(1.085, 64, 40);
+  var mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.55, depthWrite: false });
+  clouds = new THREE.Mesh(geo, mat);
+  scene.add(clouds);
+}
+
+function onResize() {
+  var w = window.innerWidth, h = window.innerHeight - 34;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+// ---------- Input ----------
+var camYaw = 0, camPitch = 0.35, camDist = 3.4;
+var dragging = false, lastX = 0, lastY = 0, dragDX = 0, dragDY = 0;
+
+function setupInput(canvas) {
+  canvas.addEventListener('mousedown', function(e) {
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    dragDX = 0; dragDY = 0;
+    canvas.classList.add('dragging');
+  });
+  window.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    var dx = e.clientX - lastX, dy = e.clientY - lastY;
+    dragDX += Math.abs(dx); dragDY += Math.abs(dy);
+    camYaw -= dx * 0.005;
+    camPitch += dy * 0.005;
+    camPitch = clamp(camPitch, -1.45, 1.45);
+    lastX = e.clientX; lastY = e.clientY;
+    updateCamera();
+  });
+  window.addEventListener('mouseup', function() {
+    dragging = false;
+    canvas.classList.remove('dragging');
+  });
+  canvas.addEventListener('click', function(e) {
+    if (!WORLD || threeMesh == null) return;
+    if (dragDX > 4 || dragDY > 4) return;
+    var rect = canvas.getBoundingClientRect();
+    var ndc = new THREE.Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
+    );
+    var rc = new THREE.Raycaster();
+    rc.setFromCamera(ndc, camera);
+    var hits = rc.intersectObject(threeMesh);
+    if (!hits.length) return;
+    var ti = WORLD.mesh.tileOfTri[hits[0].faceIndex];
+    if (currentTool === 'info') {
+      selectedTile = ti;
+      updateInfoPanel();
+      drawSelectedOutline();
+    } else {
+      applyBrush(ti, currentTool, brushRadius);
+      stepBiomes(WORLD);
+      updateMeshPositions();
+      recolorAll();
+      geometry.attributes.position.needsUpdate = true;
+      geometry.attributes.color.needsUpdate = true;
+      refreshAllUI();
+    }
+  });
+  // Throttled mousemove raycast for hover highlight. At 184K triangles raycasting every
+  // mousemove would burn frames, so we cap to ~12 Hz and skip while dragging.
+  var lastHover = 0;
+  canvas.addEventListener('mousemove', function(e) {
+    if (dragging || !WORLD || !threeMesh || !hoverLine) return;
+    if (!SETTINGS.hover) return;
+    var now = performance.now();
+    if (now - lastHover < 85) return;
+    lastHover = now;
+    var rect = canvas.getBoundingClientRect();
+    var ndc = new THREE.Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
+    );
+    var rc = new THREE.Raycaster();
+    rc.setFromCamera(ndc, camera);
+    var hits = rc.intersectObject(threeMesh);
+    if (hits.length) {
+      var ti = WORLD.mesh.tileOfTri[hits[0].faceIndex];
+      if (ti !== hoverTile) {
+        hoverTile = ti;
+        drawTileOutline(hoverTile, hoverGeo, hoverLine);
+      }
+    } else if (hoverTile !== -1) {
+      hoverTile = -1;
+      hoverLine.visible = false;
+    }
+  });
+  canvas.addEventListener('mouseleave', function() {
+    hoverTile = -1;
+    if (hoverLine) hoverLine.visible = false;
+  });
+  canvas.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    camDist *= e.deltaY > 0 ? 1.1 : (1/1.1);
+    camDist = clamp(camDist, 1.25, 8);
+    updateCamera();
+  }, { passive: false });
+  // touch
+  var tp = null;
+  canvas.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) { tp = { x: e.touches[0].clientX, y: e.touches[0].clientY }; dragDX = 0; dragDY = 0; }
+  });
+  canvas.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 1 && tp) {
+      var dx = e.touches[0].clientX - tp.x, dy = e.touches[0].clientY - tp.y;
+      dragDX += Math.abs(dx); dragDY += Math.abs(dy);
+      camYaw -= dx * 0.005; camPitch += dy * 0.005;
+      camPitch = clamp(camPitch, -1.45, 1.45);
+      tp.x = e.touches[0].clientX; tp.y = e.touches[0].clientY;
+      updateCamera();
+      e.preventDefault();
+    }
+  }, { passive: false });
+  canvas.addEventListener('touchend', function() { tp = null; });
+  updateCamera();
+}
+
+function updateCamera() {
+  var cp = Math.cos(camPitch), sp = Math.sin(camPitch);
+  var cy = Math.cos(camYaw), sy = Math.sin(camYaw);
+  camera.position.set(camDist*cp*sy, camDist*sp, camDist*cp*cy);
+  camera.lookAt(0, 0, 0);
+}
+
+function drawTileOutline(tileIdx, geo, line) {
+  if (tileIdx < 0 || !WORLD) { if (line) line.visible = false; return; }
+  var tile = WORLD.tiles[tileIdx];
+  var arr = geo.attributes.position.array;
+  var n = tile.verts.length;
+  var d = WORLD.data;
+  var elev = d.bedrock[tileIdx];
+  var ice = d.iceDepth[tileIdx];
+  var r = elev <= SIM.seaLevel ? 1 + SIM.seaLevel * ELEV_SCALE : 1 + elev * ELEV_SCALE;
+  if (ice > 0.02) r += ice * ELEV_SCALE * 0.5;
+  r *= 1.008;
+  for (var i = 0; i < n; i++) {
+    var v = vScale(tile.verts[i], r);
+    arr[i*3]=v[0]; arr[i*3+1]=v[1]; arr[i*3+2]=v[2];
+  }
+  geo.setDrawRange(0, n);
+  geo.attributes.position.needsUpdate = true;
+  line.visible = true;
+}
+
+function drawSelectedOutline() {
+  if (selectedTile < 0 || !WORLD) { outlineLine.visible = false; return; }
+  drawTileOutline(selectedTile, outlineGeo, outlineLine);
+  outlineLine.visible = true;
+}
+
+// ---------- UI ----------
+function setupUI() {
+  document.querySelectorAll('.view-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.view-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentMode = btn.dataset.view;
+      if (WORLD) { recolorAll(); geometry.attributes.color.needsUpdate = true; }
+      if (plateArrows) plateArrows.visible = (currentMode === 'plate');
+      buildLegend();
+    });
+  });
+  document.querySelectorAll('.tool-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tool-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentTool = btn.dataset.tool;
+      var canvas = document.getElementById('globeCanvas');
+      if (currentTool === 'info') canvas.classList.remove('brushing');
+      else canvas.classList.add('brushing');
+    });
+  });
+  document.querySelectorAll('.speed-btn[data-speed]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.speed-btn[data-speed]').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      SIM.speed = parseInt(btn.dataset.speed, 10);
+    });
+  });
+  document.getElementById('btnSpin').addEventListener('click', function(e) {
+    autoSpin = !autoSpin;
+    e.currentTarget.style.color = autoSpin ? '#FFD040' : '#B0C8E0';
+  });
+  var br = document.getElementById('brushRadius');
+  var bl = document.getElementById('brushLabel');
+  br.addEventListener('input', function() { brushRadius = parseInt(br.value, 10); bl.textContent = brushRadius; });
+  var sunSl = document.getElementById('sunSlider');
+  var sunLb = document.getElementById('sunLabel');
+  if (sunSl) sunSl.addEventListener('input', function() {
+    SIM.sunOverride = parseInt(sunSl.value, 10) / 100;
+    sunLb.textContent = SIM.sunOverride.toFixed(2);
+  });
+  var co2Sl = document.getElementById('co2Slider');
+  var co2Lb = document.getElementById('co2Label');
+  if (co2Sl) co2Sl.addEventListener('input', function() {
+    SIM.co2Forcing = parseInt(co2Sl.value, 10);
+    co2Lb.textContent = SIM.co2Forcing + ' ppm/step';
+  });
+  var tiltSl = document.getElementById('tiltSlider');
+  var tiltLb = document.getElementById('tiltLabel');
+  if (tiltSl) tiltSl.addEventListener('input', function() {
+    var deg = parseInt(tiltSl.value, 10);
+    SIM.axialTilt = deg * Math.PI / 180;
+    tiltLb.textContent = deg + '\u00B0';
+  });
+  var seasonCb = document.getElementById('seasonToggle');
+  if (seasonCb) seasonCb.addEventListener('change', function() {
+    SIM.showSeasons = seasonCb.checked;
+  });
+  var scn = document.getElementById('scenarioSelect');
+  if (scn) scn.addEventListener('change', function() {
+    if (!scn.value) return;
+    applyScenario(scn.value);
+    scn.value = '';  // reset dropdown after apply
+  });
+  syncSliderUI();
+  document.getElementById('disIceAge').addEventListener('click', disasterIceAge);
+  document.getElementById('disGreenhouse').addEventListener('click', disasterGreenhouse);
+  document.getElementById('disExtinct').addEventListener('click', disasterExtinction);
+  document.getElementById('disReset').addEventListener('click', disasterReset);
+  window.addEventListener('keydown', handleKey);
+}
+
+var lastNonZeroSpeed = 1;
+var VIEW_ORDER = ['elevation','temperature','moisture','rivers','wind','biome','plate','vegetation'];
+function handleKey(e) {
+  var tag = (e.target.tagName || '').toUpperCase();
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.metaKey || e.ctrlKey || e.altKey) return;
+  var k = e.key;
+  if (k === ' ') {
+    e.preventDefault();
+    if (SIM.speed !== 0) { lastNonZeroSpeed = SIM.speed; setSpeed(0); }
+    else { setSpeed(lastNonZeroSpeed || 1); }
+  } else if (k >= '1' && k <= '5') {
+    setSpeed(parseInt(k, 10) - 1);
+  } else if (k === 'v' || k === 'V') {
+    var idx = VIEW_ORDER.indexOf(currentMode);
+    setViewMode(VIEW_ORDER[(idx + 1) % VIEW_ORDER.length]);
+  } else if (k === 'm' || k === 'M') {
+    document.getElementById('btnMusic').click();
+  } else if (k === 's' || k === 'S') {
+    document.getElementById('btnSpin').click();
+  } else if (k === 'r' || k === 'R') {
+    disasterReset();
+  } else if (k === '?' || k === '/') {
+    toggleHelp(true);
+  } else if (k === 'Escape') {
+    var helpEl = document.getElementById('helpOverlay');
+    var setEl  = document.getElementById('settingsPanel');
+    var bnEl   = document.getElementById('banner');
+    if (helpEl && helpEl.classList.contains('open')) { toggleHelp(false); return; }
+    if (setEl && setEl.classList.contains('open'))   { toggleSettings(false); return; }
+    if (bnEl && bnEl.classList.contains('open'))     { bnEl.classList.remove('open'); return; }
+    openMainMenu();
+  }
+}
+
+function toggleHelp(open) {
+  var el = document.getElementById('helpOverlay');
+  if (!el) return;
+  var shouldOpen = (open === undefined) ? !el.classList.contains('open') : !!open;
+  el.classList.toggle('open', shouldOpen);
+  if (shouldOpen) renderAchievementsList();
+}
+
+function renderAchievementsList() {
+  var div = document.getElementById('helpAchievements');
+  if (!div) return;
+  var earned = 0;
+  var html = '<ul>';
+  for (var i = 0; i < ACHIEVEMENTS.length; i++) {
+    var a = ACHIEVEMENTS[i];
+    var got = !!ACHIEVEMENTS_STATE[a.id];
+    if (got) earned++;
+    html += '<li style="opacity:' + (got ? 1 : 0.42) + '">'
+         + (got ? '<span style="color:#FFD040">\u2605</span> ' : '<span style="color:#3A4858">\u2606</span> ')
+         + '<b>' + a.name + '</b> &mdash; <span style="color:#6080A0">' + a.desc + '</span></li>';
+  }
+  html += '</ul>';
+  html = '<div style="color:#6080A0;font-size:0.85em;margin-bottom:6px">' + earned + ' / ' + ACHIEVEMENTS.length + ' unlocked</div>' + html;
+  div.innerHTML = html;
+}
+function setSpeed(s) {
+  SIM.speed = s;
+  if (s !== 0) lastNonZeroSpeed = s;
+  document.querySelectorAll('.speed-btn[data-speed]').forEach(function(b) {
+    b.classList.toggle('active', parseInt(b.dataset.speed, 10) === s);
+  });
+}
+function setViewMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.view-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.view === mode);
+  });
+  if (WORLD) { recolorAll(); geometry.attributes.color.needsUpdate = true; }
+  if (plateArrows) plateArrows.visible = (currentMode === 'plate');
+  buildLegend();
+}
+
+function syncSliderUI() {
+  var sunSl = document.getElementById('sunSlider');
+  var sunLb = document.getElementById('sunLabel');
+  var co2Sl = document.getElementById('co2Slider');
+  var co2Lb = document.getElementById('co2Label');
+  var tiltSl = document.getElementById('tiltSlider');
+  var tiltLb = document.getElementById('tiltLabel');
+  var seasonCb = document.getElementById('seasonToggle');
+  if (sunSl && SIM.sunOverride != null) { sunSl.value = Math.round(SIM.sunOverride * 100); sunLb.textContent = SIM.sunOverride.toFixed(2); }
+  if (co2Sl && SIM.co2Forcing != null)  { co2Sl.value = SIM.co2Forcing; co2Lb.textContent = SIM.co2Forcing + ' ppm/step'; }
+  if (tiltSl && SIM.axialTilt != null)  { var deg = Math.round(SIM.axialTilt * 180 / Math.PI); tiltSl.value = deg; tiltLb.textContent = deg + '\u00B0'; }
+  if (seasonCb) seasonCb.checked = !!SIM.showSeasons;
+}
+
+function refreshAllUI() {
+  updateStats();
+  updateLifePanel();
+  updateInfoPanel();
+  updateYearDisplay();
+  drawHistory();
+  buildLegend();
+  syncSliderUI();
+}
+
+function drawHistory() {
+  var c = document.getElementById('histChart');
+  if (!c) return;
+  var ctx = c.getContext('2d');
+  var W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+  var h = SIM.history;
+  if (h.length < 2) return;
+  var pad = 2;
+  var ageMax = Math.max(SIM.age, 0.5);
+  // reference grid: freezing line and 14°C comfort line for temperature
+  ctx.strokeStyle = '#0E1A30'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (var g = 1; g < 5; g++) {
+    var gx = pad + (g/5) * (W - 2*pad);
+    ctx.moveTo(gx, pad); ctx.lineTo(gx, H - pad);
+  }
+  ctx.stroke();
+  function drawLine(getVal, vMin, vMax, color) {
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.2;
+    for (var i = 0; i < h.length; i++) {
+      var x = pad + (h[i].age / ageMax) * (W - 2*pad);
+      var v = clamp((getVal(h[i]) - vMin) / (vMax - vMin), 0, 1);
+      var y = H - pad - v * (H - 2*pad);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  drawLine(function(s){ return s.temp; },            -20, 40,  '#FF9060');  // T
+  drawLine(function(s){ return s.o2 * 100; },         0,  30,  '#80D080');  // O2 %
+  drawLine(function(s){ return Math.log10(s.co2); },  1.8, 4.3, '#D0A060'); // log CO2
+  drawLine(function(s){ return s.ice; },              0,  0.7, '#80B0FF');  // ice frac
+}
+
+function updateStats() {
+  if (!WORLD) return;
+  var d = WORLD.data;
+  var n = d.bedrock.length;
+  document.getElementById('stTiles').textContent = n.toLocaleString();
+  document.getElementById('stLand').textContent = (100*SIM.landFrac).toFixed(1) + '%';
+  var sl = (SIM.seaLevel * 5000).toFixed(0);
+  document.getElementById('stSea').textContent = (sl >= 0 ? '+' : '') + sl + ' m';
+  var tEl = document.getElementById('stTemp');
+  tEl.textContent = SIM.globalTemp.toFixed(1) + ' \u00B0C';
+  tEl.className = SIM.globalTemp > 28 ? 'hot' : (SIM.globalTemp < 0 ? 'cold' : '');
+  document.getElementById('stCO2').textContent = SIM.co2.toFixed(0) + ' ppm';
+  var ch4El = document.getElementById('stCH4');
+  ch4El.textContent = SIM.ch4.toFixed(0) + ' ppb';
+  ch4El.className = SIM.ch4 > 2500 ? 'hot' : '';
+  document.getElementById('stH2O').textContent = SIM.h2o.toFixed(2) + ' \u00D7';
+  document.getElementById('stO2').textContent = (SIM.o2 * 100).toFixed(2) + '%';
+  document.getElementById('stSun').textContent = (SIM.sunLum * 100).toFixed(1) + '%';
+  document.getElementById('stIce').textContent = (100*SIM.iceFrac).toFixed(1) + '%';
+  var firesEl = document.getElementById('stFires');
+  firesEl.textContent = SIM.fireCount + (SIM.firesEverLit > 0 ? ' (' + SIM.firesEverLit + ' total)' : '');
+  firesEl.className = SIM.fireCount > 50 ? 'hot' : '';
+  document.getElementById('stPlates').textContent = d.plateCount;
+  document.getElementById('stSeed').textContent = WORLD_SEED || 'random';
+}
+
+function updateLifePanel() {
+  var s = STAGES[SIM.lifeStage];
+  document.getElementById('lifeName').textContent = s.name;
+  document.getElementById('lifeDesc').textContent = s.desc;
+  document.getElementById('lifeMass').textContent = (SIM.biomass*100).toFixed(2) + '%';
+  document.getElementById('lifeVeg').textContent = (SIM.vegFrac*100).toFixed(1) + '%';
+  var dots = document.getElementById('stageDots');
+  var html = '';
+  for (var i = 1; i < STAGES.length; i++) {
+    var cls = 'stage-dot';
+    if (SIM.lifeStage > i) cls += ' done';
+    else if (SIM.lifeStage === i) cls += ' current';
+    html += '<div class="'+cls+'" title="'+STAGES[i].name+'"></div>';
+  }
+  dots.innerHTML = html;
+}
+
+function updateInfoPanel() {
+  var div = document.getElementById('tileInfo');
+  if (selectedTile < 0 || !WORLD) { div.innerHTML = 'Click any tile.<br><span style="color:#6080A0">Use TOOLS to sculpt the world.</span>'; return; }
+  var t = WORLD.tiles[selectedTile];
+  var d = WORLD.data;
+  var elev = d.bedrock[selectedTile];
+  var elevM = ((elev - SIM.seaLevel) * (elev > SIM.seaLevel ? 4500 : 5500)).toFixed(0);
+  div.innerHTML =
+    '<div class="row"><span>Lat/Lon</span><b>' + (t.lat*180/Math.PI).toFixed(1) + '\u00B0, ' + (t.lon*180/Math.PI).toFixed(1) + '\u00B0</b></div>' +
+    '<div class="row"><span>Elevation</span><b>' + elevM + ' m</b></div>' +
+    '<div class="row"><span>Ice</span><b>' + (d.iceDepth[selectedTile]*4000).toFixed(0) + ' m</b></div>' +
+    '<div class="row"><span>Temp</span><b>' + d.temperature[selectedTile].toFixed(1) + ' \u00B0C</b></div>' +
+    '<div class="row"><span>Moisture</span><b>' + (d.moisture[selectedTile]*100).toFixed(0) + '%</b></div>' +
+    '<div class="row"><span>Biome</span><b>' + BIOMES[d.biome[selectedTile]].name + '</b></div>' +
+    '<div class="row"><span>Vegetation</span><b>' + (d.vegetation[selectedTile]*100).toFixed(0) + '%</b></div>' +
+    '<div class="row"><span>Plate</span><b>#' + d.plates[selectedTile] + (d.plateInfo[d.plates[selectedTile]].oceanic ? ' (ocean)' : ' (cont)') + '</b></div>' +
+    '<div class="row"><span>River flow</span><b>' + d.riverFlow[selectedTile].toFixed(1) + '</b></div>' +
+    '<div class="row"><span>Precip</span><b>' + ((BUF.Precip ? BUF.Precip[selectedTile] : 0) * 100).toFixed(2) + '</b></div>' +
+    '<div class="row"><span>Wind</span><b>' + (WORLD.tiles[selectedTile].windSpeed * 60).toFixed(1) + ' kph</b></div>';
+}
+
+function updateYearDisplay() {
+  var yr = SIM.year;
+  var label;
+  if (yr >= 1e9) label = (yr/1e9).toFixed(2) + ' Gy';
+  else if (yr >= 1e6) label = (yr/1e6).toFixed(1) + ' My';
+  else if (yr >= 1e3) label = (yr/1e3).toFixed(1) + ' Ky';
+  else label = yr.toFixed(0) + ' y';
+  document.getElementById('yrVal').textContent = label;
+  document.getElementById('ageVal').textContent = SIM.age.toFixed(2) + ' Gy';
+}
+
+function buildLegend() {
+  var div = document.getElementById('legendBody');
+  var html = '';
+  if (currentMode === 'biome') {
+    for (var i = 0; i < BIOMES.length; i++) {
+      var c = BIOMES[i].color;
+      var rgb = 'rgb(' + (c[0]*255|0) + ',' + (c[1]*255|0) + ',' + (c[2]*255|0) + ')';
+      html += '<div class="leg-row"><span class="swatch" style="background:' + rgb + '"></span>' + BIOMES[i].name + '</div>';
+    }
+  } else if (currentMode === 'elevation') {
+    html = '<div class="leg-row">abyss &rarr; shelf &rarr; plain &rarr; mountain &rarr; peak (ice caps in white)</div>';
+  } else if (currentMode === 'temperature') {
+    html = '<div class="leg-row">&minus;40 \u00B0C (deep blue) &rarr; +45 \u00B0C (red)</div>';
+  } else if (currentMode === 'moisture') {
+    html = '<div class="leg-row">arid (tan) &rarr; saturated (blue)</div>';
+  } else if (currentMode === 'rivers') {
+    html = '<div class="leg-row">elevation base + blue where runoff accumulates (steepest-descent flow)</div>';
+  } else if (currentMode === 'wind') {
+    html = '<div class="leg-row">easterly (red) &rarr; calm (gray) &rarr; westerly (blue) &mdash; 3-cell Hadley/Ferrel/polar</div>';
+  } else if (currentMode === 'plate') {
+    html = '<div class="leg-row">' + (WORLD ? WORLD.data.plateCount : 0) + ' plates &mdash; colors are arbitrary IDs</div>';
+  } else if (currentMode === 'vegetation') {
+    html = '<div class="leg-row">bare (tan) &rarr; lush (green)</div>';
+  }
+  div.innerHTML = html;
+}
+
+// ---------- Events feed ----------
+function notifyEvent(text, kind) {
+  var key = text.slice(0, 30);
+  if (SIM.lastEventYear[key] && SIM.year - SIM.lastEventYear[key] < 1e7) return;
+  SIM.lastEventYear[key] = SIM.year;
+  var feed = document.getElementById('eventFeed');
+  var msg = document.createElement('div');
+  msg.className = 'event-msg' + (kind === 'warn' ? ' warn' : (kind === 'good' ? ' good' : ''));
+  msg.innerHTML = text;
+  feed.appendChild(msg);
+  setTimeout(function(){ if (msg.parentNode) msg.parentNode.removeChild(msg); }, 6200);
+}
+
+// =============================================================
+// Animation + simulation loop
+// =============================================================
+var fpsBuf = [], fpsLast = 0;
+function tickFps(now) {
+  if (!fpsLast) { fpsLast = now; return; }
+  var dt = now - fpsLast; fpsLast = now;
+  if (dt <= 0 || dt > 500) return;
+  fpsBuf.push(1000 / dt);
+  if (fpsBuf.length > 60) fpsBuf.shift();
+  if (frameCount % 12 === 0) {
+    var sum = 0;
+    for (var i = 0; i < fpsBuf.length; i++) sum += fpsBuf[i];
+    var el = document.getElementById('fpsCounter');
+    if (el) el.textContent = (sum / fpsBuf.length).toFixed(0) + ' FPS';
+  }
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  frameCount++;
+  if (SETTINGS.fps) tickFps(performance.now());
+  var steps = STEPS_PER_FRAME[SIM.speed] || 0;
+  for (var s = 0; s < steps; s++) simStep();
+
+  if (steps > 0 && WORLD) {
+    // Heavy updates only a few times per second
+    if (frameCount % 4 === 0) {
+      updateMeshPositions();
+      geometry.attributes.position.needsUpdate = true;
+      updateMonolithPositions();
+      if (selectedTile >= 0) drawSelectedOutline();
+    }
+    if (frameCount % 2 === 0) {
+      recolorAll();
+      geometry.attributes.color.needsUpdate = true;
+    }
+    if (frameCount % 6 === 0) refreshAllUI();
+  }
+
+  // Seasons advance on real time so you can watch the planet breathe even while paused.
+  if (SIM && SIM.showSeasons) {
+    SIM.seasonPhase = (SIM.seasonPhase || 0) + 0.012;
+    if (SIM.seasonPhase > Math.PI * 2) SIM.seasonPhase -= Math.PI * 2;
+    if (WORLD && currentMode === 'temperature' && (frameCount % 3) === 0) {
+      recolorAll();
+      geometry.attributes.color.needsUpdate = true;
+    }
+  }
+
+  if (autoSpin) { camYaw -= 0.0013; updateCamera(); }
+  // Subtle atmosphere breathe + slow cloud drift + day-night planet rotation
+  if (atmosphere) atmosphere.material.opacity = 0.04 + 0.02 * (0.5 + 0.5 * Math.sin(frameCount * 0.01));
+  if (clouds) clouds.rotation.y += 0.0003;
+  if (planetGroup && SETTINGS.dayNight) planetGroup.rotation.y += 0.0009;
+  if (auroraLines && SETTINGS.aurora) {
+    var solarGain = (SIM && SIM.sunLum) ? clamp((SIM.sunLum - 0.95) * 5, -0.4, 1.2) : 0;
+    var pulse = 0.22 + 0.10 * Math.sin(frameCount * 0.02) + solarGain * 0.35;
+    pulse = clamp(pulse, 0.02, 0.85);
+    for (var i = 0; i < auroraLines.children.length; i++) {
+      auroraLines.children[i].material.opacity = pulse * (0.8 + 0.4 * Math.sin(frameCount * 0.015 + i));
+    }
+    auroraLines.visible = true;
+  } else if (auroraLines) {
+    auroraLines.visible = false;
+  }
+  if (SETTINGS.meteors) animateMeteors();
+  if (SETTINGS.cities && SIM && SIM.lifeStage >= 6 && (frameCount - lastCityBuildFrame) > 480) {
+    rebuildCityLights();
+    lastCityBuildFrame = frameCount;
+  } else if (SIM && SIM.lifeStage < 6 && cityLights) {
+    planetGroup.remove(cityLights); cityLights.geometry.dispose(); cityLights.material.dispose(); cityLights = null;
+  }
+  // Sun color tracks solar luminosity so the slider / faint-young-sun is visible.
+  if (SPACE.sun && SIM) {
+    var br = clamp(SIM.sunLum, 0.35, 1.8);
+    SPACE.sun.material.color.setRGB(1.0, 0.93 * Math.min(1, br), 0.78 * Math.min(1, br));
+    if (SPACE.sunHalo) SPACE.sunHalo.material.opacity = 0.25 * clamp(br, 0.4, 1.6);
+  }
+  renderer.render(scene, camera);
+}
+
+// =============================================================
+// Save / Load to LocalStorage (base64-encoded typed-array buffers)
+// =============================================================
+var SAVE_KEY = 'simearth_save_v1';      // legacy single-slot key, still read for compat
+var NUM_SAVE_SLOTS = 3;
+function slotKey(i) { return 'simearth_save_v1_slot_' + i; }
+function slotMeta(i) {
+  var raw = localStorage.getItem(slotKey(i));
+  if (!raw) return null;
+  try {
+    var p = JSON.parse(raw);
+    return {
+      age: (p.sim && p.sim.age) || 0,
+      stage: (p.sim && typeof p.sim.lifeStage === 'number') ? p.sim.lifeStage : 0,
+      temp: (p.sim && typeof p.sim.globalTemp === 'number') ? p.sim.globalTemp : 0,
+      seed: p.seed || '',
+      ts: p._ts || 0
+    };
+  } catch (e) { return null; }
+}
+function hasAnySaveSlot() {
+  for (var i = 0; i < NUM_SAVE_SLOTS; i++) if (localStorage.getItem(slotKey(i))) return true;
+  return !!localStorage.getItem(SAVE_KEY);
+}
+function mostRecentSlot() {
+  var best = -1, bestTs = 0;
+  for (var i = 0; i < NUM_SAVE_SLOTS; i++) {
+    var m = slotMeta(i);
+    if (m && m.ts > bestTs) { bestTs = m.ts; best = i; }
+  }
+  return best;
+}
+
+function arrToB64(typedArr) {
+  var bytes = new Uint8Array(typedArr.buffer, typedArr.byteOffset, typedArr.byteLength);
+  var bin = '', chunk = 8192;
+  for (var i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunk, bytes.length)));
+  }
+  return btoa(bin);
+}
+function b64ToArr(b64, Type) {
+  var bin = atob(b64);
+  var bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Type(bytes.buffer);
+}
+
+function saveWorld(slot) {
+  if (!WORLD) return;
+  var key = (slot != null) ? slotKey(slot) : SAVE_KEY;
+  var d = WORLD.data;
+  var payload = {
+    version: 1,
+    _ts: Date.now(),
+    seed: WORLD_SEED,
+    tileCount: d.bedrock.length,
+    sim: {
+      year: SIM.year, age: SIM.age, speed: SIM.speed, co2: SIM.co2, o2: SIM.o2,
+      seaLevel: SIM.seaLevel, sunLum: SIM.sunLum, lifeStage: SIM.lifeStage,
+      globalTemp: SIM.globalTemp, landFrac: SIM.landFrac, iceFrac: SIM.iceFrac,
+      vegFrac: SIM.vegFrac, biomass: SIM.biomass, history: SIM.history,
+      ch4: SIM.ch4, h2o: SIM.h2o, firesEverLit: SIM.firesEverLit,
+      monoliths: SIM.monoliths, sunOverride: SIM.sunOverride, co2Forcing: SIM.co2Forcing,
+      axialTilt: SIM.axialTilt, seasonPhase: SIM.seasonPhase, showSeasons: SIM.showSeasons,
+      geothermal: SIM.geothermal
+    },
+    plateInfo: d.plateInfo,
+    plateCount: d.plateCount,
+    bedrock:     arrToB64(d.bedrock),
+    iceDepth:    arrToB64(d.iceDepth),
+    temperature: arrToB64(d.temperature),
+    moisture:    arrToB64(d.moisture),
+    vegetation:  arrToB64(d.vegetation),
+    riverFlow:   arrToB64(d.riverFlow),
+    biome:       arrToB64(d.biome),
+    plates:      arrToB64(d.plates)
+  };
+  try {
+    localStorage.setItem(key, JSON.stringify(payload));
+    notifyEvent('Saved' + (slot != null ? ' to slot ' + (slot+1) : '') + ' (age ' + SIM.age.toFixed(2) + ' Gy).', 'good');
+  } catch (e) {
+    notifyEvent('Save failed: ' + e.message, 'warn');
+  }
+}
+
+function loadWorld(slot) {
+  var key = (slot != null) ? slotKey(slot) : (mostRecentSlot() >= 0 ? slotKey(mostRecentSlot()) : SAVE_KEY);
+  var raw = localStorage.getItem(key);
+  if (!raw) { notifyEvent('No saved world found.', 'warn'); return; }
+  if (!WORLD) { notifyEvent('Load failed: world not built yet.', 'warn'); return; }
+  try {
+    var p = JSON.parse(raw);
+    if (p.version !== 1) throw new Error('incompatible save version');
+    if (p.tileCount !== WORLD.data.bedrock.length) throw new Error('tile count mismatch');
+    var d = WORLD.data;
+    d.bedrock     = b64ToArr(p.bedrock,     Float32Array);
+    d.iceDepth    = b64ToArr(p.iceDepth,    Float32Array);
+    d.temperature = b64ToArr(p.temperature, Float32Array);
+    d.moisture    = b64ToArr(p.moisture,    Float32Array);
+    d.vegetation  = b64ToArr(p.vegetation,  Float32Array);
+    d.riverFlow   = b64ToArr(p.riverFlow,   Float32Array);
+    d.biome       = b64ToArr(p.biome,       Int8Array);
+    d.plates      = b64ToArr(p.plates,      Int16Array);
+    d.plateInfo   = p.plateInfo;
+    d.plateCount  = p.plateCount;
+    for (var k in p.sim) SIM[k] = p.sim[k];
+    SIM.lastEventYear = {};
+    setSpeed(SIM.speed);
+    stepBiomes(WORLD);
+    updateMeshPositions();
+    recolorAll();
+    geometry.attributes.position.needsUpdate = true;
+    geometry.attributes.color.needsUpdate = true;
+    buildPlateArrows();
+    buildMonolithGroup();
+    refreshAllUI();
+    notifyEvent('World loaded at ' + (SIM.age).toFixed(2) + ' Gy.', 'good');
+  } catch (e) {
+    notifyEvent('Load failed: ' + e.message, 'warn');
+  }
+}
+
+// =============================================================
+// Ambient music (Web Audio, fully procedural)
+// Slow sine drones + detuned sawtooth pad swells + pentatonic bell
+// motifs, routed through a synthesized convolver reverb.
+// =============================================================
+var AUDIO = { ctx: null, master: null, drones: [], bellTimer: 0, padTimer: 0, enabled: false, vol: 0.22 };
+
+// Synthesized one-shot SFX. Use the same AudioContext as the music; routed through
+// a separate gain so settings can scale SFX vol independently if needed.
+var SFX_GAIN = null;
+function ensureSfxBus() {
+  if (!AUDIO || !AUDIO.ctx) audioInit();
+  if (!AUDIO.ctx) return null;
+  if (AUDIO.ctx.state === 'suspended') AUDIO.ctx.resume();
+  if (!SFX_GAIN) {
+    SFX_GAIN = AUDIO.ctx.createGain();
+    SFX_GAIN.gain.value = 0.35;
+    SFX_GAIN.connect(AUDIO.ctx.destination);
+  }
+  return AUDIO.ctx;
+}
+function sfxClick() {
+  if (!SETTINGS.sfx) return;
+  var ctx = ensureSfxBus(); if (!ctx) return;
+  var t = ctx.currentTime;
+  var o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = 1200;
+  var g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(0.06, t + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+  o.connect(g); g.connect(SFX_GAIN);
+  o.start(t); o.stop(t + 0.06);
+}
+function sfxUnlock() {
+  if (!SETTINGS.sfx) return;
+  var ctx = ensureSfxBus(); if (!ctx) return;
+  var t = ctx.currentTime;
+  // Two-note bell chime (perfect fifth)
+  [880, 1318.5].forEach(function(f, i) {
+    var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+    var o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 2.01;
+    var g = ctx.createGain();
+    var start = t + i * 0.08;
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.linearRampToValueAtTime(0.18, start + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0005, start + 1.6);
+    var g2 = ctx.createGain();
+    g2.gain.setValueAtTime(0.0001, start);
+    g2.gain.linearRampToValueAtTime(0.06, start + 0.02);
+    g2.gain.exponentialRampToValueAtTime(0.0005, start + 0.9);
+    o.connect(g); o2.connect(g2);
+    g.connect(SFX_GAIN); g2.connect(SFX_GAIN);
+    o.start(start); o.stop(start + 1.8);
+    o2.start(start); o2.stop(start + 1.0);
+  });
+}
+function sfxDisaster() {
+  if (!SETTINGS.sfx) return;
+  var ctx = ensureSfxBus(); if (!ctx) return;
+  var t = ctx.currentTime;
+  // Low rumble: filtered noise burst
+  var bufLen = ctx.sampleRate * 1.2 | 0;
+  var buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+  var data = buf.getChannelData(0);
+  for (var i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufLen);
+  var src = ctx.createBufferSource(); src.buffer = buf;
+  var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 220; f.Q.value = 0.7;
+  var g = ctx.createGain(); g.gain.value = 0.5;
+  src.connect(f); f.connect(g); g.connect(SFX_GAIN);
+  src.start(t);
+}
+function sfxEvent() {
+  if (!SETTINGS.sfx) return;
+  var ctx = ensureSfxBus(); if (!ctx) return;
+  var t = ctx.currentTime;
+  // Soft "ping" — sine sweep
+  var o = ctx.createOscillator(); o.type = 'sine';
+  o.frequency.setValueAtTime(440, t);
+  o.frequency.exponentialRampToValueAtTime(660, t + 0.18);
+  var g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(0.10, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0005, t + 0.5);
+  o.connect(g); g.connect(SFX_GAIN);
+  o.start(t); o.stop(t + 0.6);
+}
+
+function audioInit() {
+  if (AUDIO.ctx) return;
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  var ctx = AUDIO.ctx = new AC();
+
+  var master = AUDIO.master = ctx.createGain();
+  master.gain.value = 0;
+
+  // Reverb: dry + wet mix
+  var conv = ctx.createConvolver();
+  var rate = ctx.sampleRate, len = (rate * 3.5)|0;
+  var ir = ctx.createBuffer(2, len, rate);
+  for (var ch = 0; ch < 2; ch++) {
+    var a = ir.getChannelData(ch);
+    for (var i = 0; i < len; i++) a[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 2.2);
+  }
+  conv.buffer = ir;
+  var wet = ctx.createGain(); wet.gain.value = 0.38;
+  var dry = ctx.createGain(); dry.gain.value = 0.75;
+  master.connect(dry); dry.connect(ctx.destination);
+  master.connect(conv); conv.connect(wet); wet.connect(ctx.destination);
+
+  // Continuous drone layers — slow breathing sines + a triangle octave.
+  var drones = [
+    { f: 65.41,  type: 'sine',     g: 0.11 },
+    { f: 98.00,  type: 'sine',     g: 0.08 },
+    { f: 130.81, type: 'triangle', g: 0.05 },
+    { f: 196.00, type: 'sine',     g: 0.04 }
+  ];
+  for (var i = 0; i < drones.length; i++) {
+    var d = drones[i];
+    var o1 = ctx.createOscillator(); o1.type = d.type; o1.frequency.value = d.f * (1 - 0.002);
+    var o2 = ctx.createOscillator(); o2.type = d.type; o2.frequency.value = d.f * (1 + 0.003);
+    var filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 500 + i*220; filt.Q.value = 0.3;
+    var g = ctx.createGain(); g.gain.value = d.g * 0.6;
+    var lfo = ctx.createOscillator(); lfo.frequency.value = 0.025 + Math.random() * 0.05;
+    var lfoDepth = ctx.createGain(); lfoDepth.gain.value = d.g * 0.45;
+    lfo.connect(lfoDepth); lfoDepth.connect(g.gain);
+    o1.connect(filt); o2.connect(filt); filt.connect(g); g.connect(master);
+    o1.start(); o2.start(); lfo.start();
+    AUDIO.drones.push(o1, o2, lfo);
+  }
+}
+
+// Major pentatonic across several octaves for the bell motif.
+var PENT = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66];
+
+function audioStart() {
+  audioInit();
+  if (!AUDIO.ctx) return;
+  if (AUDIO.ctx.state === 'suspended') AUDIO.ctx.resume();
+  AUDIO.enabled = true;
+  var t = AUDIO.ctx.currentTime;
+  AUDIO.master.gain.cancelScheduledValues(t);
+  AUDIO.master.gain.setValueAtTime(AUDIO.master.gain.value, t);
+  AUDIO.master.gain.linearRampToValueAtTime(AUDIO.vol, t + 3.2);
+  scheduleBells();
+  schedulePads();
+}
+
+function audioStop() {
+  AUDIO.enabled = false;
+  if (!AUDIO.ctx) return;
+  var t = AUDIO.ctx.currentTime;
+  AUDIO.master.gain.cancelScheduledValues(t);
+  AUDIO.master.gain.setValueAtTime(AUDIO.master.gain.value, t);
+  AUDIO.master.gain.linearRampToValueAtTime(0, t + 1.4);
+  if (AUDIO.bellTimer) clearTimeout(AUDIO.bellTimer);
+  if (AUDIO.padTimer) clearTimeout(AUDIO.padTimer);
+}
+
+function scheduleBells() {
+  if (!AUDIO.enabled) return;
+  playBell(PENT[(Math.random()*PENT.length)|0], 0.07 + Math.random()*0.09);
+  AUDIO.bellTimer = setTimeout(scheduleBells, 1800 + Math.random() * 5000);
+}
+
+function playBell(freq, vel) {
+  var ctx = AUDIO.ctx; if (!ctx) return;
+  var t = ctx.currentTime;
+  var o  = ctx.createOscillator(); o.type = 'sine';     o.frequency.value = freq;
+  var o2 = ctx.createOscillator(); o2.type = 'sine';    o2.frequency.value = freq * 2.01;
+  var g  = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(vel, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0005, t + 4.0 + Math.random()*2);
+  var g2 = ctx.createGain(); g2.gain.setValueAtTime(0.0001, t);
+  g2.gain.linearRampToValueAtTime(vel * 0.28, t + 0.04);
+  g2.gain.exponentialRampToValueAtTime(0.0005, t + 2.5);
+  o.connect(g); o2.connect(g2);
+  g.connect(AUDIO.master); g2.connect(AUDIO.master);
+  o.start(t);  o.stop(t + 7);
+  o2.start(t); o2.stop(t + 4);
+}
+
+function schedulePads() {
+  if (!AUDIO.enabled) return;
+  var roots = [130.81, 146.83, 164.81, 174.61, 196.00];  // C D E F G at octave 3
+  playPad(roots[(Math.random()*roots.length)|0]);
+  AUDIO.padTimer = setTimeout(schedulePads, 14000 + Math.random() * 18000);
+}
+
+function playPad(root) {
+  var ctx = AUDIO.ctx; if (!ctx) return;
+  var t = ctx.currentTime;
+  var chord = [root, root * 1.5, root * 2.0, root * 2.5];
+  var g = ctx.createGain(); g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.09, t + 4.5);
+  g.gain.linearRampToValueAtTime(0.0,  t + 13);
+  var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 0.4;
+  f.frequency.setValueAtTime(600, t);
+  f.frequency.linearRampToValueAtTime(2200, t + 6);
+  f.frequency.linearRampToValueAtTime(600,  t + 13);
+  for (var i = 0; i < chord.length; i++) {
+    var o = ctx.createOscillator(); o.type = 'sawtooth';
+    o.frequency.value = chord[i] * (1 + (i - 1.5) * 0.002);
+    o.connect(f);
+    o.start(t); o.stop(t + 13.5);
+  }
+  f.connect(g); g.connect(AUDIO.master);
+}
+
+function wireMusicButton() {
+  var btn = document.getElementById('btnMusic');
+  if (!btn) return;
+  btn.addEventListener('click', function() {
+    if (AUDIO.enabled) { audioStop(); btn.style.color = '#B0C8E0'; }
+    else               { audioStart(); btn.style.color = '#FFD040'; }
+  });
+}
+
+function openSlotPicker(mode) {
+  var el = document.getElementById('slotPicker');
+  if (!el) return;
+  document.getElementById('slotTitle').textContent = mode === 'save' ? 'Save world' : 'Load world';
+  var list = document.getElementById('slotList');
+  var html = '';
+  for (var i = 0; i < NUM_SAVE_SLOTS; i++) {
+    var m = slotMeta(i);
+    var empty = !m;
+    html += '<div class="slot-row' + (empty ? ' empty' : '') + '" data-slot="' + i + '">';
+    html += '<div class="slot-n">Slot ' + (i+1) + '</div>';
+    html += '<div class="slot-info">';
+    if (empty) {
+      html += (mode === 'save' ? '(empty) click to save here' : '(empty)');
+    } else {
+      var stage = STAGES[m.stage] ? STAGES[m.stage].name : 'Stage ' + m.stage;
+      var d = new Date(m.ts || 0);
+      html += 'Age ' + m.age.toFixed(2) + ' Gy &middot; ' + stage + ' &middot; ' + m.temp.toFixed(1) + '\u00B0C';
+      html += '<small>' + (m.seed ? 'seed: ' + m.seed + ' &middot; ' : '') + (d.toLocaleString ? d.toLocaleString() : '') + '</small>';
+    }
+    html += '</div></div>';
+  }
+  list.innerHTML = html;
+  var rows = list.querySelectorAll('.slot-row');
+  for (var r = 0; r < rows.length; r++) {
+    rows[r].addEventListener('click', function(ev) {
+      var row = ev.currentTarget;
+      var slot = parseInt(row.dataset.slot, 10);
+      if (mode === 'save') {
+        if (!row.classList.contains('empty') && !confirm('Overwrite slot ' + (slot+1) + '?')) return;
+        saveWorld(slot);
+      } else {
+        if (row.classList.contains('empty')) return;
+        loadWorld(slot);
+      }
+      closeSlotPicker();
+    });
+  }
+  el.classList.add('open');
+}
+function closeSlotPicker() {
+  var el = document.getElementById('slotPicker');
+  if (el) el.classList.remove('open');
+}
+
+function wireSaveLoadButtons() {
+  var s = document.getElementById('btnSave');
+  var l = document.getElementById('btnLoad');
+  if (s) s.addEventListener('click', function() { openSlotPicker('save'); });
+  if (l) l.addEventListener('click', function() { openSlotPicker('load'); });
+  var sc = document.getElementById('slotCancel');
+  if (sc) sc.addEventListener('click', closeSlotPicker);
+  var sp = document.getElementById('slotPicker');
+  if (sp) sp.addEventListener('click', function(e) { if (e.target === sp) closeSlotPicker(); });
+  var h = document.getElementById('btnHelp');
+  if (h) h.addEventListener('click', function() { toggleHelp(true); });
+  var mn = document.getElementById('btnMenu');
+  if (mn) mn.addEventListener('click', openMainMenu);
+  var hc = document.getElementById('helpClose');
+  if (hc) hc.addEventListener('click', function() { toggleHelp(false); });
+  var ho = document.getElementById('helpOverlay');
+  if (ho) ho.addEventListener('click', function(e) { if (e.target === ho) toggleHelp(false); });
+  wireMainMenu();
+  wireSettings();
+}
+
+// =============================================================
+// Main menu (shown over the freshly-built world on first load).
+// =============================================================
+var FIRSTRUN_KEY = 'simearth_first_run_done_v1';
+function maybeShowFirstRun() {
+  if (localStorage.getItem(FIRSTRUN_KEY)) return;
+  var fr = document.getElementById('firstRun');
+  if (!fr) return;
+  setTimeout(function() { fr.classList.add('open'); }, 700);
+  var close = function() {
+    fr.classList.remove('open');
+    try { localStorage.setItem(FIRSTRUN_KEY, '1'); } catch (e) {}
+  };
+  document.getElementById('frClose').addEventListener('click', close, { once: true });
+  fr.addEventListener('click', function(e) { if (e.target === fr) close(); }, { once: true });
+}
+
+function openMainMenu() {
+  var menu = document.getElementById('mainMenu');
+  if (!menu) return;
+  menu.style.display = '';
+  menu.classList.remove('hidden');
+  refreshMainMenuContinue();
+}
+function refreshMainMenuContinue() {
+  var cont = document.getElementById('mmContinue');
+  if (cont) cont.style.display = hasAnySaveSlot() ? '' : 'none';
+}
+
+function wireMainMenu() {
+  var menu = document.getElementById('mainMenu');
+  if (!menu) return;
+  refreshMainMenuContinue();
+
+  function dismiss() { menu.classList.add('hidden'); setTimeout(function(){ menu.style.display = 'none'; }, 700); }
+
+  document.getElementById('mmNew').addEventListener('click', function() {
+    var seedInput = document.getElementById('mmSeed');
+    setWorldSeed(seedInput && seedInput.value.trim() ? seedInput.value.trim() : '');
+    disasterReset();
+    dismiss();
+    maybeShowFirstRun();
+  });
+  if (cont) cont.addEventListener('click', function() {
+    dismiss();
+    setTimeout(function() { openSlotPicker('load'); }, 400);
+  });
+  document.getElementById('mmScenarios').addEventListener('click', function() {
+    dismiss();
+    setTimeout(function() {
+      var sel = document.getElementById('scenarioSelect');
+      if (sel) sel.focus();
+    }, 800);
+  });
+  document.getElementById('mmHelp').addEventListener('click', function() {
+    dismiss();
+    setTimeout(function(){ toggleHelp(true); }, 100);
+  });
+  document.getElementById('mmSettings').addEventListener('click', function() {
+    toggleSettings(true);
+  });
+}
+
+// =============================================================
+// Settings (persistent per browser).
+// =============================================================
+var SETTINGS_KEY = 'simearth_settings_v1';
+var SETTINGS = {
+  vol: 0.22, clouds: true, meteors: true, cities: true, hover: true, autosave: false, sfx: true, fps: false,
+  dayNight: true, aurora: true
+};
+function loadSettings() {
+  try {
+    var raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) {
+      var s = JSON.parse(raw);
+      for (var k in s) if (k in SETTINGS) SETTINGS[k] = s[k];
+    }
+  } catch (e) {}
+  applySettings();
+}
+function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); } catch (e) {} }
+function applySettings() {
+  if (clouds)     clouds.visible     = SETTINGS.clouds;
+  if (cityLights) cityLights.visible = SETTINGS.cities;
+  var fpsEl = document.getElementById('fpsCounter');
+  if (fpsEl) fpsEl.style.display = SETTINGS.fps ? '' : 'none';
+  if (AUDIO && AUDIO.master && AUDIO.enabled) {
+    AUDIO.vol = SETTINGS.vol;
+    var t = AUDIO.ctx.currentTime;
+    AUDIO.master.gain.cancelScheduledValues(t);
+    AUDIO.master.gain.linearRampToValueAtTime(SETTINGS.vol, t + 0.4);
+  } else if (AUDIO) {
+    AUDIO.vol = SETTINGS.vol;
+  }
+}
+function toggleSettings(open) {
+  var el = document.getElementById('settingsPanel');
+  if (!el) return;
+  var should = (open === undefined) ? !el.classList.contains('open') : !!open;
+  el.classList.toggle('open', should);
+}
+function wireSettings() {
+  loadSettings();
+  var vol = document.getElementById('setVol');
+  var volL = document.getElementById('setVolLabel');
+  var cl = document.getElementById('setClouds');
+  var me = document.getElementById('setMeteors');
+  var ct = document.getElementById('setCities');
+  var hv = document.getElementById('setHover');
+  var as = document.getElementById('setAutosave');
+  var sfx = document.getElementById('setSfx');
+  var fps = document.getElementById('setFps');
+  var dn = document.getElementById('setDayNight');
+  var au = document.getElementById('setAurora');
+  // sync UI
+  vol.value = Math.round(SETTINGS.vol * 100); volL.textContent = vol.value + '%';
+  cl.checked = SETTINGS.clouds; me.checked = SETTINGS.meteors;
+  ct.checked = SETTINGS.cities; hv.checked = SETTINGS.hover;
+  as.checked = SETTINGS.autosave;
+  sfx.checked = SETTINGS.sfx;
+  fps.checked = SETTINGS.fps;
+  dn.checked = SETTINGS.dayNight;
+  au.checked = SETTINGS.aurora;
+  vol.addEventListener('input', function() {
+    SETTINGS.vol = parseInt(vol.value, 10) / 100;
+    volL.textContent = vol.value + '%';
+    applySettings(); saveSettings();
+  });
+  cl.addEventListener('change', function() { SETTINGS.clouds  = cl.checked; applySettings(); saveSettings(); });
+  me.addEventListener('change', function() { SETTINGS.meteors = me.checked; saveSettings(); });
+  ct.addEventListener('change', function() { SETTINGS.cities  = ct.checked; applySettings(); saveSettings(); });
+  hv.addEventListener('change', function() { SETTINGS.hover   = hv.checked; if (!hv.checked && hoverLine) hoverLine.visible = false; saveSettings(); });
+  as.addEventListener('change', function() { SETTINGS.autosave = as.checked; saveSettings(); });
+  sfx.addEventListener('change', function() { SETTINGS.sfx = sfx.checked; saveSettings(); });
+  dn.addEventListener('change', function() { SETTINGS.dayNight = dn.checked; saveSettings(); });
+  au.addEventListener('change', function() { SETTINGS.aurora = au.checked; saveSettings(); });
+  fps.addEventListener('change', function() {
+    SETTINGS.fps = fps.checked; saveSettings();
+    var el = document.getElementById('fpsCounter'); if (el) el.style.display = SETTINGS.fps ? '' : 'none';
+  });
+  // Delegated SFX click for buttons (so we don't have to wire each one individually).
+  document.body.addEventListener('click', function(e) {
+    var t = e.target;
+    if (t.matches && t.matches('.tool-btn, .view-btn, .speed-btn, .mm-btn, .act-btn')) sfxClick();
+    else if (t.matches && t.matches('.dis-btn')) sfxDisaster();
+  }, true);
+  document.getElementById('setClose').addEventListener('click', function() { toggleSettings(false); });
+  document.getElementById('settingsPanel').addEventListener('click', function(e) {
+    if (e.target.id === 'settingsPanel') toggleSettings(false);
+  });
+}
+// Autosave: every 5 minutes if SETTINGS.autosave is enabled and a world exists
+setInterval(function() {
+  if (SETTINGS && SETTINGS.autosave && WORLD) saveWorld();
+}, 5 * 60 * 1000);
+
+window.addEventListener('load', function() { init(); wireMusicButton(); wireSaveLoadButtons(); });
+</script>
+</body>
+</html>
