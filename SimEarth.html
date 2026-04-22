@@ -236,7 +236,6 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
     </div>
   </div>
 </div>
-
 <div id="gameNav">
   <div class="nav-bar">
     <span class="nav-title">SimEarth</span>
@@ -942,16 +941,15 @@ function stepTectonics(W, dtY) {
     var hc = tiles[ct].center;
     var r = 0.10 + Math.random()*0.08;
     var amp = 0.08 + Math.random()*0.10;
-    var sumW = 0, sumUp = 0;
+    var sumUp = 0;
     var w = new Float32Array(n);
     for (var i = 0; i < n; i++) {
       var c = tiles[i].center;
       var dd = Math.acos(clamp(c[0]*hc[0]+c[1]*hc[1]+c[2]*hc[2], -1, 1));
       w[i] = Math.exp(-(dd*dd)/(r*r));
       sumUp += w[i] * amp;
-      sumW += 1;
     }
-    var comp = sumUp / sumW;  // uniform subsidence to conserve mass
+    var comp = sumUp / n;  // uniform subsidence to conserve mass
     for (var i = 0; i < n; i++) d.bedrock[i] += amp * w[i] - comp;
     SIM.co2 += 40;
   }
@@ -1007,7 +1005,6 @@ function stepClimate(W, dtY) {
     var insol = 1.0 * (1 - 0.477 * (1.5*s2 - 0.5));
     var T_eq = -14 + 60 * insol * sun * (1 - alb) + ghFactor + (SIM.geothermal || 0);
     if (elev > 0) T_eq -= elev * 32;           // lapse rate
-    if (isOcean) T_eq -= 3 * (elev < -0.3 ? 0 : 0);  // no-op, oceans already mild
     tEqArr[i] = T_eq;
     if (!isOcean) { landCount++; }
     if (ice > 0.02) iceCount++;
