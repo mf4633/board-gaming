@@ -378,7 +378,6 @@
     .rules ul { padding-left: 18px; }
     .rules li { margin-bottom: 3px; }
     /* Mobile game nav */
-    #mobileNav { display: none; }
   </style>
 </head>
 <body>
@@ -678,13 +677,11 @@
     // Check for captures of opponent groups
     var captured = 0;
     var adj = neighbors(r, c);
-    var capturedStones = [];
     for (var i = 0; i < adj.length; i++) {
       var nr = adj[i][0], nc = adj[i][1];
       if (testBoard[nr][nc] === opponent) {
         var group = getGroup(testBoard, nr, nc);
         if (group.liberties === 0) {
-          capturedStones = capturedStones.concat(group.stones);
           captured += removeGroup(testBoard, group.stones);
         }
       }

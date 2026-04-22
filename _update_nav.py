@@ -86,6 +86,10 @@ PAT_OLD_MOBILE_CSS = re.compile(
     r'[ \t]*@media \(max-width: 768px\) \{\s*#mobileNav[^\n]*\n(?:[^\n]*\n){0,20}?\s*\}\s*\n',
     re.MULTILINE,
 )
+PAT_OLD_MOBILE_RULE = re.compile(
+    r'^\s*#mobileNav \{[^\n]*\}\s*\n',
+    re.MULTILINE,
+)
 PAT_OLD_MOBILE_HTML = re.compile(
     r'<div id="mobileNav">.*?<a href="Ur\.html"[^>]*>Ur</a>\s*</div>\s*</div>\s*',
     re.DOTALL,
@@ -108,6 +112,7 @@ def process(path, fname):
     src = PAT_OLD_SITENAV_HTML.sub('', src)
     src = PAT_OLD_MOBILE_HTML.sub('', src)
     src = PAT_OLD_MOBILE_CSS.sub('', src)
+    src = PAT_OLD_MOBILE_RULE.sub('', src)
     # Insert new nav right after <body ...>
     new_nav = nav_snippet(fname)
     src, n = re.subn(r'(<body[^>]*>)', lambda m: m.group(1) + '\n' + new_nav, src, count=1)
