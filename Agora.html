@@ -487,7 +487,6 @@
   var aiTimeout = null;
   var diceA = 0;
   var diceB = 0;
-  var buildMode = null; // null, 'post', 'route'
 
   var svgEl = document.getElementById('board-svg');
   var rollBtn = document.getElementById('roll-btn');
@@ -682,10 +681,6 @@
     // Pick 6 cities: prefer 3-hex vertices, spread out
     var candidates = threeHex.concat(twoHex);
     var chosen = [];
-
-    // Always pick the center hex index (hex 9 in 3-4-5-4-3 = index 9 is center of row 2)
-    var centerHexIdx = 7 + 2; // rows: 0-2, 3-6, 7-11 -> center is index 9
-    // Mark center hex for Agora display
 
     // Greedily select spread-out cities
     shuffleArray(candidates);
@@ -894,7 +889,6 @@
     phase = 'roll';
     diceA = 0;
     diceB = 0;
-    buildMode = null;
 
     generateHexLayout();
     assignTerrain();
@@ -1019,7 +1013,6 @@
     cities[cityId].owner = p;
     players[p].posts.push(cityId);
     setMessage(PLAYER_NAMES[p] + ' built a trade post at ' + cities[cityId].name + '!');
-    buildMode = null;
     render();
     renderMarket();
   }
@@ -1060,7 +1053,6 @@
     edges[edgeId].owner = p;
     players[p].routes.push(edgeId);
     setMessage(PLAYER_NAMES[p] + ' built a trade route!');
-    buildMode = null;
     render();
     renderMarket();
   }
@@ -1070,7 +1062,6 @@
   // =============================================
   function endTurn() {
     if (phase === 'roll' || gameOver) return;
-    buildMode = null;
     playerTurn = 1 - playerTurn;
     phase = 'roll';
     diceA = 0;

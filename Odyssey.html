@@ -559,18 +559,18 @@
     Each turn Poseidon's fury shifts one step: 1-2-3-4-5-4-3-2-1-2... Islands are swallowed when the wrath reaches their elevation. Submerged hexes lose resources and camps are temporarily lost beneath the waves.
 
     <h4>Resources</h4>
-    When islands emerge, treasures wash ashore: Timber (common), Olives, Wine, Bronze, Ambrosia (rare, food of the gods). Resources decay after 2 turns if not collected. Harvest automatically from hexes adjacent to your camps.
+    When islands emerge, treasures wash ashore: Timber (common), Shell, Kelp, Salt, Rock, Pearl (rare, gifts of the gods). Resources decay after 2 turns if not collected. Harvest automatically from hexes adjacent to your camps.
 
     <h4>Structures</h4>
-    <b>Camp</b> (2 Timber + 1 Olives): Establish a beachhead to harvest from this island and its neighbors. 1 VP.<br>
-    <b>Temple</b> (1 Stone + 2 Wine): Raise a temple to appease the gods &mdash; protects the island from Poseidon's wrath. 1 VP.<br>
-    <b>Trireme</b> (1 Timber + 1 Bronze): Launch a warship connecting two islands even across open sea. 2 VP.
+    <b>Camp</b> (2 Timber + 1 Shell): Establish a beachhead to harvest from this island and its neighbors. 1 VP.<br>
+    <b>Temple</b> (1 Rock + 2 Kelp): Raise a temple to appease the gods &mdash; protects the island from Poseidon's wrath. 1 VP.<br>
+    <b>Trireme</b> (1 Timber + 1 Salt): Launch a warship connecting two islands even across open sea. 2 VP.
 
     <h4>Hermes' Ship</h4>
-    The golden merchant vessel of Hermes drifts each turn. If your camps and triremes form a connected chain to Hermes' Ship, you may trade. Prices: Timber 1, Olives 2, Wine 2, Bronze 3, Ambrosia 6.
+    The golden merchant vessel of Hermes drifts each turn. If your camps and triremes form a connected chain to Hermes' Ship, you may trade. Prices: Timber 1, Shell 2, Kelp 2, Salt 3, Pearl 6.
 
     <h4>Actions</h4>
-    Each turn you get 2 actions: Build a structure, Trade with Hermes, or Redirect Hermes' Ship (costs 1 Ambrosia).
+    Each turn you get 2 actions: Build a structure, Trade with Hermes, or Redirect Hermes' Ship (costs 1 Pearl).
 
     <h4>Victory</h4>
     First to 15 VP reaches Ithaca and wins. Camp/Temple=1 VP, Trireme=2 VP, every 5 coins=1 VP, largest connected network=3 VP bonus.
@@ -590,12 +590,10 @@
     var HEX_H = 63;
     var ROW_SIZES = [4, 5, 6, 7, 6, 5, 4];
     var TOTAL_HEXES = 37;
-    var RESOURCE_NAMES = ['Timber', 'Olives', 'Wine', 'Bronze', 'Ambrosia'];
-    var RESOURCE_ICONS = { Timber: '\u{1FAB5}', Olives: '\uD83C\uDF3F', Wine: '\uD83C\uDF77', Bronze: '\u2694', Ambrosia: '\u2728', Stone: '\uD83E\uDEA8' };
+    var RESOURCE_ICONS = { Timber: '\u{1FAB5}', Shell: '\uD83D\uDC1A', Kelp: '\uD83C\uDF3F', Salt: '\uD83E\uDDC2', Pearl: '\u2728', Rock: '\uD83E\uDEA8' };
     var TERRAIN_TYPES = ['Shore', 'Bog', 'Stone', 'Grove'];
     var PRICES = { Timber: 1, Shell: 2, Kelp: 2, Salt: 3, Pearl: 6 };
     var PLAYER_COLORS = ['#E8C840', '#60C0B0'];
-    var PLAYER_LABELS = ['P1', 'P2'];
     var WIN_VP = 15;
 
     /* ===== STATE ===== */
@@ -819,11 +817,11 @@
         var roll = Math.random();
         var res;
         if (roll < 0.30) res = 'Timber';
-        else if (roll < 0.50) res = 'Olives';
-        else if (roll < 0.68) res = 'Wine';
-        else if (roll < 0.80) res = 'Bronze';
-        else if (roll < 0.85) res = 'Ambrosia';
-        else if (roll < 0.92) res = 'Stone';
+        else if (roll < 0.50) res = 'Shell';
+        else if (roll < 0.68) res = 'Kelp';
+        else if (roll < 0.80) res = 'Salt';
+        else if (roll < 0.85) res = 'Pearl';
+        else if (roll < 0.92) res = 'Rock';
         else res = null;
 
         if (res) {
