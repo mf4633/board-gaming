@@ -891,7 +891,6 @@ function initState() {
     trapsToPlace: 0,
     turnNumber: 1,
     gameOver: false,
-    conqueredThisTurn: false,
     activePlayers: [],    /* list of active player numbers (1-based, 0=neutral) */
     eliminatedPlayers: [], /* players who lost all territories */
     hasNeutral: false
@@ -1403,7 +1402,6 @@ function resolveCombat(atkId, defId) {
     if (moved < 1) moved = 1;
     def.traps = moved;
     atk.traps -= moved;
-    state.conqueredThisTurn = true;
 
     /* Flash animation */
     var terrDiv = document.getElementById('terr-' + defId);
@@ -1451,19 +1449,17 @@ function showDice(atkRolls, atkResults, defRolls, defResults) {
   var area = document.getElementById('diceArea');
   var html = '<div class="dice-group"><span class="dice-label">ATK</span>';
   for (var i = 0; i < atkRolls.length; i++) {
-    html += '<div class="die atk ' + atkResults[i] + '">' + diceFace(atkRolls[i]) + '</div>';
+    html += '<div class="die atk ' + atkResults[i] + '">' + atkRolls[i] + '</div>';
   }
   html += '</div>';
   html += '<div style="color:#555;font-size:1.5em">vs</div>';
   html += '<div class="dice-group"><span class="dice-label">DEF</span>';
   for (var j = 0; j < defRolls.length; j++) {
-    html += '<div class="die def ' + defResults[j] + '">' + diceFace(defRolls[j]) + '</div>';
+    html += '<div class="die def ' + defResults[j] + '">' + defRolls[j] + '</div>';
   }
   html += '</div>';
   area.innerHTML = html;
 }
-
-function diceFace(n) { return n; }
 
 /* ===== FORTIFY PHASE ===== */
 function handleFortify(id) {
@@ -1562,7 +1558,6 @@ function nextTurn() {
   state.currentPlayer = next;
   state.phase = 'deploy';
   state.trapsToPlace = calcReinforcements(next);
-  state.conqueredThisTurn = false;
   selectedTerritory = null;
   attackSource = null;
   fortifySource = null;

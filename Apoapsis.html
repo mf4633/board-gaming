@@ -209,7 +209,6 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
     </div>
   </div>
 </div>
-
 <div id="gameNav">
   <div class="nav-bar">
     <span class="nav-title">Apoapsis</span>
@@ -604,8 +603,10 @@ function initThree() {
   exhaustParticles = new THREE.Points(exhaustGeo, exhaustMat);
   scene.add(exhaustParticles);
 
-  // Trail
+  // Trail — preallocate max-capacity buffer once; updated in place each frame
   trailGeom = new THREE.BufferGeometry();
+  trailGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(500 * 3), 3));
+  trailGeom.setDrawRange(0, 0);
   var trailMat = new THREE.LineBasicMaterial({ color: 0xff8844, transparent: true, opacity: 0.4 });
   trailLine = new THREE.Line(trailGeom, trailMat);
   scene.add(trailLine);
@@ -1834,15 +1835,19 @@ function renderFlight3D() {
   exhaustParticles.geometry.attributes.color.needsUpdate = true;
   exhaustParticles.geometry.attributes.size.needsUpdate = true;
 
-  // Trail
+  // Trail — update the preallocated buffer in place
   if (sim.trail.length > 1) {
-    var tpos = new Float32Array(sim.trail.length * 3);
+    var trailAttr = trailGeom.getAttribute('position');
+    var arr = trailAttr.array;
     for (var i = 0; i < sim.trail.length; i++) {
-      tpos[i * 3] = sim.trail[i].x;
-      tpos[i * 3 + 1] = sim.trail[i].y;
-      tpos[i * 3 + 2] = sim.trail[i].z;
+      arr[i * 3]     = sim.trail[i].x;
+      arr[i * 3 + 1] = sim.trail[i].y;
+      arr[i * 3 + 2] = sim.trail[i].z;
     }
-    trailGeom.setAttribute('position', new THREE.BufferAttribute(tpos, 3));
+    trailAttr.needsUpdate = true;
+    trailGeom.setDrawRange(0, sim.trail.length);
+  } else {
+    trailGeom.setDrawRange(0, 0);
   }
 
   // KSP-style orbit-cam: frame the whole rocket, positioned behind-and-above in the local (radial=up) frame
