@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Floodline — Flood Engineering Simulator</title>
 <style>
   :root {
@@ -25,8 +26,9 @@
   #infopanel { background: var(--panel); border-radius: 6px; padding: 12px; overflow-y: auto; }
   #timeline { grid-column: 1 / 4; background: var(--panel); border-radius: 6px; padding: 10px; position: relative; }
 
-  .stat { display: inline-flex; flex-direction: column; align-items: flex-start; padding: 4px 10px; background: var(--panel2); border-radius: 4px; font-size: 11px; color: var(--dim); }
-  .stat b { font-size: 15px; color: var(--accent); }
+  .stat { display: inline-flex; flex-direction: column; align-items: flex-start; padding: 3px 8px; background: var(--panel2); border-radius: 4px; font-size: 10px; color: var(--dim); white-space: nowrap; line-height: 1.25; min-width: 52px; }
+  .stat b { font-size: 13px; color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 10px; letter-spacing: 0.02em; }
   .stat.warn b { color: var(--accent2); }
   .stat.danger b { color: var(--danger); }
 
@@ -99,6 +101,50 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+  /* ---- Mobile / narrow viewport ---- */
+  @media (max-width: 960px) {
+    #game {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto 90px;
+      gap: 2px; padding: 2px;
+    }
+    #topbar { grid-column: 1; overflow-x: auto; padding: 6px 8px; gap: 8px; flex-wrap: nowrap; font-size: 11px; min-height: 42px; }
+    #topbar > * { flex-shrink: 0; }
+    #scenarioName { display: none; }
+    #toolpanel { grid-column: 1; grid-row: 3; max-height: 160px; padding: 8px; }
+    #toolpanel h3 { font-size: 11px; margin: 0 0 4px 0; }
+    #toolpanel .legend { display: none; }
+    #tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .tool { padding: 4px 6px; font-size: 10px; grid-template-columns: 22px 1fr auto; }
+    .tool .desc { display: none; }
+    .tool .icon { width: 22px; height: 22px; font-size: 11px; }
+    #toolpanel > h3:nth-of-type(n+2), #objectives { display: none; }
+    #infopanel { display: none; }
+    #canvaswrap { grid-column: 1; grid-row: 2; }
+    #timeline { grid-column: 1; grid-row: 4; height: 90px; padding: 6px; }
+    .speed-btns button { padding: 4px 8px; font-size: 10px; }
+    button { padding: 6px 10px; font-size: 12px; min-height: 36px; }
+    .stat { padding: 3px 6px; font-size: 10px; }
+    .stat b { font-size: 12px; }
+    .scenarios { grid-template-columns: 1fr 1fr; }
+    .modal { padding: 14px 18px; }
+    .modal h1 { font-size: 20px; }
+    .toast { font-size: 11px; padding: 6px 10px; }
+  }
+  @media (max-width: 560px) {
+    .scenarios { grid-template-columns: 1fr; }
+    #tools { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Touch-specific: bigger tap hitboxes */
+  @media (pointer: coarse) {
+    button { min-height: 40px; padding: 8px 14px; }
+    .tool { min-height: 44px; }
+    .tool.active { outline: 2px solid var(--accent); }
+    .challenge-chip { min-height: 36px; }
+    canvas { touch-action: none; }  /* Prevent browser pinch-zoom */
+  }
 </style>
 </head>
 <body>
@@ -154,24 +200,40 @@
       <a href="Apoapsis.html">Apoapsis</a>
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Floodline.html" class="current">Floodline</a>
-      <a href="SimEarth.html">SimEarth</a>
+      <a href="BiosphereBlue.html">Biosphere Blue</a>
       <a href="Tower.html">Tower</a>
     </div>
   </div>
 </div>
-
 <div id="game">
   <div id="topbar">
     <div style="font-size:16px; color:var(--accent); font-weight:bold; letter-spacing:0.05em;">FLOODLINE</div>
     <div id="scenarioName" style="font-size:13px; color:var(--dim);"></div>
     <div style="flex:1;"></div>
-    <div class="stat"><span>Wallet</span><b id="walletDisp">$0</b></div>
-    <div class="stat"><span>Budget</span><b id="budgetDisp">$0</b></div>
-    <div class="stat"><span>Time</span><b id="timeDisp">0:00</b></div>
-    <div class="stat"><span>River Stage</span><b id="stageDisp">0.0 m</b></div>
-    <div class="stat warn"><span>Rainfall</span><b id="rainDisp">0 mm/hr</b></div>
-    <div class="stat"><span>Tailwater</span><b id="tailwaterDisp">2.8 m</b></div>
-    <div class="stat danger"><span>Damage</span><b id="damageDisp">0%</b></div>
+    <div class="stat" title="Carries over across scenarios. Used alongside the FEMA grant for prep."><span>Wallet</span><b id="walletDisp">$0</b></div>
+    <div class="stat" title="FEMA grant + wallet. Spend on structures during prep."><span>Budget</span><b id="budgetDisp">$0</b></div>
+    <div class="stat" title="Storm time elapsed"><span>Time</span><b id="timeDisp">0:00</b></div>
+    <div class="stat" title="Maximum water-surface elevation along the river channel"><span>Stage</span><b id="stageDisp">0.0 m</b></div>
+    <div class="stat warn" title="Current rainfall intensity (mm per hour)"><span>Rain</span><b id="rainDisp">0 mm/hr</b></div>
+    <div class="stat" title="Downstream boundary water-surface elevation (backs up when discharge is high)"><span>Tailwater</span><b id="tailwaterDisp">2.8 m</b></div>
+    <div class="stat" title="Wind velocity — surface wind shear nudges shallow water in its direction (arrow shows direction wind is blowing)">
+      <span>Wind</span>
+      <div style="display:flex;align-items:center;gap:6px;line-height:1;">
+        <div style="position:relative;width:22px;height:22px;border:1px solid #475569;border-radius:50%;background:#0a0e14;">
+          <div style="position:absolute;left:50%;top:2px;width:1px;height:3px;background:#475569;transform:translateX(-50%);"></div>
+          <div id="windArrow" style="
+            position:absolute;left:50%;top:50%;width:0;height:0;
+            border-left:3px solid transparent;border-right:3px solid transparent;
+            border-bottom:9px solid #fbbf24;
+            transform-origin:50% 100%;
+            transform:translate(-50%,-100%) rotate(0deg);"></div>
+        </div>
+        <b id="windSpeed">0 m/s</b>
+      </div>
+    </div>
+    <div class="stat" title="Total water volume on the map (assumes 10 m cells)"><span>Vol</span><b id="volDisp">0 m³</b></div>
+    <div class="stat danger" title="Total town damage weighted by tile type (hospital 3×, school 2×)"><span>Damage</span><b id="damageDisp">0%</b></div>
+    <div class="stat" title="Projected FEMA damage cost at current damage level ($120K per % damage)"><span>Cost</span><b id="costDisp">$0</b></div>
     <div class="speed-btns">
       <button data-spd="0">Pause</button>
       <button data-spd="1" class="active">1x</button>
@@ -180,8 +242,10 @@
     </div>
     <button id="startBtn">Start Storm</button>
     <button id="viewBtn" class="ghost" title="Toggle view (V)">Iso</button>
+    <button id="removeBtn" class="ghost" title="Toggle remove-mode for touch (50% refund)">🗑 Remove</button>
     <button id="undoBtn" class="ghost" title="Ctrl+Z">↶ Undo</button>
     <button id="muteBtn" class="ghost" title="Toggle audio">🔊</button>
+    <button id="upgradesBtn" class="ghost" title="Spend wallet on permanent perks">★ Upgrades</button>
     <button id="menuBtn" class="ghost">Menu</button>
   </div>
 
@@ -221,15 +285,160 @@
   </div>
 </div>
 
+<div id="titleScreen" style="position:fixed;inset:0;background:linear-gradient(135deg,#0a0e14 0%,#1e3a5f 100%);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;overflow:hidden;">
+  <canvas id="titleBgCanvas" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.4;"></canvas>
+  <div style="position:relative;z-index:2;text-align:center;padding:40px;">
+    <div style="font-size:72px;font-weight:900;letter-spacing:8px;color:#7dd3fc;text-shadow:0 4px 20px rgba(125,211,252,0.4);">FLOODLINE</div>
+    <div style="font-size:16px;color:#cbd5e1;margin-top:8px;letter-spacing:4px;">A flood engineering simulator</div>
+    <div style="font-size:12px;color:#64748b;margin-top:4px;">Physics you can trust. Decisions that count.</div>
+    <div style="margin-top:40px;display:flex;flex-direction:column;gap:12px;align-items:center;">
+      <button id="titleCampaign" style="
+          background:linear-gradient(135deg,#b45309 0%,#d97706 50%,#f59e0b 100%);
+          color:#0a0e14;padding:22px 30px;font-size:20px;font-weight:900;letter-spacing:2px;
+          border-radius:10px;min-width:420px;border:2px solid #fbbf24;
+          box-shadow:0 6px 24px rgba(217,119,6,0.4);cursor:pointer;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;">
+          <span style="font-size:28px;">★</span>
+          <div style="text-align:left;">
+            <div>CAMPAIGN MODE</div>
+            <div style="font-size:11px;font-weight:normal;letter-spacing:1px;opacity:0.85;margin-top:3px;">
+              3 campaigns · 11 missions · 4 difficulties
+            </div>
+          </div>
+        </div>
+      </button>
+      <button id="titlePlay" style="background:#2563eb;color:white;padding:12px 40px;font-size:15px;font-weight:bold;border-radius:8px;min-width:220px;">▶ Free Play</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px;">
+        <button id="titleStats" class="ghost" style="min-width:130px;">Career Stats</button>
+        <button id="titleHelp" class="ghost" style="min-width:130px;">How to Play</button>
+        <button id="titleCredits" class="ghost" style="min-width:130px;">Credits</button>
+        <button id="titleShare" class="ghost" style="min-width:130px;">Share</button>
+      </div>
+    </div>
+    <div style="margin-top:40px;font-size:10px;color:#475569;">Based on real hydrology, historical floods, and SCS Type II methods.</div>
+  </div>
+</div>
+
+<div id="creditsOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:400;display:none;align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:620px;">
+    <h1 style="text-align:center;">FLOODLINE</h1>
+    <div style="text-align:center;color:var(--dim);font-size:13px;margin-bottom:18px;">A flood engineering simulator</div>
+
+    <h2>Design & Engineering</h2>
+    <p style="font-size:14px;"><b>Michael Flynn, PE</b><br>
+    <span style="color:var(--dim);font-size:12px;">Professional Engineer · Dam safety, hydrology, and hydraulic modeling</span></p>
+
+    <h2>Hydrology grounded in real methods</h2>
+    <ul style="color:#cbd5e1;font-size:12px;line-height:1.7;">
+      <li><b>SCS Type II</b> rainfall distribution (NRCS TR-55)</li>
+      <li><b>SCS triangular unit hydrograph</b> for upstream routing</li>
+      <li><b>HAZUS-MH</b>-style stage-damage curves for buildings</li>
+      <li>100-year 24-hour rainfall depths from NOAA Atlas 14 (US) and approximate sources globally</li>
+      <li>Shallow-water cellular automaton with 8-neighbor gradient flux</li>
+      <li>Levee overtopping & piping-failure stress model</li>
+      <li>Stage-discharge rating curve at the tailwater boundary</li>
+      <li>Green-Ampt-like infiltration with antecedent moisture</li>
+    </ul>
+
+    <h2>Historical scenarios</h2>
+    <p style="color:#cbd5e1;font-size:12px;line-height:1.5;">
+      Johnstown (1889) · Mississippi (1927) · Katrina (2005) · Cedar Rapids (2008) ·
+      Lumberton (2016) · Harvey (2017) · Oroville (2017) · Edenville (2020).
+      Storm profiles, terrain, and outcomes derived from real engineering and historical records.
+    </p>
+
+    <h2>Tech</h2>
+    <p style="color:#cbd5e1;font-size:12px;line-height:1.5;">
+      Single-file HTML / Canvas 2D / Web Audio API. No external libraries, no images, no audio files.
+      All graphics and sound are procedurally generated at runtime.
+    </p>
+
+    <h2>Thanks</h2>
+    <p style="color:#cbd5e1;font-size:12px;line-height:1.5;">
+      To the engineers maintaining NC's dam safety program, the hydrologists at ASDSO and USSD,
+      and the researchers whose work on post-Katrina levee forensics and post-Oroville spillway
+      investigation made each of those scenarios possible to model.
+    </p>
+
+    <p style="color:var(--dim);font-size:11px;text-align:center;margin-top:18px;">
+      This is a simulation game, not an engineering tool. Do not use for design decisions.
+    </p>
+
+    <div style="margin-top:16px;"><button id="closeCredits" class="ghost">Close</button></div>
+  </div>
+</div>
+
+<div id="statsOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:400;display:none;align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:620px;">
+    <h1>Career Statistics</h1>
+    <div id="statsBody"></div>
+    <div style="margin-top:16px;display:flex;gap:8px;">
+      <button id="closeStats" class="ghost">Close</button>
+      <button id="resetStats" class="danger" style="margin-left:auto;">Reset All Progress</button>
+    </div>
+  </div>
+</div>
+
 <div id="overlay">
   <div class="modal" id="menuModal">
     <h1>Floodline</h1>
     <p style="color:var(--dim);">A flood engineering simulator. Build levees, channels, and pumps against real hydrology. Levees breach under load. Infiltration matters. The hydrograph tells the truth — read it, and pre-position.</p>
-    <h2>Scenario Select</h2>
+    <button id="menuCampaign" style="
+        background:linear-gradient(135deg,#b45309 0%,#d97706 100%);color:#0a0e14;
+        padding:10px 20px;font-size:14px;font-weight:bold;border-radius:6px;
+        border:1px solid #fbbf24;margin:8px 0 18px;">
+      ★ Open Campaign Mode
+    </button>
+    <h2>Free Play — Scenario Select</h2>
     <div id="scenarioGrid" class="scenarios"></div>
     <p style="margin-top:20px; font-size:11px; color:var(--dim);">Historical scenarios use simplified but faithful parameters — river inflow, rainfall depth, breach risk, and terrain are derived from real events. This is a game, not an engineering tool.</p>
     <div style="margin-top:16px; font-size:11px; color:var(--dim);">
       <b>Keys:</b> 1–8 select tool · Space pause · [ / ] speed · R replay · Esc menu
+    </div>
+  </div>
+</div>
+
+<div id="upgradesOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:600px;">
+    <h1>Permanent Upgrades</h1>
+    <p style="color:var(--dim);font-size:12px;">Spend wallet money on perks that carry across every scenario. Purchases are permanent.</p>
+    <div id="walletShow" style="font-size:15px;color:#fbbf24;margin:10px 0;">Wallet: $0</div>
+    <div id="upgradeList"></div>
+    <div style="margin-top:16px;"><button id="closeUpgrades" class="ghost">Close</button></div>
+  </div>
+</div>
+
+<div id="helpOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:400;display:none;align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:640px;">
+    <h1>How to Play</h1>
+    <h2>Core loop</h2>
+    <p>A storm is coming. Place levees, channels, pumps, and retention ponds to keep town damage below the threshold. Wallet money carries across scenarios; spend it on upgrades or let it fund bigger storms later.</p>
+    <h2>Physics you can manipulate</h2>
+    <ul style="color:#cbd5e1;font-size:12px;line-height:1.6;">
+      <li><b>Head gradient</b> drives water — place levees to force detours; channels cut elevation and drain faster.</li>
+      <li><b>Tailwater</b> backs up water when downstream discharge is high. Hospital may flood from the outlet, not from rain.</li>
+      <li><b>Antecedent moisture (AMC)</b> — pre-wet soil infiltrates less. Historical events start with high AMC.</li>
+      <li><b>Breach</b> — levees fail when overtopped; stress builds with head differential. Reinforce to raise threshold.</li>
+      <li><b>Soil type</b> — sand drains fast, clay slow. Visible as subtle tint on grass cells.</li>
+    </ul>
+    <h2>Hotkeys</h2>
+    <div style="font-size:11px;color:var(--dim);line-height:1.7;">
+      <b>1–9</b> select tool · <b>Space</b> pause · <b>[ / ]</b> speed · <b>Ctrl+Z</b> undo<br>
+      <b>H</b> damage heatmap · <b>C</b> 1 m contours · <b>P</b> peak flood extent · <b>V</b> toggle iso / 2D<br>
+      <b>Wheel</b> zoom · <b>Shift+Drag</b> or middle-drag pan · <b>Arrows</b> nudge camera · <b>0</b> reset view<br>
+      <b>R</b> replay · <b>M</b> mute · <b>?</b> this help · <b>Esc</b> menu
+    </div>
+    <div style="margin-top:16px;"><button id="closeHelp" class="ghost">Got it</button></div>
+  </div>
+</div>
+
+<div id="campaignOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:400;display:none;align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:640px;max-height:90vh;overflow-y:auto;">
+    <h1>Campaign</h1>
+    <div id="campaignBody"></div>
+    <div style="margin-top:16px;display:flex;gap:8px;">
+      <button id="closeCampaign" class="ghost">Close</button>
+      <button id="resetCampaign" class="danger" style="margin-left:auto;">Reset Campaign Progress</button>
     </div>
   </div>
 </div>
@@ -267,16 +476,16 @@ const T = {
 
 // ---------- Tool catalog ----------
 const TOOLS = {
-  sandbag:    { name: 'Sandbag',      cost: 50,   icon: 'S', color: '#d4a56a', desc: 'Stackable bump, fast to place' },
-  levee:      { name: 'Levee',        cost: 300,  icon: 'L', color: '#8b6f47', desc: 'Tall wall, can breach if overtopped' },
-  reinforce:  { name: 'Reinforce',    cost: 150,  icon: '⚙', color: '#a78bfa', desc: 'Clears stress and hardens existing levee' },
-  channel:    { name: 'Channel',      cost: 150,  icon: 'C', color: '#4a5568', desc: 'Drains water 2× faster downstream' },
-  pump:       { name: 'Pump Station', cost: 800,  icon: 'P', color: '#dc2626', desc: 'Actively removes water in 5×5 area' },
-  siphon:     { name: 'Siphon',       cost: 250,  icon: '~', color: '#06b6d4', desc: 'Passive drain, no power; slower than pump' },
-  pond:       { name: 'Retention',    cost: 400,  icon: 'R', color: '#1e40af', desc: 'Excavates basin to store water' },
-  spillway:   { name: 'Spillway',     cost: 500,  icon: 'W', color: '#64748b', desc: 'Controlled overflow to safe area' },
-  evac:       { name: 'Evacuate',     cost: 200,  icon: 'E', color: '#22c55e', desc: 'Removes people; no damage counted' },
-  breach:     { name: 'Emergency Cut', cost: 100, icon: 'X', color: '#f59e0b', desc: 'Deliberately cuts a levee to relieve pressure' },
+  sandbag:    { name: 'Sandbag',      cost: 50000,   icon: 'S', color: '#d4a56a', desc: 'Stackable bump, fast to place' },
+  levee:      { name: 'Levee',        cost: 300000,  icon: 'L', color: '#8b6f47', desc: 'Tall wall, can breach if overtopped' },
+  reinforce:  { name: 'Reinforce',    cost: 150000,  icon: '⚙', color: '#a78bfa', desc: 'Clears stress and hardens existing levee' },
+  channel:    { name: 'Channel',      cost: 150000,  icon: 'C', color: '#4a5568', desc: 'Drains water 2× faster downstream' },
+  pump:       { name: 'Pump Station', cost: 800000,  icon: 'P', color: '#dc2626', desc: 'Actively removes water in 5×5 area' },
+  siphon:     { name: 'Siphon',       cost: 250000,  icon: '~', color: '#06b6d4', desc: 'Passive drain, no power; slower than pump' },
+  pond:       { name: 'Retention',    cost: 400000,  icon: 'R', color: '#1e40af', desc: 'Excavates basin to store water' },
+  spillway:   { name: 'Spillway',     cost: 500000,  icon: 'W', color: '#64748b', desc: 'Controlled overflow to safe area' },
+  evac:       { name: 'Evacuate',     cost: 200000,  icon: 'E', color: '#22c55e', desc: 'Removes people; no damage counted' },
+  breach:     { name: 'Emergency Cut', cost: 100000, icon: 'X', color: '#f59e0b', desc: 'Deliberately cuts a levee to relieve pressure' },
 };
 
 // ---------- SCS Type II hyetograph (24-hour cumulative rainfall distribution) ----------
@@ -463,6 +672,7 @@ const STAR_REQUIREMENTS = {
   edenville2020: 10,
   oroville2017: 13,
   katrina2005: 16,
+  asheville2024: 18,
   endless: 20,
 };
 
@@ -511,7 +721,7 @@ const SCENARIOS = [
     diff: 'easy',
     blurb: 'Flat meadow, steady river, light storm. Learn the physics.',
     brief: 'A light training scenario. Rainfall is moderate and the river is tame. Use this to get comfortable with levees, channels, and pumps before tackling real disasters.',
-    budget: 3000,
+    budget: 3000000,
     duration: 120,
     mapScale: 0.7,
     stormProfile: t => ({
@@ -535,7 +745,7 @@ const SCENARIOS = [
     diff: 'normal',
     blurb: 'Slow-rising crest. Weeks of rain upstream, now the river peaks.',
     brief: 'June 2008. Cedar River at Cedar Rapids reached 31.12 ft — nearly 12 ft above the 100-year flood. 1,300 city blocks inundated. The river rises gradually; this is a duration fight, not a flash flood. Pre-position levees and let pumps run long.',
-    budget: 5000,
+    budget: 5000000,
     duration: 180,
     mapScale: 1.0,
     amc: 0.85,
@@ -560,7 +770,7 @@ const SCENARIOS = [
     diff: 'hard',
     blurb: 'Compound flooding. Stalled hurricane dumps 40 inches of rain.',
     brief: 'August 2017. Hurricane Harvey stalled over SE Texas and dropped 40+ inches in four days. Flat terrain, overwhelmed bayous, reservoirs at capacity. The enemy here is pure rainfall depth, not river peak. Retention ponds and pumps earn their keep.',
-    budget: 6500,
+    budget: 6500000,
     duration: 240,
     mapScale: 1.3,
     amc: 0.75,
@@ -585,7 +795,7 @@ const SCENARIOS = [
     diff: 'extreme',
     blurb: 'Dam failure upstream. Minutes to evacuate. 2,209 died.',
     brief: 'May 31, 1889. South Fork Dam on Lake Conemaugh failed after heavy rain. A 36-foot wall of water, 20M tons, hit Johnstown in under an hour. 2,209 died — one of the worst disasters in US history. You have limited warning. Evacuations save lives; levees probably will not hold.',
-    budget: 8000,
+    budget: 8000000,
     duration: 120,
     mapScale: 1.2,
     stormProfile: t => ({
@@ -609,7 +819,7 @@ const SCENARIOS = [
     diff: 'extreme',
     blurb: 'Storm surge overtops levees. Below sea level. Pumps or perish.',
     brief: 'August 29, 2005. Category 3 at landfall. Storm surge overtopped and breached 50+ levees. 80% of the city flooded, much of it below sea level. Pumps are essential but many were knocked out. Strengthen levees, stage pumps, protect the Superdome and hospitals.',
-    budget: 9000,
+    budget: 9000000,
     duration: 180,
     mapScale: 1.4,
     stormProfile: t => {
@@ -636,7 +846,7 @@ const SCENARIOS = [
     diff: 'hard',
     blurb: 'Engineering dilemma: breach a levee upstream or let the city flood.',
     brief: 'Spring 1927. The Mississippi reached 80-foot crests; 27,000 sq miles submerged across 7 states. The Army Corps dynamited the Caernarvon levee to save New Orleans, flooding poorer parishes downstream. Here the river is wide and relentless. Sometimes a controlled breach is the right call — even if it costs you damage.',
-    budget: 7000,
+    budget: 7000000,
     duration: 240,
     mapScale: 1.3,
     amc: 0.8,
@@ -661,7 +871,7 @@ const SCENARIOS = [
     diff: 'extreme',
     blurb: 'Main spillway fractured. Auxiliary eroding. 188,000 evacuated.',
     brief: 'February 2017. Oroville Dam — tallest in the US — saw its main spillway disintegrate mid-release. The auxiliary emergency spillway, never used before, began eroding toward the dam foundation. 188,000 people downstream evacuated. The reservoir cannot be allowed to overtop. Manage flow, reinforce the path, buy time.',
-    budget: 10000,
+    budget: 10000000,
     duration: 200,
     mapScale: 1.3,
     stormProfile: t => ({
@@ -685,7 +895,7 @@ const SCENARIOS = [
     diff: 'hard',
     blurb: 'Cascading failure. Edenville fails, Sanford next. Two towns downstream.',
     brief: 'May 19, 2020. Midland County, Michigan. After days of rain, Edenville Dam failed — releasing Wixom Lake downstream into Sanford Lake, which then overtopped Sanford Dam. 10,000 evacuated, $250M damage. You have two reservoirs, two dams, and cascading consequences. Protect downstream before upstream fails.',
-    budget: 6500,
+    budget: 6500000,
     duration: 180,
     mapScale: 1.2,
     stormProfile: t => ({
@@ -709,7 +919,7 @@ const SCENARIOS = [
     diff: 'hard',
     blurb: 'Hurricane Matthew. Lumber River jumps I-95. West Lumberton flooded.',
     brief: 'October 8-14, 2016. Hurricane Matthew stalled over eastern NC and dumped 12-14 inches. The Lumber River, normally 13 ft at flood stage, crested at 24.15 ft. West Lumberton flooded for the first time in recorded history because water breached through a CSX railroad underpass — an opening nobody had planned for. Close the gap, or the town drowns.',
-    budget: 5500,
+    budget: 5500000,
     duration: 200,
     mapScale: 1.1,
     amc: 0.7,
@@ -728,13 +938,40 @@ const SCENARIOS = [
     peakRain: 30,
   },
   {
+    id: 'asheville2024',
+    name: 'Asheville (Helene)',
+    year: '2024',
+    diff: 'extreme',
+    blurb: 'Orographic flash flood. 30+ inches in the mountains. River confluence breaks.',
+    brief: 'September 26-28, 2024. Hurricane Helene stalled its remnants against the Appalachian escarpment. Orographic lift dumped 20-30 inches on western NC. The French Broad and Swannanoa crested 8+ feet above any prior record at their Asheville confluence. Entire towns — Chimney Rock, Swannanoa, Biltmore Village — were swept away. Over 100 dead in NC alone. You sit in a narrow gorge below the confluence. There is no retreat.',
+    budget: 8000000,
+    duration: 200,
+    mapScale: 1.15,
+    amc: 0.6, // saturated from days of prior rain
+    stormProfile: t => ({
+      // Violent rainfall peak driven by stalled tropical moisture over mountains
+      rain: 25 + 55 * Math.max(0, Math.sin(Math.PI * (t - 30) / 120)) + 20 * Math.max(0, Math.sin(Math.PI * (t - 50) / 60)),
+      // Fast upland response — narrow steep catchment, almost-flashy hydrograph
+      inflow: 0.4 + 3.2 * Math.max(0, Math.sin(Math.PI * (t - 35) / 110)) + (t > 60 && t < 130 ? 2.0 : 0),
+    }),
+    terrain: generateMountainGorge,
+    townBox: { x: 0.45, y: 0.60, w: 16, h: 10 },
+    hospital: { x: 0.48, y: 0.56 },
+    school: { x: 0.55, y: 0.66 },
+    winDamage: 55,
+    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'evac', 'breach'],
+    peakAt: 95,
+    peakFlow: 5.2,
+    peakRain: 95,
+  },
+  {
     id: 'localstorm',
     name: 'Local Design Storm',
     year: 'Your City',
     diff: 'normal',
     blurb: 'SCS Type II 24-hr storm using your selected city\'s rainfall depth.',
     brief: 'A dimensionless SCS Type II rainfall distribution scaled by the 100-year 24-hour precipitation depth for your selected city (set in Settings). River inflow follows an SCS triangular unit hydrograph lagged to represent a small urban watershed. Change your city in the menu to see how different climates stress your design.',
-    budget: 5000,
+    budget: 5000000,
     duration: 240,
     mapScale: 1.1,
     stormProfile: t => localStormProfile(t, 240),
@@ -755,7 +992,7 @@ const SCENARIOS = [
     diff: 'easy',
     blurb: 'Unlimited budget. Experiment with the physics against a hard storm.',
     brief: 'Free-play sandbox mode. Unlimited budget, all tools available, no objectives — but the storm is serious so you have something to work against. Watch how channels route flow, how levees fail under sustained load, how soil saturates.',
-    budget: 999999,
+    budget: 999999999,
     duration: 600,
     mapScale: 1.0,
     stormProfile: t => ({
@@ -780,7 +1017,7 @@ const SCENARIOS = [
     diff: 'normal',
     blurb: 'Seeded scenario, resets every day. Compete for the best score.',
     brief: 'A procedurally generated scenario with a seed based on today\'s date. Everyone who plays today faces the same storm. Compare your score tomorrow, when the seed rolls over.',
-    budget: 5000,
+    budget: 5000000,
     duration: 180,
     mapScale: 1.0,
     stormProfile: t => dailyStormProfile(t),
@@ -802,7 +1039,7 @@ const SCENARIOS = [
     diff: 'extreme',
     blurb: 'Procedural storms forever. How many rounds can you hold?',
     brief: 'Survive waves of escalating storms. Each round the rain falls harder, the river rises faster, and your budget is smaller. Run: how long can you hold?',
-    budget: 4000,
+    budget: 4000000,
     duration: 600,
     mapScale: 1.3,
     stormProfile: t => ({
@@ -833,16 +1070,26 @@ const state = {
   damage: null,
   stress: null,        // Levee stress (time above water level) — drives breach
   flow: null,          // Last-step flux magnitude (for visual)
+  flowX: null,         // Resultant flux x-component per cell
+  flowY: null,         // Resultant flux y-component per cell
   soilSat: null,       // Soil saturation 0..1; reduces infiltration
   soilType: null,      // 0=loam, 1=sand (fast drain), 2=clay (slow drain)
   reinforced: null,    // Uint8Array, 1 if levee is reinforced (2× breach threshold)
   countdown: 0,        // Pre-storm countdown seconds
-  windX: 0,            // Wind vector (cells/sec)
+  windX: 0,            // Derived pixel-space wind for rain particles (back-compat)
+  windVx: 0,           // Wind velocity in m/s (east positive)
+  windVy: 0,           // Wind velocity in m/s (south positive, matches game Y)
+  windVxBase: 0,       // Slowly-drifting base wind (gust = base + noise)
+  windVyBase: 0,
   showHeatmap: false,
   fireworks: [],       // Victory particles
+  showContours: false, // Contour line overlay
+  contourSegs: null,   // Cached contour segments
   watershedQ: 0,       // Lagged virtual upstream runoff (game units)
   tailwaterStage: 0,   // Current downstream tailwater elevation
   outflowQ: 0,         // Total flux into outlet row last tick
+  dragZ: null,         // Pinned unproject z-plane during an active click-drag
+  campaign: { active: false, index: 0 },  // Campaign run state
   prepTimer: 30,       // Seconds before storm auto-starts
   nextEventAt: 0,      // Next mid-storm random event time
   eventInflowSpike: 0, // Temporary inflow multiplier from events
@@ -868,7 +1115,8 @@ const state = {
   stage: 0,
   breachEvents: [],
   objectives: [],
-  stats: { peakDamage: 0, breaches: 0, evacuated: 0, pumped: 0 },
+  stats: { peakDamage: 0, breaches: 0, evacuated: 0, pumped: 0, spentBy: {} },
+  showPeakExtent: false,
   hydrographHistory: [],
 };
 
@@ -881,13 +1129,24 @@ function idx(x, y) { return y * COLS + x; }
 
 // ---------- Terrain generators ----------
 function generateValley(elev) {
+  // Ridge + side-drainage terrain: main valley slopes N→S but has secondary
+  // tributaries and hills so flow finds real gradient directions, not just
+  // axis-aligned N/S.
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {
       const i = idx(x, y);
-      const slope = (ROWS - y) * 0.15 + Math.abs(x - COLS * 0.5) * 0.04;
-      const river = -3.0 * Math.exp(-Math.pow((x - (COLS * 0.3 + Math.sin(y * 0.2) * 10)) / 4, 2));
-      const noise = Math.sin(x * 0.3) * 0.3 + Math.cos(y * 0.25) * 0.3 + Math.sin((x + y) * 0.15) * 0.2;
-      elev[i] = 6 + slope + river + noise;
+      const slope = (ROWS - y) * 0.11;
+      const valleyWall = Math.pow(Math.abs(x - COLS * 0.35) / (COLS * 0.45), 1.6) * 7;
+      const river = -3.2 * Math.exp(-Math.pow((x - (COLS * 0.3 + Math.sin(y * 0.18) * 12)) / 4, 2));
+      // Tributary: runs diagonally into the main valley
+      const trib = -1.4 * Math.exp(-Math.pow(((x - COLS * 0.7) + (y - ROWS * 0.35)) / 7, 2));
+      // Secondary tributary from NE
+      const trib2 = -1.0 * Math.exp(-Math.pow(((x - COLS * 0.85) - (y - ROWS * 0.55) * 0.6) / 6, 2));
+      // Hills and knobs — multi-octave noise so flow patterns are interesting
+      const noise1 = Math.sin(x * 0.18 + 1.7) * Math.cos(y * 0.22 + 2.3) * 1.1;
+      const noise2 = Math.sin((x + y) * 0.12) * 0.6;
+      const noise3 = Math.sin(x * 0.41 - 0.8) * Math.cos(y * 0.35) * 0.4;
+      elev[i] = 5 + slope + valleyWall + river + trib + trib2 + noise1 + noise2 + noise3;
     }
   }
 }
@@ -973,16 +1232,51 @@ function generateCascadeValley(elev) {
 }
 
 function generateSubSeaLevel(elev) {
-  // Much of the map below sea level; lake to the north
+  // New Orleans layout: Lake Pontchartrain to the north (y<25%), narrow
+  // levee ridge (3-4 cells), city bowl below sea level sloping DOWN toward
+  // pump outfalls at the south edge. Levee is deliberately NARROW so water
+  // can cross once overtopped — a 10%-of-ROWS-wide levee acts like a
+  // kilometer-thick earth dam and would never overtop in any reasonable time.
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {
       const i = idx(x, y);
       let base;
       if (y < ROWS * 0.25) base = 0; // lake
-      else if (y < ROWS * 0.35) base = 4; // levee ridge
-      else base = 1 + (y - ROWS * 0.35) * 0.03; // bowl below sea level
+      else if (y < ROWS * 0.28) base = 4; // levee ridge (3-4 cells thick)
+      else {
+        // Normalized 0 at the levee, 1 at the south edge
+        const frac = (y - ROWS * 0.28) / (ROWS * 0.72);
+        base = 2.2 - frac * 1.7; // 2.2m → 0.5m across the bowl
+      }
       const noise = Math.sin(x * 0.15) * 0.15 + Math.cos(y * 0.2) * 0.2;
       elev[i] = base + noise;
+    }
+  }
+}
+
+function generateMountainGorge(elev) {
+  // Steep Appalachian mountain valley: two rivers converge (French Broad +
+  // Swannanoa geometry). Ridges 15-20m above valley floor. Town sits in the
+  // narrow valley below the confluence — no room to retreat.
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      // Steep longitudinal gradient down the valley
+      const slope = (ROWS - y) * 0.22;
+      // Asymmetric ridges rising fast outside the valley
+      const distFromAxis = Math.abs(x - COLS * 0.5);
+      const ridge = Math.pow(distFromAxis / (COLS * 0.35), 1.6) * 16;
+      // Main river down the axis
+      const river1 = -3.0 * Math.exp(-Math.pow((x - COLS * 0.5 + Math.sin(y * 0.08) * 3) / 2.5, 2));
+      // Tributary joining from the left, converges near y=0.5
+      const tribOffset = Math.max(0, (y / ROWS) - 0.15) * 18;
+      const river2 = y < ROWS * 0.55
+        ? -2.2 * Math.exp(-Math.pow((x - (COLS * 0.2 + tribOffset)) / 2, 2))
+        : 0;
+      // Rocky, irregular terrain
+      const noise = Math.sin(x * 0.3 + 1.2) * 0.35 + Math.cos(y * 0.28 + 0.5) * 0.3
+                  + Math.sin((x + y) * 0.18) * 0.25;
+      elev[i] = 6 + slope + ridge + river1 + river2 + noise;
     }
   }
 }
@@ -1005,8 +1299,11 @@ function startScenario(sc) {
   state.type = new Uint8Array(COLS * ROWS);
   state.structH = new Float32Array(COLS * ROWS);
   state.damage = new Float32Array(COLS * ROWS);
+  state.peakDepth = new Float32Array(COLS * ROWS);
   state.stress = new Float32Array(COLS * ROWS);
   state.flow = new Float32Array(COLS * ROWS);
+  state.flowX = new Float32Array(COLS * ROWS);
+  state.flowY = new Float32Array(COLS * ROWS);
   state.soilSat = new Float32Array(COLS * ROWS);
   state.soilType = new Uint8Array(COLS * ROWS);
   state.reinforced = new Uint8Array(COLS * ROWS);
@@ -1016,9 +1313,10 @@ function startScenario(sc) {
   delete sc._budgetMod; delete sc._noLevees; delete sc._noEvac; delete sc._durationMod; delete sc._noPump;
   state.activeChallenges = new Set(state_challenges);
   for (const cid of state.activeChallenges) CHALLENGES[cid].apply(sc);
-  const budgetMult = (sc._budgetMod ?? 1) * settings.diff;
-  // FEMA grant is scaled down so wallet (carried over from prior scenarios) matters.
-  const femaGrant = Math.round(sc.budget * budgetMult * 0.6);
+  const budgetMult = (sc._budgetMod ?? 1) * settings.diff * budgetMultFor(state.campaign);
+  // FEMA grant covers most of the scenario budget so first-time players aren't
+  // broke on round 1; wallet still adds headroom on later runs.
+  const femaGrant = Math.round(sc.budget * budgetMult * 0.85) + femaGrantBonus();
   const walletContribution = sc.sandbox ? 0 : loadWallet();
   state.scenarioFEMA = femaGrant;
   state.scenarioWalletStart = walletContribution;
@@ -1035,14 +1333,22 @@ function startScenario(sc) {
   state.countdown = 0;
   state.fireworks = [];
   state.windX = 0;
+  // Seed a random prevailing wind for each scenario — 4-10 m/s base magnitude.
+  const ang = Math.random() * Math.PI * 2;
+  const mag = 4 + Math.random() * 6;
+  state.windVxBase = Math.cos(ang) * mag;
+  state.windVyBase = Math.sin(ang) * mag;
+  state.windVx = state.windVxBase;
+  state.windVy = state.windVyBase;
   state.nextEventAt = 30 + Math.random() * 25;
   state.eventInflowSpike = 0;
   state.watershedQ = 0;
-  state.tailwaterStage = 4.0;
+  state.tailwaterStage = 3.2;
   state.outflowQ = 0;
-  state.prepTimer = sc.sandbox ? 0 : 15;
+  state.prepTimer = sc.sandbox ? 0 : (15 + prepTimeBonus());
+  state._incidentFlags = {};
   state._camInit = false;
-  state.stats = { peakDamage: 0, breaches: 0, evacuated: 0, pumped: 0 };
+  state.stats = { peakDamage: 0, breaches: 0, evacuated: 0, pumped: 0, spentBy: {} };
   state.hydrographHistory = [];
   state.rainParticles = [];
   state.toasts = [];
@@ -1131,7 +1437,11 @@ function startScenario(sc) {
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {
       const i = idx(x, y);
-      if (state.elev[i] < 3.5 && state.type[i] === T.GRASS) state.type[i] = T.RIVER;
+      // Katrina sub-sea-level bowl (y >= 35%) stays DRY floodplain. It's not
+      // a river, and it must not get pre-filled to baseStage — otherwise the
+      // entire city starts submerged because its elevation is below 3.5m.
+      const isKatrinaBowl = (sc.id === 'katrina2005' && y >= ROWS * 0.35);
+      if (!isKatrinaBowl && state.elev[i] < 3.5 && state.type[i] === T.GRASS) state.type[i] = T.RIVER;
       if (y === ROWS - 1) state.type[i] = T.OUTLET;
     }
   }
@@ -1154,8 +1464,25 @@ function startScenario(sc) {
 
   buildObjectives();
   buildToolPanel();
-  document.getElementById('scenarioName').textContent = `${sc.name} — ${sc.year}`;
-  document.getElementById('briefing').textContent = sc.brief;
+  let campaignLabel = '';
+  if (state.campaign?.active) {
+    const camp = getCampaign(state.campaign.campaignId);
+    const diff = getDifficulty(state.campaign.difficulty);
+    const totalMult = stormIntensityFor(state.campaign).toFixed(2);
+    campaignLabel = ` · ${camp?.name || 'Campaign'} ${state.campaign.index + 1}/${camp?.missions.length || '?'} · ${diff.name} ×${totalMult}`;
+  }
+  document.getElementById('scenarioName').textContent = `${sc.name} — ${sc.year}${campaignLabel}`;
+  const forecast = computePeakForecast(sc);
+  state.scenarioForecast = forecast;
+  document.getElementById('briefing').innerHTML =
+    sc.brief +
+    `<div style="margin-top:10px;padding:8px;background:var(--panel2);border-radius:4px;font-size:11px;line-height:1.5;">
+      <div style="color:#fbbf24;font-weight:bold;text-transform:uppercase;letter-spacing:0.05em;font-size:10px;">Forecast</div>
+      <div>Peak rainfall: <b>${forecast.peakRain.toFixed(0)} mm/hr</b></div>
+      <div>Peak inflow:   <b>${forecast.peakInflow.toFixed(1)} units</b> @ ${formatTime(forecast.peakT)}</div>
+      <div>Est. peak stage: <b style="color:${forecast.peakStage > 6 ? '#ef4444' : '#fbbf24'};">${forecast.peakStage.toFixed(1)} m</b></div>
+      <div style="color:#94a3b8;font-size:10px;margin-top:2px;">Floodplain crest ≈ 4.3 m · Tailwater base 3.2 m</div>
+    </div>`;
   renderChallengePanel();
   document.getElementById('overlay').style.display = 'none';
   document.getElementById('startBtn').disabled = false;
@@ -1186,8 +1513,10 @@ function step(dt) {
 
   // Storm profile
   const profile = sc.stormProfile(state.time);
-  state.currentRain = state.storming ? profile.rain : 0;
-  state.currentInflow = state.storming ? profile.inflow * (1 + state.eventInflowSpike) : 1.5;
+  // Campaign runs intensify storms per-mission (+4%/mission) × difficulty rainMult
+  const stormMult = stormIntensityFor(state.campaign);
+  state.currentRain = state.storming ? profile.rain * stormMult : 0;
+  state.currentInflow = state.storming ? profile.inflow * stormMult * (1 + state.eventInflowSpike) : 1.5;
 
   // Decay event spike
   state.eventInflowSpike = Math.max(0, state.eventInflowSpike - dt * 0.15);
@@ -1204,49 +1533,96 @@ function step(dt) {
   // cell-to-cell distance (√2 times the cardinal step).
   state.waterNext.set(state.water);
   state.flow.fill(0);
-  const W = state.water, WN = state.waterNext, EL = state.elev, SH = state.structH, TY = state.type, FL = state.flow;
+  state.flowX.fill(0);
+  state.flowY.fill(0);
+  const W = state.water, WN = state.waterNext, EL = state.elev, SH = state.structH, TY = state.type, FL = state.flow, FX = state.flowX, FY = state.flowY;
   const COLS_ = COLS;
   const DIAG = 0.7071;
   const K_BASE = 0.22, K_CHAN = 0.45, K_SPILL = 0.35;
+  // Wind shear flux — small tangential forcing on the water surface. Real
+  // surface drift is ~3% of the wind speed; scaled down further so wind
+  // nudges shallow water across flat ground but never overwhelms gravity.
+  // Only applies when depth > 5 cm so dry cells aren't affected.
+  const K_WIND = 0.00045;
+  const WVx = state.windVx, WVy = state.windVy;
 
-  for (let y = 1; y < ROWS - 1; y++) {
-    const rowStart = y * COLS_ + 1;
-    const rowEnd = rowStart + COLS_ - 2;
-    for (let i = rowStart; i < rowEnd; i++) {
+  const kFor = (ta, tb) =>
+    (ta === T.CHANNEL || tb === T.CHANNEL) ? K_CHAN :
+    (ta === T.SPILLWAY || tb === T.SPILLWAY) ? K_SPILL : K_BASE;
+  const ROWS_ = ROWS;
+  // Iterate every cell including borders. Boundary cells need to be sources
+  // too — otherwise rain/inflow/surge deposited at y=0 is trapped there
+  // forever because no other cell can pull water north. Out-of-bounds
+  // directions are gated per cell. Outlet cells never act as sources; they
+  // are destinations clamped to tailwater after the loop.
+  for (let y = 0; y < ROWS_; y++) {
+    for (let x = 0; x < COLS_; x++) {
+      const i = y * COLS_ + x;
       const wi = W[i];
       if (wi < 0.0005) continue;
       const ti = TY[i];
+      if (ti === T.OUTLET) continue;
       const hi = EL[i] + SH[i] + wi;
 
-      // 8 neighbor indices
-      const iE  = i + 1,         iW  = i - 1;
-      const iS  = i + COLS_,     iN  = i - COLS_;
-      const iSE = i + COLS_ + 1, iSW = i + COLS_ - 1;
-      const iNE = i - COLS_ + 1, iNW = i - COLS_ - 1;
-
-      const hE  = EL[iE]  + SH[iE]  + W[iE];
-      const hW  = EL[iW]  + SH[iW]  + W[iW];
-      const hS  = EL[iS]  + SH[iS]  + W[iS];
-      const hN  = EL[iN]  + SH[iN]  + W[iN];
-      const hSE = EL[iSE] + SH[iSE] + W[iSE];
-      const hSW = EL[iSW] + SH[iSW] + W[iSW];
-      const hNE = EL[iNE] + SH[iNE] + W[iNE];
-      const hNW = EL[iNW] + SH[iNW] + W[iNW];
-
-      const kFor = (ta, tb) =>
-        (ta === T.CHANNEL || tb === T.CHANNEL) ? K_CHAN :
-        (ta === T.SPILLWAY || tb === T.SPILLWAY) ? K_SPILL : K_BASE;
+      const hasN = y > 0, hasS = y < ROWS_ - 1;
+      const hasE = x < COLS_ - 1, hasWestN = x > 0;
 
       let fE = 0, fW = 0, fS = 0, fN = 0;
       let fSE = 0, fSW = 0, fNE = 0, fNW = 0;
-      const dE = hi - hE;   if (dE > 0) fE = Math.min(wi, dE * kFor(ti, TY[iE]));
-      const dW = hi - hW;   if (dW > 0) fW = Math.min(wi, dW * kFor(ti, TY[iW]));
-      const dS = hi - hS;   if (dS > 0) fS = Math.min(wi, dS * kFor(ti, TY[iS]));
-      const dN = hi - hN;   if (dN > 0) fN = Math.min(wi, dN * kFor(ti, TY[iN]));
-      const dSE = hi - hSE; if (dSE > 0) fSE = Math.min(wi, dSE * kFor(ti, TY[iSE]) * DIAG);
-      const dSW = hi - hSW; if (dSW > 0) fSW = Math.min(wi, dSW * kFor(ti, TY[iSW]) * DIAG);
-      const dNE = hi - hNE; if (dNE > 0) fNE = Math.min(wi, dNE * kFor(ti, TY[iNE]) * DIAG);
-      const dNW = hi - hNW; if (dNW > 0) fNW = Math.min(wi, dNW * kFor(ti, TY[iNW]) * DIAG);
+
+      if (hasE) {
+        const iE = i + 1;
+        const dE = hi - (EL[iE] + SH[iE] + W[iE]);
+        if (dE > 0) fE = Math.min(wi, dE * kFor(ti, TY[iE]));
+      }
+      if (hasWestN) {
+        const iW = i - 1;
+        const dW = hi - (EL[iW] + SH[iW] + W[iW]);
+        if (dW > 0) fW = Math.min(wi, dW * kFor(ti, TY[iW]));
+      }
+      if (hasS) {
+        const iS = i + COLS_;
+        const dS = hi - (EL[iS] + SH[iS] + W[iS]);
+        if (dS > 0) fS = Math.min(wi, dS * kFor(ti, TY[iS]));
+      }
+      if (hasN) {
+        const iN = i - COLS_;
+        const dN = hi - (EL[iN] + SH[iN] + W[iN]);
+        if (dN > 0) fN = Math.min(wi, dN * kFor(ti, TY[iN]));
+      }
+      if (hasS && hasE) {
+        const iSE = i + COLS_ + 1;
+        const dSE = hi - (EL[iSE] + SH[iSE] + W[iSE]);
+        if (dSE > 0) fSE = Math.min(wi, dSE * kFor(ti, TY[iSE]) * DIAG);
+      }
+      if (hasS && hasWestN) {
+        const iSW = i + COLS_ - 1;
+        const dSW = hi - (EL[iSW] + SH[iSW] + W[iSW]);
+        if (dSW > 0) fSW = Math.min(wi, dSW * kFor(ti, TY[iSW]) * DIAG);
+      }
+      if (hasN && hasE) {
+        const iNE = i - COLS_ + 1;
+        const dNE = hi - (EL[iNE] + SH[iNE] + W[iNE]);
+        if (dNE > 0) fNE = Math.min(wi, dNE * kFor(ti, TY[iNE]) * DIAG);
+      }
+      if (hasN && hasWestN) {
+        const iNW = i - COLS_ - 1;
+        const dNW = hi - (EL[iNW] + SH[iNW] + W[iNW]);
+        if (dNW > 0) fNW = Math.min(wi, dNW * kFor(ti, TY[iNW]) * DIAG);
+      }
+
+      // Wind shear — gate each direction on in-bounds
+      if (wi > 0.05) {
+        const wCap = wi * 0.25;
+        if (hasE)            fE  += Math.min(wCap, K_WIND * Math.max(0,  WVx)       * wi);
+        if (hasWestN)        fW  += Math.min(wCap, K_WIND * Math.max(0, -WVx)       * wi);
+        if (hasS)            fS  += Math.min(wCap, K_WIND * Math.max(0,  WVy)       * wi);
+        if (hasN)            fN  += Math.min(wCap, K_WIND * Math.max(0, -WVy)       * wi);
+        if (hasS && hasE)    fSE += Math.min(wCap, K_WIND * Math.max(0,  WVx + WVy) * wi * DIAG * 0.707);
+        if (hasS && hasWestN)fSW += Math.min(wCap, K_WIND * Math.max(0, -WVx + WVy) * wi * DIAG * 0.707);
+        if (hasN && hasE)    fNE += Math.min(wCap, K_WIND * Math.max(0,  WVx - WVy) * wi * DIAG * 0.707);
+        if (hasN && hasWestN)fNW += Math.min(wCap, K_WIND * Math.max(0, -WVx - WVy) * wi * DIAG * 0.707);
+      }
 
       let total = fE + fW + fS + fN + fSE + fSW + fNE + fNW;
       if (total > wi) {
@@ -1255,16 +1631,18 @@ function step(dt) {
         fSE *= s; fSW *= s; fNE *= s; fNW *= s;
         total = wi;
       }
-      if (fE > 0)  WN[iE]  += fE;
-      if (fW > 0)  WN[iW]  += fW;
-      if (fS > 0)  WN[iS]  += fS;
-      if (fN > 0)  WN[iN]  += fN;
-      if (fSE > 0) WN[iSE] += fSE;
-      if (fSW > 0) WN[iSW] += fSW;
-      if (fNE > 0) WN[iNE] += fNE;
-      if (fNW > 0) WN[iNW] += fNW;
+      if (fE > 0)  WN[i + 1]          += fE;
+      if (fW > 0)  WN[i - 1]          += fW;
+      if (fS > 0)  WN[i + COLS_]      += fS;
+      if (fN > 0)  WN[i - COLS_]      += fN;
+      if (fSE > 0) WN[i + COLS_ + 1]  += fSE;
+      if (fSW > 0) WN[i + COLS_ - 1]  += fSW;
+      if (fNE > 0) WN[i - COLS_ + 1]  += fNE;
+      if (fNW > 0) WN[i - COLS_ - 1]  += fNW;
       WN[i] -= total;
       FL[i] = total;
+      FX[i] = (fE - fW) + (fSE - fSW + fNE - fNW) * DIAG;
+      FY[i] = (fS - fN) + (fSE + fSW - fNE - fNW) * DIAG;
     }
   }
 
@@ -1288,19 +1666,30 @@ function step(dt) {
   const tau = 18; // seconds of watershed lag
   state.watershedQ += (inflowFromRain - state.watershedQ / tau) * dt;
   const totalInflow = state.currentInflow + state.watershedQ;
-  for (let x = 0; x < COLS; x++) {
-    const i0 = idx(x, 0);
-    if (state.type[i0] === T.RIVER) state.waterNext[i0] += totalInflow * 0.35;
-    const i1 = idx(x, 1);
-    if (state.type[i1] === T.RIVER) state.waterNext[i1] += totalInflow * 0.20;
+  // Skip the generic river-inflow injection for Katrina — row 0 is a 252-cell
+  // lake there (not a river channel), so the generic code would pump the
+  // equivalent of ~250× a normal scenario's inflow. Katrina uses its own
+  // calibrated surge block below.
+  if (state.scenario.id !== 'katrina2005') {
+    for (let x = 0; x < COLS; x++) {
+      const i0 = idx(x, 0);
+      if (state.type[i0] === T.RIVER) state.waterNext[i0] += totalInflow * 0.35;
+      const i1 = idx(x, 1);
+      if (state.type[i1] === T.RIVER) state.waterNext[i1] += totalInflow * 0.20;
+    }
   }
 
-  // ---- Katrina-specific: lake inflow ----
-  if (state.scenario.id === 'katrina2005') {
+  // ---- Katrina-specific: storm surge at the north edge ----
+  // Coefficients here get applied to every column at the lake boundary, so
+  // the total mass added per step is (coef × COLS × inflow). A normal river
+  // inflow concentrates in ~3 cells at ~0.35 × inflow; to represent a
+  // realistic ~5× total storm surge flux we need coef × COLS ≈ 5 × 0.35 × 3,
+  // so ~0.02 per cell. Anything higher raises the lake faster than any sane
+  // levee can overtop, and the lake piles straight up.
+  if (state.scenario.id === 'katrina2005' && state.storming) {
     for (let x = 0; x < COLS; x++) {
-      for (let y = 0; y < ROWS * 0.25; y++) {
-        state.waterNext[idx(x, y)] += state.currentInflow * 0.15;
-      }
+      state.waterNext[idx(x, 0)] += state.currentInflow * 0.015;
+      state.waterNext[idx(x, 1)] += state.currentInflow * 0.005;
     }
   }
 
@@ -1309,12 +1698,13 @@ function step(dt) {
     for (let x = 0; x < COLS; x++) {
       const i = idx(x,y);
       if (state.type[i] === T.PUMP) {
+        const cap = 0.03 * pumpPowerMult();
         for (let dy = -2; dy <= 2; dy++) {
           for (let dx = -2; dx <= 2; dx++) {
             const nx = x + dx, ny = y + dy;
             if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
               const j = idx(nx, ny);
-              const removed = Math.min(0.03, state.waterNext[j]);
+              const removed = Math.min(cap, state.waterNext[j]);
               state.waterNext[j] -= removed;
               state.stats.pumped += removed;
             }
@@ -1357,18 +1747,26 @@ function step(dt) {
   }
 
   // ---- Outlets with tailwater boundary ----
-  // Measure discharge arriving at the outlet row (sum of water sitting in outlet cells
-  // before we apply the boundary condition). That discharge drives a rating curve.
+  // Measure INCREMENTAL flux arriving at the outlet row this step — the delta
+  // between what flux added and the clamped tailwater depth the outlet held
+  // last step. Measuring raw waterNext[i] erroneously captured the standing
+  // canal depth (~2.7 m) as "flow", driving tailwater up to its cap and
+  // trapping water just upstream because bowl surface could never exceed it.
   let Q_in = 0;
+  let outletCount = 0;
   for (let x = 0; x < COLS; x++) {
     const i = idx(x, ROWS - 1);
-    if (state.type[i] === T.OUTLET) Q_in += state.waterNext[i];
+    if (state.type[i] === T.OUTLET) {
+      Q_in += Math.max(0, state.waterNext[i] - state.water[i]);
+      outletCount++;
+    }
   }
-  state.outflowQ = state.outflowQ * 0.85 + Q_in * 0.15; // low-pass filter
-  // Stage-discharge rating. H_base sits just below the floodplain crest so
-  // there's always a visible standing pool at the outlet; storms push it up.
-  const H_base = 4.0;
-  const H_tw_target = H_base + 0.55 * Math.pow(Math.max(0, state.outflowQ), 0.7);
+  const q_avg = outletCount > 0 ? Q_in / outletCount : 0;
+  state.outflowQ = state.outflowQ * 0.85 + q_avg * 0.15; // low-pass filter, mean incremental flux
+  // Stage-discharge rating. H_base is the resting discharge elevation; flow
+  // causes a small backwater rise capped at 1.5 m.
+  const H_base = 3.2;
+  const H_tw_target = H_base + Math.min(1.5, 6.0 * Math.pow(Math.max(0, state.outflowQ), 0.6));
   state.tailwaterStage = state.tailwaterStage * 0.9 + H_tw_target * 0.1;
   // Hold outlet cells at tailwater stage (water depth = tw - terrain, clamped ≥ 0)
   for (let x = 0; x < COLS; x++) {
@@ -1401,7 +1799,8 @@ function step(dt) {
           if (maxHead > 0) {
             const rate = state.reinforced[i] ? 0.5 : 1.0;
             state.stress[i] += dt * rate * (1 + maxHead * 3);
-            const threshold = state.reinforced[i] ? 10 : 5;
+            const baseThresh = state.reinforced[i] ? 10 : 5;
+            const threshold = baseThresh * leveeBreachMult();
             if (state.stress[i] > threshold) {
               state.type[i] = T.BREACH;
               state.structH[i] = -0.5;
@@ -1442,17 +1841,39 @@ function step(dt) {
     }
   }
 
-  // ---- Damage accumulation ----
+  // ---- Damage via stage-damage curves (HAZUS-style depth→damage) ----
+  // Each building type has a depth→max-damage curve. Actual damage relaxes
+  // toward the curve target over exposure time, so brief splashes don't
+  // destroy a building but sustained inundation does.
   if (state.storming) {
     for (let i = 0; i < state.type.length; i++) {
       const t = state.type[i];
-      const depth = state.water[i];
-      if (depth > 0.15) {
-        if (t === T.TOWN) state.damage[i] = Math.min(1, state.damage[i] + depth * 0.004);
-        else if (t === T.HOSPITAL) state.damage[i] = Math.min(1, state.damage[i] + depth * 0.006);
-        else if (t === T.SCHOOL) state.damage[i] = Math.min(1, state.damage[i] + depth * 0.005);
+      if (t !== T.TOWN && t !== T.HOSPITAL && t !== T.SCHOOL) continue;
+      const d = state.water[i];
+      if (d < 0.05) continue;
+      let target;
+      if (t === T.HOSPITAL) {
+        target = d < 0.3 ? 0.15 : d < 0.6 ? 0.40 : d < 1.2 ? 0.75 : 1.0;
+      } else if (t === T.SCHOOL) {
+        target = d < 0.3 ? 0.10 : d < 0.6 ? 0.30 : d < 1.2 ? 0.65 : d < 2.0 ? 0.90 : 1.0;
+      } else {
+        target = d < 0.3 ? 0.05 : d < 0.6 ? 0.22 : d < 1.2 ? 0.55 : d < 2.0 ? 0.82 : 1.0;
+      }
+      if (target > state.damage[i]) {
+        state.damage[i] = Math.min(1, state.damage[i] + (target - state.damage[i]) * 0.04 * dt);
       }
     }
+    // One-shot incident notifications (first time buildings cross damage thresholds)
+    if (!state._incidentFlags) state._incidentFlags = {};
+    const f = state._incidentFlags;
+    const hospDmg = getInfraDamage(T.HOSPITAL);
+    const schDmg = getInfraDamage(T.SCHOOL);
+    const townDmg = getInfraDamage(T.TOWN);
+    if (!f.hospHit && hospDmg > 20) { f.hospHit = true; toast('⚠ Hospital taking water — ER flooding', 'danger'); }
+    if (!f.hospCrit && hospDmg > 60) { f.hospCrit = true; toast('💀 Hospital evacuation order issued', 'danger'); }
+    if (!f.schHit && schDmg > 30) { f.schHit = true; toast('⚠ School first floor inundated', 'danger'); }
+    if (!f.townMinor && townDmg > 15) { f.townMinor = true; toast('Residential streets flooded', 'info'); }
+    if (!f.townMajor && townDmg > 40) { f.townMajor = true; toast('⚠ Major residential damage', 'danger'); }
   }
 
   // ---- River stage (max water level along river column) ----
@@ -1463,12 +1884,27 @@ function step(dt) {
       if (state.type[i] === T.RIVER) maxStage = Math.max(maxStage, state.water[i]);
     }
   }
-  state.stage = maxStage;
+  // Low-pass filter — the instantaneous max oscillates sub-centimeter between
+  // ticks as water sloshes. Smooth so the HUD readout stays readable.
+  state.stage = (state.stage || 0) * 0.85 + maxStage * 0.15;
 
-  // ---- Wind (slow random walk) ----
-  state.windX += (Math.random() - 0.5) * dt * 30;
-  state.windX *= 0.99;
-  state.windX = Math.max(-200, Math.min(200, state.windX));
+  // ---- Wind (2D, real units: m/s) ----
+  // Base drifts on a slow random walk; actual wind adds gust noise scaled by
+  // rainfall intensity (heavier rain → gustier). Storming doubles the ceiling.
+  state.windVxBase += (Math.random() - 0.5) * dt * 0.8;
+  state.windVyBase += (Math.random() - 0.5) * dt * 0.8;
+  const baseCap = state.storming ? 22 : 10;
+  const mag = Math.hypot(state.windVxBase, state.windVyBase);
+  if (mag > baseCap) {
+    state.windVxBase *= baseCap / mag;
+    state.windVyBase *= baseCap / mag;
+  }
+  const gustMag = (state.storming ? 3 : 1) * (1 + state.currentRain / 60);
+  state.windVx = state.windVxBase + (Math.random() - 0.5) * gustMag;
+  state.windVy = state.windVyBase + (Math.random() - 0.5) * gustMag;
+  // Back-compat: derive pixel-space wind for rain/cloud visuals.
+  // Tuned so ~10 m/s wind gives ~100 px/s lateral rain drift.
+  state.windX = state.windVx * 10;
 
   // ---- Rain particle updates (angled by wind) ----
   if (state.currentRain > 0) {
@@ -1517,6 +1953,13 @@ function step(dt) {
     if (state.hydrographHistory.length > 800) state.hydrographHistory.shift();
   }
 
+  // ---- Track peak depths ----
+  if (state.storming) {
+    for (let i = 0; i < state.water.length; i++) {
+      if (state.water[i] > state.peakDepth[i]) state.peakDepth[i] = state.water[i];
+    }
+  }
+
   // ---- Stats ----
   state.stats.peakDamage = Math.max(state.stats.peakDamage, getDamagePct());
 }
@@ -1542,6 +1985,20 @@ function getInfraDamage(tileType) {
   return tot > 0 ? (100 * dmg / tot) : 0;
 }
 
+// ---------- Money formatting ----------
+// Compact $X.XM / $XXXK / $X,XXX. Used everywhere budget numbers are shown
+// in the HUD so the big infrastructure costs stay readable.
+function fmt$(n) {
+  const v = Math.round(n || 0);
+  const sign = v < 0 ? '-' : '';
+  const a = Math.abs(v);
+  if (a >= 1e9) return sign + '$' + (a / 1e9).toFixed(a >= 1e10 ? 1 : 2) + 'B';
+  if (a >= 1e6) return sign + '$' + (a / 1e6).toFixed(a >= 1e7 ? 1 : 2) + 'M';
+  if (a >= 1e4) return sign + '$' + Math.round(a / 1e3) + 'K';
+  if (a >= 1e3) return sign + '$' + (a / 1e3).toFixed(1) + 'K';
+  return sign + '$' + a.toLocaleString();
+}
+
 // ---------- Iso projection ----------
 const ISO = { sxScale: 1.0, syScale: 0.5, zScale: 2.5 };
 
@@ -1557,27 +2014,37 @@ function isoProject(gx, gy, z) {
     y: (gx + gy) * cw * ISO.syScale - z * cw * ISO.zScale + state.cam.y,
   };
 }
-function isoUnproject(sx, sy) {
+function isoUnproject(sx, sy, pinMode = false) {
   // Derivation: for a cell at corner (gx, gy) and elevation z, the top-face
-  // CENTER projects to u_c = gx - gy, v_c = gx + gy + 1 - (zScale/syScale)*z,
-  // where u = (sx - cam.x)/(cw*sxScale), v = (sy - cam.y)/(cw*syScale).
+  // CENTER projects to u_c = gx - gy, v_c = gx + gy + 1 - (zScale/syScale)*z.
   // Inverting: gx = (u + v - 1 + Z*z) / 2,  gy = (v - u - 1 + Z*z) / 2.
-  // Where Z = zScale / syScale (constant, = 5 here).
   const cw = state.cell;
   const u = (sx - state.cam.x) / (cw * ISO.sxScale);
   const v = (sy - state.cam.y) / (cw * ISO.syScale);
   const Z = ISO.zScale / ISO.syScale;
   const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
-  if (!state.elev) {
+  // Flat mode (legacy): project to z=0.
+  if (pinMode === true || !state.elev) {
     return {
       x: clamp(Math.floor((u + v - 1) / 2 + 0.5), 0, COLS - 1),
       y: clamp(Math.floor((v - u - 1) / 2 + 0.5), 0, ROWS - 1),
     };
   }
-  // Scan elevations from 0 up; return the cell whose actual elevation matches
-  // the z guess (fixed point of the projection inverse).
+  // Elevation-aware search. Two modes:
+  //   * Hover (pinMode=false): full z-range [0, 20].
+  //   * Drag (pinMode=<number>): narrow z-range around the pinned elevation,
+  //     so drags stay on the clicked plane but still get proper diamond
+  //     picking — keeps sandbag lines straight without drifting uphill on
+  //     slopes, and on flat ground the range always contains the cursor's
+  //     real z.
+  let zLo = 0, zHi = 20;
+  if (typeof pinMode === 'number') {
+    zLo = Math.max(0, pinMode - 2.0);
+    zHi = pinMode + 2.0;
+  }
   let best = null;
-  for (let z = 0; z <= 18; z += 0.2) {
+  let bestScore = -Infinity;
+  for (let z = zLo; z <= zHi; z += 0.2) {
     const Gx = (u + v - 1 + Z * z) / 2;
     const Gy = (v - u - 1 + Z * z) / 2;
     const gx = Math.floor(Gx + 0.5);
@@ -1585,15 +2052,27 @@ function isoUnproject(sx, sy) {
     if (gx < 0 || gx >= COLS || gy < 0 || gy >= ROWS) continue;
     const i = idx(gx, gy);
     const realZ = state.elev[i] + state.structH[i] + state.water[i];
-    if (Math.abs(z - realZ) < 0.25) {
+    if (Math.abs(z - realZ) > 0.3) continue;
+    const u_c = gx - gy;
+    const v_c = gx + gy + 1 - Z * realZ;
+    const diamond = Math.abs(u - u_c) + Math.abs(v - v_c);
+    if (diamond > 1.05) continue;
+    // Front-most wins (painter's order), tie-break on tighter diamond fit.
+    let score = (gx + gy) * 10 - diamond;
+    // In pin mode, bias toward cells whose real elevation is close to the pin
+    // so the cursor sticks to the clicked plane across a slope.
+    if (typeof pinMode === 'number') score -= Math.abs(realZ - pinMode) * 0.5;
+    if (score > bestScore) {
       best = { x: gx, y: gy };
+      bestScore = score;
     }
   }
   if (best) return best;
-  // Fallback — flat plane projection, clamped in bounds
+  // Fallback — fixed-z projection at the pinned elevation (or flat if hover).
+  const fz = typeof pinMode === 'number' ? pinMode : 0;
   return {
-    x: clamp(Math.floor((u + v - 1) / 2 + 0.5), 0, COLS - 1),
-    y: clamp(Math.floor((v - u - 1) / 2 + 0.5), 0, ROWS - 1),
+    x: clamp(Math.floor((u + v - 1 + Z * fz) / 2 + 0.5), 0, COLS - 1),
+    y: clamp(Math.floor((v - u - 1 + Z * fz) / 2 + 0.5), 0, ROWS - 1),
   };
 }
 
@@ -1816,6 +2295,34 @@ function renderTop(w, h) {
     }
   }
 
+  // Peak flood extent overlay (2D)
+  if (state.showPeakExtent && state.peakDepth) {
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const pd = state.peakDepth[idx(x, y)];
+        if (pd < 0.1) continue;
+        const alpha = Math.min(0.6, 0.2 + pd * 0.3);
+        const r = 200 + Math.min(55, pd * 30);
+        const g = 120 - Math.min(90, pd * 50);
+        ctx.fillStyle = `rgba(${r|0},${g|0},40,${alpha})`;
+        ctx.fillRect(x * cw, y * ch, cw + 1, ch + 1);
+      }
+    }
+  }
+
+  // Contour lines (2D projection)
+  if (state.showContours) {
+    if (!state.contourSegs) computeContours();
+    ctx.lineWidth = 0.6;
+    for (const s of state.contourSegs) {
+      ctx.strokeStyle = s.z % 5 === 0 ? 'rgba(40,30,20,0.7)' : 'rgba(60,45,30,0.4)';
+      ctx.beginPath();
+      ctx.moveTo(s.x1 * cw, s.y1 * ch);
+      ctx.lineTo(s.x2 * cw, s.y2 * ch);
+      ctx.stroke();
+    }
+  }
+
   // Damage heatmap overlay (toggle with H)
   if (state.showHeatmap) {
     for (let y = 0; y < ROWS; y++) {
@@ -1863,16 +2370,16 @@ function renderTop(w, h) {
     const tool = TOOLS[state.tool];
     if (tool) {
       const { x, y } = state.mouseCell;
-      const affordable = state.budget >= tool.cost;
+      const c = effCost(state.tool);
+      const affordable = state.budget >= c;
       ctx.strokeStyle = affordable ? tool.color : '#ef4444';
       ctx.lineWidth = 2;
       ctx.strokeRect(x * cw, y * ch, cw, ch);
-      // Cost badge
       ctx.fillStyle = affordable ? 'rgba(15,23,42,0.85)' : 'rgba(239,68,68,0.85)';
       ctx.fillRect(x * cw + cw + 2, y * ch - 2, 44, 14);
       ctx.fillStyle = '#fbbf24';
       ctx.font = 'bold 10px Segoe UI';
-      ctx.fillText(`$${tool.cost}`, x * cw + cw + 6, y * ch + 9);
+      ctx.fillText(fmt$(c), x * cw + cw + 6, y * ch + 9);
     }
   }
 
@@ -1945,28 +2452,30 @@ function renderTop(w, h) {
   ctx.globalAlpha = 1;
   state.breachEvents = state.breachEvents.filter(b => state.time - b.t < 3);
 
-  // Flow-direction tick marks on cells with significant flow
-  if (state.storming) {
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  // Flow vectors (2D): arrow from cell center along resultant (flowX, flowY).
+  // Length scales with flow magnitude.
+  if (state.storming || state.showContours) {
+    ctx.strokeStyle = 'rgba(230,240,255,0.65)';
+    ctx.lineWidth = 1;
     for (let y = 1; y < ROWS - 1; y += 2) {
       for (let x = 1; x < COLS - 1; x += 2) {
         const i = idx(x, y);
-        if (state.flow[i] < 0.1 || state.water[i] < 0.1) continue;
-        // Find steepest downhill neighbor
-        const hi = state.elev[i] + state.structH[i] + state.water[i];
-        const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
-        let bestDx = 0, bestDy = 0, bestDH = 0;
-        for (const [dx, dy] of dirs) {
-          const j = idx(x + dx, y + dy);
-          const dh = hi - (state.elev[j] + state.structH[j] + state.water[j]);
-          if (dh > bestDH) { bestDH = dh; bestDx = dx; bestDy = dy; }
-        }
-        if (bestDH > 0) {
-          const px = x * cw + cw / 2, py = y * ch + ch / 2;
-          ctx.beginPath();
-          ctx.arc(px + bestDx * cw * 0.3, py + bestDy * ch * 0.3, 1.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
+        const fx = state.flowX[i], fy = state.flowY[i];
+        const mag = Math.sqrt(fx * fx + fy * fy);
+        if (mag < 0.01 || state.water[i] < 0.02) continue;
+        const scale = Math.min(cw * 1.5, mag * 80);
+        const ux = fx / mag, uy = fy / mag;
+        const px = x * cw + cw / 2, py = y * ch + ch / 2;
+        const ex = px + ux * scale, ey = py + uy * scale;
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(ex, ey);
+        // Arrowhead
+        const ah = Math.min(4, scale * 0.4);
+        ctx.lineTo(ex - ux * ah + uy * ah * 0.6, ey - uy * ah - ux * ah * 0.6);
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(ex - ux * ah - uy * ah * 0.6, ey - uy * ah + ux * ah * 0.6);
+        ctx.stroke();
       }
     }
   }
@@ -1995,6 +2504,7 @@ function renderTop(w, h) {
     ctx.fillText(phase.label, w / 2, 25);
     ctx.textAlign = 'left';
   }
+  drawMinimap(w, h);
 }
 
 function renderIso(w, h) {
@@ -2190,6 +2700,68 @@ function renderIso(w, h) {
     }
   }
 
+  // Peak flood extent overlay (shows worst moment during storm)
+  if (state.showPeakExtent && state.peakDepth) {
+    for (let gy = 0; gy < ROWS; gy++) {
+      for (let gx = 0; gx < COLS; gx++) {
+        const i = idx(gx, gy);
+        const pd = state.peakDepth[i];
+        if (pd < 0.1) continue;
+        const e = state.elev[i] + state.structH[i] + pd + 0.02;
+        const p1 = isoProject(gx, gy, e);
+        const p2 = isoProject(gx + 1, gy, e);
+        const p3 = isoProject(gx + 1, gy + 1, e);
+        const p4 = isoProject(gx, gy + 1, e);
+        const alpha = Math.min(0.6, 0.2 + pd * 0.3);
+        // Amber/red overlay scaled by peak depth
+        const r = 200 + Math.min(55, pd * 30);
+        const g = 120 - Math.min(90, pd * 50);
+        ctx.fillStyle = `rgba(${r|0},${g|0},40,${alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+        ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+  }
+
+  // Contour lines (iso projection of each segment)
+  if (state.showContours) {
+    if (!state.contourSegs) computeContours();
+    ctx.lineWidth = 0.7;
+    for (const s of state.contourSegs) {
+      ctx.strokeStyle = s.z % 5 === 0 ? 'rgba(40,30,20,0.6)' : 'rgba(60,45,30,0.35)';
+      const p1 = isoProject(s.x1, s.y1, s.z);
+      const p2 = isoProject(s.x2, s.y2, s.z);
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+  }
+
+  // Flow vectors (iso): arrow from cell center along resultant (flowX, flowY)
+  if (state.storming || state.showContours) {
+    ctx.strokeStyle = 'rgba(230,240,255,0.7)';
+    ctx.lineWidth = 1;
+    for (let gy = 1; gy < ROWS - 1; gy += 2) {
+      for (let gx = 1; gx < COLS - 1; gx += 2) {
+        const i = idx(gx, gy);
+        const fx = state.flowX[i], fy = state.flowY[i];
+        const mag = Math.sqrt(fx * fx + fy * fy);
+        if (mag < 0.01 || state.water[i] < 0.02) continue;
+        const e = state.elev[i] + state.structH[i] + state.water[i] + 0.05;
+        const p0 = isoProject(gx + 0.5, gy + 0.5, e);
+        const tip = isoProject(gx + 0.5 + fx / mag * Math.min(1.2, mag * 8),
+                                 gy + 0.5 + fy / mag * Math.min(1.2, mag * 8), e);
+        ctx.beginPath();
+        ctx.moveTo(p0.x, p0.y);
+        ctx.lineTo(tip.x, tip.y);
+        ctx.stroke();
+      }
+    }
+  }
+
   // Breach wave ripples in iso (ellipses)
   ctx.strokeStyle = 'rgba(239,68,68,0.7)';
   ctx.lineWidth = 2;
@@ -2216,7 +2788,8 @@ function renderIso(w, h) {
       const e = state.elev[i] + state.structH[i] + state.water[i];
       const tool = TOOLS[state.tool];
       if (tool) {
-        const affordable = state.budget >= tool.cost;
+        const c = effCost(state.tool);
+        const affordable = state.budget >= c;
         const p1 = isoProject(x, y, e + 0.08);
         const p2 = isoProject(x + 1, y, e + 0.08);
         const p3 = isoProject(x + 1, y + 1, e + 0.08);
@@ -2227,13 +2800,28 @@ function renderIso(w, h) {
         ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
         ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y);
         ctx.closePath(); ctx.stroke();
-        // Cost badge
         ctx.fillStyle = affordable ? 'rgba(15,23,42,0.9)' : 'rgba(239,68,68,0.9)';
         ctx.fillRect(p2.x + 4, p2.y - 6, 44, 14);
         ctx.fillStyle = '#fbbf24';
         ctx.font = 'bold 10px Segoe UI';
-        ctx.fillText(`$${tool.cost}`, p2.x + 8, p2.y + 5);
+        ctx.fillText(fmt$(c), p2.x + 8, p2.y + 5);
       }
+    }
+  }
+
+  // Cloud shadows drifting with wind direction (iso)
+  if (state.storming && state.currentRain > 5) {
+    const cloudCount = Math.min(5, Math.floor(state.currentRain / 12));
+    for (let c = 0; c < cloudCount; c++) {
+      const offset = (state.time * (20 + state.windX * 0.3) + c * 500) % (w + 400) - 200;
+      const cy = (c * 137) % h;
+      const radius = 120 + c * 30;
+      const alpha = Math.min(0.35, state.currentRain / 200);
+      const grad = ctx.createRadialGradient(offset, cy, 0, offset, cy, radius);
+      grad.addColorStop(0, `rgba(0,0,20,${alpha})`);
+      grad.addColorStop(1, 'rgba(0,0,20,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(offset - radius, cy - radius, radius * 2, radius * 2);
     }
   }
 
@@ -2285,6 +2873,74 @@ function renderIso(w, h) {
     ctx.fillText(phase.label, w / 2, 25);
     ctx.textAlign = 'left';
   }
+
+  drawMinimap(w, h);
+}
+
+// ---------- Mini-map ----------
+function drawMinimap(w, h) {
+  if (!state.elev) return;
+  const MW = 180, MH = Math.round(MW * ROWS / COLS);
+  const mx = w - MW - 10, my = h - MH - 10;
+  // Bg
+  ctx.fillStyle = 'rgba(15,23,42,0.85)';
+  ctx.fillRect(mx - 2, my - 2, MW + 4, MH + 4);
+  // Cells (coarse)
+  const stride = Math.max(1, Math.floor(COLS / MW));
+  for (let gy = 0; gy < ROWS; gy += stride) {
+    for (let gx = 0; gx < COLS; gx += stride) {
+      const i = idx(gx, gy);
+      const e = state.elev[i] + state.structH[i];
+      const wv = state.water[i];
+      const t = state.type[i];
+      let r, g, b;
+      if (e < 3.0)       { r = 50; g = 90; b = 100; }
+      else if (e < 5.0)  { r = 58; g = 105; b = 52; }
+      else if (e < 7.5)  { r = 95; g = 145; b = 70; }
+      else if (e < 10.5) { r = 150; g = 160; b = 85; }
+      else if (e < 13.5) { r = 165; g = 130; b = 80; }
+      else if (e < 16)   { r = 160; g = 150; b = 140; }
+      else               { r = 240; g = 242; b = 250; }
+      if (t === T.TOWN || t === T.HOSPITAL || t === T.SCHOOL) { r = 230; g = 200; b = 80; }
+      if (t === T.RIVER) { r = 55; g = 120; b = 200; }
+      if (wv > 0.02) {
+        const wN = Math.min(1, wv * 0.8 + 0.3);
+        r = r * (1 - wN) + 60 * wN;
+        g = g * (1 - wN) + 140 * wN;
+        b = b * (1 - wN) + 225 * wN;
+      }
+      const px = mx + (gx / COLS) * MW;
+      const py = my + (gy / ROWS) * MH;
+      const sw = (stride / COLS) * MW + 1;
+      const sh = (stride / ROWS) * MH + 1;
+      ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
+      ctx.fillRect(px, py, sw, sh);
+    }
+  }
+  // Viewport indicator (iso view only — rough box around visible cells)
+  if (state.view === 'iso' && state.cell > 0) {
+    // Unproject the four canvas corners back to grid cells (z=0 approximation)
+    const toGrid = (sx, sy) => {
+      const u = (sx - state.cam.x) / (state.cell * ISO.sxScale);
+      const v = (sy - state.cam.y) / (state.cell * ISO.syScale);
+      return { x: (u + v) / 2, y: (v - u) / 2 };
+    };
+    const corners = [toGrid(0, 0), toGrid(w, 0), toGrid(w, h), toGrid(0, h)];
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    corners.forEach((c, k) => {
+      const px = mx + Math.max(0, Math.min(COLS, c.x)) / COLS * MW;
+      const py = my + Math.max(0, Math.min(ROWS, c.y)) / ROWS * MH;
+      if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    });
+    ctx.closePath();
+    ctx.stroke();
+  }
+  // Border
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(mx - 2, my - 2, MW + 4, MH + 4);
 }
 
 function triggerRandomEvent() {
@@ -2296,9 +2952,12 @@ function triggerRandomEvent() {
     toast('⚠ Upstream landslide — inflow spike incoming!', 'danger');
     sfx.impact();
   } else if (roll < 0.45) {
-    // Wind shift
-    state.windX = (Math.random() - 0.5) * 300;
-    toast('⚠ Sudden wind shift — rain direction changed.', 'info');
+    // Wind shift — new prevailing direction, gusty magnitude
+    const ang = Math.random() * Math.PI * 2;
+    const mag = 12 + Math.random() * 18;
+    state.windVxBase = Math.cos(ang) * mag;
+    state.windVyBase = Math.sin(ang) * mag;
+    toast('⚠ Sudden wind shift — surface flow and rain will reroute.', 'info');
   } else if (roll < 0.6) {
     // Random pump goes offline
     const pumps = [];
@@ -2347,15 +3006,25 @@ function renderHydrograph() {
   if (!state.scenario) return;
   const dur = state.scenario._effectiveDuration ?? state.scenario.duration;
 
+  // Y-axis maxes must include campaign intensity + any overshoot we've
+  // actually seen, otherwise curves clip against the top edge and look like
+  // a horizontal axis line.
+  const mult = stormIntensityFor(state.campaign);
+  let maxRainSeen = state.currentRain || 0;
+  let maxFlowSeen = state.currentInflow || 0;
+  for (const s of state.hydrographHistory) {
+    if (s.rain > maxRainSeen) maxRainSeen = s.rain;
+    if (s.inflow > maxFlowSeen) maxFlowSeen = s.inflow;
+  }
   // Predicted storm profile (the whole thing) + uncertainty bands
-  const rainMax = state.scenario.peakRain * 1.5;
+  const rainMax = Math.max(state.scenario.peakRain * mult * 1.5, maxRainSeen * 1.1, 10);
   hctx.fillStyle = 'rgba(125,211,252,0.08)';
   hctx.beginPath();
   let firstPt = true;
   const rainSamples = [];
   for (let t = 0; t <= dur; t += dur / 200) {
     const p = state.scenario.stormProfile(t);
-    rainSamples.push({ t, v: p.rain });
+    rainSamples.push({ t, v: p.rain * mult });
   }
   // Upper band
   for (const s of rainSamples) {
@@ -2388,11 +3057,11 @@ function renderHydrograph() {
   hctx.strokeStyle = 'rgba(239,68,68,0.3)';
   hctx.lineWidth = 1;
   hctx.beginPath();
-  const flowMax = state.scenario.peakFlow * 1.3;
+  const flowMax = Math.max(state.scenario.peakFlow * mult * 1.3, maxFlowSeen * 1.1, 1);
   for (let t = 0; t <= dur; t += dur / 200) {
     const p = state.scenario.stormProfile(t);
     const x = (t / dur) * w;
-    const y = h - (p.inflow / flowMax) * h * 0.9;
+    const y = h - (p.inflow * mult / flowMax) * h * 0.9;
     if (t === 0) hctx.moveTo(x, y); else hctx.lineTo(x, y);
   }
   hctx.stroke();
@@ -2477,6 +3146,23 @@ function renderHydrograph() {
 }
 
 // ---------- UI ----------
+// Simulate the scenario's storm profile (without running physics) to forecast
+// the peak inflow/rain and approximate peak river stage using the tailwater
+// rating curve as a rough proxy — purely informational for the briefing.
+function computePeakForecast(sc) {
+  let peakRain = 0, peakInflow = 0, peakT = 0;
+  const dur = sc._effectiveDuration ?? sc.duration;
+  const mult = stormIntensityFor(state.campaign);
+  for (let t = 0; t < dur; t += 1) {
+    const p = sc.stormProfile(t);
+    const inflow = p.inflow * mult;
+    if (inflow > peakInflow) { peakInflow = inflow; peakT = t; }
+    peakRain = Math.max(peakRain, p.rain * mult);
+  }
+  const peakStage = 3.2 + Math.min(1.5, 1.2 * Math.pow(peakInflow * 0.4, 0.6));
+  return { peakRain, peakInflow, peakT, peakStage };
+}
+
 function renderChallengePanel() {
   let box = document.getElementById('challengeBox');
   if (!box) {
@@ -2532,7 +3218,7 @@ function buildToolPanel() {
         <div><b>${tool.name}</b></div>
         <div class="desc">${tool.desc}</div>
       </div>
-      <div class="cost">$${tool.cost}</div>`;
+      <div class="cost">${fmt$(effCost(id))}</div>`;
     div.addEventListener('click', () => {
       document.querySelectorAll('.tool').forEach(e => e.classList.remove('active'));
       div.classList.add('active');
@@ -2574,21 +3260,47 @@ function colorForPct(p, thresh = 40) {
 
 function updateHUD() {
   const sandbox = state.scenario?.sandbox;
-  document.getElementById('walletDisp').textContent = `$${loadWallet().toLocaleString()}`;
-  document.getElementById('budgetDisp').textContent = sandbox ? '∞' : `$${state.budget.toLocaleString()}`;
+  document.getElementById('walletDisp').textContent = fmt$(loadWallet());
+  document.getElementById('budgetDisp').textContent = sandbox ? '∞' : fmt$(state.budget);
   const startBtn = document.getElementById('startBtn');
   if (startBtn && !startBtn.disabled && state.scenario && !sandbox && state.prepTimer > 0 && !state.storming && state.countdown === 0) {
     startBtn.textContent = `Start Storm (${Math.ceil(state.prepTimer)}s)`;
     startBtn.style.background = state.prepTimer < 10 ? '#b91c1c' : '#2563eb';
   }
   document.getElementById('timeDisp').textContent = formatTime(state.time);
-  document.getElementById('stageDisp').textContent = `${state.stage.toFixed(2)} m`;
+  document.getElementById('stageDisp').textContent = `${state.stage.toFixed(1)} m`;
   document.getElementById('rainDisp').textContent = `${state.currentRain.toFixed(0)} mm/hr`;
   document.getElementById('tailwaterDisp').textContent = `${state.tailwaterStage.toFixed(2)} m`;
+  // Wind gauge — use a smoothed value so per-frame gust noise doesn't make
+  // the arrow jitter or the speed flicker between adjacent integers.
+  const vx = state.windVx || 0, vy = state.windVy || 0;
+  state._windVxSmooth = (state._windVxSmooth ?? vx) * 0.92 + vx * 0.08;
+  state._windVySmooth = (state._windVySmooth ?? vy) * 0.92 + vy * 0.08;
+  const wSpeed = Math.hypot(state._windVxSmooth, state._windVySmooth);
+  // atan2(vx, -vy): 0 rad → blowing north (up), +π/2 → east, etc.
+  const wAngle = Math.atan2(state._windVxSmooth, -state._windVySmooth);
+  const arrow = document.getElementById('windArrow');
+  if (arrow) {
+    arrow.style.transform = `translate(-50%,-100%) rotate(${wAngle}rad)`;
+    // Color-code by Beaufort-ish intensity
+    const color = wSpeed < 8 ? '#7dd3fc' : wSpeed < 17 ? '#fbbf24' : wSpeed < 28 ? '#f97316' : '#ef4444';
+    arrow.style.borderBottomColor = color;
+  }
+  const speedEl = document.getElementById('windSpeed');
+  if (speedEl) speedEl.textContent = `${wSpeed.toFixed(0)} m/s`;
+  // Total water volume (cells × depth × nominal cell area 100 m²)
+  let vol = 0;
+  if (state.water) for (let i = 0; i < state.water.length; i++) vol += state.water[i];
+  const m3 = vol * 100; // each cell = 10m × 10m = 100 m²
+  document.getElementById('volDisp').textContent =
+    m3 >= 1e6 ? `${(m3/1e6).toFixed(2)} Mm³` :
+    m3 >= 1e3 ? `${(m3/1e3).toFixed(1)}k m³` :
+    `${m3.toFixed(0)} m³`;
   const pct = state.scenario ? getDamagePct() : 0;
   const dmgEl = document.getElementById('damageDisp');
   dmgEl.textContent = `${pct.toFixed(0)}%`;
   dmgEl.style.color = colorForPct(pct, state.scenario?.winDamage || 50);
+  document.getElementById('costDisp').textContent = fmt$(Math.round(pct * 120000));
   if (state.scenario) { renderObjectives(); updateInfra(); }
 }
 
@@ -2609,37 +3321,89 @@ function toast(text, kind = 'info') {
 }
 
 // ---------- Placement ----------
-let mouseDown = false;
-let mouseBtn = 0;
+// Pointer event model (works for mouse + touch + pen).
+let pointers = new Map();  // pointerId → { x, y, sx, sy }
+let primaryPointerDown = false;
+let primaryPointerBtn = 0;
 let panning = false;
 let panStart = null;
+let pinchStartDist = 0;
+let pinchStartZoom = 1;
+let pinchCenter = { x: 0, y: 0 };
+let removeMode = false;
+
 canvas.addEventListener('contextmenu', e => e.preventDefault());
-canvas.addEventListener('mousedown', e => {
-  // Middle-mouse or Shift+Left = pan
-  if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+
+canvas.addEventListener('pointerdown', e => {
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (pointers.size === 2) {
+    // Second finger down: start pinch + pan
+    panning = false;
+    primaryPointerDown = false;
+    const pts = [...pointers.values()];
+    pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+    pinchStartZoom = state.zoom;
+    pinchCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+    panStart = { x: pinchCenter.x, y: pinchCenter.y, camX: state.cam.x, camY: state.cam.y };
+    return;
+  }
+
+  // Single pointer: pan (middle/shift) vs action
+  if (e.button === 1 || (e.button === 0 && e.shiftKey) || e.pointerType === 'touch' && pointers.size > 1) {
     panning = true;
     panStart = { x: e.clientX, y: e.clientY, camX: state.cam.x, camY: state.cam.y };
     canvas.style.cursor = 'grabbing';
     e.preventDefault();
     return;
   }
-  mouseDown = true; mouseBtn = e.button;
-  if (e.button === 2) removeCell(e); else place(e);
+  primaryPointerDown = true;
+  primaryPointerBtn = e.button;
+  // Snapshot the elevation of the cell under the cursor so the rest of the
+  // drag unprojects to that same z-plane. Prevents the cursor from jumping
+  // to a lower/higher neighbor when placing a structure changes cell height.
+  const hit = mouseToCell(e, false);
+  if (hit && hit.x >= 0 && hit.x < COLS && hit.y >= 0 && hit.y < ROWS) {
+    const hi = idx(hit.x, hit.y);
+    state.dragZ = state.elev[hi] + state.structH[hi] + state.water[hi];
+  } else {
+    state.dragZ = 0;
+  }
+  const useRemove = (e.button === 2) || removeMode;
+  if (useRemove) removeCell(e); else place(e);
 });
-canvas.addEventListener('mouseup', () => {
-  mouseDown = false;
-  panning = false;
-  canvas.style.cursor = 'crosshair';
-});
-canvas.addEventListener('mouseleave', () => {
-  mouseDown = false;
-  panning = false;
-  canvas.style.cursor = 'crosshair';
-  state.mouseCell = null;
-  const tt = document.getElementById('cellTooltip');
-  if (tt) tt.style.display = 'none';
-});
-canvas.addEventListener('mousemove', e => {
+
+canvas.addEventListener('pointermove', e => {
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  // Two-finger pinch zoom + pan
+  if (pointers.size === 2 && pinchStartDist > 0) {
+    const pts = [...pointers.values()];
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+    const center = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+    const prevZoom = state.zoom;
+    const ratio = dist / pinchStartDist;
+    state.zoom = Math.max(0.4, Math.min(5, pinchStartZoom * ratio));
+    // Zoom about initial pinch center (converted to canvas coords)
+    const rect = canvas.getBoundingClientRect();
+    const scale = canvas.width / rect.width;
+    const cx = (pinchCenter.x - rect.left) * scale;
+    const cy = (pinchCenter.y - rect.top) * scale;
+    const r = state.zoom / prevZoom;
+    if (state.view === 'iso') {
+      state.cam.x = cx - (cx - state.cam.x) * r;
+      state.cam.y = cy - (cy - state.cam.y) * r;
+      // Plus pan from 2-finger center drift
+      if (panStart) {
+        state.cam.x += (center.x - panStart.x) * scale;
+        state.cam.y += (center.y - panStart.y) * scale;
+        panStart.x = center.x; panStart.y = center.y;
+      }
+    }
+    return;
+  }
+
   if (panning && panStart) {
     const rect = canvas.getBoundingClientRect();
     const scale = canvas.width / rect.width;
@@ -2647,11 +3411,36 @@ canvas.addEventListener('mousemove', e => {
     state.cam.y = panStart.camY + (e.clientY - panStart.y) * scale;
     return;
   }
-  state.mouseCell = mouseToCell(e);
-  if (mouseDown) {
-    if (mouseBtn === 2) removeCell(e); else place(e);
+  // During active drag, unproject to the z-plane captured at pointerdown so
+  // placing a structure (which bumps cell elevation) doesn't reassign the
+  // cursor to a neighbor. On hover, use full elevation-aware picking.
+  const pin = primaryPointerDown ? (state.dragZ ?? true) : false;
+  state.mouseCell = mouseToCell(e, pin);
+  if (primaryPointerDown) {
+    const useRemove = (primaryPointerBtn === 2) || removeMode;
+    if (useRemove) removeCell(e); else place(e);
   }
+  state._lastMouseClient = { x: e.clientX, y: e.clientY };
   updateTooltip(e);
+});
+
+function endPointer(e) {
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) { pinchStartDist = 0; }
+  if (pointers.size === 0) {
+    primaryPointerDown = false;
+    panning = false;
+    state.dragZ = null;
+    canvas.style.cursor = 'crosshair';
+  }
+}
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+canvas.addEventListener('pointerleave', e => {
+  endPointer(e);
+  state.mouseCell = null;
+  const tt = document.getElementById('cellTooltip');
+  if (tt) tt.style.display = 'none';
 });
 
 canvas.addEventListener('wheel', e => {
@@ -2664,32 +3453,35 @@ canvas.addEventListener('wheel', e => {
   const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
   state.zoom = Math.max(0.4, Math.min(5, state.zoom * factor));
   if (state.view === 'iso') {
-    // Zoom keeps mouse-focal point stable
     const ratio = state.zoom / prev;
     state.cam.x = mx - (mx - state.cam.x) * ratio;
     state.cam.y = my - (my - state.cam.y) * ratio;
   }
 }, { passive: false });
 
-function mouseToCell(e) {
+function mouseToCell(e, pin = false) {
   const rect = canvas.getBoundingClientRect();
   const sx = (e.clientX - rect.left) * (canvas.width / rect.width);
   const sy = (e.clientY - rect.top) * (canvas.height / rect.height);
   if (state.view === 'iso') {
-    return isoUnproject(sx, sy);
+    return isoUnproject(sx, sy, pin);
   }
   const cw = canvas.width / COLS, ch = canvas.height / ROWS;
   return { x: Math.floor(sx / cw), y: Math.floor(sy / ch) };
 }
 
+function currentDragPin() {
+  return primaryPointerDown ? (state.dragZ ?? true) : false;
+}
+
 function removeCell(e) {
-  const { x, y } = mouseToCell(e);
+  const { x, y } = mouseToCell(e, currentDragPin());
   if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return;
   const i = idx(x, y);
   const t = state.type[i];
   const removableCosts = {
-    [T.SANDBAG]: 50, [T.LEVEE]: 300, [T.CHANNEL]: 150,
-    [T.PUMP]: 800, [T.POND]: 400, [T.SPILLWAY]: 500, [T.SIPHON]: 250,
+    [T.SANDBAG]: 50000, [T.LEVEE]: 300000, [T.CHANNEL]: 150000,
+    [T.PUMP]: 800000, [T.POND]: 400000, [T.SPILLWAY]: 500000, [T.SIPHON]: 250000,
   };
   if (!(t in removableCosts)) return;
   snapshotCell(i);
@@ -2744,6 +3536,61 @@ function updateTooltip(e) {
   tt.style.top = (e.clientY + 14) + 'px';
 }
 
+// Compute 1-m elevation contour segments in world coordinates.
+// Segments stored as {x1, y1, x2, y2, z} arrays for fast rendering.
+function computeContours() {
+  const segs = [];
+  for (let y = 0; y < ROWS - 1; y++) {
+    for (let x = 0; x < COLS - 1; x++) {
+      const i = idx(x, y);
+      const eC = state.elev[i] + state.structH[i];
+      const iR = idx(x + 1, y);
+      const iD = idx(x, y + 1);
+      const eR = state.elev[iR] + state.structH[iR];
+      const eD = state.elev[iD] + state.structH[iD];
+      // Right edge (x=x+1, from y to y+1)
+      for (let c = Math.ceil(Math.min(eC, eR)); c < Math.max(eC, eR); c++) {
+        if (c < 2 || c > 20) continue;
+        segs.push({ x1: x + 1, y1: y, x2: x + 1, y2: y + 1, z: c });
+      }
+      // Down edge (y=y+1, from x to x+1)
+      for (let c = Math.ceil(Math.min(eC, eD)); c < Math.max(eC, eD); c++) {
+        if (c < 2 || c > 20) continue;
+        segs.push({ x1: x, y1: y + 1, x2: x + 1, y2: y + 1, z: c });
+      }
+    }
+  }
+  state.contourSegs = segs;
+}
+
+// Grade surrounding cells with a side slope. Positive `delta` raises (berms,
+// embankments); negative lowers (channels, ponds). Slope = H:V ratio, so a
+// 1 m cut at 3:1 extends the transition zone 3 cells.
+function gradeSlope(cx, cy, delta, slope) {
+  const radius = Math.max(1, Math.ceil(Math.abs(delta) * slope));
+  for (let dy = -radius; dy <= radius; dy++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      if (dx === 0 && dy === 0) continue;
+      const nx = cx + dx, ny = cy + dy;
+      if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) continue;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d > radius) continue;
+      const ni = idx(nx, ny);
+      const t = state.type[ni];
+      if (t !== T.GRASS && t !== T.EVACUATED) continue;
+      const amount = delta * (1 - d / radius);
+      if (amount > 0) {
+        // Raising (berm): only raise if this would be higher than current elev
+        state.elev[ni] = Math.max(state.elev[ni], state.elev[ni] + amount);
+      } else {
+        state.elev[ni] = Math.max(1.5, Math.min(state.elev[ni], state.elev[ni] + amount));
+      }
+    }
+  }
+}
+// Back-compat alias for the old name (lowers only)
+const gradeAround = (cx, cy, depth, slope) => gradeSlope(cx, cy, -Math.abs(depth), slope);
+
 const undoStack = [];
 function snapshotCell(i) {
   undoStack.push({
@@ -2768,7 +3615,7 @@ function undo() {
 }
 
 function place(e) {
-  const { x, y } = mouseToCell(e);
+  const { x, y } = mouseToCell(e, currentDragPin());
   if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return;
   const i = idx(x, y);
   const tool = TOOLS[state.tool];
@@ -2778,13 +3625,13 @@ function place(e) {
   if (state.tool === 'reinforce') {
     if (state.type[i] !== T.LEVEE) return;
     const sb = state.scenario?.sandbox;
-    if (!sb && state.budget < tool.cost) return;
+    if (!sb && state.budget < effCost(state.tool)) return;
     if (state.reinforced[i]) return; // already reinforced
     snapshotCell(i);
     state.reinforced[i] = 1;
     state.stress[i] = 0;
     state.structH[i] += 0.5;
-    if (!sb) { state.budget -= tool.cost; state.spent += tool.cost; }
+    if (!sb) { const c = effCost(state.tool); state.budget -= c; state.spent += c; }
     updateHUD();
     sfx.click();
     return;
@@ -2794,12 +3641,12 @@ function place(e) {
   if (state.tool === 'breach') {
     if (state.type[i] !== T.LEVEE) return;
     const sb = state.scenario?.sandbox;
-    if (!sb && state.budget < tool.cost) return;
+    if (!sb && state.budget < effCost(state.tool)) return;
     snapshotCell(i);
     state.type[i] = T.BREACH;
     state.structH[i] = -0.5;
     state.elev[i] = Math.max(2, state.elev[i] - 0.5);
-    if (!sb) { state.budget -= tool.cost; state.spent += tool.cost; }
+    if (!sb) { const c = effCost(state.tool); state.budget -= c; state.spent += c; }
     toast('Emergency breach opened.', 'good');
     updateHUD();
     sfx.click();
@@ -2810,11 +3657,11 @@ function place(e) {
   if (state.tool === 'evac') {
     if (![T.TOWN, T.HOSPITAL, T.SCHOOL].includes(state.type[i])) return;
     const sb = state.scenario?.sandbox;
-    if (!sb && state.budget < tool.cost) return;
+    if (!sb && state.budget < effCost(state.tool)) return;
     snapshotCell(i);
     state.type[i] = T.EVACUATED;
     state.stats.evacuated++;
-    if (!sb) { state.budget -= tool.cost; state.spent += tool.cost; }
+    if (!sb) { const c = effCost(state.tool); state.budget -= c; state.spent += c; }
     updateHUD();
     sfx.click();
     return;
@@ -2822,30 +3669,39 @@ function place(e) {
 
   if ([T.TOWN, T.HOSPITAL, T.SCHOOL, T.OUTLET, T.EVACUATED].includes(state.type[i])) return;
   if (state.type[i] === T.RIVER && state.tool !== 'channel') return;
-  if (state.budget < tool.cost) return;
+  const effCostVal = effCost(state.tool);
+  if (state.budget < effCostVal) return;
 
   snapshotCell(i);
   const sandboxMode = state.scenario?.sandbox;
   if (state.tool === 'sandbag') {
     if (state.type[i] === T.SANDBAG) { state.structH[i] += 0.4; }
-    else { state.type[i] = T.SANDBAG; state.structH[i] = 0.8; }
+    else {
+      state.type[i] = T.SANDBAG; state.structH[i] = 0.8;
+      gradeSlope(x, y, 0.4, 2);  // small berm base
+    }
   } else if (state.tool === 'levee') {
     state.type[i] = T.LEVEE; state.structH[i] = 3.5; state.stress[i] = 0;
+    gradeSlope(x, y, 1.1, 3);    // earthen embankment with 3:1 side slopes
   } else if (state.tool === 'channel') {
     state.type[i] = T.CHANNEL; state.structH[i] = -1.2; state.elev[i] = Math.max(2, state.elev[i] - 1);
+    gradeSlope(x, y, -1.0, 3);
   } else if (state.tool === 'pump') {
     state.type[i] = T.PUMP; state.structH[i] = 0.3;
   } else if (state.tool === 'siphon') {
     state.type[i] = T.SIPHON; state.structH[i] = 0.2;
   } else if (state.tool === 'pond') {
     state.type[i] = T.POND; state.structH[i] = -2.0; state.elev[i] = Math.max(1, state.elev[i] - 2);
+    gradeSlope(x, y, -2.0, 3);
   } else if (state.tool === 'spillway') {
     state.type[i] = T.SPILLWAY; state.structH[i] = 1.5;
   }
   if (!sandboxMode) {
-    state.budget -= tool.cost;
-    state.spent += tool.cost;
+    state.budget -= effCostVal;
+    state.spent += effCostVal;
+    state.stats.spentBy[state.tool] = (state.stats.spentBy[state.tool] || 0) + effCostVal;
   }
+  state.contourSegs = null; // invalidate contour cache
   updateHUD();
   sfx.click();
 }
@@ -2872,6 +3728,42 @@ function renderScenarioGrid() {
     el.parentNode.insertBefore(totalLine, el);
   }
   totalLine.innerHTML = `★ Total stars: <b>${totalStars}</b> · ${SCENARIOS.filter(s => isScenarioUnlocked(s.id)).length}/${SCENARIOS.length} scenarios unlocked`;
+
+  // Resume banner if there's a live save
+  const save = loadGame();
+  let resumeEl = document.getElementById('resumeBanner');
+  if (save) {
+    const sc = SCENARIOS.find(x => x.id === save.scenarioId);
+    if (sc) {
+      if (!resumeEl) {
+        resumeEl = document.createElement('div');
+        resumeEl.id = 'resumeBanner';
+        resumeEl.style.cssText = 'margin-top:10px;padding:10px 14px;background:linear-gradient(90deg,#1e3a5f,#1a2230);border:1px solid #7dd3fc;border-radius:6px;display:flex;justify-content:space-between;align-items:center;gap:10px;';
+        el.parentNode.insertBefore(resumeEl, el);
+      }
+      const minsAgo = Math.round((Date.now() - save.ts) / 60000);
+      const timeLabel = minsAgo < 1 ? 'just now' : minsAgo < 60 ? `${minsAgo} min ago` : `${Math.round(minsAgo / 60)}h ago`;
+      resumeEl.innerHTML = `
+        <div>
+          <div style="color:#7dd3fc;font-weight:bold;font-size:13px;">Resume in progress: ${sc.name}</div>
+          <div style="color:#94a3b8;font-size:11px;">Saved ${timeLabel} · ${save.storming ? 'Storm live at ' + formatTime(save.time) : 'Prep phase'}</div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button id="resumeBtn">Resume</button>
+          <button id="discardSave" class="ghost">Discard</button>
+        </div>`;
+      document.getElementById('resumeBtn').onclick = () => {
+        document.getElementById('overlay').style.display = 'none';
+        resumeGame(save);
+      };
+      document.getElementById('discardSave').onclick = () => {
+        clearSave();
+        renderScenarioGrid();
+      };
+    }
+  } else if (resumeEl) {
+    resumeEl.remove();
+  }
 
   el.innerHTML = SCENARIOS.map(sc => {
     const best = scores[sc.id];
@@ -2901,11 +3793,378 @@ function renderScenarioGrid() {
         return;
       }
       const sc = SCENARIOS.find(s => s.id === id);
+      // Picking from the free-play grid always exits campaign mode
+      state.campaign = { active: false, index: 0 };
       startScenario(sc);
     });
   });
   renderAchievementsInMenu();
 }
+
+// ---------- Campaigns ----------
+// Three curated campaigns scaling from small-watershed training to
+// catastrophic-failure endgame. Storm intensity ramps 4%/mission within a
+// campaign; an overall difficulty multiplier stacks on top.
+const CAMPAIGNS = [
+  {
+    id: 'foothills',
+    name: 'Foothills Training',
+    subtitle: 'Small watersheds · Light to moderate storms · Learn the fundamentals',
+    color: '#22c55e',
+    icon: '🌿',
+    missions: [
+      { scenarioId: 'training',      title: 'Flat Meadow',                brief: 'Light rain, gentle river. Learn the tools.' },
+      { scenarioId: 'localstorm',    title: 'Your City Design Storm',     brief: 'SCS Type II 100-year event over your local rainfall.' },
+      { scenarioId: 'lumberton2016', title: 'Lumberton (Matthew, 2016)',  brief: 'Find the gap before the Lumber River does.' },
+      { scenarioId: 'iowa2008',      title: 'Cedar Rapids 2008',          brief: 'Slow crest. Duration fight — pre-position.' },
+    ],
+  },
+  {
+    id: 'bigrivers',
+    name: 'Big Rivers',
+    subtitle: 'Wide systems · Sustained hurricanes · Engineered infrastructure',
+    color: '#7dd3fc',
+    icon: '🌊',
+    missions: [
+      { scenarioId: 'harvey2017',       title: 'Houston (Harvey, 2017)',       brief: 'Stalled hurricane. 40+ inches of pure rainfall.' },
+      { scenarioId: 'edenville2020',    title: 'Edenville Cascade (2020)',     brief: 'Two dams upstream. Cascading failures.' },
+      { scenarioId: 'mississippi1927',  title: 'Great Mississippi (1927)',     brief: 'Wide river, weeks of flow. Breach upstream?' },
+      { scenarioId: 'oroville2017',     title: 'Oroville Spillway (2017)',     brief: 'Spillway disintegrating. Reservoir cannot overtop.' },
+    ],
+  },
+  {
+    id: 'catastrophe',
+    name: 'Catastrophe',
+    subtitle: 'Failure modes · Flash floods · Urban disasters — no margin',
+    color: '#ef4444',
+    icon: '⚠',
+    missions: [
+      { scenarioId: 'katrina2005',   title: 'Katrina (2005)',                 brief: 'Sub-sea-level city. Surge overtops 50+ levees.' },
+      { scenarioId: 'asheville2024', title: 'Asheville (Helene, 2024)',       brief: '30 inches in the mountains. Confluence breaks.' },
+      { scenarioId: 'johnstown1889', title: 'Johnstown (Final, 1889)',        brief: 'Dam burst. 36-foot wall of water. Evacuate.' },
+    ],
+  },
+];
+const DIFFICULTIES = [
+  { id: 'easy',   name: 'Easy',   rainMult: 0.80, budgetMult: 1.30, color: '#22c55e', desc: 'Softer storms, bigger budget' },
+  { id: 'normal', name: 'Normal', rainMult: 1.00, budgetMult: 1.00, color: '#7dd3fc', desc: 'Historical intensity, standard budget' },
+  { id: 'hard',   name: 'Hard',   rainMult: 1.25, budgetMult: 0.85, color: '#fbbf24', desc: 'Harsher rain, tighter budget' },
+  { id: 'brutal', name: 'Brutal', rainMult: 1.55, budgetMult: 0.65, color: '#ef4444', desc: 'Worst-case forecasts, stripped FEMA grant' },
+];
+function getCampaign(id) { return CAMPAIGNS.find(c => c.id === id); }
+function getDifficulty(id) { return DIFFICULTIES.find(d => d.id === id) || DIFFICULTIES[1]; }
+function loadAllCampaigns() {
+  try { return JSON.parse(localStorage.getItem('floodline_campaigns') || '{}'); }
+  catch { return {}; }
+}
+function saveAllCampaigns(obj) { localStorage.setItem('floodline_campaigns', JSON.stringify(obj)); }
+function loadCampaign(id) {
+  const all = loadAllCampaigns();
+  return all[id] || { index: 0, difficulty: 'normal' };
+}
+function saveCampaign(id, data) {
+  const all = loadAllCampaigns();
+  all[id] = data;
+  saveAllCampaigns(all);
+}
+function campaignProgress(id) { return Math.max(0, Math.min(getCampaign(id).missions.length, loadCampaign(id).index || 0)); }
+function stormIntensityFor(state_campaign) {
+  if (!state_campaign?.active) return 1;
+  const diff = getDifficulty(state_campaign.difficulty);
+  return diff.rainMult * (1 + 0.04 * state_campaign.index);
+}
+function budgetMultFor(state_campaign) {
+  if (!state_campaign?.active) return 1;
+  return getDifficulty(state_campaign.difficulty).budgetMult;
+}
+function startCampaignMission(campaignId, index) {
+  const camp = getCampaign(campaignId);
+  if (!camp) return;
+  if (index >= camp.missions.length) {
+    toast('Campaign complete.', 'good');
+    return;
+  }
+  const mission = camp.missions[index];
+  const sc = SCENARIOS.find(s => s.id === mission.scenarioId);
+  if (!sc) { toast('Mission scenario not found.', 'danger'); return; }
+  const saved = loadCampaign(campaignId);
+  state.campaign = { active: true, campaignId, index, difficulty: saved.difficulty || 'normal' };
+  document.getElementById('campaignOverlay').style.display = 'none';
+  document.getElementById('overlay').style.display = 'none';
+  document.getElementById('titleScreen').style.display = 'none';
+  startScenario(sc);
+  const diff = getDifficulty(state.campaign.difficulty);
+  const totalMult = (diff.rainMult * (1 + 0.04 * index)).toFixed(2);
+  toast(`${camp.name} — Mission ${index + 1}: ${mission.title} · storm ×${totalMult}`, 'info');
+}
+let campaignOverlayMode = 'select'; // 'select' | 'missions'
+let selectedCampaignId = null;
+function openCampaignOverlay() {
+  campaignOverlayMode = 'select';
+  selectedCampaignId = null;
+  renderCampaignOverlay();
+  document.getElementById('campaignOverlay').style.display = 'flex';
+}
+function renderCampaignOverlay() {
+  const body = document.getElementById('campaignBody');
+  if (campaignOverlayMode === 'select') {
+    body.innerHTML = `
+      <p style="color:var(--dim);font-size:13px;margin-bottom:14px;">
+        Pick a campaign. Each one ramps storm intensity 4% per mission. Difficulty
+        multiplies rain and shrinks budget on top. Progress saves automatically.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${CAMPAIGNS.map(c => {
+          const saved = loadCampaign(c.id);
+          const cleared = Math.min(saved.index || 0, c.missions.length);
+          const done = cleared >= c.missions.length;
+          const diff = getDifficulty(saved.difficulty || 'normal');
+          return `<div class="camp-card" data-id="${c.id}" style="
+            padding:14px 16px;background:#1a2230;border-left:4px solid ${c.color};border-radius:6px;
+            cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;">
+            <div style="font-size:28px;">${c.icon}</div>
+            <div>
+              <div style="font-size:16px;font-weight:bold;color:${c.color};">${c.name}</div>
+              <div style="font-size:12px;color:#94a3b8;margin-top:2px;">${c.subtitle}</div>
+              <div style="font-size:11px;color:#64748b;margin-top:6px;">
+                ${c.missions.length} missions ·
+                <span style="color:${diff.color};">${diff.name}</span> ·
+                ${done ? '<span style="color:#fbbf24;">★ Complete</span>' : `Progress: ${cleared}/${c.missions.length}`}
+              </div>
+            </div>
+            <div style="color:#7dd3fc;font-size:20px;">›</div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+    body.querySelectorAll('.camp-card').forEach(card => {
+      card.addEventListener('click', () => {
+        selectedCampaignId = card.dataset.id;
+        campaignOverlayMode = 'missions';
+        renderCampaignOverlay();
+      });
+    });
+  } else {
+    const camp = getCampaign(selectedCampaignId);
+    const saved = loadCampaign(selectedCampaignId);
+    const idx = Math.min(saved.index || 0, camp.missions.length);
+    const completed = idx >= camp.missions.length;
+    const currentDiff = saved.difficulty || 'normal';
+    body.innerHTML = `
+      <div style="margin-bottom:14px;">
+        <button id="backToCampaigns" class="ghost" style="font-size:12px;padding:4px 10px;">← All Campaigns</button>
+      </div>
+      <div style="padding:10px 14px;background:#1a2230;border-left:4px solid ${camp.color};border-radius:4px;margin-bottom:16px;">
+        <div style="font-size:18px;font-weight:bold;color:${camp.color};">${camp.icon} ${camp.name}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:4px;">${camp.subtitle}</div>
+        <div style="font-size:11px;color:#7dd3fc;margin-top:8px;">
+          Progress: ${idx} / ${camp.missions.length} missions cleared
+          ${completed ? ' · <span style="color:#fbbf24;">★ Complete — replay any mission</span>' : ''}
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px;color:var(--dim);margin-bottom:6px;">DIFFICULTY</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${DIFFICULTIES.map(d => `
+            <button class="diff-btn" data-diff="${d.id}" style="
+              padding:8px 14px;background:${d.id === currentDiff ? d.color : '#1a2230'};
+              color:${d.id === currentDiff ? '#0a0e14' : d.color};
+              border:1px solid ${d.color};border-radius:4px;
+              font-weight:${d.id === currentDiff ? 'bold' : 'normal'};font-size:12px;cursor:pointer;">
+              ${d.name}
+              <div style="font-size:10px;font-weight:normal;opacity:0.85;margin-top:2px;">${d.desc}</div>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${camp.missions.map((m, i) => {
+          const status = i < idx ? 'done' : (i === idx ? 'current' : 'locked');
+          const bg = status === 'done' ? '#1e3a2f' : (status === 'current' ? '#1e3a5f' : '#1a1f28');
+          const border = status === 'current' ? '#7dd3fc' : (status === 'done' ? '#22c55e' : '#334155');
+          const badge = status === 'done' ? '<span style="color:#22c55e;">✓ Cleared</span>'
+                      : status === 'current' ? '<span style="color:#7dd3fc;">▶ Current</span>'
+                      : '<span style="color:#475569;">🔒 Locked</span>';
+          const diff = getDifficulty(currentDiff);
+          const effMult = (diff.rainMult * (1 + 0.04 * i)).toFixed(2);
+          const clickable = (status !== 'locked') || completed;
+          return `<div class="mission-row" data-idx="${i}" style="
+            padding:10px 14px;background:${bg};border:1px solid ${border};border-radius:6px;
+            display:flex;justify-content:space-between;align-items:center;gap:10px;
+            cursor:${clickable ? 'pointer' : 'not-allowed'};opacity:${clickable ? 1 : 0.55};">
+            <div>
+              <div style="font-weight:bold;color:#e6edf3;">Mission ${i + 1} — ${m.title}</div>
+              <div style="color:#94a3b8;font-size:11px;">${m.brief} · storm ×${effMult}</div>
+            </div>
+            <div style="font-size:11px;">${badge}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+    document.getElementById('backToCampaigns').addEventListener('click', () => {
+      campaignOverlayMode = 'select';
+      selectedCampaignId = null;
+      renderCampaignOverlay();
+    });
+    body.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const d = btn.dataset.diff;
+        const s = loadCampaign(selectedCampaignId);
+        s.difficulty = d;
+        saveCampaign(selectedCampaignId, s);
+        renderCampaignOverlay();
+      });
+    });
+    body.querySelectorAll('.mission-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const i = parseInt(row.dataset.idx, 10);
+        const s = loadCampaign(selectedCampaignId);
+        const cur = Math.min(s.index || 0, camp.missions.length);
+        if (i > cur && cur < camp.missions.length) {
+          toast('Clear earlier missions first.', 'danger');
+          return;
+        }
+        startCampaignMission(selectedCampaignId, i);
+      });
+    });
+  }
+}
+function advanceCampaignOnWin() {
+  if (!state.campaign?.active) return;
+  const id = state.campaign.campaignId;
+  const camp = getCampaign(id);
+  if (!camp) return;
+  const saved = loadCampaign(id);
+  const cur = Math.min(saved.index || 0, camp.missions.length);
+  if (state.campaign.index === cur && cur < camp.missions.length) {
+    saved.index = cur + 1;
+    if (saved.index >= camp.missions.length) saved.completedAt = Date.now();
+    saveCampaign(id, saved);
+  }
+}
+
+// ---------- Permanent upgrades (wallet-funded, persist across scenarios) ----------
+const UPGRADES = [
+  { id: 'contracts',  name: 'Better Contracts',    cost: 1500000, desc: 'All structures cost 15% less' },
+  { id: 'fema',       name: 'FEMA Veteran Rep',    cost: 2500000, desc: 'FEMA reimbursement 60% → 80%' },
+  { id: 'warning',    name: 'Early Warning System', cost: 1500000, desc: '+20 s prep time each scenario' },
+  { id: 'materials',  name: 'Reinforced Materials', cost: 2000000, desc: 'Levee breach threshold +50%' },
+  { id: 'taxbase',    name: 'Tax Base Expansion',  cost: 3000000, desc: '+$1M FEMA grant per scenario' },
+  { id: 'pumps',      name: 'Pump Fleet',          cost: 2500000, desc: 'Pumps cost 30% less, drain 50% faster' },
+];
+
+function loadUpgrades() {
+  try { return JSON.parse(localStorage.getItem('floodline_upgrades') || '{}'); }
+  catch { return {}; }
+}
+function saveUpgrades(obj) {
+  localStorage.setItem('floodline_upgrades', JSON.stringify(obj));
+}
+function hasUpgrade(id) { return !!loadUpgrades()[id]; }
+function costMultiplier() { return hasUpgrade('contracts') ? 0.85 : 1.0; }
+function pumpCostMult() { return hasUpgrade('pumps') ? 0.70 : 1.0; }
+function effCost(toolId) {
+  const base = TOOLS[toolId]?.cost ?? 0;
+  let m = costMultiplier();
+  if (toolId === 'pump') m *= pumpCostMult();
+  return Math.round(base * m);
+}
+function pumpPowerMult() { return hasUpgrade('pumps') ? 1.50 : 1.0; }
+function leveeBreachMult() { return hasUpgrade('materials') ? 1.50 : 1.0; }
+function femaReimbRate() { return hasUpgrade('fema') ? 0.80 : 0.60; }
+function femaGrantBonus() { return hasUpgrade('taxbase') ? 1000000 : 0; }
+function prepTimeBonus() { return hasUpgrade('warning') ? 20 : 0; }
+
+// ---------- Save / resume mid-scenario ----------
+function saveGame() {
+  if (!state.scenario || state.scenario.sandbox || state.gameOver) return;
+  try {
+    const save = {
+      ts: Date.now(),
+      scenarioId: state.scenario.id,
+      cols: COLS, rows: ROWS,
+      time: state.time,
+      storming: state.storming,
+      prepTimer: state.prepTimer,
+      budget: state.budget,
+      spent: state.spent,
+      stats: state.stats,
+      activeChallenges: [...state.activeChallenges],
+      tailwaterStage: state.tailwaterStage,
+      watershedQ: state.watershedQ,
+      scenarioFEMA: state.scenarioFEMA,
+      scenarioWalletStart: state.scenarioWalletStart,
+      campaign: state.campaign,
+      windVxBase: state.windVxBase, windVyBase: state.windVyBase,
+      elev: Array.from(state.elev),
+      water: Array.from(state.water),
+      type: Array.from(state.type),
+      structH: Array.from(state.structH),
+      damage: Array.from(state.damage),
+      stress: Array.from(state.stress),
+      soilSat: Array.from(state.soilSat),
+      soilType: Array.from(state.soilType),
+      reinforced: Array.from(state.reinforced),
+      peakDepth: Array.from(state.peakDepth),
+    };
+    localStorage.setItem('floodline_save', JSON.stringify(save));
+  } catch (e) { console.warn('Save failed:', e); }
+}
+function loadGame() {
+  try {
+    const s = localStorage.getItem('floodline_save');
+    return s ? JSON.parse(s) : null;
+  } catch { return null; }
+}
+function clearSave() { localStorage.removeItem('floodline_save'); }
+
+function resumeGame(save) {
+  const sc = SCENARIOS.find(x => x.id === save.scenarioId);
+  if (!sc) return false;
+  // Restore campaign context BEFORE startScenario so budget/storm mults apply
+  if (save.campaign) state.campaign = save.campaign;
+  else state.campaign = { active: false, index: 0 };
+  startScenario(sc);
+  if (save.windVxBase !== undefined) {
+    state.windVxBase = save.windVxBase;
+    state.windVyBase = save.windVyBase;
+    state.windVx = save.windVxBase;
+    state.windVy = save.windVyBase;
+  }
+  // Overwrite dynamic state from save
+  state.time = save.time;
+  state.storming = save.storming;
+  state.budget = save.budget;
+  state.spent = save.spent;
+  state.stats = save.stats || { peakDamage: 0, breaches: 0, evacuated: 0, pumped: 0, spentBy: {} };
+  state.watershedQ = save.watershedQ;
+  state.tailwaterStage = save.tailwaterStage;
+  state.prepTimer = save.prepTimer;
+  state.activeChallenges = new Set(save.activeChallenges || []);
+  state.scenarioFEMA = save.scenarioFEMA ?? state.scenarioFEMA;
+  state.scenarioWalletStart = save.scenarioWalletStart ?? state.scenarioWalletStart;
+  state.elev = new Float32Array(save.elev);
+  state.water = new Float32Array(save.water);
+  state.type = new Uint8Array(save.type);
+  state.structH = new Float32Array(save.structH);
+  state.damage = new Float32Array(save.damage);
+  state.stress = new Float32Array(save.stress);
+  state.soilSat = new Float32Array(save.soilSat);
+  state.soilType = new Uint8Array(save.soilType);
+  state.reinforced = new Uint8Array(save.reinforced);
+  state.peakDepth = new Float32Array(save.peakDepth);
+  state.waterNext = new Float32Array(state.water.length);
+  state.contourSegs = null;
+  document.getElementById('startBtn').disabled = state.storming;
+  document.getElementById('startBtn').textContent = state.storming ? 'Storm in progress' : 'Start Storm';
+  updateHUD();
+  toast('Previous run restored', 'good');
+  return true;
+}
+
+// Auto-save every 20 s and on page unload
+setInterval(saveGame, 20000);
+window.addEventListener('beforeunload', saveGame);
 
 // ---------- Persistent wallet (campaign economy) ----------
 function loadWallet() {
@@ -2913,7 +4172,7 @@ function loadWallet() {
   return isNaN(v) ? 0 : v;
 }
 function saveWallet(v) {
-  localStorage.setItem('floodline_wallet', String(Math.max(-99999, Math.min(9999999, v|0))));
+  localStorage.setItem('floodline_wallet', String(Math.max(-99999999, Math.min(9999999999, v|0))));
 }
 
 function loadScores() {
@@ -3045,7 +4304,7 @@ function renderAchievementsInMenu() {
     <h2>Controls</h2>
     <div style="font-size:11px;color:var(--dim);line-height:1.7;">
       <b>Left-click</b> place · <b>Right-click</b> remove (50% refund) · <b>Hover</b> inspect cell<br>
-      <b>1–9</b> tool · <b>Space</b> pause · <b>[ / ]</b> speed · <b>Ctrl+Z</b> undo · <b>H</b> heatmap · <b>V</b> view · <b>R</b> replay · <b>Esc</b> menu<br>
+      <b>1–9</b> tool · <b>Space</b> pause · <b>[ / ]</b> speed · <b>Ctrl+Z</b> undo · <b>H</b> heatmap · <b>C</b> contours · <b>P</b> peak extent · <b>V</b> view · <b>R</b> replay · <b>Esc</b> menu<br>
       <b>Wheel</b> zoom · <b>Shift+Drag</b> or <b>Middle-drag</b> pan · <b>Arrows</b> nudge · <b>+ / −</b> zoom · <b>0</b> reset view
     </div>
     <div style="margin-top:16px;padding:12px;background:var(--panel2);border-radius:4px;font-size:11px;color:var(--dim);line-height:1.5;">
@@ -3119,7 +4378,59 @@ document.getElementById('menuBtn').addEventListener('click', () => {
   document.getElementById('overlay').style.display = 'flex';
   renderScenarioGrid();
 });
+document.getElementById('upgradesBtn').addEventListener('click', openUpgrades);
+document.getElementById('closeUpgrades').addEventListener('click', () =>
+  document.getElementById('upgradesOverlay').style.display = 'none');
+document.getElementById('closeHelp').addEventListener('click', () =>
+  document.getElementById('helpOverlay').style.display = 'none');
+
+function openUpgrades() {
+  const owned = loadUpgrades();
+  const wallet = loadWallet();
+  document.getElementById('walletShow').textContent = `Wallet: ${fmt$(wallet)}`;
+  const listEl = document.getElementById('upgradeList');
+  listEl.innerHTML = UPGRADES.map(u => {
+    const got = !!owned[u.id];
+    const can = !got && wallet >= u.cost;
+    return `<div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px;background:${got ? '#1e2c42' : 'var(--panel2)'};border:1px solid ${got ? '#fbbf24' : '#334'};border-radius:6px;margin-bottom:6px;">
+      <div>
+        <div style="color:${got ? '#fbbf24' : '#e6edf3'};font-weight:bold;">${got ? '★ ' : ''}${u.name}</div>
+        <div style="color:#94a3b8;font-size:11px;margin-top:2px;">${u.desc}</div>
+      </div>
+      <button data-id="${u.id}" class="${got ? 'ghost' : ''}" ${got || !can ? 'disabled' : ''} style="min-width:80px;">${got ? 'Owned' : `Buy $${u.cost}`}</button>
+    </div>`;
+  }).join('');
+  listEl.querySelectorAll('button[data-id]').forEach(b => {
+    b.addEventListener('click', () => buyUpgrade(b.dataset.id));
+  });
+  document.getElementById('upgradesOverlay').style.display = 'flex';
+}
+
+function buyUpgrade(id) {
+  const u = UPGRADES.find(x => x.id === id);
+  if (!u) return;
+  const wallet = loadWallet();
+  if (wallet < u.cost) return;
+  const owned = loadUpgrades();
+  if (owned[id]) return;
+  owned[id] = Date.now();
+  saveUpgrades(owned);
+  saveWallet(wallet - u.cost);
+  toast(`Upgrade purchased: ${u.name}`, 'good');
+  sfx.impact();
+  openUpgrades();
+  // Rebuild tool panel so new prices show immediately
+  if (state.scenario) buildToolPanel();
+  updateHUD();
+}
 document.getElementById('undoBtn').addEventListener('click', () => undo());
+document.getElementById('removeBtn').addEventListener('click', () => {
+  removeMode = !removeMode;
+  const btn = document.getElementById('removeBtn');
+  btn.style.background = removeMode ? '#b91c1c' : '';
+  btn.textContent = removeMode ? '🗑 Removing' : '🗑 Remove';
+  toast(removeMode ? 'Remove mode on — tap structures to demolish (50% refund)' : 'Remove mode off', 'info');
+});
 document.getElementById('viewBtn').addEventListener('click', () => toggleView());
 function toggleView() {
   state.view = state.view === 'iso' ? 'top' : 'iso';
@@ -3155,13 +4466,28 @@ function endGame() {
   }
   const effectiveStars = Math.min(5, starsForPct(pct) + bonus);
   if (!state.scenario.sandbox) saveScore(state.scenario.id, pct, state.time, effectiveStars);
+  clearSave();
   // Campaign economy: wallet = unspent + FEMA reimb - damage + bonus
   // (Since scenario budget = FEMA + wallet, unspent already accounts for wallet carryover.)
   const econ = computeEconomics(pct, allMet);
   state.lastEcon = econ;
   if (!state.scenario.sandbox) {
     saveWallet(econ.finalWallet);
+    // Career stats
+    const c = loadCareer();
+    c.runs = (c.runs || 0) + 1;
+    if (allMet) c.wins = (c.wins || 0) + 1;
+    c.breaches = (c.breaches || 0) + state.stats.breaches;
+    c.evacuated = (c.evacuated || 0) + state.stats.evacuated;
+    c.pumped = (c.pumped || 0) + state.stats.pumped;
+    c.lifetimeEarnings = (c.lifetimeEarnings || 0) + Math.max(0, econ.netChange);
+    const hist = HISTORY_ACTUAL[state.scenario.id];
+    if (hist && pct < hist.dmgPct) {
+      c.damagePrevented = (c.damagePrevented || 0) + (hist.dmgPct - pct);
+    }
+    saveCareer(c);
   }
+  if (allMet) advanceCampaignOnWin();
   checkAchievements();
   showResults(allMet, pct);
 }
@@ -3175,9 +4501,9 @@ function computeEconomics(dmgPct, won) {
   const spentFema = Math.min(totalSpent, fema);
   const spentWallet = Math.max(0, totalSpent - fema);
   const femaReturned = Math.max(0, fema - totalSpent); // unused grant returns to FEMA
-  const damageCost = Math.round(dmgPct * 120);
-  const femaReimb = Math.round(damageCost * 0.60);
-  const performanceBonus = won ? Math.max(0, Math.round((sc.winDamage - dmgPct) * 40)) : 0;
+  const damageCost = Math.round(dmgPct * 120000);
+  const femaReimb = Math.round(damageCost * femaReimbRate());
+  const performanceBonus = won ? Math.max(0, Math.round((sc.winDamage - dmgPct) * 40000)) : 0;
   const walletRemaining = Math.max(0, walletStart - spentWallet);
   const net = walletRemaining + femaReimb - damageCost + performanceBonus;
   const finalWallet = Math.max(0, net);
@@ -3194,7 +4520,7 @@ function showResults(allMet, pct) {
   const townDmg = getInfraDamage(T.TOWN);
   const hospDmg = getInfraDamage(T.HOSPITAL);
   const schDmg = getInfraDamage(T.SCHOOL);
-  const score = Math.max(0, Math.round(10000 - pct * 100 - state.stats.breaches * 200 + (sc.budget - state.spent) * 0.1));
+  const score = Math.max(0, Math.round(10000 - pct * 100 - state.stats.breaches * 200 + (sc.budget - state.spent) * 0.0001));
 
   document.getElementById('resultsTitle').textContent = allMet ? 'Victory' : 'Scenario Failed';
   document.getElementById('resultsTitle').style.color = allMet ? 'var(--ok)' : 'var(--danger)';
@@ -3226,32 +4552,66 @@ function showResults(allMet, pct) {
     ['Levee breaches', state.stats.breaches],
     ['Cells evacuated', state.stats.evacuated],
     ['Water pumped', `${state.stats.pumped.toFixed(1)} m³`],
-    ['Budget spent', `$${state.spent} / $${sc.budget}`],
+    ['Budget spent', `${fmt$(state.spent)} / ${fmt$(state.scenarioFEMA + state.scenarioWalletStart)}`],
   );
   const historyNote = HISTORY_NOTES[sc.id];
   const econ = state.lastEcon;
+  const sb = state.stats.spentBy || {};
+  const sortedSpent = Object.entries(sb).sort((a,b) => b[1] - a[1]);
+  const spendHtml = sortedSpent.length > 0 ? `
+    <div style="margin-top:12px; padding:10px; background:var(--panel2); border-radius:4px;">
+      <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Spending breakdown</div>
+      ${sortedSpent.map(([id, amt]) => {
+        const pct = Math.round(100 * amt / state.spent);
+        return `<div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;font-size:12px;align-items:center;padding:2px 0;">
+          <span style="color:${TOOLS[id]?.color || '#94a3b8'};">${TOOLS[id]?.name || id}</span>
+          <span style="color:var(--dim);">${pct}%</span>
+          <span>${fmt$(amt)}</span>
+        </div>`;
+      }).join('')}
+    </div>` : '';
   const econHtml = econ && !sc.sandbox ? `
     <div style="margin-top:16px; padding:12px; background:var(--panel2); border-radius:4px;">
       <div style="font-size:11px; color:#22c55e; font-weight:bold; letter-spacing:0.05em; text-transform:uppercase;">FEMA settlement</div>
       <table style="width:100%; border-collapse:collapse; margin-top:6px; font-size:12px;">
-        <tr><td style="color:var(--dim);">Wallet at start</td><td style="text-align:right;">$${econ.walletStart.toLocaleString()}</td></tr>
-        <tr><td style="color:var(--dim);">FEMA grant</td><td style="text-align:right;">$${econ.fema.toLocaleString()}</td></tr>
-        <tr><td style="color:var(--dim);">Total spent</td><td style="text-align:right;">−$${(econ.spentFema + econ.spentWallet).toLocaleString()}</td></tr>
-        <tr><td style="padding-left:12px;color:var(--dim);font-size:11px;">↳ from FEMA grant</td><td style="text-align:right;color:#64748b;font-size:11px;">$${econ.spentFema.toLocaleString()}</td></tr>
-        <tr><td style="padding-left:12px;color:var(--dim);font-size:11px;">↳ from wallet</td><td style="text-align:right;color:#64748b;font-size:11px;">$${econ.spentWallet.toLocaleString()}</td></tr>
-        <tr><td style="color:var(--dim);">FEMA unused (returned)</td><td style="text-align:right;color:#64748b;">$${econ.femaReturned.toLocaleString()}</td></tr>
-        <tr><td style="color:var(--dim);">Damage repair</td><td style="text-align:right;color:#ef4444;">−$${econ.damageCost.toLocaleString()}</td></tr>
-        <tr><td style="color:var(--dim);">FEMA reimbursement (60%)</td><td style="text-align:right;color:#22c55e;">+$${econ.femaReimb.toLocaleString()}</td></tr>
-        ${econ.performanceBonus > 0 ? `<tr><td style="color:var(--dim);">Performance bonus</td><td style="text-align:right;color:#fbbf24;">+$${econ.performanceBonus.toLocaleString()}</td></tr>` : ''}
-        <tr style="border-top:1px solid #475569;"><td style="padding-top:6px;"><b>Wallet after</b></td><td style="text-align:right;padding-top:6px;color:${econ.netChange >= 0 ? '#22c55e' : '#ef4444'};"><b>$${econ.finalWallet.toLocaleString()}</b> (${econ.netChange >= 0 ? '+' : ''}$${econ.netChange.toLocaleString()})</td></tr>
+        <tr><td style="color:var(--dim);">Wallet at start</td><td style="text-align:right;">${fmt$(econ.walletStart)}</td></tr>
+        <tr><td style="color:var(--dim);">FEMA grant</td><td style="text-align:right;">${fmt$(econ.fema)}</td></tr>
+        <tr><td style="color:var(--dim);">Total spent</td><td style="text-align:right;">−${fmt$(econ.spentFema + econ.spentWallet)}</td></tr>
+        <tr><td style="padding-left:12px;color:var(--dim);font-size:11px;">↳ from FEMA grant</td><td style="text-align:right;color:#64748b;font-size:11px;">${fmt$(econ.spentFema)}</td></tr>
+        <tr><td style="padding-left:12px;color:var(--dim);font-size:11px;">↳ from wallet</td><td style="text-align:right;color:#64748b;font-size:11px;">${fmt$(econ.spentWallet)}</td></tr>
+        <tr><td style="color:var(--dim);">FEMA unused (returned)</td><td style="text-align:right;color:#64748b;">${fmt$(econ.femaReturned)}</td></tr>
+        <tr><td style="color:var(--dim);">Damage repair</td><td style="text-align:right;color:#ef4444;">−${fmt$(econ.damageCost)}</td></tr>
+        <tr><td style="color:var(--dim);">FEMA reimbursement (60%)</td><td style="text-align:right;color:#22c55e;">+${fmt$(econ.femaReimb)}</td></tr>
+        ${econ.performanceBonus > 0 ? `<tr><td style="color:var(--dim);">Performance bonus</td><td style="text-align:right;color:#fbbf24;">+${fmt$(econ.performanceBonus)}</td></tr>` : ''}
+        <tr style="border-top:1px solid #475569;"><td style="padding-top:6px;"><b>Wallet after</b></td><td style="text-align:right;padding-top:6px;color:${econ.netChange >= 0 ? '#22c55e' : '#ef4444'};"><b>${fmt$(econ.finalWallet)}</b> (${econ.netChange >= 0 ? '+' : ''}${fmt$(econ.netChange)})</td></tr>
       </table>
     </div>` : '';
   document.getElementById('resultsBody').innerHTML =
     '<table style="width:100%; border-collapse:collapse;">' +
     rows.map(([k,v]) => `<tr><td style="padding:4px 0; color:var(--dim);">${k}</td><td style="text-align:right; color:var(--text);">${v}</td></tr>`).join('') +
     '</table>' +
+    spendHtml +
     econHtml +
-    (historyNote ? `<div style="margin-top:16px; padding:12px; background:var(--panel2); border-left:3px solid var(--accent); border-radius:4px;">
+    (HISTORY_ACTUAL[sc.id] ? (() => {
+      const a = HISTORY_ACTUAL[sc.id];
+      const delta = a.dmgPct - pct;
+      const verdict = delta > 30 ? 'far better than history' :
+                      delta > 10 ? 'better than history' :
+                      delta > -10 ? 'matched history' :
+                      delta > -30 ? 'worse than history' :
+                      'catastrophically worse';
+      const color = delta > 10 ? '#22c55e' : delta > -10 ? '#fbbf24' : '#ef4444';
+      return `<div style="margin-top:14px; padding:12px; background:var(--panel2); border-left:3px solid ${color}; border-radius:4px;">
+        <div style="font-size:10px; color:${color}; text-transform:uppercase; letter-spacing:0.05em; font-weight:bold;">Historical comparison</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;font-size:12px;">
+          <div><span style="color:var(--dim);">Your damage:</span> <b>${pct.toFixed(0)}%</b></div>
+          <div><span style="color:var(--dim);">Historical:</span> <b>${a.dmgPct}%</b></div>
+        </div>
+        <div style="color:${color};font-size:12px;margin-top:4px;font-weight:bold;">${verdict.toUpperCase()}</div>
+        <div style="color:#94a3b8;font-size:11px;margin-top:4px;line-height:1.4;">${a.label}</div>
+      </div>`;
+    })() : '') +
+    (historyNote ? `<div style="margin-top:12px; padding:12px; background:var(--panel2); border-left:3px solid var(--accent); border-radius:4px;">
       <div style="font-size:11px; color:var(--accent); font-weight:bold; letter-spacing:0.05em; text-transform:uppercase;">What really happened</div>
       <div style="font-size:12px; color:#cbd5e1; margin-top:6px; line-height:1.5;">${historyNote}</div>
     </div>` : '');
@@ -3283,6 +4643,20 @@ function showResults(allMet, pct) {
   }
 }
 
+// Approximate actual damage percentages (damage vs total town) from real events.
+// Used to compare player performance against history.
+const HISTORY_ACTUAL = {
+  iowa2008:       { dmgPct: 68, label: '2008 actual: Cedar Rapids took ~$5–6B in damages; ~1/5 of the city inundated' },
+  harvey2017:     { dmgPct: 75, label: '2017 actual: 204,000 homes damaged; ~$125B total' },
+  johnstown1889: { dmgPct: 95, label: '1889 actual: 2,209 killed; downtown Johnstown obliterated' },
+  katrina2005:    { dmgPct: 80, label: '2005 actual: 80% of New Orleans flooded; 1,392 dead' },
+  mississippi1927:{ dmgPct: 90, label: '1927 actual: 27,000 sq miles submerged; 246 dead' },
+  lumberton2016:  { dmgPct: 60, label: '2016 actual: ~1,500 homes flooded in West Lumberton' },
+  oroville2017:   { dmgPct: 50, label: '2017 actual: No fatalities; 188,000 evacuated; spillways destroyed' },
+  edenville2020:  { dmgPct: 55, label: '2020 actual: 2,500 structures damaged; ~$250M' },
+  asheville2024:  { dmgPct: 85, label: '2024 actual: 107+ NC fatalities; Chimney Rock and Swannanoa devastated; ~$53B regional damage' },
+};
+
 const HISTORY_NOTES = {
   iowa2008: 'Cedar Rapids crested at 31.12 ft — 11.7 ft above the previous record and nearly 20 ft above flood stage. The city had no main-stem levees. 1,126 blocks flooded; 10 sq miles inundated. Response drove a decade of floodwall construction and strategic property buyouts. Total damages: $5–6 billion.',
   harvey2017: 'Harvey dropped 60.58 in. at Nederland, TX — the largest rainfall total from a single storm ever recorded in the continental US. Stalled for four days over SE Texas. Addicks and Barker reservoirs, built for flood control in the 1940s, reached levels that forced controlled releases flooding thousands of homes. 68 direct deaths, 107 total. $125 billion in damages.',
@@ -3292,6 +4666,7 @@ const HISTORY_NOTES = {
   oroville2017: 'Mid-release at 55,000 cfs on Feb 7, 2017, a section of the main spillway disintegrated, exposing underlying rock. Engineers switched to the never-before-used emergency spillway on Feb 11. Within 24 hours, erosion threatened to undercut the spillway weir — which would have released a 30-foot wall of water into the Feather River. 188,000 were evacuated. Reconstruction cost $1.1 billion.',
   lumberton2016: 'Hurricane Matthew flooded West Lumberton through a CSX railroad underpass — an opening local officials had never identified as a flood risk. The Lumber River crested at 24.15 ft, 11 ft above flood stage. Nearly 1,500 homes flooded. Two years later, Hurricane Florence flooded the same neighborhood again. The underpass has since been closed with an emergency floodgate.',
   edenville2020: 'Edenville Dam had been ordered to upgrade its spillway capacity for 14 years before failing. FERC revoked its hydropower license in 2018 for non-compliance. When it failed on May 19, 2020, water surged into Sanford Lake; Sanford Dam overtopped and its spillway was destroyed. The Tittabawassee River crested at 35.05 ft in Midland — 10 ft above its previous record. Remarkably, no one died.',
+  asheville2024: 'September 26-28, 2024. Helene\'s remnants stalled against the Blue Ridge escarpment; orographic lift produced 20-30+ inches of rain across western NC, on top of soils already saturated by a predecessor front. The French Broad crested at 24.67 ft in Asheville — 10 ft above the 1916 record. Chimney Rock, Swannanoa, Biltmore Village, and much of the River Arts District were destroyed. 107 confirmed dead in NC alone (230+ regionally). Regional damages estimated $53B. The event exposed how mountain communities — with no floodplain to retreat to — are uniquely vulnerable to extreme precipitation.',
 };
 
 document.getElementById('resultsReplay').addEventListener('click', () => {
@@ -3304,7 +4679,20 @@ document.getElementById('resultsMenu').addEventListener('click', () => {
   renderScenarioGrid();
 });
 document.getElementById('resultsNext').addEventListener('click', () => {
-  // Find next unlocked scenario after current
+  // Campaign run: jump to the next mission (or show completion)
+  if (state.campaign?.active) {
+    const camp = getCampaign(state.campaign.campaignId);
+    const nextIdx = state.campaign.index + 1;
+    document.getElementById('resultsOverlay').style.display = 'none';
+    if (!camp || nextIdx >= camp.missions.length) {
+      toast(`${camp?.name || 'Campaign'} complete — all missions cleared.`, 'good');
+      openCampaignOverlay();
+      return;
+    }
+    startCampaignMission(state.campaign.campaignId, nextIdx);
+    return;
+  }
+  // Free play: next unlocked scenario after current
   const idx = SCENARIOS.findIndex(s => s.id === state.scenario.id);
   for (let k = 1; k <= SCENARIOS.length; k++) {
     const cand = SCENARIOS[(idx + k) % SCENARIOS.length];
@@ -3361,6 +4749,11 @@ function loop(t) {
   render();
   renderHydrograph();
   if (state.scenario) updateHUD();
+  // Refresh hover tooltip each frame so depth/damage/stress readouts track
+  // the live sim — otherwise the numbers only changed on mousemove.
+  if (state.mouseCell && state._lastMouseClient) {
+    updateTooltip({ clientX: state._lastMouseClient.x, clientY: state._lastMouseClient.y });
+  }
 
   requestAnimationFrame(loop);
 }
@@ -3477,32 +4870,180 @@ const sfx = (() => {
     if (master) master.gain.value = volume;
   }
 
-  // Procedural ambient drone (storm atmosphere)
-  let droneOsc1 = null, droneOsc2 = null, droneGain = null;
+  // Procedural ambient music — warm nu-jazz / chillout in the SimCity 4
+  // (Jerry Martin) mold: ii-V-I-vi turnaround in C with Rhodes-ish maj7/m7
+  // pad voicings, upright-bass walking line, and brushed-snare backbeat.
+  let musicStarted = false;
+  let musicGain = null, musicFilter = null, musicLFO = null;
+  let bassFilter = null, brushFilter = null;
+  let brushBuffer = null;
+  let nextBarAt = 0;
+  let barIdx = 0;
+  // 4-bar loop — Dm7 → G7 → Cmaj7 → Am7 (ii-V-I-vi). Each bar = 4 beats.
+  // Voicings in the low-mid register so they sit below rain/thunder.
+  const BARS = [
+    { // Dm7: D, F, A, C
+      chord: [146.83, 174.61, 220.00, 261.63],
+      bass:  [ 73.42, 110.00], // D2, A2 (root-fifth walk)
+      next:  0, // leads into G
+    },
+    { // G7: G, B, D, F
+      chord: [ 98.00, 123.47, 146.83, 174.61],
+      bass:  [ 49.00,  73.42], // G1, D2
+      next:  0,
+    },
+    { // Cmaj7: C, E, G, B
+      chord: [130.81, 164.81, 196.00, 246.94],
+      bass:  [ 65.41,  98.00], // C2, G2
+      next:  0,
+    },
+    { // Am7: A, C, E, G
+      chord: [110.00, 130.81, 164.81, 196.00],
+      bass:  [ 55.00,  82.41], // A1, E2
+      next:  0,
+    },
+  ];
+  const BAR_DUR = 2.4;   // ~100 BPM, 4 beats per bar
+  const BEAT = BAR_DUR / 4;
+  function ensureBrushBuffer() {
+    if (brushBuffer) return brushBuffer;
+    // Short white-noise pop for brushed-snare hits
+    const n = Math.floor(ctx.sampleRate * 0.12);
+    brushBuffer = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = brushBuffer.getChannelData(0);
+    for (let i = 0; i < n; i++) {
+      const t = i / ctx.sampleRate;
+      d[i] = (Math.random() * 2 - 1) * Math.exp(-t * 28);
+    }
+    return brushBuffer;
+  }
+  function playChord(freqs, startT) {
+    // Rhodes-ish pad: soft attack, long sustain, tail release that overlaps
+    // the next chord so voicings crossfade smoothly.
+    const attack = 0.35, release = 0.9;
+    const sustainDur = BAR_DUR;
+    freqs.forEach((f, i) => {
+      const o = ctx.createOscillator();
+      o.type = i === 0 ? 'sine' : 'triangle';
+      o.detune.value = (i - 1.5) * 5; // ensemble detune
+      o.frequency.value = f;
+      const og = ctx.createGain();
+      const peak = 0.18 / freqs.length;
+      og.gain.setValueAtTime(0, startT);
+      og.gain.linearRampToValueAtTime(peak, startT + attack);
+      og.gain.setValueAtTime(peak, startT + sustainDur);
+      og.gain.linearRampToValueAtTime(0, startT + sustainDur + release);
+      o.connect(og); og.connect(musicFilter);
+      o.start(startT);
+      o.stop(startT + sustainDur + release + 0.05);
+    });
+  }
+  function playBassNote(freq, startT, duration) {
+    // Plucked upright-bass feel: sine fundamental + a quick 2nd-harmonic
+    // tick for string attack, routed through a warm lowpass.
+    const o = ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = freq;
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0, startT);
+    og.gain.linearRampToValueAtTime(0.55, startT + 0.015);
+    og.gain.exponentialRampToValueAtTime(0.12, startT + 0.2);
+    og.gain.exponentialRampToValueAtTime(0.001, startT + duration);
+    o.connect(og); og.connect(bassFilter);
+    o.start(startT);
+    o.stop(startT + duration + 0.05);
+    // Attack tick — 2nd harmonic, very short
+    const o2 = ctx.createOscillator();
+    o2.type = 'triangle';
+    o2.frequency.value = freq * 2;
+    const og2 = ctx.createGain();
+    og2.gain.setValueAtTime(0.18, startT);
+    og2.gain.exponentialRampToValueAtTime(0.001, startT + 0.06);
+    o2.connect(og2); og2.connect(bassFilter);
+    o2.start(startT);
+    o2.stop(startT + 0.08);
+  }
+  function playBrush(startT) {
+    const src = ctx.createBufferSource();
+    src.buffer = ensureBrushBuffer();
+    // Per-hit gain for subtle dynamics so the backbeat doesn't feel mechanical
+    const hitGain = ctx.createGain();
+    hitGain.gain.value = 0.75 + Math.random() * 0.35;
+    src.connect(hitGain);
+    hitGain.connect(brushFilter);
+    src.start(startT);
+  }
+  function playBar(bar, startT) {
+    playChord(bar.chord, startT);
+    // Bass on beats 1 and 3 (root then fifth)
+    playBassNote(bar.bass[0], startT,           BEAT * 2 * 0.95);
+    playBassNote(bar.bass[1], startT + BEAT*2,  BEAT * 2 * 0.95);
+    // Brushed snare on backbeat — beats 2 and 4
+    playBrush(startT + BEAT * 1);
+    playBrush(startT + BEAT * 3);
+    // Occasional ghost-note on beat 4.5 for lounge feel
+    if (Math.random() < 0.35) playBrush(startT + BEAT * 3.5);
+  }
+  function startMusic() {
+    if (musicStarted || !ensure()) return;
+    musicStarted = true;
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 0;
+    // Main chord-pad filter — warm, slightly muted
+    musicFilter = ctx.createBiquadFilter();
+    musicFilter.type = 'lowpass';
+    musicFilter.frequency.value = 1400;
+    musicFilter.Q.value = 0.8;
+    musicFilter.connect(musicGain);
+    // Bass filter — separate so bass stays punchy, not masked by the pad cutoff
+    bassFilter = ctx.createBiquadFilter();
+    bassFilter.type = 'lowpass';
+    bassFilter.frequency.value = 900;
+    bassFilter.Q.value = 0.5;
+    bassFilter.connect(musicGain);
+    // Brush filter — high bandpass so it sounds like a snare wire, not white noise
+    brushFilter = ctx.createBiquadFilter();
+    brushFilter.type = 'bandpass';
+    brushFilter.frequency.value = 4500;
+    brushFilter.Q.value = 1.1;
+    const brushLevel = ctx.createGain();
+    brushLevel.gain.value = 0.22;
+    brushFilter.connect(brushLevel);
+    brushLevel.connect(musicGain);
+    musicGain.connect(master);
+    // Slow LFO on the pad filter for gentle movement
+    musicLFO = ctx.createOscillator();
+    musicLFO.frequency.value = 0.07;
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = 300;
+    musicLFO.connect(lfoGain);
+    lfoGain.connect(musicFilter.frequency);
+    musicLFO.start();
+    nextBarAt = ctx.currentTime + 0.1;
+  }
+  function tickMusic() {
+    if (!musicStarted) return;
+    // Schedule bars ahead so setInterval jitter never leaves a gap
+    while (nextBarAt < ctx.currentTime + BAR_DUR + 0.5) {
+      playBar(BARS[barIdx % BARS.length], nextBarAt);
+      barIdx++;
+      nextBarAt += BAR_DUR;
+    }
+  }
   function setDrone(intensity) {
     if (!enabled || !ensure()) return;
-    if (!droneOsc1 && intensity > 0) {
-      droneOsc1 = ctx.createOscillator();
-      droneOsc2 = ctx.createOscillator();
-      droneOsc1.type = 'sine';
-      droneOsc2.type = 'triangle';
-      droneOsc1.frequency.value = 55;
-      droneOsc2.frequency.value = 82.4;
-      droneGain = ctx.createGain();
-      droneGain.gain.value = 0;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = 400;
-      droneOsc1.connect(filter);
-      droneOsc2.connect(filter);
-      filter.connect(droneGain);
-      droneGain.connect(master);
-      droneOsc1.start();
-      droneOsc2.start();
-    }
-    if (droneGain) {
-      const target = Math.min(0.08, intensity / 800);
-      droneGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.5);
+    // Don't schedule oscillators on a suspended context — they'd all fire at
+    // once when the user first interacts. Wait for the context to run.
+    if (ctx.state !== 'running') return;
+    startMusic();
+    tickMusic();
+    if (musicGain) {
+      // Quiet during calm prep, swells during heavy storms. Cap well below
+      // rain/thunder headroom so music sits under the weather layer.
+      const target = intensity > 0
+        ? Math.min(0.07, 0.015 + intensity / 1800)
+        : 0.012; // faint bed even when storm is off
+      musicGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 1.2);
     }
   }
 
@@ -3551,8 +5092,18 @@ document.addEventListener('keydown', e => {
   } else if (e.key === 'h' || e.key === 'H') {
     state.showHeatmap = !state.showHeatmap;
     toast(state.showHeatmap ? 'Heatmap on' : 'Heatmap off', 'info');
+  } else if (e.key === 'c' || e.key === 'C') {
+    state.showContours = !state.showContours;
+    toast(state.showContours ? 'Contours on (1 m)' : 'Contours off', 'info');
+  } else if (e.key === 'p' || e.key === 'P') {
+    state.showPeakExtent = !state.showPeakExtent;
+    toast(state.showPeakExtent ? 'Peak flood extent shown' : 'Peak extent off', 'info');
   } else if (e.key === 'v' || e.key === 'V') {
     toggleView();
+  } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+    document.getElementById('helpOverlay').style.display = 'flex';
+  } else if (e.key === 'm' || e.key === 'M') {
+    document.getElementById('muteBtn').click();
   } else if (e.key === 'ArrowLeft')  { state.cam.x += 40; e.preventDefault(); }
     else if (e.key === 'ArrowRight') { state.cam.x -= 40; e.preventDefault(); }
     else if (e.key === 'ArrowUp')    { state.cam.y += 40; e.preventDefault(); }
@@ -3573,9 +5124,157 @@ setInterval(() => {
   }
 }, 200);
 
+// ---------- Title screen ----------
+const titleBgCanvas = document.getElementById('titleBgCanvas');
+const titleBgCtx = titleBgCanvas.getContext('2d');
+let titleBgT = 0;
+function titleBgLoop() {
+  if (document.getElementById('titleScreen').style.display === 'none') return;
+  const w = titleBgCanvas.clientWidth, h = titleBgCanvas.clientHeight;
+  if (titleBgCanvas.width !== w) titleBgCanvas.width = w;
+  if (titleBgCanvas.height !== h) titleBgCanvas.height = h;
+  titleBgT += 0.015;
+  titleBgCtx.clearRect(0, 0, w, h);
+  // Animated water ripples
+  titleBgCtx.strokeStyle = 'rgba(125,211,252,0.25)';
+  titleBgCtx.lineWidth = 1;
+  for (let y = 0; y < h; y += 18) {
+    titleBgCtx.beginPath();
+    for (let x = 0; x < w; x += 3) {
+      const yOff = Math.sin(x * 0.008 + titleBgT + y * 0.01) * 6 +
+                   Math.cos(x * 0.02 + titleBgT * 1.4 + y * 0.03) * 3;
+      if (x === 0) titleBgCtx.moveTo(x, y + yOff); else titleBgCtx.lineTo(x, y + yOff);
+    }
+    titleBgCtx.stroke();
+  }
+  // Drifting rain droplets
+  for (let k = 0; k < 60; k++) {
+    const x = ((k * 83 + titleBgT * 120) % (w + 50)) - 20;
+    const y = ((k * 37 + titleBgT * 280) % (h + 50)) - 20;
+    titleBgCtx.strokeStyle = `rgba(180,200,230,${0.3 + (k % 3) * 0.1})`;
+    titleBgCtx.beginPath();
+    titleBgCtx.moveTo(x, y);
+    titleBgCtx.lineTo(x - 1.5, y + 6);
+    titleBgCtx.stroke();
+  }
+  requestAnimationFrame(titleBgLoop);
+}
+
+document.getElementById('titlePlay').addEventListener('click', () => {
+  document.getElementById('titleScreen').style.display = 'none';
+  localStorage.setItem('floodline_titleSeen', '1');
+  document.getElementById('overlay').style.display = 'flex';
+  renderScenarioGrid();
+});
+document.getElementById('titleCampaign').addEventListener('click', () => {
+  document.getElementById('titleScreen').style.display = 'none';
+  openCampaignOverlay();
+});
+document.getElementById('menuCampaign').addEventListener('click', () => {
+  document.getElementById('overlay').style.display = 'none';
+  openCampaignOverlay();
+});
+document.getElementById('closeCampaign').addEventListener('click', () => {
+  document.getElementById('campaignOverlay').style.display = 'none';
+  // If the title screen was the launcher, bring it back
+  if (!state.scenario) document.getElementById('titleScreen').style.display = 'flex';
+});
+document.getElementById('resetCampaign').addEventListener('click', () => {
+  const scope = campaignOverlayMode === 'missions' && selectedCampaignId
+    ? `"${getCampaign(selectedCampaignId).name}"`
+    : 'all campaigns';
+  if (confirm(`Reset progress for ${scope}? Mission clears will be lost.`)) {
+    if (scope === 'all campaigns') {
+      saveAllCampaigns({});
+    } else {
+      const s = loadCampaign(selectedCampaignId);
+      saveCampaign(selectedCampaignId, { index: 0, difficulty: s.difficulty || 'normal' });
+    }
+    renderCampaignOverlay();
+  }
+});
+document.getElementById('titleStats').addEventListener('click', openCareerStats);
+document.getElementById('titleHelp').addEventListener('click', () => {
+  document.getElementById('helpOverlay').style.display = 'flex';
+});
+document.getElementById('titleCredits').addEventListener('click', () => {
+  document.getElementById('creditsOverlay').style.display = 'flex';
+});
+document.getElementById('titleShare').addEventListener('click', async () => {
+  const url = location.href;
+  const text = 'Floodline — a flood engineering simulator. Real hydrology, 12 scenarios, $2.';
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'Floodline', text, url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      const btn = document.getElementById('titleShare');
+      const old = btn.textContent;
+      btn.textContent = '✓ Link copied!';
+      setTimeout(() => btn.textContent = old, 2000);
+    }
+  } catch (e) { /* user cancelled */ }
+});
+document.getElementById('closeCredits').addEventListener('click', () =>
+  document.getElementById('creditsOverlay').style.display = 'none');
+document.getElementById('closeStats').addEventListener('click', () =>
+  document.getElementById('statsOverlay').style.display = 'none');
+document.getElementById('resetStats').addEventListener('click', () => {
+  if (confirm('Reset all progress — scores, upgrades, wallet, achievements? This cannot be undone.')) {
+    ['floodline_scores','floodline_ghosts','floodline_achievements','floodline_wallet',
+     'floodline_upgrades','floodline_career','floodline_settings','floodline_location']
+      .forEach(k => localStorage.removeItem(k));
+    location.reload();
+  }
+});
+
+// ---------- Career stats ----------
+function loadCareer() {
+  try { return JSON.parse(localStorage.getItem('floodline_career') || '{}'); }
+  catch { return {}; }
+}
+function saveCareer(c) { localStorage.setItem('floodline_career', JSON.stringify(c)); }
+function bumpCareer(stat, by = 1) {
+  const c = loadCareer();
+  c[stat] = (c[stat] || 0) + by;
+  saveCareer(c);
+}
+function openCareerStats() {
+  const c = loadCareer();
+  const scores = loadScores();
+  const totalStars = totalStarsEarned();
+  const scenariosPlayed = Object.keys(scores).length;
+  const bodyEl = document.getElementById('statsBody');
+  const upgrades = Object.keys(loadUpgrades()).length;
+  const rows = [
+    ['Scenarios played',     c.runs || 0],
+    ['Scenarios won',        c.wins || 0],
+    ['Unique scenarios cleared', scenariosPlayed],
+    ['Total stars earned',   totalStars],
+    ['Upgrades purchased',   `${upgrades} / ${UPGRADES.length}`],
+    ['Current wallet',       fmt$(loadWallet())],
+    ['Lifetime earnings',    fmt$(c.lifetimeEarnings || 0)],
+    ['Damage prevented (vs history)', `${(c.damagePrevented || 0).toFixed(0)}% · ${fmt$((c.damagePrevented || 0) * 120000)}`],
+    ['Levee breaches witnessed', c.breaches || 0],
+    ['People evacuated',     (c.evacuated || 0).toLocaleString()],
+    ['Water pumped',         `${(c.pumped || 0).toFixed(0)} m³`],
+    ['Achievements unlocked', `${Object.keys(loadAchievements()).length} / ${ACHIEVEMENTS.length}`],
+  ];
+  bodyEl.innerHTML =
+    '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+    rows.map(([k,v]) => `<tr><td style="padding:5px 0;color:var(--dim);">${k}</td><td style="text-align:right;color:var(--text);">${v}</td></tr>`).join('') +
+    '</table>';
+  document.getElementById('statsOverlay').style.display = 'flex';
+}
+
 // ---------- Boot ----------
 sfx.setVolume(loadSettings().volume);
-renderScenarioGrid();
+// Title screen shows every visit so the Campaign banner is always the first
+// thing the player sees. Free Play still opens the scenario grid directly.
+document.getElementById('titleScreen').style.display = 'flex';
+document.getElementById('overlay').style.display = 'none';
+// Always attempt to kick off the title animation — it self-exits when hidden
+requestAnimationFrame(titleBgLoop);
 requestAnimationFrame(loop);
 </script>
 </body>

@@ -25,7 +25,7 @@ SIMS = [
     ("Apoapsis.html",                 "Apoapsis",           "3D rocket flight sim"),
     ("BonnevilleSpillwayOperator.html","Bonneville Spillway","Columbia River dam operator"),
     ("Floodline.html",                "Floodline",          "California flood defense"),
-    ("SimEarth.html",                 "SimEarth",           "Planet-scale geosim"),
+    ("BiosphereBlue.html",            "Biosphere Blue",     "Planet-scale geosim"),
     ("Tower.html",                    "Tower",              "High-rise operations"),
 ]
 

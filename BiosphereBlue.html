@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SimEarth</title>
+<title>Biosphere Blue</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127757;</text></svg>">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -205,7 +205,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
 <div id="siteNav">
   <div class="nav-bar">
     <a href="index.html" class="nav-home">HOME</a>
-    <span class="nav-title">SimEarth</span>
+    <span class="nav-title">Biosphere Blue</span>
     <button class="nav-toggle" onclick="document.querySelector('#siteNav .nav-menu').classList.toggle('open')">GAMES &#9776;</button>
   </div>
   <div class="nav-menu">
@@ -231,14 +231,14 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
       <a href="Apoapsis.html">Apoapsis</a>
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Floodline.html">Floodline</a>
-      <a href="SimEarth.html" class="current">SimEarth</a>
+      <a href="BiosphereBlue.html" class="current">Biosphere Blue</a>
       <a href="Tower.html">Tower</a>
     </div>
   </div>
 </div>
 <div id="gameNav">
   <div class="nav-bar">
-    <span class="nav-title">SimEarth</span>
+    <span class="nav-title">Biosphere Blue</span>
     <button class="nav-toggle" onclick="document.querySelector('#gameNav .nav-menu').classList.toggle('open')">&#9776;</button>
   </div>
   <div class="nav-menu">
@@ -255,7 +255,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
     <a href="Othello.html">Othello</a>
     <a href="PenteGrammai.html">Pente Grammai</a>
     <a href="Senet.html">Senet</a>
-    <a href="SimEarth.html" class="current">SimEarth</a>
+    <a href="BiosphereBlue.html" class="current">Biosphere Blue</a>
     <a href="Tidelands.html">Tidelands</a>
     <a href="Ur.html">Ur</a>
   </div>
@@ -268,7 +268,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
 
 <div id="mainMenu">
   <div class="menu-card">
-    <div class="mm-title">SIMEARTH</div>
+    <div class="mm-title">BIOSPHERE BLUE</div>
     <div class="mm-sub">a coupled Earth-system simulator</div>
     <input type="text" id="mmSeed" placeholder="seed (optional)" maxlength="32" style="width:100%;padding:8px 14px;background:rgba(14,20,40,0.7);border:1px solid #1A2A40;border-radius:4px;color:#B0C8E0;font-family:'Courier New',monospace;font-size:0.85em;letter-spacing:1px;text-align:center;margin-bottom:8px;outline:none">
     <button class="mm-btn primary" id="mmNew">NEW EARTH</button>
@@ -276,7 +276,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
     <button class="mm-btn" id="mmScenarios">SCENARIOS</button>
     <button class="mm-btn" id="mmHelp">CONTROLS &amp; PHYSICS</button>
     <button class="mm-btn" id="mmSettings">SETTINGS</button>
-    <div class="mm-foot">v0.3 &middot; press ? in-game for help</div>
+    <div class="mm-foot">v1.0 &middot; press ? in-game for help</div>
   </div>
 </div>
 
@@ -343,7 +343,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
 <div id="helpOverlay">
   <div class="help-content">
     <button class="help-close" id="helpClose" title="close (Esc)">&times;</button>
-    <h2>SIMEARTH</h2>
+    <h2>BIOSPHERE BLUE</h2>
     <div class="help-sub">a coupled Earth-system simulator</div>
     <div class="help-cols">
 
@@ -429,7 +429,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
 </div>
 
 <div id="title">
-  <h1>SIMEARTH</h1>
+  <h1>BIOSPHERE BLUE</h1>
   <div class="subtitle">a living world</div>
 </div>
 
@@ -548,7 +548,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // =============================================================
-// SimEarth  -  full sim
+// Biosphere Blue - planet-scale sim
 // Goldberg polyhedron (subdivided icosahedron dual) at freq-32
 // Dynamic tectonics / energy-balance climate / hydrology /
 // Holdridge biomes / life evolution / player tools
@@ -1311,8 +1311,6 @@ var EVENTS = [
   },
   { name: 'Pandemic strikes', kind: 'warn', minStage: 7, weight: 0.5,
     effect: function() {
-      // Civilization setback
-      SIM.firesEverLit = SIM.firesEverLit; // no-op placeholder
       notifyEvent('Civilization recovers slowly.', '');
     }
   },

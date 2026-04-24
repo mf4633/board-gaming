@@ -43,7 +43,12 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
 
 .stars { color: #FFD040; font-size: 1.3em; letter-spacing: 2px; }
 
-.palette-wrap { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 40px); display: flex; align-items: stretch; z-index: 20; }
+.palette-wrap { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 40px); display: flex; align-items: stretch; z-index: 20; flex-direction: column; }
+.palette-tabs { display: flex; gap: 2px; margin-bottom: 4px; justify-content: center; }
+.palette-tab { background: rgba(12,18,26,0.88); color: #8A9CB0; border: 1px solid #2A3040; border-bottom: none; padding: 3px 12px; font-family: Georgia, serif; font-size: 0.75em; cursor: pointer; letter-spacing: 1px; border-radius: 4px 4px 0 0; }
+.palette-tab:hover { color: #FFD060; background: #1A2030; }
+.palette-tab.active { background: rgba(12,18,26,0.92); color: #FFD060; border-color: #3A4858; border-bottom: 1px solid rgba(12,18,26,0.92); margin-bottom: -1px; }
+.palette-row { display: flex; align-items: stretch; }
 .palette-arrow { width: 30px; flex-shrink: 0; background: rgba(12,18,26,0.92); color: #B0C8E0; border: 1px solid #3A4858; cursor: pointer; font-size: 1.3em; font-family: Georgia, serif; display: flex; align-items: center; justify-content: center; transition: all 0.1s; }
 .palette-arrow:hover { background: #1A2840; color: #FFD060; border-color: #FFD060; }
 .palette-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -108,6 +113,8 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
 #logToggle { position: absolute; top: 100px; right: 12px; padding: 6px 12px; background: rgba(12,18,26,0.92); border: 1px solid #3A4858; color: #B0C8E0; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 0.8em; z-index: 21; }
 #logToggle:hover { background: #1A2030; }
 #logToggle.active { background: #4A3010; color: #FFD060; border-color: #FFD060; }
+#mailBtn.active { background: #4A3010; color: #FFD060; border-color: #FFD060; animation: mailPulse 2s ease-in-out infinite; }
+@keyframes mailPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,208,96,0); } 50% { box-shadow: 0 0 8px 2px rgba(255,208,96,0.4); } }
 
 #saveBtn, #loadBtn { position: absolute; top: 100px; padding: 6px 10px; background: rgba(12,18,26,0.92); border: 1px solid #3A4858; color: #B0C8E0; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 0.78em; z-index: 21; }
 #saveBtn { right: 80px; }
@@ -145,6 +152,25 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
 .event-banner.show { display: block; }
 .event-banner.boom { background: rgba(20,50,20,0.96); color: #C0FFD0; border-color: #40E080; }
 .event-banner.bust { background: rgba(40,40,10,0.96); color: #FFE080; border-color: #E0A040; }
+
+#eodSummary { position: absolute; top: 80px; left: 50%; transform: translateX(-50%) translateY(-120%); background: rgba(16,22,36,0.97); border: 2px solid #FFD060; border-radius: 8px; padding: 14px 22px; min-width: 340px; max-width: 420px; font-family: Georgia, serif; color: #E0ECFF; z-index: 28; opacity: 0; transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.3, 1.4), opacity 0.3s; pointer-events: none; box-shadow: 0 8px 30px rgba(0,0,0,0.7); }
+#eodSummary.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#eodSummary h3 { color: #FFD060; font-size: 1.05em; margin-bottom: 8px; letter-spacing: 2px; text-align: center; }
+#eodSummary .eod-row { display: flex; justify-content: space-between; padding: 3px 0; font-family: 'Courier New', monospace; font-size: 0.88em; border-bottom: 1px dotted #2A3040; }
+#eodSummary .eod-row:last-child { border-bottom: none; }
+#eodSummary .eod-row .label { color: #9AB8D8; }
+#eodSummary .eod-row .good { color: #60E090; font-weight: bold; }
+#eodSummary .eod-row .bad { color: #E04040; font-weight: bold; }
+#eodSummary .eod-events { margin-top: 6px; color: #E0A880; font-size: 0.82em; font-style: italic; text-align: center; }
+
+.mail-item { background: rgba(20,28,40,0.8); border: 1px solid #2A3040; border-left: 3px solid #5A7898; border-radius: 4px; padding: 8px 12px; margin: 4px 0; cursor: pointer; transition: all 0.1s; }
+.mail-item:hover { background: #1A2840; border-left-color: #FFD060; }
+.mail-item.unread { border-left-color: #FFD060; background: rgba(40,32,18,0.55); }
+.mail-item .mail-head { display: flex; justify-content: space-between; font-size: 0.82em; margin-bottom: 2px; }
+.mail-item .mail-from { color: #9ADBFF; font-weight: bold; }
+.mail-item .mail-age { color: #6A8098; font-family: monospace; }
+.mail-item .mail-subj { color: #E0D0A8; font-size: 0.92em; }
+.mail-item.unread .mail-subj { color: #FFD060; font-weight: bold; }
 
 #newsTicker { position: absolute; bottom: 0; left: 0; right: 0; height: 22px; background: linear-gradient(90deg, #0A0E12 0%, #1A2030 50%, #0A0E12 100%); border-top: 1px solid #3A4858; overflow: hidden; z-index: 25; font-family: 'Courier New', monospace; font-size: 0.8em; color: #B0C8E0; }
 #newsTicker .nt-label { position: absolute; left: 0; top: 0; bottom: 0; display: flex; align-items: center; padding: 0 14px; background: #C04020; color: #FFE080; font-weight: bold; letter-spacing: 2px; z-index: 2; }
@@ -304,12 +330,11 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
       <a href="Apoapsis.html">Apoapsis</a>
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Floodline.html">Floodline</a>
-      <a href="SimEarth.html">SimEarth</a>
+      <a href="BiosphereBlue.html">Biosphere Blue</a>
       <a href="Tower.html" class="current">Tower</a>
     </div>
   </div>
 </div>
-
 <div id="titleScreen">
   <div class="title-bg"><div class="title-tower"></div></div>
   <div class="title-content">
@@ -329,7 +354,7 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
   </div>
   <div id="legacyDisplay" style="position:absolute;top:28px;left:50%;transform:translateX(-50%);color:#FFD060;font-family:'Courier New',monospace;font-size:0.85em;letter-spacing:2px;z-index:3;display:none;"></div>
   <div class="copyright">&copy; 2026 &middot; built with Claude Code</div>
-  <div class="version">v0.9 pre-alpha</div>
+  <div class="version">v1.0</div>
 </div>
 
 <div id="pauseMenu">
@@ -341,6 +366,7 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
     <button onclick="showModal('settingsModal')">SETTINGS</button>
     <button onclick="showModal('achievementsModal')">ACHIEVEMENTS</button>
     <button onclick="showModal('statsModal')">STATISTICS</button>
+    <button onclick="renameTower()">RENAME TOWER</button>
     <button id="retireBtn" onclick="retireTower()" style="display:none;color:#FFD060;border-color:#FFD060;">RETIRE TOWER (+LEGACY)</button>
     <button onclick="quitToTitle()">QUIT TO TITLE</button>
   </div>
@@ -462,6 +488,70 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
   <div class="modal-box" id="dynastyBody"></div>
 </div>
 
+<div id="dialogModal" class="modal-overlay">
+  <div class="modal-box" style="min-width:340px;max-width:460px;">
+    <div id="dialogMsg" style="white-space:pre-wrap;margin-bottom:18px;line-height:1.45;color:#D0E0F0;"></div>
+    <div id="dialogInputWrap" style="display:none;margin-bottom:18px;">
+      <input id="dialogInput" type="text" maxlength="60" style="width:100%;padding:8px 10px;font-size:1em;font-family:Georgia,serif;background:#0A0E18;color:#E0E8F8;border:1px solid #5A7898;border-radius:4px;box-sizing:border-box;">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button id="dialogCancel" style="padding:8px 18px;background:#1A2028;color:#A0B0C0;border:1px solid #3A4858;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:0.95em;">Cancel</button>
+      <button id="dialogOk" style="padding:8px 18px;background:#3A5878;color:#E0E8F8;border:1px solid #5A7898;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:0.95em;">OK</button>
+    </div>
+  </div>
+</div>
+
+<div id="shortcutsModal" class="modal-overlay">
+  <div class="modal-box">
+    <button class="modal-close" onclick="hideModal('shortcutsModal')">&times;</button>
+    <h2>KEYBOARD SHORTCUTS</h2>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 16px;color:#D0E0F0;font-size:0.9em;">
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">Space</kbd><span>Pause / resume</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">1 / 3 / 9</kbd><span>Game speed (1×, 3×, 9×)</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">Esc</kbd><span>Cancel tool / close modal / pause menu</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">B</kbd><span>Quick-select Office</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">Right-click</kbd><span>Bulldoze unit under cursor</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">G</kbd><span>Jump camera to ground floor</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">T</kbd><span>Jump camera to top floor</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">M</kbd><span>Toggle mini-map</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">H</kbd><span>Cycle heatmap (occupancy / sat / revenue)</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">Q</kbd><span>Toggle quests panel</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">I</kbd><span>Open help overlay</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">+ / -</kbd><span>Zoom in / out</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">0</kbd><span>Reset zoom</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">Ctrl+wheel</kbd><span>Zoom in / out (mouse)</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">Ctrl+S</kbd><span>Save to slot 1</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">Ctrl+L</kbd><span>Load from slot 1</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">?</kbd><span>This help</span>
+    </div>
+    <p style="color:#7098C8;font-size:0.8em;margin-top:14px;text-align:center;">All HUD panels can be dragged to reposition. Right-click any unit to bulldoze.</p>
+  </div>
+</div>
+
+<div id="festivalModal" class="modal-overlay">
+  <div class="modal-box">
+    <button class="modal-close" onclick="hideModal('festivalModal')">&times;</button>
+    <h2>FESTIVALS</h2>
+    <div id="festivalBody"></div>
+  </div>
+</div>
+
+<div id="campaignModal" class="modal-overlay">
+  <div class="modal-box">
+    <button class="modal-close" onclick="hideModal('campaignModal')">&times;</button>
+    <h2>MARKETING</h2>
+    <div id="campaignBody"></div>
+  </div>
+</div>
+
+<div id="mailModal" class="modal-overlay">
+  <div class="modal-box">
+    <button class="modal-close" onclick="hideModal('mailModal')">&times;</button>
+    <h2>INBOX</h2>
+    <div id="mailBody" style="max-height:440px;overflow-y:auto;"></div>
+  </div>
+</div>
+
 <div id="timelineModal" class="modal-overlay">
   <div class="modal-box" style="max-width:760px;">
     <button class="modal-close" onclick="hideModal('timelineModal')">&times;</button>
@@ -562,9 +652,12 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
   </div>
 
   <div class="palette-wrap">
-    <button class="palette-arrow left" id="palArrowL" onclick="scrollPalette(-1)" title="Scroll left">&#9664;</button>
-    <div class="palette" id="palette"></div>
-    <button class="palette-arrow right" id="palArrowR" onclick="scrollPalette(1)" title="Scroll right">&#9654;</button>
+    <div class="palette-tabs" id="paletteTabs"></div>
+    <div class="palette-row">
+      <button class="palette-arrow left" id="palArrowL" onclick="scrollPalette(-1)" title="Scroll left">&#9664;</button>
+      <div class="palette" id="palette"></div>
+      <button class="palette-arrow right" id="palArrowR" onclick="scrollPalette(1)" title="Scroll right">&#9654;</button>
+    </div>
   </div>
 
   <div class="speed-ctl">
@@ -589,6 +682,7 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
   <div id="eventBanner" class="event-banner"></div>
   <div id="tutHint"></div>
   <div id="guidedTutorial"></div>
+  <div id="eodSummary"></div>
   <div id="seasonPill">Spring, Day 1 &middot; <span id="weatherPill">clear</span></div>
   <div id="loanBar"></div>
   <div id="infoOverlay">
@@ -614,6 +708,9 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
   <button id="helpBtn" onclick="toggleInfoOverlay()" style="position:absolute;top:100px;right:200px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">HELP</button>
   <button id="statsBtn" onclick="showModal('statsModal')" style="position:absolute;top:100px;right:260px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">STATS</button>
   <button id="timelineBtn" onclick="showModal('timelineModal')" style="position:absolute;top:100px;right:320px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">GRAPH</button>
+  <button id="mailBtn" onclick="showModal('mailModal')" style="position:absolute;top:100px;right:380px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">MAIL</button>
+  <button id="campaignBtn" onclick="showModal('campaignModal')" style="position:absolute;top:100px;right:440px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">ADS</button>
+  <button id="festivalBtn" onclick="showModal('festivalModal')" style="position:absolute;top:100px;right:490px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">FEST</button>
   <div id="newsTicker">
     <div class="nt-label">NEWS</div>
     <div class="nt-scroll"><div class="nt-items" id="newsItems"></div></div>
@@ -621,9 +718,40 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
 </div>
 
 <script>
+/* Surface JS errors as an on-screen banner. Production Tauri/WebView2 has
+   no visible devtools, so silent errors (null dereference, missing DOM, etc.)
+   would otherwise look like a crash. Register before anything else. */
+window.addEventListener('error', function(e) {
+  try {
+    var b = document.getElementById('errorBanner');
+    if (!b) {
+      b = document.createElement('div');
+      b.id = 'errorBanner';
+      b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#8B1A1A;color:#FFE0E0;font-family:monospace;font-size:12px;padding:8px 12px;border-bottom:2px solid #FF4040;white-space:pre-wrap;max-height:40vh;overflow-y:auto;cursor:pointer;';
+      b.title = 'Click to dismiss';
+      b.onclick = function() { b.remove(); };
+      (document.body || document.documentElement).appendChild(b);
+    }
+    var loc = e.filename ? ' @ ' + e.filename.split('/').pop() + ':' + e.lineno + ':' + e.colno : '';
+    b.textContent += (b.textContent ? '\n' : '') + (e.message || 'error') + loc;
+  } catch (ex) {}
+});
+window.addEventListener('unhandledrejection', function(e) {
+  try {
+    var msg = e.reason && (e.reason.stack || e.reason.message) || String(e.reason);
+    var ev = new ErrorEvent('error', { message: 'Unhandled rejection: ' + msg });
+    window.dispatchEvent(ev);
+  } catch (ex) {}
+});
+
 /* ===== CONSTANTS ===== */
-var CELL_W = 18;
-var CELL_H = 22;
+var CELL_W_BASE = 18;
+var CELL_H_BASE = 22;
+var zoom = 1.0;
+function getCellW() { return CELL_W_BASE * zoom; }
+function getCellH() { return CELL_H_BASE * zoom; }
+Object.defineProperty(window, 'CELL_W', { get: getCellW });
+Object.defineProperty(window, 'CELL_H', { get: getCellH });
 var GRID_W = 28;           // cells wide
 var FLOOR_MIN = -8;
 var FLOOR_MAX = 80;
@@ -643,16 +771,17 @@ var UNITS = {
   security: { name:'Security',  w:3, h:1, cost:60000,  rent:0,    color:'#4A5060', textColor:'#E0E0A0', capacity:0, minStars:2, coverage:8, upkeep:350 },
   atm:      { name:'ATM',       w:1, h:1, cost:20000,  rent:0,    color:'#80A060', textColor:'#203020', capacity:0, perDay:260, minStars:2, upkeep:30 },
   firestation:{ name:'Fire Stn', w:4, h:1, cost:150000, rent:0,   color:'#C04020', textColor:'#FFE080', capacity:0, minStars:2, upkeep:450, fireProtect:10 },
+  sprinkler:{ name:'Sprinkler', w:1, h:1, cost:15000,  rent:0,    color:'#60A0C0', textColor:'#FFF', capacity:0, minStars:2, upkeep:20, fireSuppress:8 },
   // 3★
   hotel:    { name:'Hotel Rm',  w:3, h:1, cost:45000,  rent:0,    color:'#C098B8', textColor:'#3A1A30', capacity:2, nightly:180, minStars:3, upkeep:120 },
   skylobby: { name:'Skylobby',  w:6, h:1, cost:350000, rent:0,    color:'#E0C890', textColor:'#5A4020', capacity:0, minStars:3, upkeep:400, isHub:true },
-  restaurant:{ name:'Restaurant',w:6, h:1, cost:180000, rent:0,   color:'#E0A860', textColor:'#5A3010', capacity:24, perVisit:22, minStars:3, upkeep:1200 },
-  cinema:   { name:'Cinema',    w:8, h:2, cost:380000, rent:0,    color:'#604080', textColor:'#FFD0E0', capacity:60, perVisit:16, minStars:3, upkeep:900 },
+  restaurant:{ name:'Restaurant',w:6, h:1, cost:180000, rent:0,   color:'#E0A860', textColor:'#5A3010', capacity:24, perVisit:22, minStars:3, upkeep:1200, noise:6, noiseRadius:3 },
+  cinema:   { name:'Cinema',    w:8, h:2, cost:380000, rent:0,    color:'#604080', textColor:'#FFD0E0', capacity:60, perVisit:16, minStars:3, upkeep:900, noise:10, noiseRadius:4 },
   clinic:   { name:'Clinic',    w:5, h:1, cost:200000, rent:0,    color:'#E0E8F0', textColor:'#304060', capacity:8,  perVisit:70, minStars:3, upkeep:600 },
-  gym:      { name:'Gym',       w:5, h:1, cost:160000, rent:0,    color:'#A0C070', textColor:'#304020', capacity:12, perVisit:18, minStars:3, upkeep:500, satBoost:4, satRadius:5 },
+  gym:      { name:'Gym',       w:5, h:1, cost:160000, rent:0,    color:'#A0C070', textColor:'#304020', capacity:12, perVisit:18, minStars:3, upkeep:500, satBoost:4, satRadius:5, noise:5, noiseRadius:2 },
   // 4★
   penthouse:{ name:'Penthouse', w:6, h:1, cost:400000, rent:1200, color:'#E0C878', textColor:'#604020', capacity:4, salePrice:800000, minStars:4, upkeep:300 },
-  conference:{name:'Conference',w:8, h:2, cost:500000, rent:0,    color:'#A08060', textColor:'#FFFFFF', capacity:40, perVisit:55, minStars:4, upkeep:850 },
+  conference:{name:'Conference',w:8, h:2, cost:500000, rent:0,    color:'#A08060', textColor:'#FFFFFF', capacity:40, perVisit:55, minStars:4, upkeep:850, noise:8, noiseRadius:3 },
   spa:      { name:'Spa',       w:6, h:1, cost:280000, rent:0,    color:'#C8D8E0', textColor:'#405060', capacity:10, perVisit:85, minStars:4, upkeep:700, satBoost:5, satRadius:5 },
   garden:   { name:'Garden',    w:6, h:1, cost:220000, rent:0,    color:'#6AC070', textColor:'#203820', capacity:0,  minStars:4, upkeep:250, satBoost:15, satRadius:6 },
   museum:   { name:'Museum',    w:8, h:2, cost:520000, rent:0,    color:'#B89A70', textColor:'#FFEEDD', capacity:30, perVisit:35, minStars:4, upkeep:480, prestige:20 },
@@ -661,10 +790,10 @@ var UNITS = {
   cathedral:{ name:'Cathedral', w:8, h:3, cost:800000, rent:0,    color:'#D8D0B8', textColor:'#402820', capacity:0, minStars:5, upkeep:500, prestige:50 },
   observatory:{name:'Observatory',w:6, h:2, cost:600000, rent:0,  color:'#203040', textColor:'#FFD060', capacity:20, perVisit:70, minStars:5, upkeep:500, nightOnly:true },
   metro:    { name:'Metro',     w:6, h:1, cost:500000, rent:0,    color:'#3A4858', textColor:'#FFD060', capacity:0, minStars:5, basementOnly:true, upkeep:600, trafficBoost:0.5 },
-  helipad:  { name:'Helipad',   w:6, h:1, cost:700000, rent:0,    color:'#303840', textColor:'#FFD060', capacity:0, minStars:5, roofOnly:true, upkeep:400, vipTip:3000 },
-  airport:  { name:'Airport',   w:8, h:1, cost:900000, rent:0,    color:'#4A5060', textColor:'#FFD060', capacity:0, minStars:5, basementOnly:true, upkeep:1200, trafficBoost:1.2 }
+  helipad:  { name:'Helipad',   w:6, h:1, cost:700000, rent:0,    color:'#303840', textColor:'#FFD060', capacity:0, minStars:5, roofOnly:true, upkeep:400, vipTip:3000, noise:15, noiseRadius:5 },
+  airport:  { name:'Airport',   w:8, h:1, cost:900000, rent:0,    color:'#4A5060', textColor:'#FFD060', capacity:0, minStars:5, basementOnly:true, upkeep:1200, trafficBoost:1.2, noise:12, noiseRadius:4 }
 };
-var PAL_ORDER = ['lobby','office','condo','stairs','elevator','shop','parking','security','atm','firestation','hotel','restaurant','cinema','clinic','gym','skylobby','penthouse','conference','spa','garden','museum','university','cathedral','observatory','metro','helipad','airport'];
+var PAL_ORDER = ['lobby','office','condo','stairs','elevator','shop','parking','security','atm','firestation','sprinkler','hotel','restaurant','cinema','clinic','gym','skylobby','penthouse','conference','spa','garden','museum','university','cathedral','observatory','metro','helipad','airport'];
 
 /* ===== STATE ===== */
 var state = {
@@ -766,9 +895,8 @@ function marketSupply(cls) {
 function marketRatio(cls) {
   if (!state.demand) return 1.0;
   var s = marketSupply(cls);
-  // Rival tower absorbs some demand based on its size
   var rivalShare = state.rivalTower ? Math.min(0.35, state.rivalTower.floors * 0.012) : 0;
-  var effDemand = state.demand[cls] * (1 - rivalShare);
+  var effDemand = state.demand[cls] * (1 - rivalShare) * campaignMult(cls);
   if (s === 0) return 2.0;
   return effDemand / s;
 }
@@ -893,6 +1021,151 @@ function renderMarketPanel() {
   el.classList.add('show');
 }
 
+/* ===== MAIL / INBOX ===== */
+function postMail(letter) {
+  if (!state.mail) state.mail = [];
+  letter.id = state.nextMailId = (state.nextMailId || 1) + 1;
+  letter.day = state.day;
+  letter.read = false;
+  state.mail.unshift(letter);
+  if (state.mail.length > 50) state.mail.pop();
+  updateMailBadge();
+  sfx('bell');
+}
+
+function updateMailBadge() {
+  var btn = document.getElementById('mailBtn');
+  if (!btn) return;
+  var unread = 0;
+  if (state.mail) for (var i = 0; i < state.mail.length; i++) if (!state.mail[i].read) unread++;
+  btn.textContent = 'MAIL' + (unread > 0 ? ' (' + unread + ')' : '');
+  btn.classList.toggle('active', unread > 0);
+}
+
+function renderMail() {
+  var body = document.getElementById('mailBody');
+  if (!state.mail || state.mail.length === 0) {
+    body.innerHTML = '<p style="color:#7098C8;text-align:center;padding:30px;font-style:italic;">Your inbox is empty.</p>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < state.mail.length; i++) {
+    var m = state.mail[i];
+    var ageDays = state.day - m.day;
+    var ageStr = ageDays === 0 ? 'today' : ageDays === 1 ? 'yesterday' : ageDays + ' days ago';
+    var unread = m.read ? '' : ' unread';
+    html += '<div class="mail-item' + unread + '" onclick="openMailItem(' + m.id + ')" data-id="' + m.id + '">' +
+      '<div class="mail-head"><span class="mail-from">' + (m.from || 'Unknown') + '</span><span class="mail-age">' + ageStr + '</span></div>' +
+      '<div class="mail-subj">' + m.subject + '</div>' +
+      '</div>';
+  }
+  body.innerHTML = html;
+}
+
+function openMailItem(id) {
+  if (!state.mail) return;
+  var m = null;
+  for (var i = 0; i < state.mail.length; i++) if (state.mail[i].id === id) { m = state.mail[i]; break; }
+  if (!m) return;
+  m.read = true;
+  updateMailBadge();
+  var body = document.getElementById('mailBody');
+  var html = '<button onclick="renderMail()" style="background:none;border:1px solid #3A4858;color:#9AB8D8;padding:4px 10px;cursor:pointer;border-radius:3px;font-family:Georgia;font-size:0.85em;margin-bottom:10px;">&#8592; Back to inbox</button>';
+  html += '<div style="padding:4px 0 10px;border-bottom:1px solid #3A4858;margin-bottom:12px;">' +
+    '<div style="color:#FFD060;font-weight:bold;font-size:1.1em;">' + m.subject + '</div>' +
+    '<div style="color:#9AB8D8;font-size:0.85em;">From: ' + (m.from || 'Unknown') + ' &middot; Day ' + m.day + '</div>' +
+    '</div>';
+  html += '<div style="color:#D0E0F0;line-height:1.6;font-size:0.95em;white-space:pre-wrap;">' + m.body + '</div>';
+  if (m.actions && m.actions.length) {
+    html += '<div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">';
+    for (var a = 0; a < m.actions.length; a++) {
+      var act = m.actions[a];
+      html += '<button onclick="runMailAction(' + m.id + ',' + a + ')" style="background:#2A4860;color:#FFD060;border:1px solid #FFD060;padding:8px 18px;cursor:pointer;font-family:Georgia;border-radius:4px;">' + act.label + '</button>';
+    }
+    html += '</div>';
+  }
+  html += '<div style="margin-top:20px;text-align:center;"><button onclick="deleteMail(' + m.id + ')" style="background:none;color:#E06060;border:1px solid #8A4060;padding:4px 12px;cursor:pointer;font-family:Georgia;font-size:0.85em;border-radius:3px;">Delete</button></div>';
+  body.innerHTML = html;
+}
+
+function runMailAction(id, actIdx) {
+  var m = null;
+  for (var i = 0; i < state.mail.length; i++) if (state.mail[i].id === id) { m = state.mail[i]; break; }
+  if (!m || !m.actions[actIdx]) return;
+  var fnName = m.actions[actIdx].fn;
+  if (typeof window[fnName] === 'function') window[fnName](m.actions[actIdx].arg);
+  // Remove letter after action
+  deleteMail(id);
+  hideModal('mailModal');
+}
+
+function deleteMail(id) {
+  if (!state.mail) return;
+  for (var i = state.mail.length - 1; i >= 0; i--) if (state.mail[i].id === id) state.mail.splice(i, 1);
+  updateMailBadge();
+  renderMail();
+}
+
+// Hook called for star promotions — sends a mayor letter
+function maybeSendBondOffer() {
+  // Once every ~25 days, when tower is healthy enough, the city may offer a bond
+  if (state.day < 20 || state.day - (state.lastBondDay || 0) < 25) return;
+  if (state.loan.principal > 250000) return;  // already in debt
+  if (state.stars < 2) return;
+  if (Math.random() > 0.25) return;
+  state.lastBondDay = state.day;
+  var principal = 500000 + state.stars * 200000;
+  var days = 30;
+  var totalRepay = Math.round(principal * 1.12);
+  postMail({
+    from: 'City Treasurer',
+    subject: 'Municipal Bond Offering',
+    body: 'We are prepared to underwrite a ' + days + '-day revenue bond for your tower.\n\nPrincipal: $' + formatMoney(principal) + '\nRepayment (day ' + (state.day + days) + '): $' + formatMoney(totalRepay) + '\nImplied rate: 12%\n\nIf accepted, the principal credits your account today. Failure to repay on the maturity date will be deducted automatically from your cash balance.\n\n— City Treasurer',
+    actions: [
+      { label: 'Accept bond', fn: 'acceptBond', arg: JSON.stringify({ p: principal, r: totalRepay, due: state.day + days }) },
+      { label: 'Decline', fn: 'declineBond', arg: '' }
+    ]
+  });
+}
+window.acceptBond = function(argJson) {
+  var b = JSON.parse(argJson);
+  state.cash += b.p;
+  state.bonds = state.bonds || [];
+  state.bonds.push({ principal: b.p, repay: b.r, due: b.due });
+  logEvent('Bond issued: +$' + formatMoney(b.p) + ', repay $' + formatMoney(b.r) + ' on day ' + b.due, 'warn');
+};
+window.declineBond = function() { logEvent('Declined the municipal bond offer.', 'info'); };
+
+function checkBondMaturity() {
+  if (!state.bonds) return;
+  for (var i = state.bonds.length - 1; i >= 0; i--) {
+    var b = state.bonds[i];
+    if (state.day >= b.due) {
+      state.cash -= b.repay;
+      logEvent('Bond matured: -$' + formatMoney(b.repay) + ' paid', state.cash >= 0 ? 'warn' : 'bad');
+      state.bonds.splice(i, 1);
+    }
+  }
+}
+
+function sendMayorLetter(stars) {
+  var titles = { 2: 'The City Notices', 3: 'Landmark Status', 4: 'Civic Pride', 5: 'Icon of the Skyline' };
+  var bodies = {
+    2: 'Your tower has crossed the 300-resident threshold. On behalf of the city, congratulations on reaching 2\u2605.\n\nAs a token of civic appreciation, please accept a small grant ($50,000) to assist with further development.\n\n— Mayor\'s Office',
+    3: 'Three stars — your tower is now a recognized landmark. Insurance is available at our standard rate.\n\nA new wave of amenities is ready to build: cinemas, clinics, gyms. Use them wisely.\n\n— Mayor\'s Office',
+    4: 'Four stars. You are now among the top developments in the city. We\'ve waived $100,000 of property tax for the quarter.\n\nPenthouses, museums, and conference centers await.\n\n— Mayor\'s Office',
+    5: 'Five stars. Few buildings in the world reach this status. Your tower defines our skyline.\n\nWe extend a $200,000 civic grant in your honor. May you retire well.\n\n— Mayor\'s Office'
+  };
+  var grants = { 2: 50000, 4: 100000, 5: 200000 };
+  postMail({
+    from: 'Mayor\'s Office',
+    subject: titles[stars] || ('Promotion to ' + stars + '\u2605'),
+    body: bodies[stars] || 'Congratulations on your ' + stars + '\u2605 promotion.',
+    grant: grants[stars] || 0
+  });
+  if (grants[stars]) { state.cash += grants[stars]; logEvent('Civic grant +$' + formatMoney(grants[stars]), 'good'); }
+}
+
 /* ===== TENANT REQUESTS ===== */
 var REQUEST_TEMPLATES = [
   { id: 'garden_near',   text: function(t) { return t.name + ' wants a rooftop garden within 6 floors.'; },
@@ -945,8 +1218,9 @@ function maybeSpawnTenantRequest() {
   if (!r) return;
   // Skip if already fulfilled
   if (r.test(u)) return;
+  var reqId = state.nextUnitId++ + '_req';
   state.tenantRequests.push({
-    id: state.nextUnitId++ + '_req',
+    id: reqId,
     templateId: r.id,
     tenantName: t.name,
     unitId: u.id,
@@ -954,7 +1228,13 @@ function maybeSpawnTenantRequest() {
     reward: r.reward,
     expireDay: state.day + 14
   });
-  logEvent(t.name + ' has a request: see the Requests panel', 'info');
+  // Also deliver as an in-character letter
+  postMail({
+    from: t.name + ' (' + UNITS[u.type].name + ' floor ' + floorLabel(u.y) + ')',
+    subject: 'A request from your tenant',
+    body: 'Hi,\n\n' + r.text(t).replace(t.name + ' ', 'I ').replace('wants', 'want').replace('demands', 'demand') + '\n\nIf you can make this happen within 14 days, I\'ll personally cover $' + formatMoney(r.reward) + ' toward the effort.\n\nThanks,\n' + t.name
+  });
+  logEvent(t.name + ' has a request — check MAIL', 'info');
   renderTenantRequests();
 }
 
@@ -1034,29 +1314,32 @@ function dailyChallengeConfig() {
 }
 
 function startDailyChallenge() {
-  var today = todayKey();
-  var prev = localStorage.getItem('skystack.daily.day');
-  if (state.gameStarted) {
-    if (!confirm('Start today\'s daily challenge? Current game will be lost.')) return;
+  function proceed() {
+    var today = todayKey();
+    resetGameState();
+    var dc = dailyChallengeConfig();
+    state.scenario = {
+      name: 'Daily: ' + dc.name,
+      desc: dc.desc,
+      goalText: dc.goal,
+      goalTest: dc.goalTest,
+      goalFail: dc.goalFail
+    };
+    state.scenarioId = 'daily_' + dc.id + '_' + today;
+    state.dailyChallenge = { id: dc.id, seed: dc.seed, day: today };
+    dc.init();
+    updatePopulation();
+    updateStars();
+    hideModal('dailyModal');
+    startGameFresh();
+    logEvent('Daily Challenge: ' + dc.name + ' (seed ' + dc.seed + ')', 'good');
+    showToast('OBJECTIVE: ' + dc.goal);
   }
-  resetGameState();
-  var dc = dailyChallengeConfig();
-  state.scenario = {
-    name: 'Daily: ' + dc.name,
-    desc: dc.desc,
-    goalText: dc.goal,
-    goalTest: dc.goalTest,
-    goalFail: dc.goalFail
-  };
-  state.scenarioId = 'daily_' + dc.id + '_' + today;
-  state.dailyChallenge = { id: dc.id, seed: dc.seed, day: today };
-  dc.init();
-  updatePopulation();
-  updateStars();
-  hideModal('dailyModal');
-  startGameFresh();
-  logEvent('Daily Challenge: ' + dc.name + ' (seed ' + dc.seed + ')', 'good');
-  showToast('OBJECTIVE: ' + dc.goal);
+  if (state.gameStarted) {
+    uiConfirm('Start today\'s daily challenge? Current game will be lost.', function(ok) { if (ok) proceed(); });
+  } else {
+    proceed();
+  }
 }
 
 function renderDailyChallenge() {
@@ -1302,17 +1585,23 @@ function createUnitDirect(type, gx, gy) {
 function startScenario(id) {
   var sc = SCENARIOS[id];
   if (!sc) return;
-  if (state.gameStarted && !confirm('Start "' + sc.name + '"? Current game will be lost.')) return;
-  resetGameState();
-  state.scenario = sc;
-  state.scenarioId = id;
-  sc.init();
-  updatePopulation();
-  updateStars();
-  hideModal('scenarioModal');
-  startGameFresh();
-  logEvent('Scenario: ' + sc.name, 'good');
-  if (sc.goalText) showToast('OBJECTIVE: ' + sc.goalText);
+  function proceed() {
+    resetGameState();
+    state.scenario = sc;
+    state.scenarioId = id;
+    sc.init();
+    updatePopulation();
+    updateStars();
+    hideModal('scenarioModal');
+    startGameFresh();
+    logEvent('Scenario: ' + sc.name, 'good');
+    if (sc.goalText) showToast('OBJECTIVE: ' + sc.goalText);
+  }
+  if (state.gameStarted) {
+    uiConfirm('Start "' + sc.name + '"? Current game will be lost.', function(ok) { if (ok) proceed(); });
+  } else {
+    proceed();
+  }
 }
 
 function renderScenarioList() {
@@ -1343,7 +1632,7 @@ function checkScenarioProgress() {
     showToast('SCENARIO FAILED: ' + sc.goalText);
     state.scenario = null;
     state.paused = true;
-    setTimeout(function() { if (confirm('Try again?')) startScenario(state.scenarioId); else quitToTitle(); }, 500);
+    setTimeout(function() { uiConfirm('Try again?', function(ok) { if (ok) startScenario(state.scenarioId); else quitToTitle(); }); }, 500);
     return;
   }
   if (sc.goalTest && sc.goalTest() && !state.scenarioWon) {
@@ -1529,10 +1818,62 @@ function showModal(id) {
   if (id === 'dailyModal') renderDailyChallenge();
   if (id === 'statsModal') renderStats();
   if (id === 'timelineModal') renderTimeline();
+  if (id === 'mailModal') renderMail();
+  if (id === 'campaignModal') renderCampaignModal();
+  if (id === 'festivalModal') renderFestivalModal();
   document.getElementById(id).classList.add('show');
 }
 function hideModal(id) {
   document.getElementById(id).classList.remove('show');
+}
+
+// Custom dialog used in place of native confirm()/prompt(), which do not
+// reliably work in Tauri/WebView2 production builds on Windows (they can
+// return null synchronously with no UI, leaving the app stuck).
+function _showDialog(opts, cb) {
+  var m = document.getElementById('dialogModal');
+  var msgEl = document.getElementById('dialogMsg');
+  var inputWrap = document.getElementById('dialogInputWrap');
+  var inputEl = document.getElementById('dialogInput');
+  var okBtn = document.getElementById('dialogOk');
+  var cancelBtn = document.getElementById('dialogCancel');
+  msgEl.textContent = opts.message || '';
+  okBtn.textContent = opts.okText || 'OK';
+  cancelBtn.textContent = opts.cancelText || 'Cancel';
+  cancelBtn.style.display = opts.hideCancel ? 'none' : '';
+  if (opts.hasInput) {
+    inputWrap.style.display = '';
+    inputEl.value = opts.defaultVal != null ? String(opts.defaultVal) : '';
+    setTimeout(function() { try { inputEl.focus(); inputEl.select(); } catch(e) {} }, 30);
+  } else {
+    inputWrap.style.display = 'none';
+  }
+  m.classList.add('show');
+  function cleanup() {
+    m.classList.remove('show');
+    okBtn.onclick = null;
+    cancelBtn.onclick = null;
+    inputEl.onkeydown = null;
+  }
+  okBtn.onclick = function() {
+    var v = opts.hasInput ? inputEl.value : true;
+    cleanup();
+    try { cb(v); } catch(e) { console.error('dialog cb error', e); }
+  };
+  cancelBtn.onclick = function() {
+    cleanup();
+    try { cb(opts.hasInput ? null : false); } catch(e) { console.error('dialog cb error', e); }
+  };
+  inputEl.onkeydown = function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); okBtn.click(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancelBtn.click(); }
+  };
+}
+function uiConfirm(message, cb) {
+  _showDialog({ message: message }, function(v) { cb(!!v); });
+}
+function uiPrompt(message, defaultVal, cb) {
+  _showDialog({ message: message, hasInput: true, defaultVal: defaultVal }, cb);
 }
 
 function slotKey(n) { return 'skystack.slot' + n; }
@@ -1544,7 +1885,8 @@ function getSlotMeta(n) {
     var snap = JSON.parse(raw);
     return {
       day: snap.day, stars: snap.stars, pop: snap.population, cash: snap.cash,
-      units: Object.keys(snap.units || {}).length, savedAt: snap.savedAt
+      units: Object.keys(snap.units || {}).length, savedAt: snap.savedAt,
+      thumbnail: snap.thumbnail, towerName: snap.towerName
     };
   } catch (ex) { return null; }
 }
@@ -1555,7 +1897,11 @@ function renderSlots(elId, mode) {
   for (var i = 0; i < SAVE_SLOT_COUNT; i++) {
     var meta = getSlotMeta(i);
     html += '<div class="save-slot">';
-    html += '<div><div class="slot-title">Slot ' + (i + 1) + '</div>';
+    if (meta && meta.thumbnail) {
+      html += '<img src="' + meta.thumbnail + '" style="width:90px;height:54px;border-radius:3px;border:1px solid #3A4858;margin-right:10px;flex-shrink:0;">';
+    }
+    html += '<div style="flex:1;">';
+    html += '<div class="slot-title">Slot ' + (i + 1) + (meta && meta.towerName ? ' &middot; ' + meta.towerName : '') + '</div>';
     if (meta) {
       var when = new Date(meta.savedAt).toLocaleString();
       html += '<div class="slot-info">Day ' + meta.day + ' &middot; ' + meta.stars + '★ &middot; ' + meta.pop + ' pop &middot; $' + formatMoney(meta.cash) + '</div>';
@@ -1595,19 +1941,59 @@ function loadFromSlot(n) {
     var raw = localStorage.getItem(slotKey(n));
     if (!raw) { showToast('Slot empty'); return; }
     var snap = JSON.parse(raw);
+    // Sanity-check required fields; offer to keep a backup if structure looks broken
+    if (!snap || typeof snap.cash !== 'number' || !snap.units || !snap.grid) {
+      uiConfirm('Slot ' + (n + 1) + ' looks corrupted. Back it up and clear?', function(ok) {
+        if (!ok) return;
+        try { localStorage.setItem(slotKey(n) + '.corrupt', raw); } catch (ex) {}
+        localStorage.removeItem(slotKey(n));
+        renderSlots('loadSlots', 'load');
+        refreshContinueButton();
+      });
+      return;
+    }
     applySaveSnapshot(snap);
     hideModal('loadModal');
     startGameFromLoaded();
     showToast('Loaded slot ' + (n + 1) + ' (Day ' + state.day + ')');
-  } catch (ex) { showToast('Load failed: ' + ex.message); }
+  } catch (ex) {
+    uiConfirm('Slot ' + (n + 1) + ' failed to parse: ' + ex.message + '\n\nBack it up and clear?', function(ok) {
+      if (!ok) return;
+      try {
+        var rawBad = localStorage.getItem(slotKey(n));
+        if (rawBad) localStorage.setItem(slotKey(n) + '.corrupt', rawBad);
+      } catch (ex2) {}
+      localStorage.removeItem(slotKey(n));
+      renderSlots('loadSlots', 'load');
+      refreshContinueButton();
+    });
+  }
 }
 
 function deleteSlot(n) {
-  if (!confirm('Delete slot ' + (n + 1) + '?')) return;
-  localStorage.removeItem(slotKey(n));
-  renderSlots('saveSlots', 'save');
-  renderSlots('loadSlots', 'load');
-  refreshContinueButton();
+  uiConfirm('Delete slot ' + (n + 1) + '?', function(ok) {
+    if (!ok) return;
+    localStorage.removeItem(slotKey(n));
+    renderSlots('saveSlots', 'save');
+    renderSlots('loadSlots', 'load');
+    refreshContinueButton();
+  });
+}
+
+function captureThumbnail() {
+  if (!canvas) return null;
+  try {
+    var tW = 200, tH = 120;
+    var off = document.createElement('canvas');
+    off.width = tW;
+    off.height = tH;
+    var ox = off.getContext('2d');
+    ox.fillStyle = '#0A0E14';
+    ox.fillRect(0, 0, tW, tH);
+    // Scale the main canvas display into our thumbnail
+    ox.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, tW, tH);
+    return off.toDataURL('image/jpeg', 0.5);
+  } catch (ex) { return null; }
 }
 
 function captureSaveSnapshot() {
@@ -1630,6 +2016,9 @@ function captureSaveSnapshot() {
     cityPopulation: state.cityPopulation,
     negDays: state.negDays,
     towerName: state.towerName,
+    mail: state.mail,
+    nextMailId: state.nextMailId,
+    thumbnail: captureThumbnail(),
     savedAt: Date.now()
   };
 }
@@ -1657,6 +2046,8 @@ function applySaveSnapshot(snap) {
   state.cityPopulation = snap.cityPopulation || 800;
   state.negDays = snap.negDays || 0;
   state.towerName = snap.towerName || null;
+  state.mail = snap.mail || [];
+  state.nextMailId = snap.nextMailId || 1;
   state.agents = [];
   state.nextAgentId = 1;
   if (state.stars >= 2) costMultiplier.elevator = 0.8;
@@ -1690,17 +2081,22 @@ function refreshContinueButton() {
 }
 
 function menuNewGame() {
-  if (state.gameStarted) {
-    if (!confirm('Start a new game? Unsaved progress will be lost.')) return;
+  function askName() {
+    var suggest = randomTowerName();
+    uiPrompt('Name your tower:', suggest, function(name) {
+      if (name === null) return; // cancelled
+      name = (name || suggest).slice(0, 28).trim() || suggest;
+      resetGameState();
+      state.towerName = name;
+      startGameFresh();
+      logEvent('Founded: ' + name, 'good');
+    });
   }
-  var suggest = randomTowerName();
-  var name = prompt('Name your tower:', suggest);
-  if (name === null) return; // cancelled
-  name = (name || suggest).slice(0, 28).trim() || suggest;
-  resetGameState();
-  state.towerName = name;
-  startGameFresh();
-  logEvent('Founded: ' + name, 'good');
+  if (state.gameStarted) {
+    uiConfirm('Start a new game? Unsaved progress will be lost.', function(ok) { if (ok) askName(); });
+  } else {
+    askName();
+  }
 }
 
 function randomTowerName() {
@@ -1759,6 +2155,17 @@ function bankruptcyNewTower() {
   document.getElementById('gameNav').style.display = 'none';
   resetGameState();
   refreshContinueButton();
+}
+
+function renameTower() {
+  uiPrompt('Rename your tower:', state.towerName || '', function(n) {
+    if (n === null) return;
+    n = n.slice(0, 28).trim();
+    if (n.length === 0) return;
+    state.towerName = n;
+    logEvent('Tower renamed to: ' + n, 'info');
+    hidePauseMenu();
+  });
 }
 
 function retireTower() {
@@ -1869,6 +2276,18 @@ function resetGameState() {
   state.towerName = null;
   state.stats = { totalRevenue: 0, totalUpkeep: 0, peakPop: 0, peakCash: state.cash, unitsBuilt: 0, unitsBulldozed: 0, firesHandled: 0, daysPlayed: 0, revByType: {}, history: [] };
   state.tenantRequests = [];
+  state.mail = [];
+  state.nextMailId = 1;
+  state.particles = [];
+  state.strikeUntil = 0;
+  state.festival = null;
+  state.campaign = null;
+  state.promoUnit = null;
+  state.promoUntil = 0;
+  state.bonds = [];
+  state.lastBondDay = 0;
+  state.heatmapMode = 0;
+  state.rivalTower = { floors: 0 };
   state.demand = { condo: 8, office: 15, restaurant: 6 };
   state.cityPopulation = 800;
   state.negDays = 0;
@@ -1985,15 +2404,17 @@ function startGameFromLoaded() {
 }
 
 function quitToTitle() {
-  if (!confirm('Quit to title? Save first if you want to keep progress.')) return;
-  hidePauseMenu();
-  document.getElementById('titleScreen').classList.remove('hide');
-  document.getElementById('gameNav').style.display = 'none';
-  state.gameStarted = false;
-  state.paused = true;
-  stopMusic();
-  resetGameState();
-  refreshContinueButton();
+  uiConfirm('Quit to title? Save first if you want to keep progress.', function(ok) {
+    if (!ok) return;
+    hidePauseMenu();
+    document.getElementById('titleScreen').classList.remove('hide');
+    document.getElementById('gameNav').style.display = 'none';
+    state.gameStarted = false;
+    state.paused = true;
+    stopMusic();
+    resetGameState();
+    refreshContinueButton();
+  });
 }
 
 function showPauseMenu() {
@@ -2303,6 +2724,11 @@ function init() {
   canvas.addEventListener('mouseleave', onMouseUp);
   canvas.addEventListener('wheel', onWheel, { passive: false });
   canvas.addEventListener('click', onClick);
+  canvas.addEventListener('contextmenu', onRightClick);
+  // Touch support (mobile / tablet)
+  canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+  canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+  canvas.addEventListener('touchend', onTouchEnd, { passive: false });
   document.addEventListener('keydown', onKey);
 
   // Restore persistent achievements across games (and legacy key migration)
@@ -2342,19 +2768,99 @@ function resize() {
 }
 
 /* ===== PALETTE ===== */
+var UNIT_CATEGORIES = {
+  'all':        { label: 'All',         keys: null },
+  'residential':{ label: 'Housing',     keys: ['condo','penthouse'] },
+  'commercial': { label: 'Commercial',  keys: ['office','shop','hotel','restaurant','conference'] },
+  'amenities':  { label: 'Amenities',   keys: ['gym','spa','garden','clinic','cinema','atm','parking'] },
+  'transit':    { label: 'Transit',     keys: ['lobby','stairs','elevator','skylobby','metro','airport','helipad'] },
+  'landmarks':  { label: 'Landmarks',   keys: ['cathedral','museum','university','observatory'] },
+  'services':   { label: 'Services',    keys: ['security','firestation','sprinkler'] }
+};
+var currentPaletteCategory = 'all';
+
+var UNIT_DESCRIPTIONS = {
+  lobby:       'Ground-floor gateway. Required for any functional tower. Every visitor enters here.',
+  office:      'Workers arrive at 8 AM, leave at 5 PM. Pays rent scaled by market & satisfaction.',
+  condo:       'Residents move in after 6 PM. Sells when 80% full for 3+ days; scales with market.',
+  stairs:      'Cheap vertical transport — but stair-only floors suffer a strong satisfaction penalty.',
+  elevator:    'Fast vertical transport. Shaft must reach a hub (ground lobby or skylobby).',
+  shop:        'Trickle of shoppers 10 AM–9 PM. Per-visit revenue, market-sensitive traffic.',
+  parking:     'Basement-only. Boosts nearby unit satisfaction and generates passive daily income.',
+  security:    'Covers units within an 8-cell radius. Prevents nightly crime losses.',
+  atm:         'Single-cell passive earner. Generates modest daily cash without tenants.',
+  firestation: 'Reduces fire event chance ~40%. Also slows fire spread from existing damage.',
+  sprinkler:   'Cheap single-cell defense. Blocks fire spread to any unit within 3 floors of it.',
+  hotel:       'Guests check in 6–10 PM, pay $180/night/head, check out 9 AM. Small unit, steady cash.',
+  restaurant:  'Lunch + dinner rushes. Workers on lunch break visit your restaurants too.',
+  cinema:      '3 daily showtimes (matinee/prime/late). High capacity, market-sensitive.',
+  clinic:      'Daytime patients. Steady hourly revenue, mid-tier payback.',
+  gym:         'Morning + evening peaks. Small satisfaction boost for nearby tenants.',
+  skylobby:    'Acts as a second hub. Units within 20 floors of a skylobby get the full elevator bonus.',
+  penthouse:   'Luxury residence — $800k sale, $1200 HOA. Requires 4★. Needs tall tower to make sense.',
+  conference:  '65% of days have booked events attracting crowds. Large capacity, decent margin.',
+  spa:         'Day-long visitor spawns. Satisfaction boost to nearby residences. Premium per-visit.',
+  garden:      'Rooftop green space. Strong satisfaction boost (+15) within 6 floors — plant liberally.',
+  museum:      'Daytime visitors. Adds prestige (city landmark bonus).',
+  university:  'Classes 8 AM–noon and 1–5 PM. Drives office demand up for the whole tower.',
+  cathedral:   '5★ only. Passive prestige +50% to all tower income. Landmark of record.',
+  observatory: 'Night-only visitors (8 PM–1 AM). Premium per-visit.',
+  metro:       'Basement-only. +50% traffic to all trickle-based unit types tower-wide.',
+  helipad:     'Roof-only. Draws VIPs with $2-12k tips. Big spectacle factor.',
+  airport:     '5★ basement. Massive +120% traffic boost, grows city population faster.'
+};
+
+function paletteTooltip(key) {
+  var u = UNITS[key];
+  if (!u) return '';
+  var desc = UNIT_DESCRIPTIONS[key] || '';
+  var lines = [u.name + ' (' + u.w + '\u00d7' + u.h + ')'];
+  if ((u.minStars || 1) > 1) lines.push('Unlocks at ' + u.minStars + '\u2605');
+  if (u.groundOnly) lines.push('Must be on floor 1');
+  if (u.basementOnly) lines.push('Basement only');
+  if (u.roofOnly) lines.push('Roof only (highest floor)');
+  if (u.capacity > 0) lines.push('Capacity: ' + u.capacity);
+  if (u.rent) lines.push('Rent: $' + u.rent + '/day');
+  if (u.salePrice) lines.push('Sale: $' + formatMoney(u.salePrice));
+  if (u.perVisit) lines.push('Per visit: $' + u.perVisit);
+  if (u.nightly) lines.push('Per night: $' + u.nightly);
+  if (u.perDay) lines.push('Daily: $' + u.perDay);
+  if (u.upkeep) lines.push('Upkeep: $' + u.upkeep + '/day');
+  if (u.satBoost) lines.push('+' + u.satBoost + ' sat within ' + u.satRadius + ' cells');
+  if (u.noise) lines.push('LOUD: -' + u.noise + ' sat to units within ' + u.noiseRadius + ' floors');
+  if (u.fireProtect) lines.push('Reduces fire risk');
+  if (u.trafficBoost) lines.push('+' + Math.round(u.trafficBoost * 100) + '% traffic');
+  if (u.prestige) lines.push('+' + u.prestige + '% prestige');
+  return lines.join('\n') + (desc ? '\n\n' + desc : '');
+}
+
 function renderPalette() {
+  // Tabs
+  var tabsEl = document.getElementById('paletteTabs');
+  if (tabsEl) {
+    var tabsHtml = '';
+    for (var cat in UNIT_CATEGORIES) {
+      var active = (cat === currentPaletteCategory) ? ' active' : '';
+      tabsHtml += '<button class="palette-tab' + active + '" onclick="setPaletteCategory(\'' + cat + '\')">' + UNIT_CATEGORIES[cat].label + '</button>';
+    }
+    tabsEl.innerHTML = tabsHtml;
+  }
   var p = document.getElementById('palette');
+  // Filter by category
+  var cat = UNIT_CATEGORIES[currentPaletteCategory];
+  var allowed = cat && cat.keys;
+  var filtered = PAL_ORDER.filter(function(k) { return !allowed || allowed.indexOf(k) >= 0; });
   // Group by star tier for readability
   var tiers = [[], [], [], [], []]; // 1..5
-  for (var i = 0; i < PAL_ORDER.length; i++) {
-    var k = PAL_ORDER[i];
+  for (var i = 0; i < filtered.length; i++) {
+    var k = filtered[i];
     var t = (UNITS[k].minStars || 1) - 1;
     tiers[t].push(k);
   }
   var html = '';
   for (var ti = 0; ti < 5; ti++) {
     if (tiers[ti].length === 0) continue;
-    if (ti > 0) html += '<div class="pal-divider"></div>';
+    if (html.length > 0) html += '<div class="pal-divider"></div>';
     for (var j = 0; j < tiers[ti].length; j++) {
       var key = tiers[ti][j];
       var u = UNITS[key];
@@ -2364,7 +2870,8 @@ function renderPalette() {
       var lockedClass = locked ? ' locked' : '';
       var cost = effectiveCost(key);
       var costLine = locked ? ('locked \u2605' + u.minStars) : (sz + ' $' + Math.round(cost/1000) + 'k');
-      html += '<div class="pal-btn' + lockedClass + '" data-unit="' + key + '" ' + onClick + '>' +
+      var tip = paletteTooltip(key).replace(/"/g, '&quot;');
+      html += '<div class="pal-btn' + lockedClass + '" data-unit="' + key + '" ' + onClick + ' title="' + tip + '">' +
               '<span class="pb-name">' + u.name + '</span>' +
               '<span class="pb-cost">' + costLine + '</span>' +
               '</div>';
@@ -2481,6 +2988,11 @@ function resetHudLayout() {
   showToast('HUD layout reset — reload to apply');
 }
 
+function setPaletteCategory(cat) {
+  currentPaletteCategory = cat;
+  renderPalette();
+}
+
 function scrollPalette(dir) {
   var p = document.getElementById('palette');
   if (!p) return;
@@ -2551,8 +3063,12 @@ function screenToCell(sx, sy) {
 function effectiveCost(type) {
   var u = UNITS[type];
   if (!u) return 0;
-  if (u.isElevator) return Math.round(u.cost * costMultiplier.elevator);
-  return u.cost;
+  var base = u.cost;
+  if (u.isElevator) base = Math.round(base * costMultiplier.elevator);
+  if (state.promoUnit === type && state.promoUntil && state.day <= state.promoUntil) {
+    base = Math.round(base * (1 - (state.promoDiscount || 0.3)));
+  }
+  return base;
 }
 
 function highestOccupiedFloor() {
@@ -2608,7 +3124,7 @@ function placeUnit(type, gx, gy) {
   var check = canPlace(type, gx, gy);
   if (!check.ok) { showToast(check.reason); return false; }
   var id = state.nextUnitId++;
-  var unit = { id: id, type: type, x: gx, y: gy, w: u.w, h: u.h, tenants: 0, occupants: [], damaged: false, quality: 1.0 };
+  var unit = { id: id, type: type, x: gx, y: gy, w: u.w, h: u.h, tenants: 0, occupants: [], damaged: false, quality: 1.0, revenueHistory: [], dayRevenue: 0, openedDay: state.day };
   state.units[id] = unit;
   for (var dx = 0; dx < u.w; dx++) {
     for (var dy = 0; dy < u.h; dy++) {
@@ -2987,6 +3503,7 @@ function spawnRestaurantPatrons() {
 }
 
 function spawnShopPatrons() {
+  if (agentsOverCap()) return;
   var m = trafficMultiplier();
   for (var id in state.units) {
     var u = state.units[id];
@@ -3005,6 +3522,11 @@ function spawnShopPatrons() {
   }
 }
 
+// Spawning throttle: beyond N concurrent agents, suppress trickle-based spawns.
+// Prevents runaway agent count killing framerate on massive towers.
+var AGENT_SOFT_CAP = 600;
+function agentsOverCap() { return state.agents.length > AGENT_SOFT_CAP; }
+
 // Metro multiplies inbound traffic for trickle-style spawns (shops, cinema, clinic, gym, etc.)
 function trafficMultiplier() {
   var m = 1.0;
@@ -3014,10 +3536,13 @@ function trafficMultiplier() {
   }
   m *= weatherTraffic();
   if (state.holiday) m *= 1.4;
-  return Math.min(m, 3.0);
+  m *= festivalMult();
+  if (state.strikeUntil && state.day <= state.strikeUntil) m *= 0.5;
+  return Math.min(m, 4.0);
 }
 
 function spawnCinemaGoers() {
+  if (agentsOverCap()) return;
   var m = trafficMultiplier();
   var show = rushActive.matinee ? 'matinee' : (rushActive.primetime ? 'primetime' : 'latenight');
   for (var id in state.units) {
@@ -3039,6 +3564,7 @@ function spawnCinemaGoers() {
 }
 
 function spawnClinicPatients() {
+  if (agentsOverCap()) return;
   var m = trafficMultiplier();
   for (var id in state.units) {
     var u = state.units[id];
@@ -3059,6 +3585,7 @@ function spawnClinicPatients() {
 }
 
 function spawnGymVisitors() {
+  if (agentsOverCap()) return;
   var m = trafficMultiplier();
   for (var id in state.units) {
     var u = state.units[id];
@@ -3111,6 +3638,7 @@ function spawnConferenceGuests() {
 }
 
 function spawnMuseumVisitors() {
+  if (agentsOverCap()) return;
   var m = trafficMultiplier();
   for (var id in state.units) {
     var u = state.units[id];
@@ -3131,6 +3659,7 @@ function spawnMuseumVisitors() {
 }
 
 function spawnStudents() {
+  if (agentsOverCap()) return;
   var m = trafficMultiplier();
   for (var id in state.units) {
     var u = state.units[id];
@@ -3236,7 +3765,7 @@ function tickAgent(a) {
           var q = target ? (target.quality || 1) : 1;
           var pay = Math.round(a.payment * q);
           state.dayRevenue = (state.dayRevenue || 0) + pay;
-          if (state.stats && state.stats.revByType && target) state.stats.revByType[target.type] = (state.stats.revByType[target.type] || 0) + pay;
+          if (target) { target.dayRevenue = (target.dayRevenue || 0) + pay; if (state.stats && state.stats.revByType) state.stats.revByType[target.type] = (state.stats.revByType[target.type] || 0) + pay; }
           a.payment = 0;
         }
       }
@@ -3249,7 +3778,7 @@ function tickAgent(a) {
         var q2 = target ? (target.quality || 1) : 1;
         var pay2 = Math.round(a.payment * q2);
         state.dayRevenue = (state.dayRevenue || 0) + pay2;
-        if (state.stats && state.stats.revByType && target) state.stats.revByType[target.type] = (state.stats.revByType[target.type] || 0) + pay2;
+        if (target) { target.dayRevenue = (target.dayRevenue || 0) + pay2; if (state.stats && state.stats.revByType) state.stats.revByType[target.type] = (state.stats.revByType[target.type] || 0) + pay2; }
         a.payment = 0;
       }
     }
@@ -3525,6 +4054,23 @@ function showUnitInfo(uid) {
     var upCost = Math.round(def.cost * 0.6 * lvl);
     html += '<div style="margin-top:8px;text-align:center;"><button style="background:#2A4860;color:#FFD060;border:1px solid #FFD060;padding:4px 10px;cursor:pointer;font-family:Georgia;font-size:0.85em;border-radius:4px;" onclick="upgradeUnit(' + u.id + ')">Upgrade to L' + (lvl + 1) + ' ($' + formatMoney(upCost) + ')</button></div>';
   }
+  // Mini-graph: last 14 days of revenue for this unit
+  if (u.revenueHistory && u.revenueHistory.length > 1) {
+    var hist = u.revenueHistory.slice(-14);
+    var max = 1;
+    for (var hi = 0; hi < hist.length; hi++) if (hist[hi] > max) max = hist[hi];
+    var total = 0; for (var ht = 0; ht < hist.length; ht++) total += hist[ht];
+    var avg = Math.round(total / hist.length);
+    var gw = 240, gh = 40, bw = gw / hist.length;
+    var svg = '<svg width="' + gw + '" height="' + gh + '" style="margin-top:8px;background:#0A0E14;border-radius:3px;">';
+    for (var hi2 = 0; hi2 < hist.length; hi2++) {
+      var bh = (hist[hi2] / max) * (gh - 4);
+      svg += '<rect x="' + (hi2 * bw + 1) + '" y="' + (gh - bh - 2) + '" width="' + (bw - 2) + '" height="' + bh + '" fill="#60E090"/>';
+    }
+    svg += '</svg>';
+    html += '<div class="row" style="margin-top:6px;"><span>Revenue (' + hist.length + 'd avg)</span><span>$' + formatMoney(avg) + '/day</span></div>';
+    html += svg;
+  }
   if (u.tenantList && u.tenantList.length > 0) {
     html += '<div class="complaints" style="border-top:1px solid #3A4858;"><span style="color:#9ADBFF;">Residents:</span>';
     for (var ti = 0; ti < u.tenantList.length; ti++) {
@@ -3581,17 +4127,28 @@ function unitSatisfaction(u) {
   // satFall accumulates when this unit's tenants wait too long for transport.
   var fall = u.satFall || 0;
   var base = Math.max(0, 100 - fall * 0.5);
-  // Amenity adjacency bonuses (gardens, spas, gyms, parking)
+  // Amenity adjacency bonuses (gardens, spas, gyms, parking) and noise penalties (restaurant/cinema/conf/gym/helipad/airport)
   var bonus = 0;
+  var sensitive = (u.type === 'condo' || u.type === 'penthouse' || u.type === 'office' || u.type === 'hotel');
   for (var id in state.units) {
     var a = state.units[id];
     if (a.id === u.id) continue;
     var def = UNITS[a.type];
-    if (!def.satBoost || a.damaged) continue;
+    if (a.damaged) continue;
     var dx = (a.x + a.w/2) - (u.x + u.w/2);
     var dy = a.y - u.y;
-    var d = Math.sqrt(dx*dx + dy*dy*4);
-    if (d <= (def.satRadius || 6)) bonus += def.satBoost;
+    if (def.satBoost) {
+      var d = Math.sqrt(dx*dx + dy*dy*4);
+      if (d <= (def.satRadius || 6)) bonus += def.satBoost;
+    }
+    // Noise cares mostly about vertical distance (sound travels through floors)
+    if (def.noise && sensitive) {
+      var vd = Math.abs(dy) + Math.max(0, Math.abs(dx) - (a.w + u.w) / 2) * 0.3;
+      if (vd <= (def.noiseRadius || 3)) {
+        var falloff = 1 - vd / ((def.noiseRadius || 3) + 0.5);
+        bonus -= def.noise * Math.max(0, falloff);
+      }
+    }
   }
   if (u.damaged) bonus -= 50;
   // Vertical access penalties: distance from the nearest hub (ground lobby or skylobby)
@@ -3622,6 +4179,8 @@ function endOfDay() {
   for (var id in state.units) {
     var u = state.units[id];
     var def = UNITS[u.type];
+    // Reset per-day revenue accumulator before computing today's income
+    u.dayRevenue = u.dayRevenue || 0;
     // Probabilistic condo/penthouse sales: need ≥80% occupancy for 3 days, then roll market-weighted.
     // Sale price uses a tightened multiplier range (0.30–1.50) so gluts hurt more and bubbles are capped.
     if (def.salePrice && def.capacity > 0) {
@@ -3636,6 +4195,7 @@ function endOfDay() {
             var saleMkt = Math.max(0.30, Math.min(1.50, 0.40 + marketRatio('condo') * 0.55));
             var salePrice = Math.round(def.salePrice * saleMkt);
             income += salePrice;
+            u.dayRevenue = (u.dayRevenue || 0) + salePrice;
             if (state.stats && state.stats.revByType) state.stats.revByType[u.type] = (state.stats.revByType[u.type] || 0) + salePrice;
             logEvent(def.name + ' sold @ floor ' + floorLabel(u.y) + '  +$' + formatMoney(salePrice) + ' (\u00d7' + saleMkt.toFixed(2) + ')', 'good');
             // One tenant cycles out — reset warmup counter so it must refill before the next sale
@@ -3665,6 +4225,9 @@ function endOfDay() {
     }
     var q = u.quality || 1;
     var tm = tenantRentMult(u);
+    // Grand opening bonus — first 3 days get +30% income
+    var grandOpen = (u.openedDay !== undefined && state.day - u.openedDay < 3) ? 1.3 : 1.0;
+    q *= grandOpen;
     // Ongoing rent / HOA scaled by occupancy AND satisfaction AND tenant traits AND market
     if (def.rent && def.capacity > 0) {
       var occ = u.tenants / def.capacity;
@@ -3674,6 +4237,7 @@ function endOfDay() {
       if (u.type === 'condo' || u.type === 'penthouse') rentClassMult = 0.5 + 0.5 * mMult.condo;
       var rentInc = Math.round(def.rent * occ * (0.4 + 0.6 * sat) * q * tm * rentClassMult);
       income += rentInc;
+      u.dayRevenue = (u.dayRevenue || 0) + rentInc;
       if (state.stats && state.stats.revByType) state.stats.revByType[u.type] = (state.stats.revByType[u.type] || 0) + rentInc;
     }
     // Passive daily income (ATM, parking)
@@ -3681,6 +4245,7 @@ function endOfDay() {
       var perDayOcc = def.capacity > 0 ? Math.min(1, (u.tenants || 0) / def.capacity + 0.5) : 1.0;
       var passiveInc = Math.round(def.perDay * perDayOcc * q);
       income += passiveInc;
+      u.dayRevenue = (u.dayRevenue || 0) + passiveInc;
       if (state.stats && state.stats.revByType) state.stats.revByType[u.type] = (state.stats.revByType[u.type] || 0) + passiveInc;
     }
     // Prestige accumulation from cathedrals
@@ -3691,6 +4256,14 @@ function endOfDay() {
     if (def.upkeep) expenses += u.damaged ? Math.round(def.upkeep * 0.3) : def.upkeep;
   }
   state.prestige = prestige;
+  // Per-unit revenue history — push today's tally, trim to last 30 days
+  for (var uid3 in state.units) {
+    var ru = state.units[uid3];
+    if (!ru.revenueHistory) ru.revenueHistory = [];
+    ru.revenueHistory.push(ru.dayRevenue || 0);
+    if (ru.revenueHistory.length > 30) ru.revenueHistory.shift();
+    ru.dayRevenue = 0;
+  }
   // Boom/bust market swing (separate from supply-demand) applies to revenue & rents
   var boomMult = state.market || 1.0;
   var prestigeMult = 1 + state.prestige / 100;
@@ -3703,8 +4276,11 @@ function endOfDay() {
     var unitCount = Object.keys(state.units).length;
     expenses += 200 + unitCount * 80;
   }
-  // Loan interest
+  // Loan interest + bond maturity
   accrueInterest();
+  checkBondMaturity();
+  maybeSendBondOffer();
+  maybeStartPromo();
   var net = income - expenses;
   state.cash += net;
   state.yesterdayIncome = net;
@@ -3755,9 +4331,12 @@ function endOfDay() {
   if (state.stats.history.length > 400) state.stats.history.shift();
   var marketTag = boomMult > 1.1 ? ' [BOOM]' : boomMult < 0.9 ? ' [BUST]' : '';
   logEvent('End of day ' + (state.day - 1) + ': income $' + formatMoney(income) + ', upkeep $' + formatMoney(expenses) + ', net ' + (net >= 0 ? '+$' : '-$') + formatMoney(Math.abs(net)) + marketTag, net >= 0 ? 'good' : 'bad');
+  showEodSummary(income, expenses, net, marketTag);
   sfx('eod');
   // Nightly crime roll (applies to covered vs uncovered units)
   rollCrime();
+  // Fire spread: each burning unit tries to ignite neighbors. Fire stations cap this.
+  rollFireSpread();
   // Schedule a possible random event
   maybeScheduleEvent();
   // Daily autosave at 2★+
@@ -3880,6 +4459,8 @@ function maybeScheduleEvent() {
   var kinds = ['fire', 'outage', 'boom', 'bust'];
   if (state.scenarioNoFires) kinds = kinds.filter(function(k) { return k !== 'fire'; });
   if (state.stars >= 3) kinds.push('inspection');
+  if (state.stars >= 3) kinds.push('pipeburst', 'strike');
+  if (state.stars >= 4) kinds.push('earthquake');
   var kind = kinds[Math.floor(Math.random() * kinds.length)];
   // Fire stations reduce fire chance and can skip it entirely
   if (kind === 'fire') {
@@ -3907,7 +4488,18 @@ function triggerEvent(kind) {
     var pick = candidates[Math.floor(Math.random() * candidates.length)];
     var pickU = state.units[pick];
     pickU.damaged = true;
+    // Evict tenants visibly — spawn fleeing agents from the fire
+    for (var fi = 0; fi < pickU.tenants; fi++) {
+      state.agents.push({
+        id: state.nextAgentId++, type: 'resident',
+        x: pickU.x + pickU.w / 2, y: pickU.y,
+        phase: 'leaving', unitId: null,
+        walkDelay: fi * 3,
+        fleeing: true
+      });
+    }
     pickU.tenants = 0;
+    pickU.tenantList = [];
     var loss = state.insurance ? 40000 : 100000;
     state.cash -= loss;
     logEvent('FIRE at ' + UNITS[pickU.type].name + ' (floor ' + floorLabel(pickU.y) + ')! -$' + formatMoney(loss) + (state.insurance ? ' (insurance)' : ''), 'bad');
@@ -3934,6 +4526,50 @@ function triggerEvent(kind) {
     for (var idx in state.units) if (state.units[idx].damaged) { hasDamage = true; break; }
     if (hasDamage) { state.cash -= 80000; logEvent('Fire inspector fined the tower -$80,000 (damaged units)', 'bad'); }
     else { state.cash += 40000; logEvent('Fire inspector: tower passed, +$40,000 civic bonus', 'good'); maybeUnlockAchievement('zero_damage'); }
+  } else if (kind === 'pipeburst') {
+    // Pipe burst: random floor's units all lose satisfaction + small repair cost
+    var ids = Object.keys(state.units);
+    if (ids.length === 0) return;
+    var victim = state.units[ids[Math.floor(Math.random() * ids.length)]];
+    var cost = 15000 + Math.floor(Math.random() * 25000);
+    state.cash -= cost;
+    logEvent('Burst pipe on floor ' + floorLabel(victim.y) + ' — repair $' + formatMoney(cost), 'bad');
+    // Knock satisfaction on all units on that floor
+    for (var pid in state.units) {
+      var pu = state.units[pid];
+      if (pu.y === victim.y) pu.satFall = (pu.satFall || 0) + 30;
+    }
+    state.shake = 0.4;
+    sfx('warn');
+  } else if (kind === 'strike') {
+    // Labor strike: 3 days of halved visit revenue & slower spawns
+    state.strikeUntil = state.day + 3;
+    logEvent('Labor strike — service disrupted for 3 days', 'bad');
+    postMail({
+      from: 'Elevator Workers Union',
+      subject: 'Work stoppage begins today',
+      body: 'Our members have voted to withhold services over stalled negotiations. Expect reduced foot traffic and visit revenue through day ' + state.strikeUntil + '.\n\nAny settlement can be negotiated in person, though the typical resolution is simply time.\n\n— UEW Local 413'
+    });
+    sfx('warn');
+  } else if (kind === 'earthquake') {
+    // Earthquake: damages 10-20% of random units + big shake
+    var list = [];
+    for (var eid in state.units) { var u = state.units[eid]; if (u.type !== 'lobby' && u.type !== 'stairs' && u.type !== 'elevator' && !u.damaged) list.push(eid); }
+    var nHit = Math.min(list.length, 2 + Math.floor(list.length * 0.12));
+    for (var eh = 0; eh < nHit; eh++) {
+      var eidx = Math.floor(Math.random() * list.length);
+      var victU = state.units[list[eidx]];
+      victU.damaged = true;
+      victU.tenants = 0;
+      if (victU.tenantList) victU.tenantList = [];
+      state.events.push({ kind: 'fire', unitId: list[eidx] });
+      list.splice(eidx, 1);
+    }
+    var loss = state.insurance ? 60000 : 200000;
+    state.cash -= loss;
+    logEvent('EARTHQUAKE! ' + nHit + ' units damaged, -$' + formatMoney(loss), 'bad');
+    state.shake = 2.0;
+    sfx('warn');
   }
 }
 
@@ -3963,6 +4599,54 @@ function tickEvents() {
 function powerOut() {
   for (var i = 0; i < state.events.length; i++) if (state.events[i].kind === 'outage') return true;
   return false;
+}
+
+function rollFireSpread() {
+  var stations = countUnits('firestation');
+  // Each additional fire station cuts spread chance in half (none = full rate)
+  var spreadProb = 0.35 / Math.max(1, stations + 1);
+  var burning = [];
+  for (var id in state.units) if (state.units[id].damaged) burning.push(state.units[id]);
+  if (burning.length === 0) return;
+  for (var b = 0; b < burning.length; b++) {
+    var u = burning[b];
+    if (Math.random() >= spreadProb) continue;
+    // Try to spread to an adjacent (not-already-damaged) unit on floor y or y±1
+    var candidates = [];
+    for (var id2 in state.units) {
+      var n = state.units[id2];
+      if (n.id === u.id || n.damaged) continue;
+      var dx = Math.abs((n.x + n.w/2) - (u.x + u.w/2));
+      var dy = Math.abs(n.y - u.y);
+      if (dy <= 1 && dx <= u.w / 2 + n.w / 2 + 1) candidates.push(n);
+    }
+    if (candidates.length === 0) continue;
+    var victim = candidates[Math.floor(Math.random() * candidates.length)];
+    if (UNITS[victim.type].fireProtect) continue;
+    // Evacuate the victim's tenants too
+    for (var vi = 0; vi < victim.tenants; vi++) {
+      state.agents.push({
+        id: state.nextAgentId++, type: 'resident',
+        x: victim.x + victim.w / 2, y: victim.y,
+        phase: 'leaving', unitId: null,
+        walkDelay: vi * 3, fleeing: true
+      });
+    }
+    // Sprinkler within 3 floors of victim blocks the spread
+    var suppressed = false;
+    for (var sid in state.units) {
+      var s = state.units[sid];
+      if (s.type !== 'sprinkler' || s.damaged) continue;
+      if (Math.abs(s.y - victim.y) <= 3 && Math.abs((s.x + 0.5) - (victim.x + victim.w/2)) <= 8) { suppressed = true; break; }
+    }
+    if (suppressed) { logEvent('Sprinkler suppressed fire spread near floor ' + floorLabel(victim.y), 'good'); continue; }
+    victim.damaged = true;
+    victim.tenants = 0;
+    state.events.push({ kind: 'fire', unitId: victim.id });
+    logEvent('Fire spread to ' + UNITS[victim.type].name + ' @ floor ' + floorLabel(victim.y), 'bad');
+    state.shake = 0.6;
+    sfx('warn');
+  }
 }
 
 function rollCrime() {
@@ -4071,6 +4755,124 @@ function renderQuests() {
   }
   panel.innerHTML = html;
   panel.classList.add('show');
+}
+
+/* ===== FESTIVALS (PLAYER-HOSTED) ===== */
+var FESTIVAL_TYPES = {
+  concert:   { label: 'Rooftop concert',       cost: 40000,  prereq: 'cinema',      reward: 2.5, days: 1, desc: 'Book a touring act in your cinema. 1-day traffic +250% tower-wide, $40k upfront.' },
+  gala:      { label: 'Charity gala',          cost: 80000,  prereq: 'conference',  reward: 2.0, days: 1, desc: 'Charity night in your conference center. +100% demand for 1 day, small prestige bump.' },
+  openhouse: { label: 'Open-house weekend',    cost: 25000,  prereq: 'lobby',       reward: 1.8, days: 2, desc: 'Throw open the doors. +80% condo/office demand, 2 days. Cheap but broad.' },
+  ribbon:    { label: 'Ribbon-cutting',        cost: 15000,  prereq: 'lobby',       reward: 1.3, days: 3, desc: 'Mayor attends. Tower prestige +5% for 3 days. Modest bump, cheap.' },
+  blockparty:{ label: 'Block party',           cost: 30000,  prereq: 'restaurant',  reward: 2.0, days: 1, desc: 'Close the ground floor, invite the city. Huge restaurant + shop boost for 1 day.' }
+};
+
+function hostFestival(kind) {
+  var f = FESTIVAL_TYPES[kind];
+  if (!f) return;
+  if (f.prereq && countUnits(f.prereq) === 0) { showToast('Requires a ' + UNITS[f.prereq].name); return; }
+  if (state.cash < f.cost) { showToast('Need $' + formatMoney(f.cost)); return; }
+  state.cash -= f.cost;
+  state.festival = { kind: kind, until: state.day + f.days, boost: f.reward };
+  if (kind === 'ribbon') state.prestige += 5;
+  logEvent('Festival: ' + f.label + ' (-$' + formatMoney(f.cost) + ')', 'good');
+  showToast(f.label + ' underway!');
+  sfx('star');
+  hideModal('festivalModal');
+}
+
+function festivalMult() {
+  if (!state.festival || state.day > state.festival.until) return 1.0;
+  return state.festival.boost;
+}
+
+function renderFestivalModal() {
+  var body = document.getElementById('festivalBody');
+  var html = '<p style="color:#9AB8D8;margin-bottom:12px;text-align:center;">Splurge on a festival for instant tower-wide excitement. Stacks with ads &amp; market.</p>';
+  if (state.festival && state.day <= state.festival.until) {
+    html += '<div style="padding:10px 14px;background:rgba(60,40,10,0.6);border:1.5px solid #FFD060;border-radius:6px;margin-bottom:14px;">';
+    html += '<div style="color:#FFD060;font-weight:bold;">Active: ' + FESTIVAL_TYPES[state.festival.kind].label + '</div>';
+    html += '<div style="color:#C0D8E0;font-size:0.85em;margin-top:2px;">Ends day ' + state.festival.until + '</div>';
+    html += '</div>';
+  }
+  for (var k in FESTIVAL_TYPES) {
+    var f = FESTIVAL_TYPES[k];
+    var has = !f.prereq || countUnits(f.prereq) > 0;
+    var afford = state.cash >= f.cost;
+    var enabled = has && afford;
+    var reason = !has ? 'Need a ' + UNITS[f.prereq].name : (!afford ? 'Insufficient funds' : '');
+    html += '<div class="save-slot" style="cursor:' + (enabled ? 'pointer' : 'not-allowed') + ';opacity:' + (enabled ? '1' : '0.5') + ';" ' + (enabled ? 'onclick="hostFestival(\'' + k + '\')"' : '') + '>' +
+      '<div><div class="slot-title">' + f.label + '</div>' +
+      '<div class="slot-info">' + f.desc + '</div>' +
+      '<div class="slot-info" style="color:#7AB0E0;">Cost: $' + formatMoney(f.cost) + (reason ? ' &middot; <span style="color:#E06060;">' + reason + '</span>' : '') + '</div>' +
+      '</div></div>';
+  }
+  body.innerHTML = html;
+}
+
+/* ===== ADVERTISING / CAMPAIGNS ===== */
+var CAMPAIGN_TYPES = {
+  broad:  { label: 'Broad media campaign',   cost: 60000,  days: 5,  effect: { condo: 1.2, office: 1.2, restaurant: 1.2 }, desc: 'Citywide ads boost all demand +20% for 5 days.' },
+  condo:  { label: 'Condo open-house push',  cost: 35000,  days: 5,  effect: { condo: 1.5 }, desc: 'Targeted housing ads boost condo demand +50% for 5 days.' },
+  office: { label: 'Commercial lease drive', cost: 40000,  days: 5,  effect: { office: 1.5 }, desc: 'Business outreach boosts office demand +50% for 5 days.' },
+  dining: { label: 'Foodie feature story',   cost: 25000,  days: 3,  effect: { restaurant: 1.6 }, desc: 'Restaurant spotlight boosts dining traffic +60% for 3 days.' }
+};
+
+function runCampaign(kind) {
+  var c = CAMPAIGN_TYPES[kind];
+  if (!c) return;
+  if (state.cash < c.cost) { showToast('Need $' + formatMoney(c.cost)); return; }
+  state.cash -= c.cost;
+  state.campaign = { kind: kind, until: state.day + c.days, effect: c.effect };
+  logEvent('Campaign: ' + c.label + ' (-$' + formatMoney(c.cost) + ') until day ' + state.campaign.until, 'good');
+  showToast(c.label + ' launched');
+  sfx('coin');
+  hideModal('campaignModal');
+}
+
+function campaignMult(cls) {
+  if (!state.campaign || state.day > state.campaign.until) return 1.0;
+  return state.campaign.effect[cls] || 1.0;
+}
+
+function renderCampaignModal() {
+  var body = document.getElementById('campaignBody');
+  var html = '<p style="color:#9AB8D8;margin-bottom:12px;text-align:center;">Pay for short-term demand boosts. Effects stack with market and holidays.</p>';
+  if (state.campaign && state.day <= state.campaign.until) {
+    html += '<div style="padding:10px 14px;background:rgba(60,40,10,0.6);border:1.5px solid #FFD060;border-radius:6px;margin-bottom:14px;">';
+    html += '<div style="color:#FFD060;font-weight:bold;">Active: ' + CAMPAIGN_TYPES[state.campaign.kind].label + '</div>';
+    html += '<div style="color:#C0D8E0;font-size:0.85em;margin-top:2px;">Ends day ' + state.campaign.until + ' (' + (state.campaign.until - state.day) + ' days left)</div>';
+    html += '</div>';
+  }
+  for (var k in CAMPAIGN_TYPES) {
+    var c = CAMPAIGN_TYPES[k];
+    var afford = state.cash >= c.cost;
+    html += '<div class="save-slot" style="cursor:' + (afford ? 'pointer' : 'not-allowed') + ';opacity:' + (afford ? '1' : '0.55') + ';" ' + (afford ? 'onclick="runCampaign(\'' + k + '\')"' : '') + '>' +
+      '<div><div class="slot-title">' + c.label + '</div>' +
+      '<div class="slot-info">' + c.desc + '</div>' +
+      '<div class="slot-info" style="color:#7AB0E0;">Cost: $' + formatMoney(c.cost) + ' &middot; Duration: ' + c.days + ' days</div>' +
+      '</div></div>';
+  }
+  body.innerHTML = html;
+}
+
+/* ===== PROMO DEALS ===== */
+// Random weeklong discount on a specific unit type
+function maybeStartPromo() {
+  if (state.promoUntil && state.day <= state.promoUntil) return;
+  if (Math.random() < 0.08) {
+    var pool = ['elevator','stairs','condo','office','shop','hotel','gym','spa','garden','sprinkler','security'];
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    if (!UNITS[pick] || (UNITS[pick].minStars || 1) > state.stars) return;
+    state.promoUnit = pick;
+    state.promoUntil = state.day + 5 + Math.floor(Math.random() * 3);
+    state.promoDiscount = 0.3;
+    postMail({
+      from: 'Supplier Network',
+      subject: 'Limited-time deal: ' + UNITS[pick].name,
+      body: 'For the next ' + (state.promoUntil - state.day) + ' days, our construction partners will supply ' + UNITS[pick].name + ' units at a 30% discount. Stack them while you can.\n\nOriginal: $' + formatMoney(UNITS[pick].cost) + '\nDiscounted: $' + formatMoney(Math.round(UNITS[pick].cost * 0.7)) + '\n\n— Supplier Network'
+    });
+    logEvent('Promo: 30% off ' + UNITS[pick].name + ' for ' + (state.promoUntil - state.day) + ' days', 'good');
+  }
 }
 
 /* ===== LOANS ===== */
@@ -4221,6 +5023,9 @@ function updateEventBanner() {
   var damaged = 0;
   for (var id in state.units) if (state.units[id].damaged) damaged++;
   if (damaged > 0) { msgs.push('\ud83d\udd25 ' + damaged + ' damaged unit' + (damaged > 1 ? 's' : '') + ' need renovation'); }
+  if (state.strikeUntil && state.day <= state.strikeUntil) { msgs.push('\u270a STRIKE active — traffic -50% through day ' + state.strikeUntil); cls = cls || 'bust'; }
+  if (state.festival && state.day <= state.festival.until) { msgs.push('\ud83c\udf89 Festival: ' + FESTIVAL_TYPES[state.festival.kind].label); cls = cls || 'boom'; }
+  if (state.campaign && state.day <= state.campaign.until) { msgs.push('\ud83d\udcca Ad campaign active through day ' + state.campaign.until); }
   if (msgs.length === 0) { b.classList.remove('show'); return; }
   b.className = 'event-banner show ' + cls;
   b.innerHTML = msgs.join(' &nbsp;&middot;&nbsp; ');
@@ -4280,6 +5085,8 @@ function updateStars() {
     renderPalette();
     maybeUnlockAchievement('star' + stars, stars + '★ tower');
     sfx('star');
+    spawnStarParticles();
+    if (stars >= 2) sendMayorLetter(stars);
   }
   // Stars are monotonic — once earned, kept. Prevents the "placed a lobby, now office is locked" trap.
 }
@@ -4370,6 +5177,8 @@ function render() {
   }
   // Roof decorations on the topmost unit per column
   drawRoofDecorations();
+  // Heatmap overlay (H key)
+  if (state.heatmapMode) drawHeatmap();
   // Selected-unit highlight (Identify panel open)
   if (state.selectedUnitId && state.units[state.selectedUnitId]) {
     var su = state.units[state.selectedUnitId];
@@ -4401,6 +5210,8 @@ function render() {
   drawHoverPreview();
   // Mini-map overlay (bottom-left)
   if (state.showMinimap) drawMinimap(W, H);
+  // Celebratory particles (if any)
+  drawParticles();
   // Day-change flash (subtle)
   if (state.dayFlash && !settings.reduceMotion) {
     ctx.fillStyle = 'rgba(255,240,200,' + (state.dayFlash * 0.3) + ')';
@@ -4558,6 +5369,41 @@ function drawStreetLife(W, streetY) {
       }
     }
   }
+}
+
+function drawHeatmap() {
+  for (var id in state.units) {
+    var u = state.units[id];
+    var def = UNITS[u.type];
+    var val = 0;
+    if (state.heatmapMode === 1) {
+      if (def.capacity <= 0) continue;
+      val = u.tenants / def.capacity;
+    } else if (state.heatmapMode === 2) {
+      if (def.capacity <= 0) continue;
+      val = unitSatisfaction(u) / 100;
+    } else if (state.heatmapMode === 3) {
+      var hist = u.revenueHistory || [];
+      if (hist.length === 0) continue;
+      var avg = 0; for (var h = 0; h < hist.length; h++) avg += hist[h];
+      avg /= hist.length;
+      val = Math.min(1, avg / 2000);
+    }
+    // val in [0,1] → red (low) → yellow → green (high)
+    var r, g, b;
+    if (val < 0.5) { r = 224; g = Math.round(64 + val * 2 * 160); b = 64; }
+    else            { r = Math.round(224 - (val - 0.5) * 2 * 130); g = 224; b = 80; }
+    var tl = worldToScreen(u.x, u.y + u.h - 1);
+    ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',0.45)';
+    ctx.fillRect(tl.x, tl.y, u.w * CELL_W, u.h * CELL_H);
+  }
+  // Legend label
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(10, 42, 180, 20);
+  ctx.fillStyle = '#FFD060';
+  ctx.font = 'bold 11px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(['', 'OCCUPANCY', 'SATISFACTION', 'REVENUE'][state.heatmapMode] + ' [H]', 16, 56);
 }
 
 function drawRoofDecorations() {
@@ -5063,6 +5909,18 @@ function drawUnit(u) {
     ctx.font = 'bold 7px Georgia';
     ctx.textAlign = 'left';
     ctx.fillText('FIRE STN', x + 3, y + h - 14);
+  } else if (u.type === 'sprinkler') {
+    ctx.fillStyle = '#2A4050';
+    ctx.fillRect(x + 2, y + 3, w - 4, h - 6);
+    // Water droplet icon
+    ctx.fillStyle = '#60A0C0';
+    ctx.beginPath();
+    ctx.moveTo(x + w/2, y + 5);
+    ctx.bezierCurveTo(x + w/2 + 4, y + h/2, x + w/2 + 3, y + h - 6, x + w/2, y + h - 6);
+    ctx.bezierCurveTo(x + w/2 - 3, y + h - 6, x + w/2 - 4, y + h/2, x + w/2, y + 5);
+    ctx.fill();
+    ctx.fillStyle = '#A0D0E0';
+    ctx.fillRect(x + w/2 - 1, y + h/2 - 1, 1, 1);
   } else if (u.type === 'atm') {
     ctx.fillStyle = '#406030';
     ctx.fillRect(x + 2, y + 3, w - 4, h - 6);
@@ -5453,6 +6311,7 @@ function drawElevatorCar(e) {
 }
 
 function agentColor(a) {
+  if (a.fleeing) return '#E04040';
   if (a.type === 'worker') return '#4A80D0';
   if (a.type === 'resident') return '#D06060';
   if (a.type === 'hotelGuest') return '#B080C0';
@@ -5739,8 +6598,88 @@ function renovateAt(gx, gy) {
   showToast('Renovated ' + UNITS[u.type].name);
   logEvent('Renovated ' + UNITS[u.type].name + ' @ floor ' + floorLabel(u.y) + ' (-$40,000)', 'good');
 }
+var touchState = { active: false, startX: 0, startY: 0, camX0: 0, camY0: 0, lastDist: 0, moved: 0 };
+function onTouchStart(e) {
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    touchState.active = true;
+    touchState.startX = e.touches[0].clientX;
+    touchState.startY = e.touches[0].clientY;
+    touchState.camX0 = state.camX;
+    touchState.camY0 = state.camY;
+    touchState.moved = 0;
+  } else if (e.touches.length === 2) {
+    var dx = e.touches[0].clientX - e.touches[1].clientX;
+    var dy = e.touches[0].clientY - e.touches[1].clientY;
+    touchState.lastDist = Math.sqrt(dx*dx + dy*dy);
+  }
+}
+function onTouchMove(e) {
+  e.preventDefault();
+  if (e.touches.length === 2) {
+    var dx = e.touches[0].clientX - e.touches[1].clientX;
+    var dy = e.touches[0].clientY - e.touches[1].clientY;
+    var dist = Math.sqrt(dx*dx + dy*dy);
+    if (touchState.lastDist > 0) {
+      zoom = Math.max(0.5, Math.min(2.5, zoom * (dist / touchState.lastDist)));
+      clampCamera();
+    }
+    touchState.lastDist = dist;
+    return;
+  }
+  if (!touchState.active || e.touches.length !== 1) return;
+  var tx = e.touches[0].clientX;
+  var ty = e.touches[0].clientY;
+  var dtx = tx - touchState.startX;
+  var dty = ty - touchState.startY;
+  touchState.moved += Math.abs(dtx) + Math.abs(dty);
+  state.camX = touchState.camX0 - dtx;
+  state.camY = touchState.camY0 - dty;
+  clampCamera();
+}
+function onTouchEnd(e) {
+  // Tap (no drag): treat as click at the touch point
+  if (touchState.active && touchState.moved < 8 && e.changedTouches.length > 0) {
+    var rect = canvas.getBoundingClientRect();
+    var t = e.changedTouches[0];
+    var cell = screenToCell(t.clientX - rect.left, t.clientY - rect.top);
+    if (build.bulldoze) bulldozeAt(cell.x, cell.y);
+    else if (build.mode === 'addcar') addElevatorCar(cell.x, cell.y);
+    else if (build.mode === 'identify') { var uid = state.grid[cell.x+','+cell.y]; if (uid) showUnitInfo(uid); }
+    else if (build.mode === 'renovate') renovateAt(cell.x, cell.y);
+    else if (build.mode) placeUnit(build.mode, cell.x, cell.y);
+  }
+  touchState.active = false;
+  touchState.lastDist = 0;
+}
+
+function onRightClick(e) {
+  e.preventDefault();
+  var rect = canvas.getBoundingClientRect();
+  var cell = screenToCell(e.clientX - rect.left, e.clientY - rect.top);
+  var uid = state.grid[cell.x + ',' + cell.y];
+  if (!uid) return;
+  var u = state.units[uid];
+  var def = UNITS[u.type];
+  // Confirm for expensive units
+  if (def.cost >= 300000) {
+    uiConfirm('Bulldoze ' + def.name + ' (50% refund: $' + formatMoney(Math.round(def.cost * 0.5)) + ')?', function(ok) {
+      if (ok) bulldozeAt(cell.x, cell.y);
+    });
+    return;
+  }
+  bulldozeAt(cell.x, cell.y);
+}
+
 function onWheel(e) {
   e.preventDefault();
+  if (e.ctrlKey || e.metaKey) {
+    // Zoom with Ctrl/Cmd+wheel — keep camera centered on cursor roughly
+    var old = zoom;
+    zoom = Math.max(0.5, Math.min(2.5, zoom * (e.deltaY < 0 ? 1.1 : 0.91)));
+    if (zoom !== old) clampCamera();
+    return;
+  }
   state.camY -= e.deltaY * 0.5;
   clampCamera();
 }
@@ -5781,6 +6720,11 @@ function onKey(e) {
   }
   else if (e.key.toLowerCase() === 'q') { toggleQuestsPanel(); }
   else if (e.key.toLowerCase() === 'i') { toggleInfoOverlay(); }
+  else if (e.key === '+' || e.key === '=') { zoom = Math.min(2.5, zoom * 1.1); clampCamera(); }
+  else if (e.key === '-' || e.key === '_') { zoom = Math.max(0.5, zoom * 0.91); clampCamera(); }
+  else if (e.key === '0' && !e.ctrlKey) { zoom = 1.0; clampCamera(); }
+  else if (e.key.toLowerCase() === 'h') { state.heatmapMode = (state.heatmapMode || 0) + 1; if (state.heatmapMode > 3) state.heatmapMode = 0; showToast(['Heatmap: off', 'Heatmap: occupancy', 'Heatmap: satisfaction', 'Heatmap: revenue'][state.heatmapMode]); }
+  else if (e.key === '?' || e.key === '/') { showModal('shortcutsModal'); }
 }
 
 /* ===== HUD ===== */
@@ -5825,6 +6769,7 @@ function updateHUD() {
     }
   }
   updateTutorialHint();
+  updateMailBadge();
   // Market panel updates once per second (every ~60 frames is overkill)
   if ((state.tickCount || 0) % 60 === 0 || state._marketDirty) { renderMarketPanel(); state._marketDirty = false; }
 }
@@ -5875,12 +6820,81 @@ function formatMoney(n) {
   return '' + Math.round(n);
 }
 
+function showEodSummary(income, expenses, net, marketTag) {
+  var el = document.getElementById('eodSummary');
+  if (!el) return;
+  // Gather events from today's log
+  var dayEvents = [];
+  for (var i = state.log.length - 1; i >= 0; i--) {
+    var e = state.log[i];
+    if (e.day < state.day - 1) break;
+    if (e.day === state.day - 1 && (e.severity === 'good' || e.severity === 'warn' || e.severity === 'bad') && e.text.indexOf('End of day') < 0) {
+      dayEvents.push(e.text);
+    }
+  }
+  var html = '<h3>DAY ' + (state.day - 1) + ' — closed' + (marketTag || '') + '</h3>';
+  html += '<div class="eod-row"><span class="label">Revenue</span><span class="good">+$' + formatMoney(income) + '</span></div>';
+  html += '<div class="eod-row"><span class="label">Upkeep</span><span class="bad">-$' + formatMoney(expenses) + '</span></div>';
+  html += '<div class="eod-row"><span class="label" style="font-weight:bold;">Net</span><span class="' + (net >= 0 ? 'good' : 'bad') + '">' + (net >= 0 ? '+' : '-') + '$' + formatMoney(Math.abs(net)) + '</span></div>';
+  html += '<div class="eod-row"><span class="label">Cash on hand</span><span style="color:#FFD060;">$' + formatMoney(state.cash) + '</span></div>';
+  if (state.population > 0) {
+    html += '<div class="eod-row"><span class="label">Population</span><span style="color:#7AB0E0;">' + state.population + '</span></div>';
+  }
+  if (dayEvents.length > 0) {
+    html += '<div class="eod-events">' + dayEvents.slice(0, 3).join(' &bull; ') + '</div>';
+  }
+  el.innerHTML = html;
+  el.classList.add('show');
+  clearTimeout(el._to);
+  el._to = setTimeout(function() { el.classList.remove('show'); }, 4500);
+}
+
 function showToast(msg) {
   var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(t._to);
   t._to = setTimeout(function() { t.classList.remove('show'); }, 1600);
+}
+
+// Confetti-like particles that fall from the top of the canvas
+function spawnStarParticles() {
+  if (!state.particles) state.particles = [];
+  if (settings.reduceMotion) return;
+  for (var i = 0; i < 80; i++) {
+    state.particles.push({
+      x: Math.random() * (canvas ? canvas.clientWidth : 800),
+      y: -10 - Math.random() * 40,
+      vx: (Math.random() - 0.5) * 4,
+      vy: 2 + Math.random() * 4,
+      rot: Math.random() * Math.PI * 2,
+      vrot: (Math.random() - 0.5) * 0.3,
+      color: ['#FFD060','#FF6AC0','#60E0FF','#90E080','#E06040','#B060E0'][Math.floor(Math.random() * 6)],
+      size: 4 + Math.random() * 4,
+      life: 200 + Math.random() * 100
+    });
+  }
+}
+
+function drawParticles() {
+  if (!state.particles || state.particles.length === 0) return;
+  for (var i = state.particles.length - 1; i >= 0; i--) {
+    var p = state.particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.08;
+    p.rot += p.vrot;
+    p.life--;
+    if (p.life <= 0 || p.y > canvas.clientHeight + 20) { state.particles.splice(i, 1); continue; }
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.globalAlpha = Math.min(1, p.life / 80);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
 }
 
 function showStarPopup(n, bonus) {

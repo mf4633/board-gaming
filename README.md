@@ -34,7 +34,7 @@ Real-time physics, engineering, and management sims.
 | [Apoapsis](./Apoapsis.html) | 3D rocket flight sim (Three.js) |
 | [Bonneville Spillway Operator](./BonnevilleSpillwayOperator.html) | Columbia River dam — turbines, spillway, fish passage, grid frequency |
 | [Floodline](./Floodline.html) | California flood defense, historical scenarios |
-| [SimEarth](./SimEarth.html) | Planet-scale geosim — tectonics, climate, biomes |
+| [Biosphere Blue](./BiosphereBlue.html) | Planet-scale geosim — tectonics, climate, biomes |
 | [Tower](./Tower.html) | SKYSTACK — high-rise tenant operations |
 
 ## Navigation
