@@ -22,36 +22,76 @@
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464" crossorigin="anonymous"></script>
 <style>
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; }
+  html, body { margin: 0; padding: 0;
+    background:
+      radial-gradient(ellipse at top, #1a0c08 0%, #0a0604 70%) fixed;
+    color: #e8d8b8; font-family: Georgia, "Times New Roman", serif; }
   #wrap { max-width: 1000px; margin: 0 auto; padding: 24px 8px 60px; }
   header { text-align: center; }
-  h1 { font-size: 2em; letter-spacing: 8px; color: #f0d89c; margin: 0 0 6px; }
-  .tag { color: #8098a8; letter-spacing: 3px; font-size: 0.82em; margin-bottom: 14px; }
+  h1 { font-size: 2.2em; letter-spacing: 10px; margin: 0 0 6px;
+    background: linear-gradient(180deg, #ffe8a8 0%, #d4a050 50%, #905028 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+  .tag { color: #a09078; letter-spacing: 4px; font-size: 0.82em; margin-bottom: 14px; font-style: italic; }
   .controls { margin: 12px 0; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
-  button { background: #1a2434; color: #f0d89c; border: 1px solid #3a5060; border-radius: 3px; padding: 8px 14px; font-family: inherit; letter-spacing: 2px; font-size: 0.82em; cursor: pointer; }
-  button:hover { background: #243044; }
-  button.active { background: #f0d89c; color: #0c1016; }
-  .stats { color: #8098a8; font-size: 0.82em; letter-spacing: 2px; text-align: center; margin: 6px 0 14px; }
-  .stats span { color: #f0d89c; }
-  #board { background: #143828; border: 1px solid #2a4a38; border-radius: 6px; padding: 14px; min-height: 600px; position: relative; }
+  button { background: linear-gradient(180deg, #3a2818, #1f1408); color: #f0d89c; border: 1px solid #5a4028; border-radius: 4px; padding: 8px 14px; font-family: inherit; letter-spacing: 2px; font-size: 0.82em; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,220,150,0.2), 0 2px 4px rgba(0,0,0,0.4); }
+  button:hover { background: linear-gradient(180deg, #4a3624, #2a1c10); border-color: #7a5838; }
+  button.active { background: linear-gradient(180deg, #f0d89c, #b08838); color: #1a1008; border-color: #b07810; }
+  .stats { color: #a09078; font-size: 0.82em; letter-spacing: 3px; text-align: center; margin: 6px 0 14px; }
+  .stats span { color: #ffd896; text-shadow: 0 1px 0 #000; }
+  /* Felt table — green baize with subtle weave */
+  #board {
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255,255,200,0.04), transparent 60%),
+      radial-gradient(circle at 70% 80%, rgba(0,40,20,0.4), transparent 60%),
+      repeating-linear-gradient(45deg, rgba(0,0,0,0.04) 0 1px, transparent 1px 3px),
+      linear-gradient(135deg, #0e3a26 0%, #0a2818 100%);
+    border: 1px solid #2a4a38;
+    border-radius: 8px; padding: 16px; min-height: 600px; position: relative;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,220,150,0.1), 0 8px 24px rgba(0,0,0,0.7); }
   .top-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 18px; }
-  .pile-slot { aspect-ratio: 5/7; max-width: 90px; min-height: 100px; border: 1px dashed #3a5a48; border-radius: 5px; position: relative; cursor: pointer; }
+  .pile-slot { aspect-ratio: 5/7; max-width: 90px; min-height: 100px; border: 1px dashed rgba(255,220,150,0.25); border-radius: 6px; position: relative; cursor: pointer; background: rgba(0,0,0,0.15); }
   .tableau { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
   .col { min-height: 360px; position: relative; cursor: pointer; }
   .col .pile-slot { width: 100%; }
-  .card { position: absolute; inset: 0; background: #f8f4e8; border: 1px solid #1a1410; border-radius: 5px; padding: 4px 6px; font-weight: bold; font-size: 0.95em; color: #1a1410; box-shadow: 1px 1px 0 rgba(0,0,0,0.3); user-select: none; line-height: 1.1; }
-  .card.red { color: #b02030; }
-  .card.back { background: linear-gradient(135deg, #2050a0 25%, #1a4090 25%, #1a4090 50%, #2050a0 50%, #2050a0 75%, #1a4090 75%); background-size: 12px 12px; border-color: #1a3070; }
-  .card .rank { font-size: 1.1em; }
+  /* Cards: aged ivory with embossed face */
+  .card { position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 15%, rgba(255,255,255,0.6), transparent 50%),
+      linear-gradient(180deg, #fbf4e2 0%, #f0e4cc 100%);
+    border: 1px solid #2a1810; border-radius: 6px;
+    padding: 4px 6px; font-weight: bold; font-size: 0.95em;
+    color: #1a0e08;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.7),
+      inset 0 -1px 0 rgba(120,80,40,0.2),
+      1px 2px 4px rgba(0,0,0,0.5);
+    user-select: none; line-height: 1.1;
+    font-family: "Palatino", "Book Antiqua", Georgia, serif; }
+  .card.red { color: #9a1820; }
+  /* Card back: gold filigree on indigo */
+  .card.back {
+    background:
+      repeating-linear-gradient(45deg, rgba(255,220,150,0.18) 0 2px, transparent 2px 8px),
+      repeating-linear-gradient(-45deg, rgba(255,220,150,0.12) 0 2px, transparent 2px 8px),
+      radial-gradient(circle at center, #2a1850, #100828 80%);
+    border: 1px solid #4a3010;
+    box-shadow:
+      inset 0 0 0 4px rgba(255,220,150,0.25),
+      inset 0 0 0 5px #1a0c30,
+      inset 0 1px 0 rgba(255,220,150,0.2),
+      1px 2px 4px rgba(0,0,0,0.5); }
+  .card .rank { font-size: 1.15em; }
   .card .suit { font-size: 1em; }
-  .card .center { position: absolute; bottom: 4px; right: 6px; font-size: 1.6em; transform: rotate(180deg); }
-  .card.sel { box-shadow: 0 0 0 3px #f0d89c, 1px 1px 0 rgba(0,0,0,0.3); z-index: 1000 !important; }
-  #msg { margin-top: 14px; min-height: 1.4em; color: #f0d89c; letter-spacing: 2px; font-size: 0.95em; text-align: center; }
+  .card .center { position: absolute; bottom: 4px; right: 6px; font-size: 1.7em; transform: rotate(180deg); opacity: 0.9; }
+  .card.sel { box-shadow: 0 0 0 3px #ffd896, 0 0 12px rgba(255,200,100,0.6), 1px 2px 4px rgba(0,0,0,0.5); z-index: 1000 !important; }
+  #msg { margin-top: 14px; min-height: 1.4em; color: #f0d89c; letter-spacing: 3px; font-size: 0.95em; text-align: center; }
   nav { margin-top: 22px; font-size: 0.82em; letter-spacing: 2px; text-align: center; }
-  nav a { color: #8098a8; text-decoration: none; margin: 0 10px; }
+  nav a { color: #a09078; text-decoration: none; margin: 0 10px; }
   nav a:hover { color: #f0d89c; }
-  .info { color: #7090a0; font-size: 0.82em; line-height: 1.6; margin-top: 30px; padding: 0 10px; }
-  .info h2 { color: #f0d89c; font-size: 0.95em; letter-spacing: 4px; text-transform: uppercase; margin: 18px 0 8px; }
+  .info { color: #8a7858; font-size: 0.82em; line-height: 1.6; margin-top: 30px; padding: 0 10px; }
+  .info h2 { color: #d4a050; font-size: 0.95em; letter-spacing: 4px; text-transform: uppercase; margin: 18px 0 8px; }
+  .info strong { color: #f0d89c; }
   @media (max-width: 700px) {
     .card { font-size: 0.78em; padding: 2px 4px; }
     .card .center { font-size: 1.1em; bottom: 2px; right: 4px; }

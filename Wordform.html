@@ -22,38 +22,73 @@
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464" crossorigin="anonymous"></script>
 <style>
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; }
+  html, body { margin: 0; padding: 0;
+    background:
+      radial-gradient(ellipse at top, #1a1410 0%, #0a0604 70%) fixed;
+    color: #e8d8b8; font-family: Georgia, "Times New Roman", serif; }
   #wrap { max-width: 480px; margin: 0 auto; padding: 28px 12px 60px; text-align: center; }
-  h1 { font-size: 2em; letter-spacing: 8px; color: #f0d89c; margin: 0 0 6px; }
-  .tag { color: #8098a8; letter-spacing: 3px; font-size: 0.82em; margin-bottom: 20px; }
+  h1 { font-size: 2.2em; letter-spacing: 10px; margin: 0 0 6px;
+    background: linear-gradient(180deg, #ffe8a8 0%, #d4a050 50%, #905028 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+  .tag { color: #a09078; letter-spacing: 4px; font-size: 0.82em; margin-bottom: 20px; font-style: italic; }
   .controls { margin: 10px 0 18px; display: flex; gap: 6px; justify-content: center; }
-  button { background: #1a2434; color: #f0d89c; border: 1px solid #3a5060; border-radius: 3px; padding: 8px 14px; font-family: inherit; letter-spacing: 2px; font-size: 0.8em; cursor: pointer; }
-  button:hover { background: #243044; }
-  button.active { background: #f0d89c; color: #0c1016; }
+  button { background: linear-gradient(180deg, #3a2818, #1f1408); color: #f0d89c; border: 1px solid #5a4028; border-radius: 4px; padding: 8px 14px; font-family: inherit; letter-spacing: 2px; font-size: 0.8em; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,220,150,0.2), 0 2px 4px rgba(0,0,0,0.4); }
+  button:hover { background: linear-gradient(180deg, #4a3624, #2a1c10); border-color: #7a5838; }
+  button.active { background: linear-gradient(180deg, #f0d89c, #b08838); color: #1a1008; border-color: #b07810; }
   #board { display: grid; grid-template-rows: repeat(6, 1fr); gap: 6px; margin: 0 auto 16px; max-width: 340px; }
   .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-  .tile { aspect-ratio: 1/1; background: #141c28; border: 1px solid #2a3540; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.6em; text-transform: uppercase; color: #f0d89c; transition: background 0.3s; }
-  .tile.has { border-color: #5a7090; }
-  .tile.hit { background: #5a8060; border-color: #5a8060; color: #fff; }
-  .tile.warm { background: #b08038; border-color: #b08038; color: #fff; }
-  .tile.miss { background: #3a3a3a; border-color: #3a3a3a; color: #888; }
+  /* Marble blank tile with carved letter feel */
+  .tile { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.7em; text-transform: uppercase;
+    background:
+      radial-gradient(ellipse at 25% 20%, rgba(255,250,240,0.5), transparent 50%),
+      linear-gradient(140deg, #f4ecda 0%, #e6d8c0 100%);
+    border: 1px solid #b09060; color: #2a1810; border-radius: 4px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(120,80,40,0.2), 0 2px 4px rgba(0,0,0,0.4);
+    transition: background 0.3s, transform 0.3s;
+    font-family: "Palatino", "Book Antiqua", Georgia, serif; }
+  .tile.has { border-color: #d4a050; transform: scale(1.02); }
+  /* Emerald hit, topaz warm, basalt miss */
+  .tile.hit {
+    background:
+      radial-gradient(ellipse at 30% 25%, rgba(180,255,200,0.55), transparent 50%),
+      linear-gradient(160deg, #2a8050 0%, #186040 50%, #084028 100%);
+    border: 1px solid #084028; color: #fff8e0;
+    box-shadow: inset 0 1px 0 rgba(180,255,200,0.5), 0 0 14px rgba(60,180,100,0.45), 0 2px 4px rgba(0,0,0,0.4);
+    text-shadow: 0 1px 0 rgba(0,40,20,0.5); }
+  .tile.warm {
+    background:
+      radial-gradient(ellipse at 30% 25%, rgba(255,220,150,0.6), transparent 50%),
+      linear-gradient(160deg, #e0a040 0%, #b07820 50%, #704808 100%);
+    border: 1px solid #704808; color: #fff8e0;
+    box-shadow: inset 0 1px 0 rgba(255,220,150,0.5), 0 0 14px rgba(255,180,40,0.45), 0 2px 4px rgba(0,0,0,0.4);
+    text-shadow: 0 1px 0 rgba(80,40,0,0.5); }
+  .tile.miss {
+    background: linear-gradient(160deg, #2a2820 0%, #181612 100%);
+    border: 1px solid #18120a; color: #6a6048;
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.5); }
   #kb { display: flex; flex-direction: column; gap: 6px; max-width: 480px; margin: 0 auto; }
   .krow { display: flex; gap: 4px; justify-content: center; }
-  .key { flex: 1; min-width: 26px; max-width: 44px; height: 48px; background: #2a3540; color: #d8d0c0; border: 1px solid #3a4860; border-radius: 4px; font-weight: bold; font-family: inherit; cursor: pointer; font-size: 0.95em; padding: 0; }
+  .key { flex: 1; min-width: 26px; max-width: 44px; height: 48px;
+    background: linear-gradient(180deg, #3a2818, #1f1408); color: #f0d89c;
+    border: 1px solid #5a4028; border-radius: 4px;
+    font-weight: bold; font-family: inherit; cursor: pointer; font-size: 0.95em; padding: 0;
+    box-shadow: inset 0 1px 0 rgba(255,220,150,0.15), 0 2px 4px rgba(0,0,0,0.4); }
   .key.wide { flex: 1.6; max-width: 64px; font-size: 0.7em; letter-spacing: 1px; }
-  .key.hit { background: #5a8060; color: #fff; }
-  .key.warm { background: #b08038; color: #fff; }
-  .key.miss { background: #1a1f28; color: #555; }
-  #msg { margin-top: 14px; min-height: 1.4em; color: #f0d89c; letter-spacing: 2px; font-size: 0.95em; }
-  .stats { color: #8098a8; font-size: 0.78em; letter-spacing: 2px; margin-top: 8px; }
-  .stats span { color: #f0d89c; }
+  .key.hit { background: linear-gradient(180deg, #2a8050, #084028); color: #fff8e0; border-color: #084028; }
+  .key.warm { background: linear-gradient(180deg, #e0a040, #704808); color: #fff8e0; border-color: #704808; }
+  .key.miss { background: linear-gradient(180deg, #1a1610, #0a0806); color: #5a4830; border-color: #1a1208; }
+  #msg { margin-top: 14px; min-height: 1.4em; color: #f0d89c; letter-spacing: 3px; font-size: 0.95em; }
+  .stats { color: #a09078; font-size: 0.78em; letter-spacing: 3px; margin-top: 8px; }
+  .stats span { color: #ffd896; text-shadow: 0 1px 0 #000; }
   nav { margin-top: 22px; font-size: 0.82em; letter-spacing: 2px; }
-  nav a { color: #8098a8; text-decoration: none; margin: 0 10px; }
+  nav a { color: #a09078; text-decoration: none; margin: 0 10px; }
   nav a:hover { color: #f0d89c; }
-  .info { color: #7090a0; font-size: 0.82em; line-height: 1.6; margin-top: 30px; text-align: left; padding: 0 6px; }
-  .info h2 { color: #f0d89c; font-size: 0.95em; letter-spacing: 4px; text-transform: uppercase; margin: 18px 0 8px; }
-  .legend { color: #7090a0; font-size: 0.78em; margin: 8px 0; }
-  .legend span { display: inline-block; width: 16px; height: 16px; border-radius: 2px; vertical-align: middle; margin: 0 4px; }
+  .info { color: #8a7858; font-size: 0.82em; line-height: 1.6; margin-top: 30px; text-align: left; padding: 0 6px; }
+  .info h2 { color: #d4a050; font-size: 0.95em; letter-spacing: 4px; text-transform: uppercase; margin: 18px 0 8px; }
+  .info strong { color: #f0d89c; }
+  .legend { color: #8a7858; font-size: 0.78em; margin: 8px 0; }
+  .legend span { display: inline-block; width: 16px; height: 16px; border-radius: 2px; vertical-align: middle; margin: 0 4px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 1px 2px rgba(0,0,0,0.4); }
 </style>
 </head>
 <body>
@@ -74,7 +109,7 @@
   <div class="info">
     <h2>How to play Wordform</h2>
     <p>Guess the hidden 5-letter word in six tries. After each guess, the tiles flip:</p>
-    <p class="legend"><span style="background:#5a8060"></span> right letter, right spot &nbsp;·&nbsp; <span style="background:#b08038"></span> right letter, wrong spot &nbsp;·&nbsp; <span style="background:#3a3a3a"></span> not in the word</p>
+    <p class="legend"><span style="background:linear-gradient(160deg,#2a8050,#084028)"></span> right letter, right spot &nbsp;·&nbsp; <span style="background:linear-gradient(160deg,#e0a040,#704808)"></span> right letter, wrong spot &nbsp;·&nbsp; <span style="background:linear-gradient(160deg,#2a2820,#181612)"></span> not in the word</p>
     <p>One puzzle per day on <strong>DAILY</strong> mode (resets at midnight local). Use <strong>RANDOM</strong> for unlimited play, or <strong>SHARE</strong> to copy your daily result as an emoji grid.</p>
   </div>
 </div>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Drift — Daily Word Ladder Puzzle | Board Gaming Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Drift: a daily word-ladder puzzle. Transform start word into target word, one letter at a time, every step a real word. Theme reveal and shareable result. Free, no signup.">
+<meta name="keywords" content="word ladder, doublets, drift game, daily word puzzle, lewis carroll word game, word transformation puzzle">
+<link rel="canonical" href="https://boardgaminghub.com/Drift.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://boardgaminghub.com/Drift.html">
+<meta property="og:title" content="Drift — Daily Word Ladder">
+<meta property="og:description" content="Transform start to target one letter at a time. Daily theme. Free, in-browser.">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "VideoGame", "name": "Drift",
+  "description": "Daily word ladder puzzle: transform a 4-letter start word into a 4-letter target word, changing one letter per step, with every intermediate word valid English.",
+  "url": "https://boardgaminghub.com/Drift.html", "genre": "Word Puzzle",
+  "applicationCategory": "Game", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464" crossorigin="anonymous"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0;
+    background:
+      radial-gradient(ellipse at top, #1a1410 0%, #0a0604 70%) fixed;
+    color: #e8d8b8; font-family: Georgia, "Times New Roman", serif; }
+  #wrap { max-width: 480px; margin: 0 auto; padding: 28px 12px 60px; text-align: center; }
+  h1 { font-size: 2.2em; letter-spacing: 10px; margin: 0 0 6px;
+    background: linear-gradient(180deg, #ffe8a8 0%, #d4a050 50%, #905028 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+  .tag { color: #a09078; letter-spacing: 4px; font-size: 0.82em; margin-bottom: 8px; font-style: italic; }
+  .theme { color: #d4b888; font-size: 0.88em; letter-spacing: 3px; margin: 4px 0 18px; font-style: italic;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.4); }
+  .controls { margin: 10px 0 18px; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  button { background: linear-gradient(180deg, #3a2818, #1f1408); color: #f0d89c; border: 1px solid #5a4028; border-radius: 4px; padding: 8px 14px; font-family: inherit; letter-spacing: 2px; font-size: 0.78em; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,220,150,0.2), 0 2px 4px rgba(0,0,0,0.4); }
+  button:hover { background: linear-gradient(180deg, #4a3624, #2a1c10); border-color: #7a5838; }
+  button.active { background: linear-gradient(180deg, #f0d89c, #b08838); color: #1a1008; border-color: #b07810; }
+  .ladder { display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin: 0 auto 14px; }
+  .rung { display: flex; gap: 6px; justify-content: center; align-items: center; }
+  /* Marble cells */
+  .cell { width: 50px; height: 60px;
+    background:
+      radial-gradient(ellipse at 25% 20%, rgba(255,250,240,0.5), transparent 50%),
+      linear-gradient(140deg, #f4ecda 0%, #e6d8c0 100%);
+    border: 1px solid #b09060;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 1.7em; text-transform: uppercase;
+    color: #2a1810; border-radius: 4px; cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(120,80,40,0.2), 0 2px 4px rgba(0,0,0,0.4);
+    font-family: "Palatino", "Book Antiqua", Georgia, serif; }
+  /* Given (start/target) — sandstone with gilt edge */
+  .cell.given {
+    background:
+      radial-gradient(ellipse at 30% 25%, rgba(255,235,180,0.5), transparent 50%),
+      linear-gradient(160deg, #f0d89c 0%, #c89848 100%);
+    border-color: #8a5818; color: #2a1408;
+    text-shadow: 0 1px 0 rgba(255,255,200,0.4); }
+  /* Locked / valid step — emerald */
+  .cell.locked {
+    background:
+      radial-gradient(ellipse at 30% 25%, rgba(180,255,200,0.55), transparent 50%),
+      linear-gradient(160deg, #2a8050 0%, #186040 50%, #084028 100%);
+    border-color: #084028; color: #fff8e0;
+    box-shadow: inset 0 1px 0 rgba(180,255,200,0.5), 0 0 14px rgba(60,180,100,0.45), 0 2px 4px rgba(0,0,0,0.4);
+    text-shadow: 0 1px 0 rgba(0,40,20,0.5); }
+  /* Letter that changed — topaz */
+  .cell.changed {
+    background:
+      radial-gradient(ellipse at 30% 25%, rgba(255,220,150,0.6), transparent 50%),
+      linear-gradient(160deg, #e0a040 0%, #b07820 50%, #704808 100%);
+    color: #fff8e0; border-color: #704808;
+    box-shadow: inset 0 1px 0 rgba(255,220,150,0.5), 0 0 14px rgba(255,180,40,0.45), 0 2px 4px rgba(0,0,0,0.4);
+    text-shadow: 0 1px 0 rgba(80,40,0,0.5); }
+  .cell.bad {
+    background: linear-gradient(160deg, #5a1818, #2a0808); color: #ffa0a0;
+    border-color: #2a0808;
+    box-shadow: inset 0 1px 0 rgba(255,150,150,0.3), 0 0 8px rgba(180,40,40,0.5); }
+  .cell.sel { outline: 2px solid #ffd896; outline-offset: 2px; box-shadow: 0 0 12px rgba(255,200,80,0.6); }
+  .rung-label { color: #8a7858; font-size: 0.75em; letter-spacing: 3px; min-width: 30px;
+    font-family: "Courier New", monospace; }
+  #kb { display: flex; flex-direction: column; gap: 6px; max-width: 480px; margin: 14px auto 0; }
+  .krow { display: flex; gap: 4px; justify-content: center; }
+  .key { flex: 1; min-width: 26px; max-width: 38px; height: 44px;
+    background: linear-gradient(180deg, #3a2818, #1f1408); color: #f0d89c;
+    border: 1px solid #5a4028; border-radius: 4px;
+    font-weight: bold; font-family: inherit; cursor: pointer; font-size: 0.95em; padding: 0;
+    box-shadow: inset 0 1px 0 rgba(255,220,150,0.15), 0 2px 4px rgba(0,0,0,0.4); }
+  .key.wide { flex: 1.6; max-width: 56px; font-size: 0.65em; letter-spacing: 1px; }
+  #msg { margin-top: 14px; min-height: 1.4em; color: #f0d89c; letter-spacing: 3px; font-size: 0.95em; }
+  .stats { color: #a09078; font-size: 0.78em; letter-spacing: 3px; margin: 8px 0; }
+  .stats span { color: #ffd896; text-shadow: 0 1px 0 #000; }
+  nav { margin-top: 22px; font-size: 0.82em; letter-spacing: 2px; }
+  nav a { color: #a09078; text-decoration: none; margin: 0 10px; }
+  nav a:hover { color: #f0d89c; }
+  .info { color: #8a7858; font-size: 0.82em; line-height: 1.6; margin-top: 30px; text-align: left; padding: 0 6px; }
+  .info h2 { color: #d4a050; font-size: 0.95em; letter-spacing: 4px; text-transform: uppercase; margin: 18px 0 8px; }
+  .info strong { color: #f0d89c; }
+  .add-row { margin: 6px 0; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>DRIFT</h1>
+  <div class="tag">DAILY WORD LADDER</div>
+  <div class="theme" id="theme">Loading…</div>
+  <div class="controls">
+    <button id="dailyBtn" class="active">DAILY</button>
+    <button id="randomBtn">RANDOM</button>
+    <button id="hintBtn">HINT</button>
+    <button id="resetBtn">RESET</button>
+    <button id="shareBtn">SHARE</button>
+  </div>
+  <div id="ladder" class="ladder"></div>
+  <div class="add-row">
+    <button id="addRow">+ ADD STEP</button>
+    <button id="rmRow">– REMOVE STEP</button>
+  </div>
+  <div id="msg"></div>
+  <div class="stats">STREAK <span id="streak">0</span> · SOLVES <span id="solves">0</span></div>
+  <div id="kb"></div>
+  <nav><a href="index.html">All games</a> · <a href="Wordform.html">Wordform</a> · <a href="Sudoku.html">Sudoku</a></nav>
+
+  <div class="info">
+    <h2>How to play Drift</h2>
+    <p>Transform the <strong>start word</strong> at the top into the <strong>target word</strong> at the bottom. Each row must change <strong>exactly one letter</strong> from the row above, and every intermediate word must be a valid English word. Tap a cell to select it, then type a letter (or use the keypad).</p>
+    <h2>Tips</h2>
+    <p>The minimum-length ladder is rarely the only solution — any valid path counts. If stuck, use <strong>+ ADD STEP</strong> to insert a row, or <strong>HINT</strong> to reveal one letter of a known short solution. The theme hints at how the start and target relate, which often suggests the path. Daily mode shares one puzzle worldwide; <strong>RANDOM</strong> draws from the full pair pool.</p>
+  </div>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  // Daily themed pairs (start, target, theme). Hand-curated to be solvable in 4–6 rungs.
+  const PAIRS = [
+    ['warm','cold','temperature'],
+    ['love','hate','emotion'],
+    ['east','west','direction'],
+    ['head','tail','two sides of a coin'],
+    ['rich','poor','wealth'],
+    ['hard','soft','texture'],
+    ['fast','slow','speed'],
+    ['work','play','activity'],
+    ['life','dead','existence'],
+    ['dawn','dusk','time of day'],
+    ['rise','fall','direction'],
+    ['wild','tame','nature'],
+    ['kind','mean','character'],
+    ['open','shut','state'],
+    ['paid','free','cost'],
+    ['heat','cool','temperature'],
+    ['peak','base','elevation'],
+    ['fair','foul','quality'],
+    ['join','part','relationship'],
+    ['wide','thin','dimension'],
+    ['weak','bold','strength'],
+    ['calm','wild','temperament'],
+    ['fool','sage','wisdom'],
+    ['holy','evil','morality'],
+    ['sick','well','health'],
+    ['rest','work','activity'],
+    ['fire','rain','element'],
+    ['rock','silk','texture'],
+    ['high','flat','elevation'],
+    ['ride','walk','movement']
+  ];
+  // Compact 4-letter dictionary — common English words. Filtered/deduped at runtime.
+  const RAW_DICT = ("able acid aged also area army away baby back bank base bath bear beat been beer bell belt best bide bird blow blue boat body bold bond bone book boom born boss both bowl bulk burn bury busy cake call calm came camp card care case cash cast cell chat chip city club coal coat code cold come cook cool cope copy core corn cost crew crop cure cute dare dark data date dawn days dead deal dean dear debt deep deer dent desk dial dice diet dirt disc dish does dome done door dose down draw drew drop drug drum dual duck duke dull dust duty each earl earn ease east easy edge else even ever evil exit face fact fade fail fair fall fame fans farm fast fate fear feat feed feel fees feet fell felt file fill film find fine fire firm fish five flag flat flaw flew flex flip flow folk food foot ford form fort four fowl free from full fund gain game gate gave gear gene gift girl give glad goal goes gold golf gone good gray grew grim grip grow gulf hair half hall halo hand hang hard harm hate haul have hawk haze head heal heap hear heat held hell help here hero hide high hike hill hint hire hold hole holy home hope horn hour huge hunt hurt idea idle inch into iron item jack jail jazz join joke jolt jump junk jury just keen keep kept kick kill kind king kiss knee knew know lack lady lake lamp land lane last late lawn lazy lead leaf lean leap left lend lens less lest lice lick life lift like limb lime line link lion list live load loan lock loft logo long look loop lord lose loss lost loud love luck lump lung made mail main make male many mark mash mass mast mate math meal mean meat meet melt mend menu mere mesh mess mice mild mile milk mill mind mine mint mire miss mist mode mood moon more most much musk must myth name navy near neat neck need nest news nice nine noon norm nose note odds once only onto open oral oval over pace pack page paid pain pair pale palm pane park part pass past path peak pear peer pelt pest pick pier pile pill pine pink pipe plan play plot plug plus poem poke pole pond pool poor port pose post pour pray prey punk pure push race rack rage raid rail rain rake ramp rank rare rate read real rear redo reed reef rely rent rest rich ride rife rile ring riot ripe rise risk roam road roam roar rock rode roll roof rook room root rope rose rude rule rune rung rush rust sack safe said sail sake sale salt same sand save scan seal seat seed seek seem seen self sell semi send sent sept ship shop shot show shun shut sick side sift sign silk sing sink site size skin slay slim slip slow snap snip snow soak soft soil sold sole some song soon sore sort soul soup sour sown spam span spin spot spry spur stab star stay step stew stir stop sue sued suit sulk sung sunk sure surf swam swan swap swim sync tack tail take tale talk tall tame tank tape task taut team tear tend tent term test that them then they thin this thus tide tied tier tile till time tine tint tiny tire toad toll tomb tone took tool toot torn tort toss tour town tray tree trim trip true tube tuck tune turn twin twit type undo unit upon urge used user vain vary vase vast veil vent verb very vest veto vial vibe vice view vile vine void vote wade waft wage wail wait wake walk wall ward ware warm warn warp wars wash wasp wast wave wavy ways weak wear weed week weep well went were west what when whim whip whom wide wife wild will wind wine wing wino wins wipe wire wise wish wits with woke wolf wood wool word wore work worm worn wrap wrap yank yard yarn yawn year yelp yoga yolk your zeal zero zone zoom").split(/\s+/);
+  const DICT = new Set(RAW_DICT.filter(w => w.length === 4 && /^[a-z]+$/.test(w)));
+
+  const W = 4;
+  let pair, rows, sel, mode = 'daily', solved = false, hintsUsed = 0;
+
+  function dailyIndex() {
+    const epoch = new Date(2026, 0, 1).getTime();
+    return Math.floor((Date.now() - epoch) / 86400000);
+  }
+  function pickPair() {
+    if (mode === 'daily') return PAIRS[dailyIndex() % PAIRS.length];
+    return PAIRS[Math.floor(Math.random() * PAIRS.length)];
+  }
+
+  function init() {
+    pair = pickPair();
+    if (mode === 'daily') {
+      const k = 'drift_d_' + dailyIndex();
+      const s = localStorage.getItem(k);
+      if (s) { try { const o = JSON.parse(s); rows = o.rows; solved = o.solved; sel = null; render(); if (solved) finish(); return; } catch(e){} }
+    }
+    rows = [pair[0].split(''), ['','','',''], ['','','',''], ['','','',''], pair[1].split('')];
+    sel = [1, 0]; solved = false; hintsUsed = 0;
+    render();
+  }
+  function save() {
+    if (mode === 'daily') localStorage.setItem('drift_d_' + dailyIndex(), JSON.stringify({rows, solved}));
+  }
+
+  function diffCount(a, b) {
+    let n = 0; for (let i=0;i<W;i++) if (a[i] !== b[i]) n++; return n;
+  }
+  function isFilled(row) { return row.every(c => /^[a-z]$/.test(c)); }
+  function rowWord(row) { return row.join(''); }
+
+  function validateRow(idx) {
+    const r = rows[idx]; if (!isFilled(r)) return null;
+    if (!DICT.has(rowWord(r))) return 'bad';
+    return 'ok';
+  }
+  function validateLink(idxA, idxB) {
+    const a = rows[idxA], b = rows[idxB];
+    if (!isFilled(a) || !isFilled(b)) return null;
+    return diffCount(a, b) === 1 ? 'ok' : 'bad';
+  }
+  function checkWin() {
+    for (let i=0; i<rows.length; i++) {
+      if (i === 0 || i === rows.length-1) continue;
+      if (validateRow(i) !== 'ok') return false;
+    }
+    for (let i=0; i<rows.length-1; i++) {
+      if (validateLink(i, i+1) !== 'ok') return false;
+    }
+    return true;
+  }
+
+  function render() {
+    $('theme').textContent = mode === 'daily' ? '#' + dailyIndex() + ' · ' + pair[2].toUpperCase() : pair[2].toUpperCase();
+    const lad = $('ladder'); lad.innerHTML = '';
+    for (let r=0; r<rows.length; r++) {
+      const rd = document.createElement('div'); rd.className = 'rung';
+      const lab = document.createElement('div'); lab.className = 'rung-label'; lab.textContent = (r+1);
+      rd.appendChild(lab);
+      const isStart = r === 0, isEnd = r === rows.length - 1;
+      const linkOk = r > 0 ? validateLink(r-1, r) : null;
+      const rowOk = (!isStart && !isEnd) ? validateRow(r) : 'ok';
+      for (let c=0; c<W; c++) {
+        const cell = document.createElement('div'); cell.className = 'cell';
+        cell.textContent = rows[r][c] || '';
+        if (isStart || isEnd) cell.classList.add('given');
+        else if (rowOk === 'ok' && linkOk === 'ok') cell.classList.add('locked');
+        if (rowOk === 'bad' || (linkOk === 'bad' && r === r)) cell.classList.add('bad');
+        if (!isStart && !isEnd && rows[r-1] && rows[r-1][c] && rows[r][c] && rows[r-1][c] !== rows[r][c]) {
+          if (rowOk !== 'bad' && linkOk !== 'bad') cell.classList.add('changed');
+        }
+        if (sel && sel[0] === r && sel[1] === c) cell.classList.add('sel');
+        if (!isStart && !isEnd) cell.onclick = () => { sel = [r, c]; render(); };
+        rd.appendChild(cell);
+      }
+      lad.appendChild(rd);
+    }
+    renderKB();
+    if (!solved && checkWin()) { solved = true; finish(); }
+    save();
+  }
+  function renderKB() {
+    const kb = $('kb'); kb.innerHTML = '';
+    const layout = ['QWERTYUIOP','ASDFGHJKL','↵ZXCVBNM⌫'];
+    for (const row of layout) {
+      const kr = document.createElement('div'); kr.className = 'krow';
+      for (const ch of row) {
+        const b = document.createElement('button'); b.className = 'key';
+        if (ch === '↵') { b.textContent = 'NEXT'; b.classList.add('wide'); b.onclick = nextCell; }
+        else if (ch === '⌫') { b.textContent = '⌫'; b.classList.add('wide'); b.onclick = backspace; }
+        else { b.textContent = ch; b.onclick = () => keypress(ch); }
+        kr.appendChild(b);
+      }
+      kb.appendChild(kr);
+    }
+  }
+  function keypress(ch) {
+    if (!sel) return;
+    const [r, c] = sel; if (r === 0 || r === rows.length-1) return;
+    rows[r][c] = ch.toLowerCase();
+    if (c < W - 1) sel = [r, c+1];
+    else if (r < rows.length - 2) sel = [r+1, 0];
+    render();
+  }
+  function backspace() {
+    if (!sel) return;
+    const [r, c] = sel; if (r === 0 || r === rows.length-1) return;
+    if (rows[r][c]) rows[r][c] = '';
+    else if (c > 0) { sel = [r, c-1]; rows[r][c-1] = ''; }
+    else if (r > 1) { sel = [r-1, W-1]; rows[r-1][W-1] = ''; }
+    render();
+  }
+  function nextCell() {
+    if (!sel) return;
+    const [r, c] = sel; if (c < W-1) sel = [r, c+1];
+    else if (r < rows.length - 2) sel = [r+1, 0];
+    render();
+  }
+  function addRow() {
+    if (rows.length >= 8) return;
+    rows.splice(rows.length - 1, 0, ['','','','']);
+    sel = [rows.length - 2, 0]; render();
+  }
+  function rmRow() {
+    if (rows.length <= 3) return;
+    rows.splice(rows.length - 2, 1);
+    sel = [Math.min(sel ? sel[0] : 1, rows.length - 2), 0]; render();
+  }
+  function hint() {
+    // Reveal one letter that, in some valid neighbor, advances toward target
+    for (let r=1; r<rows.length-1; r++) {
+      for (let c=0; c<W; c++) {
+        if (!rows[r][c]) {
+          const above = rows[r-1], below = rows[r+1];
+          // try letters such that resulting word would be valid and link to above
+          for (const ch of 'abcdefghijklmnopqrstuvwxyz') {
+            const cand = above.map((x,i) => i === c ? ch : (rows[r][i] || x));
+            if (DICT.has(cand.join('')) && diffCount(cand, above) === 1) {
+              rows[r] = cand; hintsUsed++;
+              $('msg').textContent = 'HINT — ROW ' + (r+1) + ' · COLUMN ' + (c+1);
+              render(); return;
+            }
+          }
+        }
+      }
+    }
+    $('msg').textContent = 'NO HINT AVAILABLE — TRY +ADD STEP';
+  }
+  function reset() {
+    rows = [pair[0].split(''), ['','','',''], ['','','',''], ['','','',''], pair[1].split('')];
+    sel = [1, 0]; solved = false; hintsUsed = 0;
+    $('msg').textContent = ''; save(); render();
+  }
+  function finish() {
+    const steps = rows.length - 1;
+    $('msg').textContent = 'SOLVED IN ' + steps + ' STEPS' + (hintsUsed ? ' (' + hintsUsed + ' HINTS)' : '');
+    if (mode === 'daily') {
+      const stats = JSON.parse(localStorage.getItem('drift_stats') || '{"solves":0,"streak":0,"lastDay":-1}');
+      const today = dailyIndex();
+      if (stats.lastDay !== today) {
+        stats.solves++;
+        stats.streak = (stats.lastDay === today - 1 ? stats.streak + 1 : 1);
+        stats.lastDay = today;
+        localStorage.setItem('drift_stats', JSON.stringify(stats));
+      }
+    }
+    updateStats();
+  }
+  function updateStats() {
+    const s = JSON.parse(localStorage.getItem('drift_stats') || '{"solves":0,"streak":0}');
+    $('streak').textContent = s.streak; $('solves').textContent = s.solves;
+  }
+  async function share() {
+    if (!solved) { $('msg').textContent = 'SOLVE FIRST'; return; }
+    const head = 'Drift #' + dailyIndex() + ' — ' + (rows.length - 1) + ' steps' + (hintsUsed ? ' (+' + hintsUsed + ' hints)' : '');
+    const grid = rows.map((r,i) => {
+      if (i === 0 || i === rows.length-1) return '⬜⬜⬜⬜';
+      const above = rows[i-1];
+      return r.map((ch, c) => ch === above[c] ? '⬛' : '🟨').join('');
+    }).join('\n');
+    const text = head + '\n' + grid + '\nboardgaminghub.com/Drift.html';
+    try { await navigator.clipboard.writeText(text); $('msg').textContent = 'COPIED'; }
+    catch (e) { $('msg').textContent = 'COPY FAILED'; }
+  }
+
+  $('dailyBtn').onclick = () => { mode = 'daily'; $('dailyBtn').classList.add('active'); $('randomBtn').classList.remove('active'); init(); };
+  $('randomBtn').onclick = () => { mode = 'random'; $('randomBtn').classList.add('active'); $('dailyBtn').classList.remove('active'); init(); };
+  $('hintBtn').onclick = hint;
+  $('resetBtn').onclick = reset;
+  $('shareBtn').onclick = share;
+  $('addRow').onclick = addRow;
+  $('rmRow').onclick = rmRow;
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey) return;
+    if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); nextCell(); }
+    else if (e.key === 'Backspace') { e.preventDefault(); backspace(); }
+    else if (/^[a-zA-Z]$/.test(e.key)) keypress(e.key.toUpperCase());
+    else if (sel && e.key.startsWith('Arrow')) {
+      let [r, c] = sel;
+      if (e.key === 'ArrowLeft' && c > 0) c--;
+      else if (e.key === 'ArrowRight' && c < W-1) c++;
+      else if (e.key === 'ArrowUp' && r > 1) r--;
+      else if (e.key === 'ArrowDown' && r < rows.length-2) r++;
+      sel = [r, c]; e.preventDefault(); render();
+    }
+  });
+  updateStats();
+  init();
+})();
+</script>
+<script src="/analytics.js"></script>
+</body>
+</html>

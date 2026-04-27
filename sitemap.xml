@@ -7,6 +7,7 @@
   <!-- High-volume puzzles: prioritize for indexing -->
   <url><loc>https://boardgaminghub.com/Solitaire.html</loc><changefreq>weekly</changefreq><priority>0.95</priority></url>
   <url><loc>https://boardgaminghub.com/Wordform.html</loc><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://boardgaminghub.com/Drift.html</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://boardgaminghub.com/Sudoku.html</loc><changefreq>weekly</changefreq><priority>0.95</priority></url>
   <url><loc>https://boardgaminghub.com/Mahjong.html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://boardgaminghub.com/Chess.html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
