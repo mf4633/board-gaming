@@ -6,4 +6,4 @@
 # (from your AdSense account → Account → Account information).
 # The line below is the single line every AdSense site needs.
 
-google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+google.com, pub-2835365593874464, DIRECT, f08c47fec0942fa0
