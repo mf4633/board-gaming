@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wordform — Free Daily 5-Letter Word Puzzle | Board Gaming Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Wordform: free daily 5-letter word guessing puzzle. Six guesses, color-coded letter feedback, share your result. No signup, single-page browser game.">
+<meta name="keywords" content="wordform, word game, daily word puzzle, 5 letter word game, word guessing game">
+<link rel="canonical" href="https://boardgaminghub.com/Wordform.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://boardgaminghub.com/Wordform.html">
+<meta property="og:title" content="Wordform — Free Daily Word Puzzle">
+<meta property="og:description" content="Six guesses, five letters, one daily word. Free, in-browser, single-file HTML.">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "VideoGame", "name": "Wordform",
+  "description": "Guess the 5-letter daily word in six tries, with color-coded letter feedback.",
+  "url": "https://boardgaminghub.com/Wordform.html", "genre": "Word Puzzle",
+  "applicationCategory": "Game", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464" crossorigin="anonymous"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; }
+  #wrap { max-width: 480px; margin: 0 auto; padding: 28px 12px 60px; text-align: center; }
+  h1 { font-size: 2em; letter-spacing: 8px; color: #f0d89c; margin: 0 0 6px; }
+  .tag { color: #8098a8; letter-spacing: 3px; font-size: 0.82em; margin-bottom: 20px; }
+  .controls { margin: 10px 0 18px; display: flex; gap: 6px; justify-content: center; }
+  button { background: #1a2434; color: #f0d89c; border: 1px solid #3a5060; border-radius: 3px; padding: 8px 14px; font-family: inherit; letter-spacing: 2px; font-size: 0.8em; cursor: pointer; }
+  button:hover { background: #243044; }
+  button.active { background: #f0d89c; color: #0c1016; }
+  #board { display: grid; grid-template-rows: repeat(6, 1fr); gap: 6px; margin: 0 auto 16px; max-width: 340px; }
+  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .tile { aspect-ratio: 1/1; background: #141c28; border: 1px solid #2a3540; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.6em; text-transform: uppercase; color: #f0d89c; transition: background 0.3s; }
+  .tile.has { border-color: #5a7090; }
+  .tile.hit { background: #5a8060; border-color: #5a8060; color: #fff; }
+  .tile.warm { background: #b08038; border-color: #b08038; color: #fff; }
+  .tile.miss { background: #3a3a3a; border-color: #3a3a3a; color: #888; }
+  #kb { display: flex; flex-direction: column; gap: 6px; max-width: 480px; margin: 0 auto; }
+  .krow { display: flex; gap: 4px; justify-content: center; }
+  .key { flex: 1; min-width: 26px; max-width: 44px; height: 48px; background: #2a3540; color: #d8d0c0; border: 1px solid #3a4860; border-radius: 4px; font-weight: bold; font-family: inherit; cursor: pointer; font-size: 0.95em; padding: 0; }
+  .key.wide { flex: 1.6; max-width: 64px; font-size: 0.7em; letter-spacing: 1px; }
+  .key.hit { background: #5a8060; color: #fff; }
+  .key.warm { background: #b08038; color: #fff; }
+  .key.miss { background: #1a1f28; color: #555; }
+  #msg { margin-top: 14px; min-height: 1.4em; color: #f0d89c; letter-spacing: 2px; font-size: 0.95em; }
+  .stats { color: #8098a8; font-size: 0.78em; letter-spacing: 2px; margin-top: 8px; }
+  .stats span { color: #f0d89c; }
+  nav { margin-top: 22px; font-size: 0.82em; letter-spacing: 2px; }
+  nav a { color: #8098a8; text-decoration: none; margin: 0 10px; }
+  nav a:hover { color: #f0d89c; }
+  .info { color: #7090a0; font-size: 0.82em; line-height: 1.6; margin-top: 30px; text-align: left; padding: 0 6px; }
+  .info h2 { color: #f0d89c; font-size: 0.95em; letter-spacing: 4px; text-transform: uppercase; margin: 18px 0 8px; }
+  .legend { color: #7090a0; font-size: 0.78em; margin: 8px 0; }
+  .legend span { display: inline-block; width: 16px; height: 16px; border-radius: 2px; vertical-align: middle; margin: 0 4px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>WORDFORM</h1>
+  <div class="tag">5 LETTERS · 6 GUESSES</div>
+  <div class="controls">
+    <button id="dailyBtn" class="active">DAILY</button>
+    <button id="randomBtn">RANDOM</button>
+    <button id="shareBtn">SHARE</button>
+  </div>
+  <div id="board"></div>
+  <div id="msg"></div>
+  <div class="stats">STREAK <span id="streak">0</span> · WINS <span id="wins">0</span> · PLAYED <span id="played">0</span></div>
+  <div id="kb"></div>
+  <nav><a href="index.html">All games</a> · <a href="Sudoku.html">Sudoku</a> · <a href="2048.html">2048</a></nav>
+
+  <div class="info">
+    <h2>How to play Wordform</h2>
+    <p>Guess the hidden 5-letter word in six tries. After each guess, the tiles flip:</p>
+    <p class="legend"><span style="background:#5a8060"></span> right letter, right spot &nbsp;·&nbsp; <span style="background:#b08038"></span> right letter, wrong spot &nbsp;·&nbsp; <span style="background:#3a3a3a"></span> not in the word</p>
+    <p>One puzzle per day on <strong>DAILY</strong> mode (resets at midnight local). Use <strong>RANDOM</strong> for unlimited play, or <strong>SHARE</strong> to copy your daily result as an emoji grid.</p>
+  </div>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  // 200 common 5-letter answer words — short list for brevity, expand at will
+  const RAW_ANSWERS = ("about above abuse actor adapt admit adopt adult after again agent agree ahead alarm album alert alike alive allow alone along alter among angel anger angle angry apart apple apply arena argue arise armor array arrow aside asset audio audit avoid award aware badly basic basis beach began begin begun being below bench bible birth black blade blame blank blast blaze blend bless blind block blood bloom blown blues board boost booth bound brain brand brave bread break breed brief bring broad broke brown brush build built burst buyer cable cache cargo carry carve catch cause cease chain chair chalk charm chart chase cheap cheat check chest chief child china choir chord chose civic civil claim clamp clash class clean clear clerk click cliff climb clock close cloth cloud clown clubs coach coast color comet comic could count court cover craft crash crate crawl crazy cream creek creep crest crime crisp cross crowd crown crude cruel crush crust curve cycle daily dance dated dealt death debit debug debut decay delay delta dense depth diary diner dirty ditch diver dodge doing donor doubt dough draft drain drama drank drawn dread dream dress dried drift drill drink drive drone drown drunk dryer eager eagle early earth eaten edges eight elect elite empty enact ended enemy enjoy enter entry equal erupt error event every exact exile exist expel extra fable faced facet fault feast feign fence fewer field fight final first fixed flair flame flash fleet flesh float flock flood floor flora flour flown fluid flush flute focal force forge forth forty forum found frame fraud fresh fried frost frown fruit fully funds funny gauge ghost giant given glade glare glass gleam globe glory glove gnash gored grace grade grain grand grant grape graph grasp grass grate grave gravy great green greet grief grill grind groan gross group grove grown guard guess guest guide guilt habit happy harsh haste hatch haunt heard heart heavy hedge hello helps hence hinge hobby hoist honor horse hotel hover human humid humor hurry icily ideal ideas idiom idiot image imply incur index inert infer inlet input intro irony issue ivory jelly jewel joint joker juice juicy jumbo jumpy karma kayak kebab kindly kneel knelt knife knock knoll known label labor laden ladle lapse large laser later laugh layer leach leafy leaky leant leapt learn leash least leave leech legal lemon lemur level lever light limbs liner linen lingo links lipid liver lobby local lodge logic loose lousy lover lower loyal lucid lucky lunar lunch lurch lyric magic maker mammal manor maple march match maxim maybe mayor meant medal media merit merry metal meter mighty might mimic mince minor minus mirth misty mixed model modem money month moral motor mount mourn mouse mouth movie muddy mulch musky mused music musty mutate myrrh nadir naive named ninja nobly noise nomad north noted novel nudge nurse oaths obese ocean offer often olive onion opera optic orbit organ ought ounce outdo outer ovary overt owing owner ozone paced paint panel panic paper parka party patch patio pause peace peach pearl pedal penny perch peril photo phase phrase pilot pinch piney pious pivot pixel pizza place plain plait plank plant plate plaza plead plier pluck plumb plump plumb plush poach point porch power press price pride print prior prism privy prize probe prone proof prose proud prove prowl proxy psalm pulse punch pupil purge purse query queue quick quiet quill quirk quite quote rabid radio rainy raise ramen ranch range rapid ratio reach react ready realm reaps rebel reign relax relay reset resin retro reuse rhino rhyme rider ridge rifle right rigid rinse riser risky rival river roach roast rogue roman roost rotor rough round rouse route royal ruler rumor rural saber sadly safer saint salad salty satin sauce sauna saved scale scalp scene scent scion scope score scorn scout scowl scrap scrub scuba sedan seedy seize semen sense serif serve setup seven shack shade shaft shake shaky shame shape share shark sharp shave shawl sheer sheet shelf shell shift shine shire shirt shock shone shore short shout shove shown shrub shrug shyly siege sigma silly sinew singe siren sixth sixty skate skiff skill skull slack slain sleek sleep slept slice slick slide slime slimy sling slope smart smelt smile smith smoke snail snake snare sneak sneer snore snowy soggy solar solid solve sorry sound space spare spark sparse speak spear spent spice spike spill spine spite splat splay split spoil spoke spoof spore sport spout spray spree spurt squad squat stack staff stage stain stair stake stale stalk stall stamp stand staple stark start state stays stead steak steal steam steed steel steep steer stems steno stern stick stiff still sting stink stock stoic stoke stole stomp stone stood stool stoop store stork storm story stout stove strap straw stray strew strip stuck study stuff stunt style suave suite sulky sunny super surge surly swamp swarm sweat sweep sweet swept swift swing sword swore sworn sworn syrup table taken talon tarot taste tasty taunt teach teary teeth tempo tense terms terse testy thank theft their theme there these thick thief thigh thing think third those three threw throb throw thumb thump thyme tiara tibia tidal tiger tight timer toast today token toxic trace track trade trail train trait trash treat trend trial tribe trick tried tries trout truce truck truly trump trunk trust truth tweed tweet twice twine twist tying ultra under unfit unite unity until upper upset urban urged usage usher using usual utter vague valor value valve vapor vault verge verse video viral virus visit vital vivid vocal vodka vogue voice voter vouch vowel vying wacky wager wagon waist waive waltz waste watch water weave weedy weigh weird welsh whale wharf wheat wheel where which while whine whirl white whole whose widen wider widow width wield wince wired wisdom witch witty woken women world worry worse worst worth would wound woven wrack wrath wreck wrote wrung yacht yearn yeast yield young youth zebra zoom").split(/\s+/);
+  const ANSWERS = [...new Set(RAW_ANSWERS.filter(w => w.length === 5 && /^[a-z]+$/.test(w)))];
+  const W = 5, ROWS = 6;
+  let target, guesses, current, mode = 'daily', done = false;
+
+  function dailyIndex() {
+    const epoch = new Date(2026, 0, 1).getTime();
+    return Math.floor((Date.now() - epoch) / 86400000);
+  }
+  function pickTarget() {
+    if (mode === 'daily') return ANSWERS[dailyIndex() % ANSWERS.length];
+    return ANSWERS[Math.floor(Math.random() * ANSWERS.length)];
+  }
+  function load() {
+    if (mode === 'daily') {
+      const k = 'wf_daily_' + dailyIndex();
+      const s = localStorage.getItem(k);
+      if (s) { try { const o = JSON.parse(s); guesses = o.guesses; done = o.done; current = ''; render(); if (done) finishMsg(); return; } catch(e){} }
+    }
+    guesses = []; current = ''; done = false;
+    render();
+  }
+  function save() {
+    if (mode === 'daily') localStorage.setItem('wf_daily_' + dailyIndex(), JSON.stringify({guesses, done, target}));
+  }
+  function score(guess, ans) {
+    const result = Array(W).fill('miss');
+    const ansArr = ans.split(''); const used = Array(W).fill(false);
+    for (let i=0;i<W;i++) if (guess[i] === ansArr[i]) { result[i] = 'hit'; used[i] = true; }
+    for (let i=0;i<W;i++) if (result[i] === 'miss') {
+      for (let j=0;j<W;j++) if (!used[j] && guess[i] === ansArr[j]) { result[i] = 'warm'; used[j] = true; break; }
+    }
+    return result;
+  }
+  function renderBoard() {
+    const b = $('board'); b.innerHTML = '';
+    for (let r=0;r<ROWS;r++) {
+      const row = document.createElement('div'); row.className = 'row';
+      for (let c=0;c<W;c++) {
+        const t = document.createElement('div'); t.className = 'tile';
+        if (r < guesses.length) {
+          const g = guesses[r]; t.textContent = g.word[c]; t.classList.add(g.scores[c]);
+        } else if (r === guesses.length) {
+          const ch = current[c]; if (ch) { t.textContent = ch; t.classList.add('has'); }
+        }
+        row.appendChild(t);
+      }
+      b.appendChild(row);
+    }
+  }
+  function renderKB() {
+    const kb = $('kb'); kb.innerHTML = '';
+    const layout = ['QWERTYUIOP','ASDFGHJKL','↵ZXCVBNM⌫'];
+    const status = {};
+    for (const g of guesses) for (let i=0;i<W;i++) {
+      const k = g.word[i].toUpperCase();
+      const s = g.scores[i];
+      if (status[k] === 'hit') continue;
+      if (s === 'hit') status[k] = 'hit';
+      else if (s === 'warm' && status[k] !== 'hit') status[k] = 'warm';
+      else if (!status[k]) status[k] = 'miss';
+    }
+    for (const row of layout) {
+      const kr = document.createElement('div'); kr.className = 'krow';
+      for (const ch of row) {
+        const b = document.createElement('button'); b.className = 'key';
+        if (ch === '↵') { b.textContent = 'ENTER'; b.classList.add('wide'); b.onclick = submit; }
+        else if (ch === '⌫') { b.textContent = '⌫'; b.classList.add('wide'); b.onclick = backspace; }
+        else { b.textContent = ch; b.onclick = () => keypress(ch); if (status[ch]) b.classList.add(status[ch]); }
+        kr.appendChild(b);
+      }
+      kb.appendChild(kr);
+    }
+  }
+  function render() { renderBoard(); renderKB(); updateStats(); }
+  function keypress(ch) { if (done) return; if (current.length < W) { current += ch.toLowerCase(); renderBoard(); renderKB(); } }
+  function backspace() { if (done) return; current = current.slice(0,-1); renderBoard(); }
+  function submit() {
+    if (done) return;
+    if (current.length !== W) { msg('NEED ' + W + ' LETTERS'); return; }
+    if (!/^[a-z]+$/.test(current)) { msg('LETTERS ONLY'); return; }
+    const sc = score(current, target);
+    guesses.push({ word: current, scores: sc });
+    const win = sc.every(s => s === 'hit');
+    current = ''; renderBoard(); renderKB();
+    if (win) { done = true; recordWin(true); finishMsg(); save(); return; }
+    if (guesses.length >= ROWS) { done = true; recordWin(false); finishMsg(); save(); return; }
+    save();
+  }
+  function recordWin(won) {
+    const stats = JSON.parse(localStorage.getItem('wf_stats') || '{"played":0,"wins":0,"streak":0}');
+    stats.played++; if (won) { stats.wins++; stats.streak++; } else stats.streak = 0;
+    localStorage.setItem('wf_stats', JSON.stringify(stats));
+    updateStats();
+  }
+  function updateStats() {
+    const s = JSON.parse(localStorage.getItem('wf_stats') || '{"played":0,"wins":0,"streak":0}');
+    $('streak').textContent = s.streak; $('wins').textContent = s.wins; $('played').textContent = s.played;
+  }
+  function finishMsg() {
+    if (guesses.length && guesses[guesses.length-1].word === target) msg('SOLVED IN ' + guesses.length);
+    else msg('OUT OF GUESSES — ' + target.toUpperCase());
+  }
+  function msg(t) { $('msg').textContent = t; }
+  function shareGrid() {
+    if (!guesses.length) return '';
+    const head = mode === 'daily' ? 'Wordform #' + dailyIndex() + ' ' + (done && guesses[guesses.length-1].word === target ? guesses.length : 'X') + '/6' : 'Wordform';
+    const map = { hit: '🟩', warm: '🟨', miss: '⬛' };
+    return head + '\n' + guesses.map(g => g.scores.map(s => map[s]).join('')).join('\n') + '\nboardgaminghub.com/Wordform.html';
+  }
+  $('dailyBtn').onclick = () => { mode = 'daily'; $('dailyBtn').classList.add('active'); $('randomBtn').classList.remove('active'); target = pickTarget(); load(); };
+  $('randomBtn').onclick = () => { mode = 'random'; $('randomBtn').classList.add('active'); $('dailyBtn').classList.remove('active'); target = pickTarget(); guesses = []; current = ''; done = false; render(); msg(''); };
+  $('shareBtn').onclick = async () => {
+    const g = shareGrid(); if (!g) { msg('NOTHING TO SHARE'); return; }
+    try { await navigator.clipboard.writeText(g); msg('COPIED'); } catch (e) { msg('COPY FAILED'); }
+  };
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey) return;
+    if (e.key === 'Enter') submit();
+    else if (e.key === 'Backspace') backspace();
+    else if (/^[a-zA-Z]$/.test(e.key)) keypress(e.key.toUpperCase());
+  });
+  target = pickTarget();
+  load();
+})();
+</script>
+<script src="/analytics.js"></script>
+</body>
+</html>

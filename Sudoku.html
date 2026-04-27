@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sudoku — Free Online Daily Puzzle, Easy to Expert | Board Gaming Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Play Sudoku free online: easy, medium, hard, and expert puzzles. Pencil-mark notes, hint and check, daily seed. No signup, no downloads — single-page browser game.">
+<meta name="keywords" content="sudoku, play sudoku online, free sudoku, sudoku puzzle, daily sudoku, hard sudoku">
+<link rel="canonical" href="https://boardgaminghub.com/Sudoku.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://boardgaminghub.com/Sudoku.html">
+<meta property="og:title" content="Sudoku — Free Online Daily Puzzle">
+<meta property="og:description" content="Easy to expert puzzles, pencil notes, hint mode, daily seed. Free, in-browser, single-file HTML.">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "VideoGame", "name": "Sudoku",
+  "description": "Place digits 1–9 so that every row, column, and 3×3 box contains each digit exactly once.",
+  "url": "https://boardgaminghub.com/Sudoku.html", "genre": "Logic Puzzle",
+  "applicationCategory": "Game", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464" crossorigin="anonymous"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; }
+  #wrap { max-width: 560px; margin: 0 auto; padding: 28px 12px 60px; text-align: center; }
+  h1 { font-size: 2em; letter-spacing: 8px; color: #f0d89c; margin: 0 0 6px; }
+  .tag { color: #8098a8; letter-spacing: 3px; font-size: 0.82em; margin-bottom: 16px; }
+  .controls { margin: 12px 0; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  button { background: #1a2434; color: #f0d89c; border: 1px solid #3a5060; border-radius: 3px; padding: 8px 12px; font-family: inherit; letter-spacing: 1.5px; font-size: 0.78em; cursor: pointer; }
+  button:hover { background: #243044; }
+  button.active { background: #f0d89c; color: #0c1016; }
+  .stats { display: flex; gap: 10px; justify-content: center; margin: 10px 0 14px; color: #8098a8; font-size: 0.82em; letter-spacing: 2px; }
+  .stats span { color: #f0d89c; }
+  #board { display: inline-grid; grid-template-columns: repeat(9, 1fr); gap: 0; background: #2a3540; border: 2px solid #2a3540; border-radius: 4px; user-select: none; max-width: 100%; aspect-ratio: 1 / 1; width: min(540px, 96vw); }
+  .cell { background: #141c28; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; font-weight: bold; font-size: clamp(1em, 4.5vw, 1.6em); }
+  .cell.given { color: #d8d0c0; }
+  .cell.user { color: #f0d89c; }
+  .cell.bad { color: #ff6080; }
+  .cell.sel { background: #2a4060; }
+  .cell.peer { background: #1a2638; }
+  .cell.same { background: #2a3a54; }
+  .cell.b-r { border-right: 1px solid #2a3540; }
+  .cell.b-b { border-bottom: 1px solid #2a3540; }
+  .cell.b-rh { border-right: 2px solid #3a5060; }
+  .cell.b-bh { border-bottom: 2px solid #3a5060; }
+  .notes { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; height: 100%; padding: 2px; font-size: 0.42em; color: #8098a8; font-weight: normal; }
+  .notes div { display: flex; align-items: center; justify-content: center; }
+  .pad { margin: 14px 0 8px; display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; max-width: 540px; margin-left: auto; margin-right: auto; }
+  .pad button { padding: 12px 0; font-size: 1em; }
+  .pad button.notemode { background: #604098; color: #fff; }
+  .toolbar { display: flex; gap: 6px; justify-content: center; margin: 6px 0; flex-wrap: wrap; }
+  #msg { margin-top: 12px; min-height: 1.2em; color: #f0d89c; letter-spacing: 2px; font-size: 0.9em; }
+  nav { margin-top: 22px; font-size: 0.82em; letter-spacing: 2px; }
+  nav a { color: #8098a8; text-decoration: none; margin: 0 10px; }
+  nav a:hover { color: #f0d89c; }
+  .info { color: #7090a0; font-size: 0.82em; line-height: 1.6; margin-top: 30px; text-align: left; padding: 0 6px; }
+  .info h2 { color: #f0d89c; font-size: 0.95em; letter-spacing: 4px; text-transform: uppercase; margin: 18px 0 8px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>SUDOKU</h1>
+  <div class="tag">PLACE 1–9</div>
+  <div class="controls">
+    <button data-d="easy" class="active">EASY</button>
+    <button data-d="medium">MEDIUM</button>
+    <button data-d="hard">HARD</button>
+    <button data-d="expert">EXPERT</button>
+  </div>
+  <div class="toolbar">
+    <button id="newgame">NEW</button>
+    <button id="daily">DAILY</button>
+    <button id="notes">NOTES</button>
+    <button id="hint">HINT</button>
+    <button id="check">CHECK</button>
+    <button id="erase">ERASE</button>
+    <button id="undo">UNDO</button>
+  </div>
+  <div class="stats">DIFFICULTY <span id="dlbl">EASY</span> · TIME <span id="time">0:00</span> · MISTAKES <span id="errs">0</span></div>
+  <div id="board"></div>
+  <div class="pad" id="pad"></div>
+  <div id="msg"></div>
+  <nav><a href="index.html">All games</a> · <a href="2048.html">2048</a> · <a href="Minesweeper.html">Minesweeper</a></nav>
+
+  <div class="info">
+    <h2>How to play Sudoku</h2>
+    <p>Fill the 9×9 grid so every <strong>row</strong>, every <strong>column</strong>, and every 3×3 <strong>box</strong> contains each digit 1–9 exactly once. Tap a cell to select it, then tap a digit on the keypad — or use a number key. <strong>NOTES</strong> mode lets you pencil in candidates without committing.</p>
+    <h2>Solving techniques</h2>
+    <p>Start with rows, columns, or boxes that already have many digits — they constrain the rest. Look for "naked singles" (cells with only one possible value) and "hidden singles" (boxes where a digit can only legally go in one place). Pencil-mark candidates and eliminate them as you commit digits.</p>
+  </div>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const SIZE = 9, BOX = 3;
+  let solution, puzzle, given, user, notes, sel = null, noteMode = false, errs = 0, t0, timer, history = [], diff = 'easy';
+
+  const targetClues = { easy: 40, medium: 32, hard: 28, expert: 24 };
+
+  function shuffle(a) { for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+  function solve(g, count) {
+    for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) if (!g[r][c]) {
+      const tries = shuffle([1,2,3,4,5,6,7,8,9]);
+      for (const v of tries) {
+        if (canPlace(g, r, c, v)) {
+          g[r][c] = v;
+          if (count) { count.n += solveCount(g, count.limit - count.n); if (count.n >= count.limit) { g[r][c] = 0; return count.n; } }
+          else if (solve(g)) return true;
+          g[r][c] = 0;
+        }
+      }
+      return count ? count.n : false;
+    }
+    return count ? 1 : true;
+  }
+  function solveCount(g, lim) {
+    for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) if (!g[r][c]) {
+      let n = 0;
+      for (let v=1;v<=9;v++) if (canPlace(g, r, c, v)) {
+        g[r][c] = v; n += solveCount(g, lim - n); g[r][c] = 0;
+        if (n >= lim) return n;
+      }
+      return n;
+    }
+    return 1;
+  }
+  function canPlace(g, r, c, v) {
+    for (let i=0;i<SIZE;i++) if (g[r][i]===v||g[i][c]===v) return false;
+    const br = Math.floor(r/3)*3, bc = Math.floor(c/3)*3;
+    for (let i=0;i<3;i++) for (let j=0;j<3;j++) if (g[br+i][bc+j]===v) return false;
+    return true;
+  }
+  function generate(target) {
+    solution = Array.from({length:9}, () => Array(9).fill(0));
+    solve(solution);
+    puzzle = solution.map(r => r.slice());
+    const positions = shuffle([...Array(81).keys()]);
+    for (const p of positions) {
+      const r = Math.floor(p/9), c = p%9;
+      if (!puzzle[r][c]) continue;
+      const removed = puzzle[r][c]; puzzle[r][c] = 0;
+      const test = puzzle.map(row => row.slice());
+      const cnt = { n: 0, limit: 2 };
+      solveCount(test, 2);
+      // simpler unique check: count solutions up to 2
+      let solutions = 0;
+      (function rec(g) {
+        if (solutions >= 2) return;
+        for (let i=0;i<SIZE;i++) for (let j=0;j<SIZE;j++) if (!g[i][j]) {
+          for (let v=1;v<=9;v++) if (canPlace(g, i, j, v)) { g[i][j]=v; rec(g); g[i][j]=0; if (solutions>=2) return; }
+          return;
+        }
+        solutions++;
+      })(puzzle.map(row => row.slice()));
+      if (solutions !== 1) puzzle[r][c] = removed;
+      const clues = puzzle.flat().filter(v=>v).length;
+      if (clues <= target) break;
+    }
+  }
+  function dailyGenerate() {
+    const today = new Date().toISOString().slice(0,10);
+    let h = 0; for (const ch of today) h = (h*31 + ch.charCodeAt(0)) >>> 0;
+    let s = h || 1;
+    Math.random = () => { s = (s * 1103515245 + 12345) >>> 0; return s / 4294967296; };
+    generate(34);
+    Math.random = Math.__orig || Math.random;
+  }
+  function newGame(target) {
+    generate(target || targetClues[diff]);
+    given = puzzle.map(r => r.map(v => v !== 0));
+    user = puzzle.map(r => r.slice());
+    notes = Array.from({length:9}, () => Array.from({length:9}, () => new Set()));
+    sel = null; noteMode = false; errs = 0; history = [];
+    if (timer) clearInterval(timer); t0 = Date.now();
+    timer = setInterval(updateTime, 1000);
+    $('errs').textContent = '0'; $('msg').textContent = '';
+    $('dlbl').textContent = diff.toUpperCase();
+    render();
+  }
+  function updateTime() {
+    const s = Math.floor((Date.now()-t0)/1000);
+    $('time').textContent = Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  }
+  function render() {
+    const b = $('board'); b.innerHTML = '';
+    for (let r=0;r<9;r++) for (let c=0;c<9;c++) {
+      const d = document.createElement('div');
+      d.className = 'cell';
+      if (c % 3 === 2 && c < 8) d.classList.add('b-rh'); else if (c < 8) d.classList.add('b-r');
+      if (r % 3 === 2 && r < 8) d.classList.add('b-bh'); else if (r < 8) d.classList.add('b-b');
+      if (sel && sel[0]===r && sel[1]===c) d.classList.add('sel');
+      else if (sel && (sel[0]===r || sel[1]===c || (Math.floor(sel[0]/3)===Math.floor(r/3) && Math.floor(sel[1]/3)===Math.floor(c/3)))) d.classList.add('peer');
+      if (sel && user[sel[0]][sel[1]] && user[r][c] === user[sel[0]][sel[1]]) d.classList.add('same');
+      if (user[r][c]) {
+        d.classList.add(given[r][c] ? 'given' : 'user');
+        if (!given[r][c] && user[r][c] !== solution[r][c]) d.classList.add('bad');
+        d.textContent = user[r][c];
+      } else if (notes[r][c].size) {
+        const nd = document.createElement('div'); nd.className = 'notes';
+        for (let n=1;n<=9;n++) { const x = document.createElement('div'); x.textContent = notes[r][c].has(n) ? n : ''; nd.appendChild(x); }
+        d.appendChild(nd);
+      }
+      d.onclick = () => { sel = [r,c]; render(); };
+      b.appendChild(d);
+    }
+    const pad = $('pad'); pad.innerHTML = '';
+    for (let n=1;n<=9;n++) {
+      const btn = document.createElement('button'); btn.textContent = n;
+      btn.onclick = () => place(n); pad.appendChild(btn);
+    }
+    $('notes').classList.toggle('notemode', noteMode);
+  }
+  function place(v) {
+    if (!sel) return;
+    const [r,c] = sel; if (given[r][c]) return;
+    history.push({ user: user.map(r=>r.slice()), notes: notes.map(r=>r.map(s=>new Set(s))), errs });
+    if (noteMode) {
+      if (notes[r][c].has(v)) notes[r][c].delete(v); else notes[r][c].add(v);
+      user[r][c] = 0;
+    } else {
+      if (user[r][c] === v) user[r][c] = 0;
+      else { user[r][c] = v; notes[r][c].clear();
+        if (v !== solution[r][c]) { errs++; $('errs').textContent = errs; }
+      }
+    }
+    render(); checkWin();
+  }
+  function erase() { if (!sel) return; const [r,c]=sel; if (given[r][c]) return;
+    history.push({ user: user.map(r=>r.slice()), notes: notes.map(r=>r.map(s=>new Set(s))), errs });
+    user[r][c] = 0; notes[r][c].clear(); render(); }
+  function hint() { if (!sel) return; const [r,c]=sel; if (given[r][c]||user[r][c]===solution[r][c]) return;
+    history.push({ user: user.map(r=>r.slice()), notes: notes.map(r=>r.map(s=>new Set(s))), errs });
+    user[r][c] = solution[r][c]; notes[r][c].clear(); render(); checkWin(); }
+  function check() {
+    let bad = 0;
+    for (let r=0;r<9;r++) for (let c=0;c<9;c++) if (user[r][c] && user[r][c] !== solution[r][c]) bad++;
+    $('msg').textContent = bad ? bad + ' WRONG ENTRIES' : 'NO MISTAKES';
+  }
+  function undo() {
+    if (!history.length) return;
+    const s = history.pop();
+    user = s.user; notes = s.notes; errs = s.errs;
+    $('errs').textContent = errs; render();
+  }
+  function checkWin() {
+    for (let r=0;r<9;r++) for (let c=0;c<9;c++) if (user[r][c] !== solution[r][c]) return;
+    clearInterval(timer);
+    $('msg').textContent = 'SOLVED IN ' + $('time').textContent + ' (' + errs + ' MISTAKES)';
+  }
+  document.querySelectorAll('[data-d]').forEach(b => b.onclick = () => {
+    diff = b.dataset.d;
+    document.querySelectorAll('[data-d]').forEach(x => x.classList.toggle('active', x === b));
+    newGame();
+  });
+  $('newgame').onclick = () => newGame();
+  $('daily').onclick = () => { Math.__orig = Math.random; dailyGenerate(); given = puzzle.map(r => r.map(v=>v!==0));
+    user = puzzle.map(r=>r.slice()); notes = Array.from({length:9}, () => Array.from({length:9}, () => new Set()));
+    sel = null; errs = 0; history = []; if (timer) clearInterval(timer); t0 = Date.now();
+    timer = setInterval(updateTime, 1000); $('errs').textContent = '0';
+    $('msg').textContent = 'DAILY ' + new Date().toISOString().slice(0,10); render(); };
+  $('notes').onclick = () => { noteMode = !noteMode; render(); };
+  $('hint').onclick = hint;
+  $('check').onclick = check;
+  $('erase').onclick = erase;
+  $('undo').onclick = undo;
+  document.addEventListener('keydown', e => {
+    if (e.key >= '1' && e.key <= '9') place(+e.key);
+    else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') erase();
+    else if (e.key === 'n' || e.key === 'N') { noteMode = !noteMode; render(); }
+    else if (sel && e.key.startsWith('Arrow')) {
+      let [r,c] = sel;
+      if (e.key === 'ArrowUp') r = (r+8)%9;
+      if (e.key === 'ArrowDown') r = (r+1)%9;
+      if (e.key === 'ArrowLeft') c = (c+8)%9;
+      if (e.key === 'ArrowRight') c = (c+1)%9;
+      sel = [r,c]; render(); e.preventDefault();
+    }
+  });
+  newGame();
+})();
+</script>
+<script src="/analytics.js"></script>
+</body>
+</html>

@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Play Free — Board Gaming Hub</title>
+<title>Play Free — Solitaire, Sudoku, Mahjong, 2048, Chess | Board Gaming Hub</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Play 21+ free strategy games and simulations in your browser — chess, go, mancala, civic and engineering sims, all single-file HTML.">
+<meta name="description" content="Play 27+ free strategy and puzzle games in your browser — Solitaire, Sudoku, Mahjong, Wordform, 2048, Minesweeper, Chess, Go, plus original designs and physics sims. Single-file HTML, ad-supported.">
+<meta name="keywords" content="free online games, solitaire, sudoku, mahjong, 2048, minesweeper, chess, go, browser games">
 <link rel="canonical" href="https://boardgaminghub.com/play.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Board Gaming Hub">
 <meta property="og:url" content="https://boardgaminghub.com/play.html">
-<meta property="og:title" content="Play 21 free in-browser strategy games &amp; simulations">
-<meta property="og:description" content="Chess, Go, Mancala, original designs, and physics sims. Free, ad-supported, no signup.">
+<meta property="og:title" content="Play 27 free in-browser puzzle &amp; strategy games">
+<meta property="og:description" content="Solitaire, Sudoku, Mahjong, Wordform, 2048, Chess, Go, plus original designs and physics sims. Free, ad-supported, no signup.">
 <meta name="twitter:card" content="summary">
 
 <!--
@@ -48,9 +49,9 @@
   .gcard:hover { background: #1e2838; border-color: #3a5060; transform: translateY(-2px); }
   .gcard .gname { color: #f0d89c; font-size: 1.08em; letter-spacing: 2px; font-weight: bold; margin-bottom: 4px; }
   .gcard .gsub { color: #a8b0c0; font-size: 0.85em; line-height: 1.4; }
+  .featured .gcard { background: #1a2434; border-color: #3a5060; }
+  .featured .gcard:hover { background: #243044; border-color: #5a7090; }
 
-  /* Ad slots: clearly demarcated so visitors know what's editorial vs. paid.
-     AdSense policy requires "ad" labeling not be misleading — keep it explicit. */
   .ad-slot { margin: 24px 0; min-height: 90px; display: flex; align-items: center; justify-content: center; background: #11161e; border: 1px dashed #2a3540; border-radius: 4px; padding: 6px; }
   .ad-slot::before { content: 'Advertisement'; position: absolute; transform: translateY(-22px); color: #5a6874; font-size: 0.65em; letter-spacing: 3px; pointer-events: none; }
   .ad-slot ins { display: block !important; }
@@ -66,7 +67,7 @@
 <div id="wrap">
   <header>
     <h1>BOARD GAMING</h1>
-    <div class="tag">Free in-browser strategy games and simulations</div>
+    <div class="tag">Free in-browser puzzle, board, and strategy games</div>
     <div class="free-tag">FREE · AD-SUPPORTED</div>
   </header>
 
@@ -76,13 +77,36 @@
     <a href="privacy.html">Privacy</a>
   </nav>
 
-  <!-- Top leaderboard ad -->
   <div class="ad-slot">
     <ins class="adsbygoogle"
          style="display:block;width:100%;height:90px;"
          data-ad-client="ca-pub-2835365593874464"
          data-ad-slot="0000000000"
          data-ad-format="horizontal"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <section class="featured">
+    <h2>Classic Puzzles</h2>
+    <div class="blurb">The most-played puzzle games on the web — free, no signup, mobile-friendly.</div>
+    <div class="grid">
+    <a class="gcard" href="Solitaire.html"><div class="gname">Solitaire</div><div class="gsub">Klondike — the classic card game</div></a>
+    <a class="gcard" href="Wordform.html"><div class="gname">Wordform</div><div class="gsub">Daily 5-letter word puzzle</div></a>
+    <a class="gcard" href="Sudoku.html"><div class="gname">Sudoku</div><div class="gsub">Place 1–9, easy to expert</div></a>
+    <a class="gcard" href="Mahjong.html"><div class="gname">Mahjong</div><div class="gsub">Solitaire tile matching</div></a>
+    <a class="gcard" href="Chess.html"><div class="gname">Chess</div><div class="gsub">The royal game</div></a>
+    <a class="gcard" href="2048.html"><div class="gname">2048</div><div class="gsub">Slide &amp; merge tiles</div></a>
+    <a class="gcard" href="Minesweeper.html"><div class="gname">Minesweeper</div><div class="gsub">Find the mines</div></a>
+    </div>
+  </section>
+
+  <div class="ad-slot">
+    <ins class="adsbygoogle"
+         style="display:block;width:100%;height:280px;"
+         data-ad-client="ca-pub-2835365593874464"
+         data-ad-slot="0000000000"
+         data-ad-format="auto"
          data-full-width-responsive="true"></ins>
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
   </div>
@@ -95,11 +119,9 @@
     <a class="gcard" href="Aresia.html"><div class="gname">Aresia</div><div class="gsub">Colonize the Red Frontier</div></a>
     <a class="gcard" href="Backgammon.html"><div class="gname">Backgammon</div><div class="gsub">Classic dice &amp; race</div></a>
     <a class="gcard" href="Bisque.html"><div class="gname">Bisque</div><div class="gsub">Battle for the Bay</div></a>
-    <a class="gcard" href="Chess.html"><div class="gname">Chess</div><div class="gsub">The royal game</div></a>
     <a class="gcard" href="Convergence.html"><div class="gname">Convergence</div><div class="gsub">Rival Civilizations, Shared Economy</div></a>
     <a class="gcard" href="Go.html"><div class="gname">Go</div><div class="gsub">Territory &amp; influence, 19x19</div></a>
 
-      <!-- In-feed ad between game cards -->
       <div class="ad-slot in-feed">
         <ins class="adsbygoogle"
              style="display:block;width:100%;height:120px;"
@@ -120,7 +142,6 @@
     </div>
   </section>
 
-  <!-- Mid-page rectangle ad -->
   <div class="ad-slot">
     <ins class="adsbygoogle"
          style="display:block;width:100%;height:280px;"
@@ -145,7 +166,6 @@
     </div>
   </section>
 
-  <!-- Bottom anchor ad -->
   <div class="ad-slot">
     <ins class="adsbygoogle"
          style="display:block;width:100%;height:90px;"

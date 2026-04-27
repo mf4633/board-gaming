@@ -2,16 +2,23 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Board Gaming Hub — Free In-Browser Strategy Games &amp; Simulations</title>
+<title>Board Gaming Hub — Free Solitaire, Sudoku, Mahjong, 2048, Chess & More</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Free in-browser board games and simulations: Chess, Go, Mancala, Backgammon, plus original strategy designs and physics sims. No downloads, no signup.">
+<meta name="description" content="Free in-browser puzzle and board games — Solitaire, Sudoku, Mahjong, Wordform, 2048, Minesweeper, Chess, Go, Backgammon, plus 20 original strategy designs and physics simulations. No signup, no downloads, single-page HTML.">
+<meta name="keywords" content="free online games, solitaire, sudoku, mahjong, 2048, minesweeper, wordle alternative, chess, go, backgammon, board games, puzzle games, browser games">
 <link rel="canonical" href="https://boardgaminghub.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Board Gaming Hub">
 <meta property="og:url" content="https://boardgaminghub.com/">
-<meta property="og:title" content="Board Gaming Hub — 21 free in-browser games">
-<meta property="og:description" content="Chess, Go, Mancala, original strategy games, and engineering simulations — every one a single self-contained HTML file.">
+<meta property="og:title" content="Board Gaming Hub — 27 free in-browser games">
+<meta property="og:description" content="Solitaire, Sudoku, Mahjong, Wordform, 2048, Minesweeper, Chess, Go, plus original strategy games and engineering simulations — every one a single self-contained HTML file.">
 <meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebSite",
+  "name": "Board Gaming Hub", "url": "https://boardgaminghub.com/",
+  "description": "Free in-browser puzzle, board, and strategy games — Solitaire, Sudoku, Mahjong, 2048, Wordform, Minesweeper, Chess, Go, and 20+ originals.",
+  "potentialAction": { "@type": "SearchAction", "target": "https://boardgaminghub.com/?q={search_term_string}", "query-input": "required name=search_term_string" } }
+</script>
 <!-- AdSense verification snippet. The library loads but this page has no <ins>
      ad-unit tags, so no ads render here. Real ads only appear on play.html. -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464"
@@ -24,6 +31,7 @@
   header h1 { font-size: 2.2em; letter-spacing: 8px; color: #f0d89c; margin: 0; }
   header .tag { color: #8098a8; letter-spacing: 3px; font-size: 0.85em; margin-top: 10px; }
   section { margin-top: 46px; }
+  section:first-of-type { margin-top: 24px; }
   section h2 { font-size: 1.0em; letter-spacing: 6px; color: #f0d89c; text-transform: uppercase; border-bottom: 1px solid #2a3540; padding-bottom: 8px; margin-bottom: 20px; }
   section .blurb { color: #8098a8; font-size: 0.92em; margin-bottom: 22px; line-height: 1.6; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
@@ -31,6 +39,8 @@
   .gcard:hover { background: #1e2838; border-color: #3a5060; transform: translateY(-2px); }
   .gcard .gname { color: #f0d89c; font-size: 1.08em; letter-spacing: 2px; font-weight: bold; margin-bottom: 4px; }
   .gcard .gsub { color: #a8b0c0; font-size: 0.85em; line-height: 1.4; }
+  .featured .gcard { background: #1a2434; border-color: #3a5060; }
+  .featured .gcard:hover { background: #243044; border-color: #5a7090; }
   footer { margin-top: 60px; text-align: center; color: #5a6874; font-size: 0.8em; letter-spacing: 2px; }
   footer a { color: #8098a8; text-decoration: none; }
   footer a:hover { color: #d8d0c0; }
@@ -40,8 +50,43 @@
 <div id="wrap">
   <header>
     <h1>BOARD GAMING</h1>
-    <div class="tag">Classics, original strategy games, and simulations — all in a single HTML file each.</div>
+    <div class="tag">Free in-browser puzzle, board, and strategy games — every one a single HTML file.</div>
   </header>
+
+  <section class="featured">
+    <h2>Classic Puzzles</h2>
+    <div class="blurb">The most-played puzzle games on the web — free, no signup, mobile-friendly.</div>
+    <div class="grid">
+    <a class="gcard" href="Solitaire.html">
+      <div class="gname">Solitaire</div>
+      <div class="gsub">Klondike — the classic card game</div>
+    </a>
+    <a class="gcard" href="Wordform.html">
+      <div class="gname">Wordform</div>
+      <div class="gsub">Daily 5-letter word puzzle</div>
+    </a>
+    <a class="gcard" href="Sudoku.html">
+      <div class="gname">Sudoku</div>
+      <div class="gsub">Place 1–9, easy to expert</div>
+    </a>
+    <a class="gcard" href="Mahjong.html">
+      <div class="gname">Mahjong</div>
+      <div class="gsub">Solitaire tile matching</div>
+    </a>
+    <a class="gcard" href="Chess.html">
+      <div class="gname">Chess</div>
+      <div class="gsub">The royal game</div>
+    </a>
+    <a class="gcard" href="2048.html">
+      <div class="gname">2048</div>
+      <div class="gsub">Slide & merge tiles</div>
+    </a>
+    <a class="gcard" href="Minesweeper.html">
+      <div class="gname">Minesweeper</div>
+      <div class="gsub">Find the mines, beginner to expert</div>
+    </a>
+    </div>
+  </section>
 
   <section>
     <h2>Board Games</h2>
@@ -62,10 +107,6 @@
     <a class="gcard" href="Bisque.html">
       <div class="gname">Bisque</div>
       <div class="gsub">Battle for the Bay</div>
-    </a>
-    <a class="gcard" href="Chess.html">
-      <div class="gname">Chess</div>
-      <div class="gsub">The royal game</div>
     </a>
     <a class="gcard" href="Convergence.html">
       <div class="gname">Convergence</div>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Minesweeper — Free Online Classic Mine Puzzle | Board Gaming Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Play Minesweeper free online. Classic Beginner, Intermediate, and Expert grids. Right-click to flag, left-click to reveal. No signup, no downloads, mobile-friendly.">
+<meta name="keywords" content="minesweeper, play minesweeper, free minesweeper online, classic minesweeper, mine puzzle">
+<link rel="canonical" href="https://boardgaminghub.com/Minesweeper.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://boardgaminghub.com/Minesweeper.html">
+<meta property="og:title" content="Minesweeper — Free Online Classic">
+<meta property="og:description" content="The classic logic puzzle: clear the field without detonating any mines. Free, in-browser, single-file HTML.">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "VideoGame", "name": "Minesweeper",
+  "description": "Reveal cells without detonating any mines. Number clues show how many mines surround each cell.",
+  "url": "https://boardgaminghub.com/Minesweeper.html", "genre": "Puzzle",
+  "applicationCategory": "Game", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464" crossorigin="anonymous"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; }
+  #wrap { max-width: 760px; margin: 0 auto; padding: 28px 12px 60px; text-align: center; }
+  h1 { font-size: 2em; letter-spacing: 8px; color: #f0d89c; margin: 0 0 6px; }
+  .tag { color: #8098a8; letter-spacing: 3px; font-size: 0.82em; margin-bottom: 18px; }
+  .controls { margin: 14px 0; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  button { background: #1a2434; color: #f0d89c; border: 1px solid #3a5060; border-radius: 3px; padding: 8px 14px; font-family: inherit; letter-spacing: 2px; font-size: 0.82em; cursor: pointer; }
+  button:hover { background: #243044; }
+  button.active { background: #f0d89c; color: #0c1016; }
+  .stats { display: flex; gap: 12px; justify-content: center; margin: 12px 0; }
+  .stat { background: #141c28; border: 1px solid #2a3540; border-radius: 4px; padding: 6px 14px; min-width: 80px; }
+  .stat .lab { color: #8098a8; font-size: 0.7em; letter-spacing: 2px; }
+  .stat .val { color: #f0d89c; font-size: 1.2em; font-weight: bold; }
+  #boardWrap { overflow: auto; padding: 8px; }
+  #board { display: inline-grid; gap: 2px; background: #141c28; padding: 6px; border: 1px solid #2a3540; border-radius: 4px; user-select: none; }
+  .cell { width: 26px; height: 26px; background: #2a3744; border: 1px solid #3a4860; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 0.9em; color: #d8d0c0; }
+  .cell.r { background: #0c1016; border-color: #1a2230; cursor: default; }
+  .cell.r.m { background: #c04050; }
+  .cell.f { background: #4a3a20; color: #f0d89c; }
+  .n1 { color: #6090ff; } .n2 { color: #60c080; } .n3 { color: #f06060; }
+  .n4 { color: #c060ff; } .n5 { color: #ff8040; } .n6 { color: #40c0c0; }
+  .n7 { color: #c8d0e0; } .n8 { color: #888888; }
+  #msg { margin-top: 14px; min-height: 1.2em; color: #f0d89c; letter-spacing: 2px; font-size: 0.95em; }
+  nav { margin-top: 22px; font-size: 0.82em; letter-spacing: 2px; }
+  nav a { color: #8098a8; text-decoration: none; margin: 0 10px; }
+  nav a:hover { color: #f0d89c; }
+  .info { color: #7090a0; font-size: 0.82em; line-height: 1.6; margin-top: 30px; text-align: left; padding: 0 6px; }
+  .info h2 { color: #f0d89c; font-size: 0.95em; letter-spacing: 4px; text-transform: uppercase; margin: 18px 0 8px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>MINESWEEPER</h1>
+  <div class="tag">FIND THE MINES</div>
+  <div class="controls">
+    <button data-d="b" class="active">BEGINNER 9×9</button>
+    <button data-d="i">INTERMEDIATE 16×16</button>
+    <button data-d="e">EXPERT 30×16</button>
+    <button id="newgame">NEW</button>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="lab">MINES</div><div class="val" id="mines">10</div></div>
+    <div class="stat"><div class="lab">TIME</div><div class="val" id="time">0</div></div>
+    <div class="stat"><div class="lab">BEST</div><div class="val" id="best">—</div></div>
+  </div>
+  <div id="boardWrap"><div id="board"></div></div>
+  <div id="msg"></div>
+  <nav><a href="index.html">All games</a> · <a href="Sudoku.html">Sudoku</a> · <a href="2048.html">2048</a></nav>
+
+  <div class="info">
+    <h2>How to play Minesweeper</h2>
+    <p><strong>Left-click</strong> a cell to reveal it. <strong>Right-click</strong> (or long-press on touch) to flag a suspected mine. Numbers show how many mines touch that cell, including diagonals. Reveal every safe cell to win — touch a mine and the field explodes.</p>
+    <h2>Tips</h2>
+    <p>The first click is always safe and opens an empty area. When the count of flags around a revealed number equals that number, you can <strong>chord-click</strong> (left+right or middle-click) to auto-reveal its remaining neighbors. Look for forced moves: a "1" with only one unrevealed neighbor means that neighbor is the mine.</p>
+  </div>
+</div>
+<script>
+(() => {
+  const cfg = { b: {w:9,h:9,m:10}, i: {w:16,h:16,m:40}, e: {w:30,h:16,m:99} };
+  let diff = 'b', W=9, H=9, M=10, grid, revealed, flagged, started, dead, won, t0, timer, time;
+  const $ = id => document.getElementById(id);
+
+  function setDiff(d) {
+    diff = d; W = cfg[d].w; H = cfg[d].h; M = cfg[d].m;
+    document.querySelectorAll('[data-d]').forEach(b => b.classList.toggle('active', b.dataset.d === d));
+    newGame();
+  }
+  function newGame() {
+    grid = Array.from({length: H}, () => Array(W).fill(0));
+    revealed = Array.from({length: H}, () => Array(W).fill(false));
+    flagged = Array.from({length: H}, () => Array(W).fill(false));
+    started = false; dead = false; won = false; time = 0;
+    if (timer) clearInterval(timer);
+    $('mines').textContent = M; $('time').textContent = 0; $('msg').textContent = '';
+    $('best').textContent = (localStorage.getItem('msw_best_'+diff)) || '—';
+    render();
+  }
+  function placeMines(safeR, safeC) {
+    let placed = 0;
+    while (placed < M) {
+      const r = Math.floor(Math.random()*H), c = Math.floor(Math.random()*W);
+      if (grid[r][c] === -1) continue;
+      if (Math.abs(r-safeR) <= 1 && Math.abs(c-safeC) <= 1) continue;
+      grid[r][c] = -1; placed++;
+    }
+    for (let r=0;r<H;r++) for (let c=0;c<W;c++) {
+      if (grid[r][c] === -1) continue;
+      let n = 0;
+      for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
+        const nr=r+dr,nc=c+dc; if (nr<0||nr>=H||nc<0||nc>=W) continue;
+        if (grid[nr][nc] === -1) n++;
+      }
+      grid[r][c] = n;
+    }
+  }
+  function reveal(r, c) {
+    if (r<0||r>=H||c<0||c>=W||revealed[r][c]||flagged[r][c]) return;
+    revealed[r][c] = true;
+    if (grid[r][c] === -1) { dead = true; return; }
+    if (grid[r][c] === 0) {
+      for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) reveal(r+dr, c+dc);
+    }
+  }
+  function chord(r, c) {
+    if (!revealed[r][c] || grid[r][c] <= 0) return;
+    let f = 0;
+    for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
+      const nr=r+dr,nc=c+dc; if (nr<0||nr>=H||nc<0||nc>=W) continue;
+      if (flagged[nr][nc]) f++;
+    }
+    if (f !== grid[r][c]) return;
+    for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) reveal(r+dr, c+dc);
+  }
+  function checkWin() {
+    let safe = 0;
+    for (let r=0;r<H;r++) for (let c=0;c<W;c++) if (grid[r][c] !== -1 && revealed[r][c]) safe++;
+    if (safe === W*H - M) { won = true; clearInterval(timer); $('msg').textContent = 'CLEARED IN ' + time + 's';
+      const k = 'msw_best_'+diff; const cur = +(localStorage.getItem(k) || Infinity);
+      if (time < cur) { localStorage.setItem(k, time); $('best').textContent = time; }
+    }
+  }
+  function render() {
+    const b = $('board');
+    b.style.gridTemplateColumns = `repeat(${W}, 26px)`;
+    b.innerHTML = '';
+    let flags = 0;
+    for (let r=0;r<H;r++) for (let c=0;c<W;c++) {
+      const d = document.createElement('div');
+      d.className = 'cell';
+      if (flagged[r][c]) { d.classList.add('f'); d.textContent = '⚑'; flags++; }
+      else if (revealed[r][c]) {
+        d.classList.add('r');
+        if (grid[r][c] === -1) { d.classList.add('m'); d.textContent = '✱'; }
+        else if (grid[r][c] > 0) { d.textContent = grid[r][c]; d.classList.add('n'+grid[r][c]); }
+      }
+      d.addEventListener('mousedown', e => handle(e, r, c));
+      d.addEventListener('contextmenu', e => { e.preventDefault(); flag(r, c); });
+      let lpt;
+      d.addEventListener('touchstart', e => { lpt = setTimeout(() => { flag(r,c); lpt=null; }, 350); }, {passive:true});
+      d.addEventListener('touchend', e => { if (lpt) { clearTimeout(lpt); reveal0(r,c); } });
+      b.appendChild(d);
+    }
+    $('mines').textContent = M - flags;
+  }
+  function handle(e, r, c) {
+    if (dead || won) return;
+    if (e.button === 2) return;
+    if (e.button === 1 || e.buttons === 3) { chord(r, c); after(); return; }
+    reveal0(r, c);
+  }
+  function reveal0(r, c) {
+    if (dead || won || flagged[r][c]) return;
+    if (!started) { started = true; placeMines(r, c); t0 = Date.now();
+      timer = setInterval(() => { time = Math.floor((Date.now()-t0)/1000); $('time').textContent = time; }, 250); }
+    reveal(r, c); after();
+  }
+  function flag(r, c) {
+    if (dead || won || revealed[r][c]) return;
+    flagged[r][c] = !flagged[r][c]; render();
+  }
+  function after() {
+    if (dead) { for (let r=0;r<H;r++) for (let c=0;c<W;c++) if (grid[r][c]===-1) revealed[r][c]=true;
+      clearInterval(timer); $('msg').textContent = 'BOOM — NEW GAME?'; }
+    else checkWin();
+    render();
+  }
+  document.querySelectorAll('[data-d]').forEach(b => b.onclick = () => setDiff(b.dataset.d));
+  $('newgame').onclick = newGame;
+  document.addEventListener('contextmenu', e => { if (e.target.closest('#board')) e.preventDefault(); });
+  newGame();
+})();
+</script>
+<script src="/analytics.js"></script>
+</body>
+</html>
