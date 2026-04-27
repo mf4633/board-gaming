@@ -515,6 +515,7 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
       <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">T</kbd><span>Jump camera to top floor</span>
       <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">M</kbd><span>Toggle mini-map</span>
       <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">H</kbd><span>Cycle heatmap (occupancy / sat / revenue)</span>
+      <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">V</kbd><span>Tower overview (zoom out to whole tower)</span>
       <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">Q</kbd><span>Toggle quests panel</span>
       <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">I</kbd><span>Open help overlay</span>
       <kbd style="background:#1A2030;border:1px solid #3A4858;padding:2px 8px;border-radius:3px;color:#FFD060;font-family:monospace;text-align:center;">+ / -</kbd><span>Zoom in / out</span>
@@ -765,6 +766,7 @@ var UNITS = {
   condo:    { name:'Condo',     w:4, h:1, cost:70000,  rent:450,  color:'#D0A090', textColor:'#5A2A20', capacity:3, salePrice:200000, minStars:1 },
   stairs:   { name:'Stairs',    w:2, h:1, cost:15000,  rent:0,    color:'#909898', textColor:'#303838', capacity:0, minStars:1 },
   elevator: { name:'Elevator',  w:1, h:1, cost:60000,  rent:0,    color:'#7A7A82', textColor:'#FFF', capacity:0, isElevator:true, minStars:1, upkeep:200 },
+  expressElevator: { name:'Express',  w:1, h:1, cost:120000, rent:0, color:'#3F2E5E', textColor:'#FFD060', capacity:0, isElevator:true, express:true, minStars:3, upkeep:400 },
   // 2★
   shop:     { name:'Shop',      w:4, h:1, cost:90000,  rent:0,    color:'#98D0A8', textColor:'#204028', capacity:12, perVisit:14, minStars:2, upkeep:400 },
   parking:  { name:'Parking',   w:4, h:1, cost:120000, rent:0,    color:'#6A7080', textColor:'#D8E0E8', capacity:30, perDay:80, minStars:2, basementOnly:true, upkeep:150, satBoost:6, satRadius:12 },
@@ -793,7 +795,7 @@ var UNITS = {
   helipad:  { name:'Helipad',   w:6, h:1, cost:700000, rent:0,    color:'#303840', textColor:'#FFD060', capacity:0, minStars:5, roofOnly:true, upkeep:400, vipTip:3000, noise:15, noiseRadius:5 },
   airport:  { name:'Airport',   w:8, h:1, cost:900000, rent:0,    color:'#4A5060', textColor:'#FFD060', capacity:0, minStars:5, basementOnly:true, upkeep:1200, trafficBoost:1.2, noise:12, noiseRadius:4 }
 };
-var PAL_ORDER = ['lobby','office','condo','stairs','elevator','shop','parking','security','atm','firestation','sprinkler','hotel','restaurant','cinema','clinic','gym','skylobby','penthouse','conference','spa','garden','museum','university','cathedral','observatory','metro','helipad','airport'];
+var PAL_ORDER = ['lobby','office','condo','stairs','elevator','expressElevator','shop','parking','security','atm','firestation','sprinkler','hotel','restaurant','cinema','clinic','gym','skylobby','penthouse','conference','spa','garden','museum','university','cathedral','observatory','metro','helipad','airport'];
 
 /* ===== STATE ===== */
 var state = {
@@ -2004,7 +2006,7 @@ function captureSaveSnapshot() {
       return {
         shaftX: e.shaftX, minY: e.minY, maxY: e.maxY,
         queueUp: {}, queueDown: {},
-        cars: e.cars.map(function(c) { return { y: c.y, floatY: c.y, dir: c.dir, passengers: [], stopTimer: 0 }; })
+        cars: e.cars.map(function(c) { return { y: c.y, floatY: c.y, dir: c.dir, passengers: [], stopTimer: 0, queueUp: {}, queueDown: {} }; })
       };
     }),
     quests: state.quests, completedQuests: state.completedQuests,
@@ -2451,6 +2453,7 @@ var ACHIEVEMENT_DEFS = {
   safe_haven:    { name: 'Safe Haven',          desc: 'Hire 3 security units',  test: function(){ return countUnits('security') >= 3; } },
   first_fire:    { name: 'Baptism by Fire',     desc: 'Survive a fire event',   test: null }, // unlocked by event trigger
   first_boom:    { name: 'Riding the Boom',     desc: 'Experience a market boom', test: null },
+  first_bomb:    { name: 'False Alarm',         desc: 'Weather a bomb threat',  test: null },
   survived_bust: { name: 'Survivor',             desc: 'Survive a market bust',  test: null },
   cathedral:     { name: 'Sanctified',          desc: 'Build a cathedral',      test: function(){ return countUnits('cathedral') >= 1; } },
   helipad:       { name: 'Sky Harbor',          desc: 'Build a helipad',        test: function(){ return countUnits('helipad') >= 1; } },
@@ -2544,8 +2547,16 @@ var SFX_PROFILES = {
   eod:    [{ f: 523, type: 'sine', dur: 0.15, vol: 0.05 }, { f: 659, type: 'sine', dur: 0.15, vol: 0.05, at: 0.1 }],
   star:   [{ f: 523, type: 'triangle', dur: 0.12, vol: 0.06 }, { f: 659, type: 'triangle', dur: 0.12, vol: 0.06, at: 0.08 }, { f: 784, type: 'triangle', dur: 0.12, vol: 0.06, at: 0.16 }, { f: 1047, type: 'triangle', dur: 0.25, vol: 0.08, at: 0.24 }],
   groan:  [{ f: 140, type: 'sawtooth', dur: 0.25, vol: 0.04 }],
-  bell:   [{ f: 988, type: 'sine', dur: 0.4, vol: 0.05 }, { f: 1319, type: 'sine', dur: 0.4, vol: 0.04, at: 0.02 }]
+  bell:   [{ f: 988, type: 'sine', dur: 0.4, vol: 0.05 }, { f: 1319, type: 'sine', dur: 0.4, vol: 0.04, at: 0.02 }],
+  elev:   [{ f: 240, type: 'sine', dur: 0.32, vol: 0.04 }, { f: 180, type: 'sine', dur: 0.30, vol: 0.035, at: 0.14 }, { f: 130, type: 'sine', dur: 0.20, vol: 0.025, at: 0.28 }]
 };
+var lastElevSfxAt = 0;
+function playElevSfx() {
+  if (!audioCtx) return;
+  if (audioCtx.currentTime - lastElevSfxAt < 0.4) return;
+  lastElevSfxAt = audioCtx.currentTime;
+  sfx('elev');
+}
 
 function sfx(type) {
   if (!settings.volSfx) return;
@@ -2785,6 +2796,7 @@ var UNIT_DESCRIPTIONS = {
   condo:       'Residents move in after 6 PM. Sells when 80% full for 3+ days; scales with market.',
   stairs:      'Cheap vertical transport — but stair-only floors suffer a strong satisfaction penalty.',
   elevator:    'Fast vertical transport. Shaft must reach a hub (ground lobby or skylobby).',
+  expressElevator: 'Express elevator: stops only at hubs (lobby + skylobbies). Cuts wait times in tall towers. Build hubs first, then connect them.',
   shop:        'Trickle of shoppers 10 AM–9 PM. Per-visit revenue, market-sensitive traffic.',
   parking:     'Basement-only. Boosts nearby unit satisfaction and generates passive daily income.',
   security:    'Covers units within an 8-cell radius. Prevents nightly crime losses.',
@@ -3033,7 +3045,7 @@ function updateBuildHint() {
     var u = UNITS[build.mode];
     msg = 'Place ' + u.name + ' (click to build, ESC to cancel)';
     if (u.groundOnly) msg += '\u00A0\u2014\u00A0must be on floor 1 (ground)';
-    if (build.mode === 'elevator' || build.mode === 'stairs') {
+    if (build.mode === 'elevator' || build.mode === 'expressElevator' || build.mode === 'stairs') {
       msg = 'Drag up/down to build a ' + u.name.toLowerCase() + ' shaft (click for single cell)';
     }
   }
@@ -3171,7 +3183,8 @@ function bulldozeAt(gx, gy) {
 }
 
 function rebuildElevators() {
-  // Keep existing shafts' car configs if the shaft at same (shaftX, minY-ish) still exists
+  // Keep existing shafts' car configs if the shaft at same (shaftX, minY-ish) still exists.
+  // Per-car queues are carried over with cars; stale queue floors outside the new range are dropped.
   var prev = state.elevators || [];
   state.elevators = [];
   var used = {};
@@ -3183,20 +3196,23 @@ function rebuildElevators() {
     var parts = key.split(',');
     var x = parseInt(parts[0]);
     var y = parseInt(parts[1]);
+    var isExpress = !!UNITS[unit.type].express;
+    var sameType = function(gy) {
+      var u2 = state.units[state.grid[x+','+gy]];
+      if (!u2 || !UNITS[u2.type].isElevator) return false;
+      return !!UNITS[u2.type].express === isExpress;
+    };
     var bot = y;
-    while (state.grid[x+','+(bot-1)] && UNITS[state.units[state.grid[x+','+(bot-1)]].type].isElevator) bot--;
+    while (sameType(bot - 1)) bot--;
     var top = y;
-    while (state.grid[x+','+(top+1)] && UNITS[state.units[state.grid[x+','+(top+1)]].type].isElevator) top++;
+    while (sameType(top + 1)) top++;
     for (var fy = bot; fy <= top; fy++) used[x+','+fy] = true;
-    // Find ALL existing shafts at this shaftX that overlap the new range and absorb their cars + queues
-    var carryCars = [], carryUp = {}, carryDown = {};
+    var carryCars = [];
     for (var pi = 0; pi < prev.length; pi++) {
       var p = prev[pi];
       if (p.shaftX !== x) continue;
       if (p.maxY < bot || p.minY > top) continue;
       for (var pcj = 0; pcj < p.cars.length; pcj++) carryCars.push(p.cars[pcj]);
-      for (var qky in p.queueUp) { if (!carryUp[qky]) carryUp[qky] = []; carryUp[qky] = carryUp[qky].concat(p.queueUp[qky]); }
-      for (var qky2 in p.queueDown) { if (!carryDown[qky2]) carryDown[qky2] = []; carryDown[qky2] = carryDown[qky2].concat(p.queueDown[qky2]); }
     }
     var cars;
     if (carryCars.length > 0) {
@@ -3206,18 +3222,59 @@ function rebuildElevators() {
         cars.push({
           y: Math.max(bot, Math.min(top, oc.y)),
           floatY: Math.max(bot, Math.min(top, oc.floatY)),
-          dir: oc.dir, passengers: oc.passengers.slice(), stopTimer: oc.stopTimer
+          dir: oc.dir, passengers: oc.passengers.slice(), stopTimer: oc.stopTimer,
+          queueUp: filterQueueRange(oc.queueUp || {}, bot, top),
+          queueDown: filterQueueRange(oc.queueDown || {}, bot, top)
         });
       }
     } else {
-      cars = [{ y: bot, floatY: bot, dir: 1, passengers: [], stopTimer: 0 }];
+      cars = [{ y: bot, floatY: bot, dir: 1, passengers: [], stopTimer: 0, queueUp: {}, queueDown: {} }];
     }
-    state.elevators.push({
+    var newShaft = {
       shaftX: x, minY: bot, maxY: top,
-      queueUp: carryUp, queueDown: carryDown,
+      express: isExpress,
+      queueUp: {}, queueDown: {}, // legacy, no longer used by dispatch
       cars: cars
-    });
+    };
+    state.elevators.push(newShaft);
+    // Reseat passengers' inElevator pointer onto the rebuilt shaft
+    for (var ck = 0; ck < cars.length; ck++) {
+      var pIds = cars[ck].passengers;
+      for (var pj = 0; pj < pIds.length; pj++) {
+        var ag = findAgent(pIds[pj]);
+        if (ag) ag.inElevator = newShaft;
+      }
+    }
   }
+  // Free any agent stranded in a destroyed shaft (passenger-id not present in any current car)
+  var liveIds = {};
+  for (var sj = 0; sj < state.elevators.length; sj++) {
+    for (var sk = 0; sk < state.elevators[sj].cars.length; sk++) {
+      var pp = state.elevators[sj].cars[sk].passengers;
+      for (var sl = 0; sl < pp.length; sl++) liveIds[pp[sl]] = true;
+    }
+  }
+  for (var ai = 0; ai < state.agents.length; ai++) {
+    var a = state.agents[ai];
+    if (a.inElevator && !liveIds[a.id]) {
+      a.inElevator = null;
+      a.waiting = false;
+      a.waitTicks = 0;
+    }
+    if (a.assignedCar) {
+      var ae = state.elevators[a.assignedCar.elevIdx];
+      if (!ae || !ae.cars[a.assignedCar.carIdx]) a.assignedCar = null;
+    }
+  }
+}
+
+function filterQueueRange(q, bot, top) {
+  var out = {};
+  for (var k in q) {
+    var f = parseInt(k);
+    if (f >= bot && f <= top && q[k] && q[k].length) out[k] = q[k].slice();
+  }
+  return out;
 }
 
 function addElevatorCar(gx, gy) {
@@ -3231,7 +3288,7 @@ function addElevatorCar(gx, gy) {
     var e = state.elevators[ei];
     if (gx === e.shaftX && gy >= e.minY && gy <= e.maxY) {
       if (e.cars.length >= 4) { showToast('Max 4 cars per shaft'); return; }
-      e.cars.push({ y: e.minY, floatY: e.minY, dir: 1, passengers: [], stopTimer: 0 });
+      e.cars.push({ y: e.minY, floatY: e.minY, dir: 1, passengers: [], stopTimer: 0, queueUp: {}, queueDown: {} });
       state.cash -= cost;
       showToast('Added elevator car (+1, now ' + e.cars.length + ')');
       return;
@@ -3330,6 +3387,7 @@ function simMinute() {
 }
 
 function spawnWorkers() {
+  if (bombThreatActive()) return;
   // Office tenants show up based on market pressure — glutted market = empty desks.
   var fill = Math.min(1.0, Math.max(0.15, (marketMult('office') - 0.15) * 0.85));
   for (var id in state.units) {
@@ -3406,6 +3464,7 @@ function returnWorkersFromLunch() {
   }
 }
 function spawnResidents() {
+  if (bombThreatActive()) return;
   // Condo demand scales with market ratio too — glutted = vacant units.
   var fill = Math.min(1.0, Math.max(0.1, (marketMult('condo') - 0.15) * 0.9));
   for (var id in state.units) {
@@ -3432,6 +3491,7 @@ function releaseResidents() {
 }
 
 function spawnHotelGuests() {
+  if (bombThreatActive()) return;
   for (var id in state.units) {
     var u = state.units[id];
     if (u.type !== 'hotel') continue;
@@ -3480,6 +3540,7 @@ function releaseRestaurantPatrons(meal) {
 
 // Tick-called spawning: restaurant patrons spawn every few minutes during a rush
 function spawnRestaurantPatrons() {
+  if (bombThreatActive()) return;
   if (!rushActive.lunch && !rushActive.dinner) return;
   var meal = rushActive.lunch ? 'lunch' : 'dinner';
   var mkt = marketMult('restaurant');
@@ -3503,6 +3564,7 @@ function spawnRestaurantPatrons() {
 }
 
 function spawnShopPatrons() {
+  if (bombThreatActive()) return;
   if (agentsOverCap()) return;
   var m = trafficMultiplier();
   for (var id in state.units) {
@@ -3542,6 +3604,7 @@ function trafficMultiplier() {
 }
 
 function spawnCinemaGoers() {
+  if (bombThreatActive()) return;
   if (agentsOverCap()) return;
   var m = trafficMultiplier();
   var show = rushActive.matinee ? 'matinee' : (rushActive.primetime ? 'primetime' : 'latenight');
@@ -3564,6 +3627,7 @@ function spawnCinemaGoers() {
 }
 
 function spawnClinicPatients() {
+  if (bombThreatActive()) return;
   if (agentsOverCap()) return;
   var m = trafficMultiplier();
   for (var id in state.units) {
@@ -3585,6 +3649,7 @@ function spawnClinicPatients() {
 }
 
 function spawnGymVisitors() {
+  if (bombThreatActive()) return;
   if (agentsOverCap()) return;
   var m = trafficMultiplier();
   for (var id in state.units) {
@@ -3619,6 +3684,7 @@ function stopConferenceEvents() {
   }
 }
 function spawnConferenceGuests() {
+  if (bombThreatActive()) return;
   for (var id in state.units) {
     var u = state.units[id];
     if (u.type !== 'conference' || u.damaged) continue;
@@ -3638,6 +3704,7 @@ function spawnConferenceGuests() {
 }
 
 function spawnMuseumVisitors() {
+  if (bombThreatActive()) return;
   if (agentsOverCap()) return;
   var m = trafficMultiplier();
   for (var id in state.units) {
@@ -3659,6 +3726,7 @@ function spawnMuseumVisitors() {
 }
 
 function spawnStudents() {
+  if (bombThreatActive()) return;
   if (agentsOverCap()) return;
   var m = trafficMultiplier();
   for (var id in state.units) {
@@ -3681,6 +3749,7 @@ function spawnStudents() {
 }
 
 function spawnSpaVisitors() {
+  if (bombThreatActive()) return;
   var m = trafficMultiplier();
   for (var id in state.units) {
     var u = state.units[id];
@@ -3701,6 +3770,7 @@ function spawnSpaVisitors() {
 }
 
 function spawnObservatoryVisitors() {
+  if (bombThreatActive()) return;
   var m = trafficMultiplier();
   for (var id in state.units) {
     var u = state.units[id];
@@ -3848,9 +3918,23 @@ function stepToward(a, tx, ty) {
     }
     if (transport.kind === 'elevator') {
       var elev = state.elevators[transport.elevIdx];
-      if (!elev) return false;
+      if (!elev || elev.cars.length === 0) return false;
       var goingUp = ty > a.y;
-      var queue = goingUp ? elev.queueUp : elev.queueDown;
+      // Validate or pick a car via ETA. Once assigned, stay assigned so we don't oscillate between cars.
+      var assigned = a.assignedCar;
+      if (assigned && (assigned.elevIdx !== transport.elevIdx || !elev.cars[assigned.carIdx])) {
+        assigned = null;
+      }
+      if (!assigned) {
+        var carIdx = pickBestCarForCall(elev, a.y, goingUp);
+        assigned = { elevIdx: transport.elevIdx, carIdx: carIdx };
+        a.assignedCar = assigned;
+      }
+      var car = elev.cars[assigned.carIdx];
+      if (!car) { a.assignedCar = null; return false; }
+      // Express: set the transfer floor so drop-off happens at the chosen hub, not the final floor
+      a.transferAt = (transport.hubExit !== undefined) ? transport.hubExit : null;
+      var queue = goingUp ? car.queueUp : car.queueDown;
       if (!queue[a.y]) queue[a.y] = [];
       if (queue[a.y].indexOf(a.id) < 0) queue[a.y].push(a.id);
       a.waiting = true;
@@ -3883,52 +3967,99 @@ function findBestTransport(ax, ay, targetY) {
     var d = Math.abs(ax - sx);
     if (d < bestDist) { bestDist = d; best = { kind: 'stairs', x: sx, unitId: id }; }
   }
-  // Elevator
+  // Elevator. For express shafts, only consider if both endpoints (or transfer hubs) are hubs.
   for (var ei = 0; ei < state.elevators.length; ei++) {
     var e = state.elevators[ei];
-    if (ay < e.minY || ay > e.maxY) continue;
-    if (targetY < e.minY || targetY > e.maxY) continue;
     var ex = e.shaftX + 0.5;
     var d2 = Math.abs(ax - ex);
-    if (d2 < bestDist) { bestDist = d2; best = { kind: 'elevator', x: ex, elevIdx: ei }; }
+    if (e.express) {
+      // Must board from a hub; ride to the hub closest to the target within the shaft's range
+      if (!isHubFloor(ay) || ay < e.minY || ay > e.maxY) continue;
+      var hubY = nearestHubInRange(targetY, e.minY, e.maxY);
+      if (hubY === null) continue;
+      // Express must actually reduce the distance to the target (otherwise just walk/local)
+      if (Math.abs(hubY - targetY) >= Math.abs(ay - targetY)) continue;
+      // Slight bias toward express when it gets you closer than local would (subtract a discount)
+      if (d2 - 1.0 < bestDist) { bestDist = d2 - 1.0; best = { kind: 'elevator', x: ex, elevIdx: ei, hubExit: hubY }; }
+    } else {
+      if (ay < e.minY || ay > e.maxY) continue;
+      if (targetY < e.minY || targetY > e.maxY) continue;
+      if (d2 < bestDist) { bestDist = d2; best = { kind: 'elevator', x: ex, elevIdx: ei }; }
+    }
   }
   return best;
 }
 
 /* ===== ELEVATOR ===== */
+// A "hub" floor is the ground (y=0) or any floor with a lobby/skylobby unit on it.
+// Express elevators only stop at hub floors.
+function isHubFloor(y) {
+  if (y === 0) return true;
+  for (var id in state.units) {
+    var u = state.units[id];
+    if (u.y !== y) continue;
+    if (u.type === 'lobby' || u.type === 'skylobby') return true;
+  }
+  return false;
+}
+function nearestHubInRange(targetY, minY, maxY) {
+  var best = null, bestD = Infinity;
+  if (0 >= minY && 0 <= maxY) { best = 0; bestD = Math.abs(targetY); }
+  for (var id in state.units) {
+    var u = state.units[id];
+    if (u.y < minY || u.y > maxY) continue;
+    if (u.type !== 'lobby' && u.type !== 'skylobby') continue;
+    var d = Math.abs(u.y - targetY);
+    if (d < bestD) { bestD = d; best = u.y; }
+  }
+  return best;
+}
+
 function tickElevator(e) {
   if (powerOut()) return; // cars frozen
   for (var ci = 0; ci < e.cars.length; ci++) tickCar(e, e.cars[ci], ci);
 }
 
 function tickCar(e, c, carIdx) {
+  if (!c.queueUp) c.queueUp = {};
+  if (!c.queueDown) c.queueDown = {};
   c.floatY += (c.y - c.floatY) * 0.15;
   if (c.stopTimer > 0) { c.stopTimer--; return; }
-  // Drop off passengers at this floor
-  for (var i = c.passengers.length - 1; i >= 0; i--) {
-    var a = findAgent(c.passengers[i]);
-    if (!a) { c.passengers.splice(i, 1); continue; }
-    if (desiredFloorForAgent(a) === c.y) {
-      a.inElevator = null;
-      a.y = c.y;
-      c.passengers.splice(i, 1);
-      c.stopTimer = 8;
+  // Express cars only service hub floors (lobby + skylobbies). They pass through everything else.
+  var canService = !e.express || isHubFloor(c.y);
+  var didStop = false;
+  if (canService) {
+    // Drop off passengers at this floor
+    for (var i = c.passengers.length - 1; i >= 0; i--) {
+      var a = findAgent(c.passengers[i]);
+      if (!a) { c.passengers.splice(i, 1); continue; }
+      if (desiredFloorForAgent(a) === c.y) {
+        a.inElevator = null;
+        a.assignedCar = null;
+        a.transferAt = null;
+        a.y = c.y;
+        c.passengers.splice(i, 1);
+        c.stopTimer = 8;
+        didStop = true;
+      }
     }
-  }
-  // Pick up passengers waiting in our direction
-  var queue = c.dir > 0 ? e.queueUp : e.queueDown;
-  if (queue[c.y] && queue[c.y].length > 0) {
-    var picks = queue[c.y].slice();
-    var maxCap = 8;
-    for (var j = 0; j < picks.length && c.passengers.length < maxCap; j++) {
-      var a2 = findAgent(picks[j]);
-      if (!a2) continue;
-      a2.inElevator = e;
-      a2.waitTicks = 0;
-      c.passengers.push(a2.id);
-      queue[c.y].splice(queue[c.y].indexOf(picks[j]), 1);
-      c.stopTimer = 8;
+    // Pick up passengers waiting in our direction (only those assigned to THIS car)
+    var queue = c.dir > 0 ? c.queueUp : c.queueDown;
+    var maxCap = 8 + Math.max(0, (state.stars || 1) - 1) * 2; // 8/10/12/14/16 by star tier
+    if (queue[c.y] && queue[c.y].length > 0) {
+      var picks = queue[c.y].slice();
+      for (var j = 0; j < picks.length && c.passengers.length < maxCap; j++) {
+        var a2 = findAgent(picks[j]);
+        if (!a2) { var idx = queue[c.y].indexOf(picks[j]); if (idx >= 0) queue[c.y].splice(idx, 1); continue; }
+        a2.inElevator = e;
+        a2.waitTicks = 0;
+        c.passengers.push(a2.id);
+        queue[c.y].splice(queue[c.y].indexOf(picks[j]), 1);
+        c.stopTimer = 8;
+        didStop = true;
+      }
     }
+    if (didStop) playElevSfx();
   }
   if (c.stopTimer > 0) return;
 
@@ -3937,25 +4068,25 @@ function tickCar(e, c, carIdx) {
   for (var oi = 0; oi < e.cars.length; oi++) if (oi !== carIdx) otherYs.push(e.cars[oi].y);
   var collides = function(ny) { return otherYs.indexOf(ny) >= 0; };
 
-  // No passengers, no shaft calls: park at a unique floor and stop
-  if (c.passengers.length === 0 && !anyAnyCallsShaft(e)) {
+  // No passengers, no calls assigned to this car: park at a unique floor and stop
+  if (c.passengers.length === 0 && !anyCallsCar(c)) {
     var parkY = Math.min(e.maxY, Math.max(e.minY, 0) + carIdx);
     while (otherYs.indexOf(parkY) >= 0 && parkY < e.maxY) parkY++;
     if (c.y > parkY && !collides(c.y - 1)) c.y--;
     else if (c.y < parkY && !collides(c.y + 1)) c.y++;
-    return; // otherwise stay put (this is the fix — no more oscillation)
+    return;
   }
 
   // SCAN scheduling: move toward demand; reverse when there's none in current direction
   var callsAbove = hasCallsAround(e, c, c.y, +1);
   var callsBelow = hasCallsAround(e, c, c.y, -1);
   var sameFloorOpposite = c.dir > 0
-    ? (e.queueDown[c.y] && e.queueDown[c.y].length > 0)
-    : (e.queueUp[c.y] && e.queueUp[c.y].length > 0);
+    ? (c.queueDown[c.y] && c.queueDown[c.y].length > 0)
+    : (c.queueUp[c.y] && c.queueUp[c.y].length > 0);
   if (c.dir > 0) {
     if (c.y < e.maxY && callsAbove && !collides(c.y + 1)) c.y++;
     else if (c.y > e.minY && callsBelow && !collides(c.y - 1)) { c.dir = -1; c.y--; }
-    else if (sameFloorOpposite) c.dir = -1;   // passenger at our floor waiting to go down — flip, pickup next tick
+    else if (sameFloorOpposite) c.dir = -1;
   } else {
     if (c.y > e.minY && callsBelow && !collides(c.y - 1)) c.y--;
     else if (c.y < e.maxY && callsAbove && !collides(c.y + 1)) { c.dir = 1; c.y++; }
@@ -3963,12 +4094,12 @@ function tickCar(e, c, carIdx) {
   }
 }
 
-// Are there any calls/passengers with destinations above/below the car's current floor?
+// Are there any calls/passengers (assigned to THIS car) with destinations above/below the car's current floor?
 function hasCallsAround(e, c, y, side) {
   if (side > 0) {
     for (var fy = y + 1; fy <= e.maxY; fy++) {
-      if (e.queueUp[fy] && e.queueUp[fy].length) return true;
-      if (e.queueDown[fy] && e.queueDown[fy].length) return true;
+      if (c.queueUp[fy] && c.queueUp[fy].length) return true;
+      if (c.queueDown[fy] && c.queueDown[fy].length) return true;
     }
     for (var pi = 0; pi < c.passengers.length; pi++) {
       var a = findAgent(c.passengers[pi]);
@@ -3976,8 +4107,8 @@ function hasCallsAround(e, c, y, side) {
     }
   } else {
     for (var fy2 = y - 1; fy2 >= e.minY; fy2--) {
-      if (e.queueUp[fy2] && e.queueUp[fy2].length) return true;
-      if (e.queueDown[fy2] && e.queueDown[fy2].length) return true;
+      if (c.queueUp[fy2] && c.queueUp[fy2].length) return true;
+      if (c.queueDown[fy2] && c.queueDown[fy2].length) return true;
     }
     for (var pi2 = 0; pi2 < c.passengers.length; pi2++) {
       var a2 = findAgent(c.passengers[pi2]);
@@ -3988,6 +4119,8 @@ function hasCallsAround(e, c, y, side) {
 }
 
 function desiredFloorForAgent(a) {
+  // If on an express transfer leg, drop-off floor is the hub, not the final destination
+  if (a.transferAt !== undefined && a.transferAt !== null) return a.transferAt;
   var u = state.units[a.unitId];
   if (!u) return 0;
   if (a.phase === 'leaving' || a.phase === 'toHome' && a.type === 'worker') return 0;
@@ -4010,9 +4143,98 @@ function anyCallsInRange(e, c, from, to, dir) {
   return false;
 }
 function anyAnyCallsShaft(e) {
-  for (var y in e.queueUp) if (e.queueUp[y].length > 0) return true;
-  for (var y in e.queueDown) if (e.queueDown[y].length > 0) return true;
+  for (var ci = 0; ci < e.cars.length; ci++) if (anyCallsCar(e.cars[ci])) return true;
   return false;
+}
+function anyCallsCar(c) {
+  if (!c.queueUp || !c.queueDown) return false;
+  for (var y in c.queueUp) if (c.queueUp[y].length > 0) return true;
+  for (var y in c.queueDown) if (c.queueDown[y].length > 0) return true;
+  return false;
+}
+
+/* ===== ETA-BASED GROUP DISPATCH =====
+ * When a hall call is queued, we pick the single car that minimizes estimated time-to-arrival
+ * and pin the call to that car's private queue. Other cars on the shaft will not service this
+ * call. This is the standard "ETA dispatch" pattern used in commercial group control before
+ * destination dispatch (Otis Compass et al). */
+function pickBestCarForCall(e, callY, goingUp) {
+  if (e.cars.length === 1) return 0;
+  var bestIdx = 0, bestEta = Infinity;
+  for (var i = 0; i < e.cars.length; i++) {
+    var c = e.cars[i];
+    if (!c.queueUp) c.queueUp = {};
+    if (!c.queueDown) c.queueDown = {};
+    var eta = estimateEta(e, c, callY, goingUp);
+    var bc = e.cars[bestIdx];
+    if (eta < bestEta - 0.001 ||
+        (Math.abs(eta - bestEta) < 0.001 && c.passengers.length < bc.passengers.length)) {
+      bestEta = eta;
+      bestIdx = i;
+    }
+  }
+  return bestIdx;
+}
+
+function estimateEta(e, c, callY, goingUp) {
+  var stopPenalty = 6;       // ticks lost per intermediate stop
+  var travelPerFloor = 1;    // ticks per floor of travel
+  var loadPenalty = c.passengers.length * 0.5;
+  var idle = c.passengers.length === 0 && !anyCallsCar(c);
+  var eta;
+  if (idle) {
+    eta = Math.abs(callY - c.y) * travelPerFloor;
+  } else if (goingUp && c.dir > 0 && c.y <= callY) {
+    eta = (callY - c.y) * travelPerFloor + stopsBetweenCar(c, c.y, callY, +1) * stopPenalty;
+  } else if (!goingUp && c.dir < 0 && c.y >= callY) {
+    eta = (c.y - callY) * travelPerFloor + stopsBetweenCar(c, callY, c.y, -1) * stopPenalty;
+  } else if (c.dir > 0) {
+    // Going up but call requires us to come back down: must finish current up-run, then descend to callY
+    var topY = highestStopForCar(c, e.maxY);
+    eta = (topY - c.y + topY - callY) * travelPerFloor + 4 * stopPenalty;
+  } else {
+    var botY = lowestStopForCar(c, e.minY);
+    eta = (c.y - botY + callY - botY) * travelPerFloor + 4 * stopPenalty;
+  }
+  return eta + loadPenalty;
+}
+
+function stopsBetweenCar(c, from, to, dir) {
+  var n = 0;
+  var lo = Math.min(from, to), hi = Math.max(from, to);
+  for (var y = lo + 1; y < hi; y++) {
+    if (c.queueUp[y] && c.queueUp[y].length) { n++; continue; }
+    if (c.queueDown[y] && c.queueDown[y].length) n++;
+  }
+  for (var pi = 0; pi < c.passengers.length; pi++) {
+    var a = findAgent(c.passengers[pi]);
+    if (!a) continue;
+    var d = desiredFloorForAgent(a);
+    if (d > lo && d < hi) n++;
+  }
+  return n;
+}
+
+function highestStopForCar(c, capY) {
+  var hi = c.y;
+  for (var y in c.queueUp) { if (c.queueUp[y].length) { var ny = +y; if (ny > hi) hi = ny; } }
+  for (var y2 in c.queueDown) { if (c.queueDown[y2].length) { var ny2 = +y2; if (ny2 > hi) hi = ny2; } }
+  for (var pi = 0; pi < c.passengers.length; pi++) {
+    var a = findAgent(c.passengers[pi]);
+    if (a) { var d = desiredFloorForAgent(a); if (d > hi) hi = d; }
+  }
+  return Math.min(hi, capY);
+}
+
+function lowestStopForCar(c, floorY) {
+  var lo = c.y;
+  for (var y in c.queueUp) { if (c.queueUp[y].length) { var ny = +y; if (ny < lo) lo = ny; } }
+  for (var y2 in c.queueDown) { if (c.queueDown[y2].length) { var ny2 = +y2; if (ny2 < lo) lo = ny2; } }
+  for (var pi = 0; pi < c.passengers.length; pi++) {
+    var a = findAgent(c.passengers[pi]);
+    if (a) { var d = desiredFloorForAgent(a); if (d < lo) lo = d; }
+  }
+  return Math.max(lo, floorY);
 }
 function findAgent(id) {
   for (var i = 0; i < state.agents.length; i++) if (state.agents[i].id === id) return state.agents[i];
@@ -4444,7 +4666,8 @@ var EVENT_KINDS = {
   outage: { label: 'Power outage', sev: 'warn' },
   boom: { label: 'Market boom', sev: 'good' },
   bust: { label: 'Market downturn', sev: 'bad' },
-  inspection: { label: 'Fire inspector', sev: 'warn' }
+  inspection: { label: 'Fire inspector', sev: 'warn' },
+  bombthreat: { label: 'BOMB THREAT', sev: 'bad' }
 };
 
 function maybeScheduleEvent() {
@@ -4459,7 +4682,7 @@ function maybeScheduleEvent() {
   var kinds = ['fire', 'outage', 'boom', 'bust'];
   if (state.scenarioNoFires) kinds = kinds.filter(function(k) { return k !== 'fire'; });
   if (state.stars >= 3) kinds.push('inspection');
-  if (state.stars >= 3) kinds.push('pipeburst', 'strike');
+  if (state.stars >= 3) kinds.push('pipeburst', 'strike', 'bombthreat');
   if (state.stars >= 4) kinds.push('earthquake');
   var kind = kinds[Math.floor(Math.random() * kinds.length)];
   // Fire stations reduce fire chance and can skip it entirely
@@ -4551,6 +4774,41 @@ function triggerEvent(kind) {
       body: 'Our members have voted to withhold services over stalled negotiations. Expect reduced foot traffic and visit revenue through day ' + state.strikeUntil + '.\n\nAny settlement can be negotiated in person, though the typical resolution is simply time.\n\n— UEW Local 413'
     });
     sfx('warn');
+  } else if (kind === 'bombthreat') {
+    // Security teams can defuse without disruption
+    var sec = countUnits('security');
+    if (sec > 0 && Math.random() < Math.min(0.7, sec * 0.35)) {
+      logEvent('Bomb threat called in — security swept the tower, all clear', 'good');
+      sfx('bell');
+      return;
+    }
+    var dur = 90 + Math.floor(Math.random() * 90);
+    state.events.push({ kind: 'bombthreat', remaining: dur });
+    var evacuated = 0;
+    for (var bid in state.units) {
+      var bu = state.units[bid];
+      if (bu.type === 'lobby' || bu.type === 'stairs' || bu.type === 'elevator' || bu.type === 'expressElevator') continue;
+      if (bu.tenants > 0) {
+        for (var ev = 0; ev < bu.tenants; ev++) {
+          state.agents.push({
+            id: state.nextAgentId++, type: 'resident',
+            x: bu.x + bu.w / 2, y: bu.y,
+            phase: 'leaving', unitId: null,
+            walkDelay: ev * 4 + Math.random() * 10,
+            fleeing: true,
+            inElevator: null
+          });
+          evacuated++;
+        }
+        bu.satFall = (bu.satFall || 0) + 35;
+      }
+    }
+    var loss = state.insurance ? 50000 : 120000;
+    state.cash -= loss;
+    logEvent('BOMB THREAT — tower evacuated (' + evacuated + ' people fled). -$' + formatMoney(loss) + (state.insurance ? ' (insurance)' : ''), 'bad');
+    state.shake = 1.2;
+    sfx('warn');
+    maybeUnlockAchievement('first_bomb');
   } else if (kind === 'earthquake') {
     // Earthquake: damages 10-20% of random units + big shake
     var list = [];
@@ -4583,6 +4841,14 @@ function tickEvents() {
         logEvent('Power restored', 'good');
       }
     }
+    if (e.kind === 'bombthreat') {
+      e.remaining--;
+      if (e.remaining <= 0) {
+        state.events.splice(i, 1);
+        logEvent('Bomb threat: all-clear, tower reopens', 'good');
+        sfx('bell');
+      }
+    }
     // Fire events are cleared when the unit is renovated or bulldozed
     if (e.kind === 'fire') {
       var fu = state.units[e.unitId];
@@ -4598,6 +4864,10 @@ function tickEvents() {
 
 function powerOut() {
   for (var i = 0; i < state.events.length; i++) if (state.events[i].kind === 'outage') return true;
+  return false;
+}
+function bombThreatActive() {
+  for (var i = 0; i < state.events.length; i++) if (state.events[i].kind === 'bombthreat') return true;
   return false;
 }
 
@@ -5018,6 +5288,14 @@ function updateEventBanner() {
   var msgs = [];
   var cls = '';
   if (powerOut()) { msgs.push('\u26A1 POWER OUTAGE — elevators down'); }
+  for (var bei = 0; bei < state.events.length; bei++) {
+    if (state.events[bei].kind === 'bombthreat') {
+      var rem = state.events[bei].remaining;
+      msgs.push('🚨 BOMB THREAT — tower evacuated (~' + Math.ceil(rem / 60 * 10) / 10 + 'h)');
+      cls = 'bust';
+      break;
+    }
+  }
   if (state.market > 1.1) { msgs.push('\ud83d\udcc8 MARKET BOOM (+30% revenue, ' + Math.max(0, state.marketUntil - state.day) + 'd)'); cls = 'boom'; }
   else if (state.market < 0.9) { msgs.push('\ud83d\udcc9 MARKET DOWNTURN (-30% revenue, ' + Math.max(0, state.marketUntil - state.day) + 'd)'); cls = 'bust'; }
   var damaged = 0;
@@ -5052,7 +5330,7 @@ function applyStarPerks(level) {
     for (var ei = 0; ei < state.elevators.length; ei++) {
       var e = state.elevators[ei];
       if (e.cars.length < 4) {
-        e.cars.push({ y: e.minY, floatY: e.minY, dir: 1, passengers: [], stopTimer: 0 });
+        e.cars.push({ y: e.minY, floatY: e.minY, dir: 1, passengers: [], stopTimer: 0, queueUp: {}, queueDown: {} });
       }
     }
   }
@@ -5411,7 +5689,7 @@ function drawRoofDecorations() {
   var topY = -Infinity, topUnits = [];
   for (var id in state.units) {
     var u = state.units[id];
-    if (u.type === 'stairs' || u.type === 'elevator') continue;
+    if (u.type === 'stairs' || u.type === 'elevator' || u.type === 'expressElevator') continue;
     if (u.y > topY) { topY = u.y; topUnits = [u]; }
     else if (u.y === topY) topUnits.push(u);
   }
@@ -6248,6 +6526,17 @@ function drawUnit(u) {
     ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
     ctx.strokeStyle = '#1A1C24';
     ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+  } else if (u.type === 'expressElevator') {
+    // Darker shaft with gold accent rails to mark express
+    ctx.fillStyle = '#1F1830';
+    ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+    ctx.strokeStyle = '#FFD060';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(x + 2, y + 1); ctx.lineTo(x + 2, y + h - 1);
+    ctx.moveTo(x + w - 2, y + 1); ctx.lineTo(x + w - 2, y + h - 1);
+    ctx.stroke();
+    ctx.lineWidth = 1;
   }
   // Satisfaction indicator (top-right corner dot) — only for units that can have tenants
   if (def.capacity > 0 && u.tenants > 0) {
@@ -6483,7 +6772,7 @@ function onMouseDown(e) {
     panState.dragging = false;
     // Start a drag-build session for stairs / elevator so the player can
     // paint a full shaft in one stroke without clicking each cell.
-    if (build.mode === 'elevator' || build.mode === 'stairs') {
+    if (build.mode === 'elevator' || build.mode === 'expressElevator' || build.mode === 'stairs') {
       var rect = canvas.getBoundingClientRect();
       var cell = screenToCell(e.clientX - rect.left, e.clientY - rect.top);
       dragBuild.active = true;
@@ -6578,7 +6867,7 @@ function onClick(e) {
     if (uid) showUnitInfo(uid); else hideUnitInfo();
   } else if (build.mode === 'renovate') {
     renovateAt(cell.x, cell.y);
-  } else if (build.mode === 'elevator' || build.mode === 'stairs') {
+  } else if (build.mode === 'elevator' || build.mode === 'expressElevator' || build.mode === 'stairs') {
     // Drag-build tool — placement already happened on mousedown, nothing to do
   } else if (build.mode) {
     placeUnit(build.mode, cell.x, cell.y);
@@ -6684,6 +6973,7 @@ function onWheel(e) {
   clampCamera();
 }
 function clampCamera() {
+  if (state.overviewMode) return; // overview computes its own camera
   var minY = -40; // how far below surface we show
   var maxY = (FLOOR_MAX - 10) * CELL_H;
   if (state.camY < minY) state.camY = minY;
@@ -6691,6 +6981,30 @@ function clampCamera() {
   var maxX = GRID_W * CELL_W / 2;
   if (state.camX < -maxX) state.camX = -maxX;
   if (state.camX > maxX) state.camX = maxX;
+}
+
+function toggleOverview() {
+  if (state.overviewMode) {
+    zoom = state._prevZoom || 1.0;
+    state.camY = (state._prevCamY !== undefined) ? state._prevCamY : 180;
+    state.camX = state._prevCamX || 0;
+    state.overviewMode = false;
+    clampCamera();
+    showToast('Normal view');
+  } else {
+    state._prevZoom = zoom;
+    state._prevCamY = state.camY;
+    state._prevCamX = state.camX;
+    var hi = Math.max(8, highestOccupiedFloor() + 4);
+    var floorsToShow = hi - FLOOR_MIN + 2;
+    var fitZ = canvas.clientHeight / (floorsToShow * CELL_H_BASE);
+    zoom = Math.max(0.18, Math.min(0.9, fitZ));
+    // Center the tower vertically: camY puts the bottom of FLOOR_MIN at the bottom of the screen
+    state.camY = -FLOOR_MIN * CELL_H + (canvas.clientHeight - floorsToShow * CELL_H) * 0.5;
+    state.camX = 0;
+    state.overviewMode = true;
+    showToast('Tower overview — press V to exit');
+  }
 }
 function onKey(e) {
   // Let modals close via escape
@@ -6724,6 +7038,7 @@ function onKey(e) {
   else if (e.key === '-' || e.key === '_') { zoom = Math.max(0.5, zoom * 0.91); clampCamera(); }
   else if (e.key === '0' && !e.ctrlKey) { zoom = 1.0; clampCamera(); }
   else if (e.key.toLowerCase() === 'h') { state.heatmapMode = (state.heatmapMode || 0) + 1; if (state.heatmapMode > 3) state.heatmapMode = 0; showToast(['Heatmap: off', 'Heatmap: occupancy', 'Heatmap: satisfaction', 'Heatmap: revenue'][state.heatmapMode]); }
+  else if (e.key.toLowerCase() === 'v') { toggleOverview(); }
   else if (e.key === '?' || e.key === '/') { showModal('shortcutsModal'); }
 }
 

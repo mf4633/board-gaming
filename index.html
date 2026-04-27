@@ -2,152 +2,428 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Board Gaming &amp; Simulations</title>
+<title>Board Gaming &amp; Simulations &mdash; A Catalogue</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --paper:    #efe6d0;
+    --paper-2:  #e6dcc1;
+    --ink:      #1c140b;
+    --ink-soft: #4a3a26;
+    --sepia:    #8a5a2a;
+    --sepia-2:  #a87440;
+    --rule:     #b89c70;
+    --rule-soft:#cdb98f;
+    --mark:     #6b4a22;
+  }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; }
-  #wrap { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px 24px; }
-  header { text-align: center; margin-bottom: 40px; }
-  header h1 { font-size: 2.2em; letter-spacing: 8px; color: #f0d89c; margin: 0; }
-  header .tag { color: #8098a8; letter-spacing: 3px; font-size: 0.85em; margin-top: 10px; }
-  section { margin-top: 46px; }
-  section h2 { font-size: 1.0em; letter-spacing: 6px; color: #f0d89c; text-transform: uppercase; border-bottom: 1px solid #2a3540; padding-bottom: 8px; margin-bottom: 20px; }
-  section .blurb { color: #8098a8; font-size: 0.92em; margin-bottom: 22px; line-height: 1.6; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
-  .gcard { display: block; background: #141c28; border: 1px solid #2a3540; border-radius: 4px; padding: 16px 18px; text-decoration: none; transition: background 0.12s, border-color 0.12s, transform 0.12s; }
-  .gcard:hover { background: #1e2838; border-color: #3a5060; transform: translateY(-2px); }
-  .gcard .gname { color: #f0d89c; font-size: 1.08em; letter-spacing: 2px; font-weight: bold; margin-bottom: 4px; }
-  .gcard .gsub { color: #a8b0c0; font-size: 0.85em; line-height: 1.4; }
-  footer { margin-top: 60px; text-align: center; color: #5a6874; font-size: 0.8em; letter-spacing: 2px; }
-  footer a { color: #8098a8; text-decoration: none; }
-  footer a:hover { color: #d8d0c0; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 19px;
+    line-height: 1.55;
+    /* Paper texture: layered grain + soft fiber blotches */
+    background-image:
+      radial-gradient(ellipse at 20% 15%, rgba(138,90,42,0.06) 0%, transparent 38%),
+      radial-gradient(ellipse at 82% 75%, rgba(74,58,38,0.07) 0%, transparent 42%),
+      radial-gradient(ellipse at 65% 30%, rgba(168,116,64,0.04) 0%, transparent 30%),
+      repeating-linear-gradient(
+        92deg,
+        rgba(28,20,11,0.012) 0px, rgba(28,20,11,0.012) 1px,
+        transparent 1px, transparent 3px
+      ),
+      repeating-linear-gradient(
+        2deg,
+        rgba(28,20,11,0.010) 0px, rgba(28,20,11,0.010) 1px,
+        transparent 1px, transparent 4px
+      );
+  }
 
-  .about-strip { display: flex; align-items: center; gap: 28px; background: linear-gradient(135deg, #141c28 0%, #1a2230 100%); border: 1px solid #3a4858; border-radius: 6px; padding: 22px 28px; margin-top: 32px; text-decoration: none; transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
-  .about-strip:hover { border-color: #f0d89c; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(240,216,156,0.12); }
-  .about-photo { flex-shrink: 0; width: 84px; height: 84px; border-radius: 50%; background-image: url(about-photo.png); background-size: 260%; background-position: 38% 18%; border: 2px solid #3a4858; }
-  .about-text { flex: 1; }
-  .about-eyebrow { color: #f0d89c; font-size: 0.72em; letter-spacing: 4px; margin-bottom: 6px; }
-  .about-name { color: #e8dfc8; font-size: 1.35em; letter-spacing: 2px; margin-bottom: 4px; }
-  .about-desc { color: #8098a8; font-size: 0.92em; letter-spacing: 0.5px; }
-  .about-arrow { color: #6a7e8e; font-size: 1.4em; padding: 0 8px; }
-  .about-strip:hover .about-arrow { color: #f0d89c; }
-  @media (max-width: 560px) {
-    .about-strip { flex-direction: column; text-align: center; gap: 16px; padding: 22px 18px; }
-    .about-arrow { display: none; }
+  /* Outer plate-mark border, like an engraving's impression */
+  #page {
+    max-width: 980px;
+    margin: 32px auto 60px;
+    padding: 56px 64px 64px;
+    position: relative;
+    border: 1px solid var(--rule-soft);
+    box-shadow:
+      inset 0 0 0 6px var(--paper),
+      inset 0 0 0 7px var(--rule-soft),
+      0 1px 0 rgba(28,20,11,0.04),
+      0 14px 38px rgba(28,20,11,0.06);
+  }
+  /* Corner ornaments */
+  #page::before, #page::after,
+  .corner-bl, .corner-br {
+    content: '';
+    position: absolute;
+    width: 28px; height: 28px;
+    border: 1px solid var(--mark);
+  }
+  #page::before { top: 18px; left: 18px; border-right: 0; border-bottom: 0; }
+  #page::after  { top: 18px; right: 18px; border-left: 0; border-bottom: 0; }
+  .corner-bl { bottom: 18px; left: 18px; border-right: 0; border-top: 0; }
+  .corner-br { bottom: 18px; right: 18px; border-left: 0; border-top: 0; }
+
+  /* ===== Frontispiece ===== */
+  header.front {
+    text-align: center;
+    padding: 8px 0 4px;
+    animation: rise 1s ease-out both;
+  }
+  .colophon {
+    font-family: 'IM Fell English SC', 'IM Fell English', serif;
+    color: var(--sepia);
+    font-size: 0.78em;
+    letter-spacing: 0.42em;
+    margin-bottom: 18px;
+  }
+  .colophon::before, .colophon::after { content: '   \2014   '; color: var(--rule); }
+
+  h1.title {
+    font-family: 'IM Fell English SC', serif;
+    font-weight: 400;
+    font-size: clamp(2.4em, 5.4vw, 3.8em);
+    letter-spacing: 0.06em;
+    margin: 0 0 4px;
+    color: var(--ink);
+    line-height: 1.05;
+  }
+  h1.title em {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--sepia);
+    letter-spacing: 0;
+    font-size: 0.78em;
+    display: block;
+    margin-top: 4px;
+  }
+  .subtitle {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 1.05em;
+    margin: 12px auto 0;
+    max-width: 620px;
+  }
+
+  /* Ornamental rule with center motif */
+  .ornament {
+    display: flex; align-items: center;
+    margin: 30px auto 8px;
+    color: var(--sepia);
+  }
+  .ornament .line {
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rule) 18%, var(--rule) 82%, transparent);
+  }
+  .ornament .glyph {
+    font-family: 'IM Fell English', serif;
+    font-size: 1.2em;
+    padding: 0 18px;
+    letter-spacing: 0.6em;
+  }
+
+  /* ===== Frontispiece — about strip restyled as a portrait card ===== */
+  .frontispiece {
+    display: grid;
+    grid-template-columns: 92px 1fr auto;
+    gap: 24px;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    margin: 36px 0 8px;
+    padding: 22px 26px;
+    background: linear-gradient(180deg, rgba(255,250,235,0.55), rgba(232,218,185,0.35));
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+    transition: background 0.25s ease, transform 0.25s ease;
+  }
+  .frontispiece::before, .frontispiece::after {
+    content: ''; position: absolute; left: 0; right: 0; height: 1px;
+    background: var(--rule-soft);
+  }
+  .frontispiece::before { top: -4px; }
+  .frontispiece::after  { bottom: -4px; }
+  .frontispiece:hover {
+    background: linear-gradient(180deg, rgba(255,250,235,0.85), rgba(232,218,185,0.55));
+    transform: translateY(-1px);
+  }
+  .portrait {
+    width: 92px; height: 92px;
+    border-radius: 50%;
+    background-image: url(about-photo.png);
+    background-size: 260%;
+    background-position: 38% 18%;
+    border: 1px solid var(--mark);
+    box-shadow:
+      inset 0 0 0 4px var(--paper),
+      inset 0 0 0 5px var(--rule),
+      0 2px 6px rgba(28,20,11,0.18);
+    filter: sepia(0.18) contrast(1.02);
+  }
+  .frontispiece .eyebrow {
+    font-family: 'IM Fell English SC', serif;
+    color: var(--sepia);
+    font-size: 0.78em;
+    letter-spacing: 0.38em;
+  }
+  .frontispiece .name {
+    font-family: 'IM Fell English SC', serif;
+    color: var(--ink);
+    font-size: 1.5em;
+    letter-spacing: 0.06em;
+    margin: 2px 0 4px;
+  }
+  .frontispiece .descline {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 1em;
+  }
+  .frontispiece .turnpage {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--sepia);
+    letter-spacing: 0.18em;
+    font-size: 0.82em;
+    white-space: nowrap;
+  }
+  .frontispiece .turnpage span { display: block; font-size: 1.5em; line-height: 1; margin-top: 2px; color: var(--mark); }
+
+  /* ===== Volumes / sections ===== */
+  section.volume {
+    margin-top: 48px;
+    animation: rise 1.1s ease-out both;
+  }
+  section.volume:nth-of-type(2) { animation-delay: 0.12s; }
+  section.volume:nth-of-type(3) { animation-delay: 0.24s; }
+
+  .volume-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: end;
+    gap: 18px;
+    margin-bottom: 18px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .volume-mark {
+    font-family: 'IM Fell English SC', serif;
+    color: var(--sepia);
+    font-size: 0.78em;
+    letter-spacing: 0.42em;
+  }
+  .volume-title {
+    font-family: 'IM Fell English SC', serif;
+    color: var(--ink);
+    font-size: 1.55em;
+    letter-spacing: 0.08em;
+    margin: 0;
+    text-align: left;
+  }
+  .volume-count {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--mark);
+    font-size: 0.78em;
+    letter-spacing: 0.18em;
+  }
+  .volume-blurb {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin: 4px 0 22px;
+    font-size: 1.02em;
+  }
+
+  /* ===== Plate entries ===== */
+  .plates {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 44px;
+    row-gap: 2px;
+  }
+  @media (max-width: 720px) { .plates { grid-template-columns: 1fr; } }
+
+  .entry {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px 6px 12px 6px;
+    border-bottom: 1px dotted var(--rule-soft);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    transition: padding 0.18s ease, background 0.18s ease;
+    opacity: 0;
+    animation: fadeIn 0.6s ease-out forwards;
+  }
+  .entry::before {
+    content: '';
+    position: absolute;
+    left: -12px; top: 0; bottom: 0; width: 2px;
+    background: var(--sepia);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.22s ease;
+  }
+  .entry:hover {
+    background: linear-gradient(90deg, rgba(168,116,64,0.08), transparent 70%);
+    padding-left: 14px;
+  }
+  .entry:hover::before { transform: scaleY(1); }
+  .entry:hover .name { color: var(--sepia); }
+
+  .pl {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--mark);
+    font-size: 0.86em;
+    letter-spacing: 0.06em;
+    text-align: right;
+    padding-right: 6px;
+    border-right: 1px solid var(--rule-soft);
+  }
+  .name {
+    font-family: 'IM Fell English SC', serif;
+    color: var(--ink);
+    font-size: 1.18em;
+    letter-spacing: 0.06em;
+    transition: color 0.18s ease;
+  }
+  .meta {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 0.92em;
+    text-align: right;
+    white-space: nowrap;
+  }
+  @media (max-width: 480px) {
+    .entry { grid-template-columns: 44px 1fr; }
+    .meta { grid-column: 2; text-align: left; padding-top: 2px; }
+  }
+
+  /* ===== Colophon footer ===== */
+  footer.colo {
+    margin-top: 56px;
+    text-align: center;
+    color: var(--ink-soft);
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.78em;
+    letter-spacing: 0.34em;
+  }
+  footer.colo .rule {
+    width: 80px; height: 1px;
+    background: var(--rule);
+    margin: 0 auto 18px;
+  }
+  footer.colo a { color: var(--sepia); text-decoration: none; border-bottom: 1px dotted var(--rule); padding-bottom: 1px; }
+  footer.colo a:hover { color: var(--ink); border-bottom-color: var(--ink-soft); }
+  footer.colo .glyphline { color: var(--mark); margin-top: 14px; letter-spacing: 0.6em; font-size: 0.9em; }
+
+  /* ===== Animations ===== */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+
+  @media (max-width: 600px) {
+    #page { padding: 36px 22px 40px; margin: 14px 8px 30px; }
+    .volume-head { grid-template-columns: 1fr auto; }
+    .volume-mark { display: none; }
+    .frontispiece { grid-template-columns: 72px 1fr; padding: 18px 16px; gap: 16px; }
+    .frontispiece .turnpage { display: none; }
+    .portrait { width: 72px; height: 72px; }
   }
 </style>
 </head>
 <body>
-<div id="wrap">
-  <header>
-    <h1>BOARD GAMING</h1>
-    <div class="tag">Classics, original strategy games, and simulations — all in a single HTML file each.</div>
+
+<div id="page">
+  <span class="corner-bl"></span><span class="corner-br"></span>
+
+  <header class="front">
+    <div class="colophon">A Private Press &middot; MMXXVI</div>
+    <h1 class="title">Board Gaming<br><em>&amp; Simulations</em></h1>
+    <div class="subtitle">A catalogue of twenty&hairsp;-&hairsp;two single&hairsp;-&hairsp;file works &mdash; ancient pastimes, original strategy, and engineering simulations &mdash; rendered in a sheet of HTML each.</div>
+    <div class="ornament" aria-hidden="true">
+      <span class="line"></span>
+      <span class="glyph">&sect; &middot; &sect;</span>
+      <span class="line"></span>
+    </div>
   </header>
 
-  <a href="about.html" class="about-strip">
-    <div class="about-photo" role="img" aria-label="Michael Flynn"></div>
-    <div class="about-text">
-      <div class="about-eyebrow">ABOUT THE MAKER</div>
-      <div class="about-name">Michael Flynn, PE</div>
-      <div class="about-desc">Dam &amp; stormwater engineer in Asheville, NC. Builds HydroComplete, ships indie sims.</div>
+  <a href="about.html" class="frontispiece">
+    <div class="portrait" role="img" aria-label="Michael Flynn"></div>
+    <div>
+      <div class="eyebrow">The Maker</div>
+      <div class="name">Michael Flynn, P.E.</div>
+      <div class="descline">Dam &amp; stormwater engineer in Asheville, North Carolina &mdash; builds HydroComplete, ships indie sims.</div>
     </div>
-    <div class="about-arrow">&rarr;</div>
+    <div class="turnpage">
+      Turn the page<span>&rarr;</span>
+    </div>
   </a>
 
-  <section>
-    <h2>Board Games</h2>
-    <div class="blurb">Turn-based strategy: ancient games, classic perfects, and original designs.</div>
-    <div class="grid">
-    <a class="gcard" href="Agora.html">
-      <div class="gname">Agora</div>
-      <div class="gsub">The Mediterranean Trade</div>
-    </a>
-    <a class="gcard" href="Aresia.html">
-      <div class="gname">Aresia</div>
-      <div class="gsub">Colonize the Red Frontier</div>
-    </a>
-    <a class="gcard" href="Backgammon.html">
-      <div class="gname">Backgammon</div>
-      <div class="gsub">Classic dice & race</div>
-    </a>
-    <a class="gcard" href="Bisque.html">
-      <div class="gname">Bisque</div>
-      <div class="gsub">Battle for the Bay</div>
-    </a>
-    <a class="gcard" href="Chess.html">
-      <div class="gname">Chess</div>
-      <div class="gsub">The royal game</div>
-    </a>
-    <a class="gcard" href="Convergence.html">
-      <div class="gname">Convergence</div>
-      <div class="gsub">Rival Civilizations, Shared Economy</div>
-    </a>
-    <a class="gcard" href="Go.html">
-      <div class="gname">Go</div>
-      <div class="gsub">Territory & influence, 19x19</div>
-    </a>
-    <a class="gcard" href="Mancala.html">
-      <div class="gname">Mancala</div>
-      <div class="gsub">Ancient count-and-capture</div>
-    </a>
-    <a class="gcard" href="Odyssey.html">
-      <div class="gname">Odyssey</div>
-      <div class="gsub">Upon the Wine-Dark Sea</div>
-    </a>
-    <a class="gcard" href="Othello.html">
-      <div class="gname">Othello</div>
-      <div class="gsub">Flip to claim the board</div>
-    </a>
-    <a class="gcard" href="PenteGrammai.html">
-      <div class="gname">Pente Grammai</div>
-      <div class="gsub">The Ancient Greek Game of Five Lines</div>
-    </a>
-    <a class="gcard" href="Senet.html">
-      <div class="gname">Senet</div>
-      <div class="gsub">The ancient Egyptian racing game</div>
-    </a>
-    <a class="gcard" href="Tidelands.html">
-      <div class="gname">Tidelands</div>
-      <div class="gsub">Bronze-age maritime trade</div>
-    </a>
-    <a class="gcard" href="Ur.html">
-      <div class="gname">Ur</div>
-      <div class="gsub">The Royal Game of Ur</div>
-    </a>
+  <section class="volume">
+    <div class="volume-head">
+      <div class="volume-mark">Volume I</div>
+      <h2 class="volume-title">Table Games</h2>
+      <div class="volume-count">XV plates</div>
+    </div>
+    <div class="volume-blurb">Turn-based works after the manner of the ancients, the perennial classics, and original designs.</div>
+    <div class="plates">
+      <a class="entry" href="Agora.html"        style="animation-delay:0.04s"><div class="pl">Pl. I</div>     <div class="name">Agora</div>         <div class="meta">The Mediterranean Trade</div></a>
+      <a class="entry" href="Aresia.html"       style="animation-delay:0.08s"><div class="pl">Pl. II</div>    <div class="name">Aresia</div>        <div class="meta">Colonize the Red Frontier</div></a>
+      <a class="entry" href="Backgammon.html"   style="animation-delay:0.12s"><div class="pl">Pl. III</div>   <div class="name">Backgammon</div>    <div class="meta">A dice &amp; race classic</div></a>
+      <a class="entry" href="Bisque.html"       style="animation-delay:0.16s"><div class="pl">Pl. IV</div>    <div class="name">Bisque</div>        <div class="meta">Battle for the Bay</div></a>
+      <a class="entry" href="Chess.html"        style="animation-delay:0.20s"><div class="pl">Pl. V</div>     <div class="name">Chess</div>         <div class="meta">The royal game</div></a>
+      <a class="entry" href="Convergence.html"  style="animation-delay:0.24s"><div class="pl">Pl. VI</div>    <div class="name">Convergence</div>   <div class="meta">Rivals, a shared economy</div></a>
+      <a class="entry" href="Go.html"           style="animation-delay:0.28s"><div class="pl">Pl. VII</div>   <div class="name">Go</div>            <div class="meta">Territory &amp; influence, 19&times;19</div></a>
+      <a class="entry" href="Mancala.html"      style="animation-delay:0.32s"><div class="pl">Pl. VIII</div>  <div class="name">Mancala</div>       <div class="meta">Ancient count-and-capture</div></a>
+      <a class="entry" href="Odyssey.html"      style="animation-delay:0.36s"><div class="pl">Pl. IX</div>    <div class="name">Odyssey</div>       <div class="meta">Upon the wine-dark sea</div></a>
+      <a class="entry" href="Othello.html"      style="animation-delay:0.40s"><div class="pl">Pl. X</div>     <div class="name">Othello</div>       <div class="meta">Flip to claim the board</div></a>
+      <a class="entry" href="PenteGrammai.html" style="animation-delay:0.44s"><div class="pl">Pl. XI</div>    <div class="name">Pente Grammai</div> <div class="meta">The Greek game of five lines</div></a>
+      <a class="entry" href="Senet.html"        style="animation-delay:0.48s"><div class="pl">Pl. XII</div>   <div class="name">Senet</div>         <div class="meta">An Egyptian race, c. 3100 BC</div></a>
+      <a class="entry" href="Tidelands.html"    style="animation-delay:0.52s"><div class="pl">Pl. XIII</div>  <div class="name">Tidelands</div>     <div class="meta">Bronze-age maritime trade</div></a>
+      <a class="entry" href="Ur.html"           style="animation-delay:0.56s"><div class="pl">Pl. XIV</div>   <div class="name">Ur</div>            <div class="meta">The Royal Game of Ur</div></a>
+      <a class="entry" href="Cliffwalkers.html" style="animation-delay:0.60s"><div class="pl">Pl. XV</div>    <div class="name">Cliffwalkers</div>  <div class="meta">A walk along the edge</div></a>
     </div>
   </section>
 
-  <section>
-    <h2>Simulations</h2>
-    <div class="blurb">Real-time physics, engineering, and management sims.</div>
-    <div class="grid">
-    <a class="gcard" href="Apoapsis.html">
-      <div class="gname">Apoapsis</div>
-      <div class="gsub">3D rocket flight sim</div>
-    </a>
-    <a class="gcard" href="BonnevilleSpillwayOperator.html">
-      <div class="gname">Bonneville Spillway</div>
-      <div class="gsub">Columbia River dam operator</div>
-    </a>
-    <a class="gcard" href="Floodline.html">
-      <div class="gname">Floodline</div>
-      <div class="gsub">California flood defense</div>
-    </a>
-    <a class="gcard" href="BiosphereBlue.html">
-      <div class="gname">Biosphere Blue</div>
-      <div class="gsub">Planet-scale geosim</div>
-    </a>
-    <a class="gcard" href="Tower.html">
-      <div class="gname">Tower</div>
-      <div class="gsub">High-rise operations</div>
-    </a>
+  <section class="volume">
+    <div class="volume-head">
+      <div class="volume-mark">Volume II</div>
+      <h2 class="volume-title">Simulations</h2>
+      <div class="volume-count">VII plates</div>
+    </div>
+    <div class="volume-blurb">Real-time works in physics, engineering, and management &mdash; the engineer&rsquo;s amusements.</div>
+    <div class="plates">
+      <a class="entry" href="Apoapsis.html"                  style="animation-delay:0.04s"><div class="pl">Pl. XVI</div>   <div class="name">Apoapsis</div>            <div class="meta">3D rocket flight, in three.js</div></a>
+      <a class="entry" href="BonnevilleSpillwayOperator.html" style="animation-delay:0.08s"><div class="pl">Pl. XVII</div>  <div class="name">Bonneville Spillway</div> <div class="meta">A Columbia River dam-op sim</div></a>
+      <a class="entry" href="Floodline.html"                 style="animation-delay:0.12s"><div class="pl">Pl. XVIII</div> <div class="name">Floodline</div>           <div class="meta">California flood defense</div></a>
+      <a class="entry" href="BiosphereBlue.html"             style="animation-delay:0.16s"><div class="pl">Pl. XIX</div>   <div class="name">Biosphere Blue</div>      <div class="meta">A planet-scale geosim</div></a>
+      <a class="entry" href="Tower.html"                     style="animation-delay:0.20s"><div class="pl">Pl. XX</div>    <div class="name">Skystack</div>            <div class="meta">High-rise operations &mdash; ETA-dispatched lifts, hub express, evacuations</div></a>
     </div>
   </section>
 
-  <footer>
-    <a href="https://github.com/mf4633/board-gaming">github.com/mf4633/board-gaming</a>
+  <footer class="colo">
+    <div class="rule"></div>
+    Set in IM Fell &amp; Garamond &middot; <a href="https://github.com/mf4633/board-gaming">github.com/mf4633/board-gaming</a>
+    <div class="glyphline">&sect; &middot; &sect; &middot; &sect;</div>
   </footer>
 </div>
+
 </body>
 </html>
