@@ -75,6 +75,24 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
 .stage-dot.done { background: #40D080; }
 .stage-dot.current { background: #FFD040; }
 
+/* Clade list */
+#lifePanel { max-height: 50vh; overflow-y: auto; min-width: 220px; }
+#lifePanel::-webkit-scrollbar { width: 6px; }
+#lifePanel::-webkit-scrollbar-thumb { background: #1A2A40; border-radius: 3px; }
+.clade-row { padding: 5px 6px; margin: 4px 0; background: #0E1428; border: 1px solid #1A2A40; border-left: 3px solid #4080D0; border-radius: 3px; font-size: 0.72em; cursor: pointer; }
+.clade-row:hover { background: #1A2848; }
+.clade-row.sapient { border-left-color: #FFD040; }
+.clade-row.civ     { border-left-color: #80F0A0; box-shadow: 0 0 6px rgba(96,240,160,0.18); }
+.clade-row .cn { color: #E0E8F0; font-family: Georgia, serif; letter-spacing: 0.5px; }
+.clade-row .cb { color: #6080A0; font-size: 0.85em; margin-left: 6px; }
+.clade-row .ct { color: #80B0E0; font-size: 0.85em; margin-top: 2px; font-style: italic; }
+.clade-row .cbar { display: inline-block; height: 4px; background: #1A2A40; border-radius: 1px; margin-left: 4px; vertical-align: middle; width: 50px; position: relative; overflow: hidden; }
+.clade-row .cbar i { display: block; height: 100%; background: #4080D0; }
+.clade-row.sapient .cbar i { background: #FFD040; }
+.clade-row.civ     .cbar i { background: #80F0A0; }
+.clade-row .cmark { color: #FFD040; }
+.clade-empty { color: #4A6080; font-size: 0.78em; font-style: italic; padding: 8px 4px; text-align: center; }
+
 #toolPanel .brush-row { display: flex; align-items: center; gap: 6px; margin-top: 5px; font-size: 0.7em; color: #6080A0; }
 #toolPanel input[type=range] { flex: 1; }
 #toolPanel .dis-row { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
@@ -176,6 +194,28 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
 .tut-actions button.primary { border-color: #FFD040; color: #FFD040; }
 .tut-actions button:hover { background: #1A2848; border-color: #4080D0; }
 .tut-highlight { outline: 2px solid #FFD040 !important; outline-offset: 3px; box-shadow: 0 0 30px rgba(255,208,64,0.55) !important; transition: all 0.25s; }
+/* Phase-portrait science overlay */
+#phaseOverlay { position: fixed; bottom: 14px; right: 14px; width: 340px; background: rgba(10,14,28,0.93); border: 1px solid #1A2A40; border-radius: 6px; padding: 8px 10px 10px; z-index: 500; display: none; font-family: 'Courier New', monospace; font-size: 0.74em; color: #B0C8E0; pointer-events: none; }
+#phaseOverlay.open { display: block; }
+#phaseOverlay canvas { display: block; width: 100%; height: 260px; border-radius: 3px; background: #05080F; }
+#phaseInfo { margin-top: 6px; line-height: 1.55; }
+#phaseInfo .kind { color: #FFD040; font-weight: bold; letter-spacing: 1px; }
+#phaseCaption { margin-top: 4px; color: #6080A0; font-size: 0.85em; letter-spacing: 1px; }
+
+/* Developer console — toggle with backtick. Quake-style overlay. */
+#devConsole { position: fixed; left: 0; right: 0; top: 0; height: 45vh; background: rgba(4,6,12,0.95); border-bottom: 1px solid #4080D0; box-shadow: 0 4px 30px rgba(64,128,208,0.25); z-index: 10000; display: none; flex-direction: column; font-family: 'Courier New', monospace; backdrop-filter: blur(4px); }
+#devConsole.open { display: flex; }
+#devConsoleOut { flex: 1; overflow-y: auto; padding: 10px 14px; font-size: 0.82em; color: #B0C8E0; line-height: 1.4; white-space: pre-wrap; }
+#devConsoleOut::-webkit-scrollbar { width: 8px; }
+#devConsoleOut::-webkit-scrollbar-thumb { background: #1A2A40; border-radius: 4px; }
+#devConsoleOut .cmd  { color: #FFD040; }
+#devConsoleOut .ok   { color: #80F0A0; }
+#devConsoleOut .err  { color: #FF8060; }
+#devConsoleOut .info { color: #6080A0; font-style: italic; }
+#devConsoleIn { display: flex; align-items: center; padding: 6px 14px; border-top: 1px solid #1A2A40; background: rgba(8,12,28,0.9); }
+#devConsoleIn .prompt { color: #FFD040; margin-right: 8px; font-weight: bold; }
+#devConsoleIn input { flex: 1; background: transparent; border: none; outline: none; color: #E0E8F0; font-family: inherit; font-size: 0.9em; padding: 4px 0; }
+#devConsoleIn input::placeholder { color: #4A6080; }
 </style>
 </head>
 <body>
@@ -409,6 +449,9 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
           <li><b>Wildfires</b>: ignition &prop; veg &times; heat &times; dryness &times; O&#8322;; release CO&#8322; + CH&#8324;, consume O&#8322;.</li>
           <li><b>Ocean CO&#8322;</b>: warm oceans outgas (Henry's law).</li>
           <li><b>Permafrost</b>: warms above 5&deg;C releases CH&#8324;.</li>
+          <li><b>Ice-albedo tipping</b>: ice forms at T&lt;&minus;2&deg;C, melts only above +3&deg;C; thick glacial ice resists melting. Past ~78% ice cover, silicate weathering dies and volcanic CO&#8322; builds until greenhouse overpowers albedo &mdash; a Snowball Earth saddle-node bifurcation.</li>
+          <li><b>Phase portrait</b> (press <b>P</b>): opens a 2D phase plane of global T vs ice fraction with nullclines, vector field, and the Jacobian eigenvalues of the climate operating point. Saddle / node / spiral / center classification updates live.</li>
+          <li><b>Console</b> (press <b>`</b> backtick): pop-up command line. Type <kbd>help</kbd> for the full list &mdash; spawn clades, fire events, set climate state, drive a clade extinct, force sapience, etc.</li>
         </ul>
         <h3>Life stages</h3>
         <ul>
@@ -461,6 +504,10 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
   <div class="row"><span>Biomass</span><b id="lifeMass">&mdash;</b></div>
   <div class="row"><span>Vegetation</span><b id="lifeVeg">&mdash;</b></div>
   <div class="stage-dots" id="stageDots"></div>
+  <div style="margin-top:8px;border-top:1px solid #1A2A40;padding-top:6px">
+    <div style="color:#4080D0;font-size:0.62em;letter-spacing:1.5px;font-family:Georgia,serif">CLADES</div>
+    <div id="cladeList"></div>
+  </div>
 </div>
 
 <div class="panel" id="viewPanel" style="display:none">
@@ -850,8 +897,15 @@ function resetSim() {
     seasonPhase: 0,         // radians, 0..2pi; 0=NH vernal equinox, pi/2=NH summer solstice
     showSeasons: true,      // overlay seasonal T in the temperature view
     geothermal: 0.35,       // K baseline heat flux added to T_eq
+    _prevIceFrac: 0,        // for Budyko-style tipping detection
+    _prevTemp: 14,
+    _snowballFlag: false,   // latched once iceFrac crosses the snowball threshold
+    _hothouseFlag: false,   // latched once T crosses runaway-greenhouse threshold
     lastEventYear: {},
-    history: []
+    history: [],
+    clades: [],            // parallel evolutionary lineages
+    cladeNextId: 0,        // monotonic clade id
+    cladeLog: []           // recent clade events ('born', 'extinct', 'speciated', 'sapient')
   };
 }
 resetSim();
@@ -881,6 +935,120 @@ var STAGES = [
   { name: 'Sapients',     desc: 'Minds emerge.' },
   { name: 'Civilization', desc: 'A thinking species shapes the world.' }
 ];
+
+// =============================================================
+// Clade system — multiple lineages evolve in parallel.
+// Each clade has a body plan, a small trait set, a current stage,
+// a global biomass fraction, and trophic role. SIM.lifeStage is
+// derived as max(clade.stage) across living clades so existing
+// global-chemistry & UI hooks (CO2/O2/CH4/civ) keep working.
+// =============================================================
+
+// niche: 'producer' (autotrophs), 'consumer' (heterotrophs), 'decomposer'
+// habitat: 'sea' | 'land' | 'any'
+var BODY_PLANS = [
+  { id: 'microbe', name: 'Microbial',  minStage: 1, maxStage: 2, niche: 'producer', habitat: 'sea',  color: '#80FFC8', sym: '·' },
+  { id: 'plant',   name: 'Plant',      minStage: 3, maxStage: 6, niche: 'producer', habitat: 'land', color: '#80E060', sym: '⚘' },
+  { id: 'algal',   name: 'Algal',      minStage: 2, maxStage: 4, niche: 'producer', habitat: 'sea',  color: '#40D0A0', sym: '≈' },
+  { id: 'fungal',  name: 'Fungal',     minStage: 3, maxStage: 5, niche: 'decomposer', habitat: 'land', color: '#C0A080', sym: '✱' },
+  { id: 'aquatic', name: 'Aquatic',    minStage: 3, maxStage: 7, niche: 'consumer', habitat: 'sea',  color: '#60C0FF', sym: '∿' },
+  { id: 'insect',  name: 'Arthropod',  minStage: 4, maxStage: 7, niche: 'consumer', habitat: 'land', color: '#E0C040', sym: '⧗' },
+  { id: 'reptile', name: 'Reptilian',  minStage: 5, maxStage: 7, niche: 'consumer', habitat: 'land', color: '#80B080', sym: '⦵' },
+  { id: 'avian',   name: 'Avian',      minStage: 5, maxStage: 7, niche: 'consumer', habitat: 'any',  color: '#FFB060', sym: '✈' },
+  { id: 'mammal',  name: 'Mammalian',  minStage: 5, maxStage: 7, niche: 'consumer', habitat: 'land', color: '#D08060', sym: '⚫' }
+];
+function bodyPlan(id) { for (var i=0;i<BODY_PLANS.length;i++) if (BODY_PLANS[i].id===id) return BODY_PLANS[i]; return null; }
+
+// Traits: each grants a survival bonus or hazard. resists[] reduces biomass damage
+// from disasters of those tags; vulnTo[] amplifies it. boosts: helpers for sapience etc.
+var TRAITS = [
+  { id: 'cold',     name: 'Cold-tolerant',  resists: ['snowball','iceage','flare'] },
+  { id: 'heat',     name: 'Heat-tolerant',  resists: ['greenhouse','volcano'] },
+  { id: 'aquatic',  name: 'Amphibious',     resists: ['asteroid','flood'] },
+  { id: 'photo',    name: 'Photosynthetic', boosts: ['o2'] },
+  { id: 'social',   name: 'Social',         boosts: ['sapience'] },
+  { id: 'tools',    name: 'Tool-using',     boosts: ['sapience','civ'] },
+  { id: 'flight',   name: 'Powered flight', resists: ['flood','asteroid'] },
+  { id: 'nocturnal',name: 'Nocturnal',      resists: ['flare','greenhouse'] },
+  { id: 'fast',     name: 'Fast-breeding',  boosts: ['recovery'] },
+  { id: 'large',    name: 'Megafauna',      vulnTo: ['extinct','pandemic','asteroid'] },
+  { id: 'hard',     name: 'Hard-shelled',   resists: ['radiation','volcano'] },
+  { id: 'venom',    name: 'Venomous',       boosts: ['predator'] }
+];
+function traitDef(id) { for (var i=0;i<TRAITS.length;i++) if (TRAITS[i].id===id) return TRAITS[i]; return null; }
+
+// Lightweight name generator: prefix + root. Avoids real-world taxa names so we don't
+// collide with player expectations about "humans" etc.
+var CLADE_PREFIX = ['Aero','Helio','Litho','Hydro','Crypto','Xeno','Pyro','Cryo','Photo','Necto','Strato','Geo','Astro','Bathy','Megalo','Micro','Macro','Pseudo','Proto','Neo','Para','Eu'];
+var CLADE_ROOT = ['phytes','pods','sauria','formes','zoa','derms','ptera','nauts','morphs','genes','cetes','phores','therms','cyans','iders','ines','fauna','flora','mites','craters'];
+function generateCladeName(rng) {
+  rng = rng || Math.random;
+  return CLADE_PREFIX[(rng()*CLADE_PREFIX.length)|0] + CLADE_ROOT[(rng()*CLADE_ROOT.length)|0];
+}
+
+// Spawn a new clade. parentId optional. Initial trait set is biased by body plan.
+function makeClade(bodyPlanId, opts) {
+  opts = opts || {};
+  var bp = bodyPlan(bodyPlanId);
+  var stage = opts.stage != null ? opts.stage : (bp ? bp.minStage : 1);
+  var traits = (opts.traits || []).slice();
+  // Body-plan-flavored starting traits
+  if (bodyPlanId === 'microbe' && traits.indexOf('photo') < 0 && Math.random() < 0.5) traits.push('photo');
+  if (bodyPlanId === 'plant'   && traits.indexOf('photo') < 0) traits.push('photo');
+  if (bodyPlanId === 'algal'   && traits.indexOf('photo') < 0) traits.push('photo');
+  if (bodyPlanId === 'avian'   && traits.indexOf('flight')< 0) traits.push('flight');
+  if (bodyPlanId === 'aquatic' && traits.indexOf('aquatic')<0) traits.push('aquatic');
+  if (bodyPlanId === 'insect'  && traits.indexOf('hard') < 0 && Math.random() < 0.7) traits.push('hard');
+  if (bodyPlanId === 'reptile' && Math.random() < 0.5) traits.push('cold');
+  if (bodyPlanId === 'mammal'  && traits.indexOf('social') < 0 && Math.random() < 0.6) traits.push('social');
+  // Per-clade encephalization roll (0..1). Mammals & avians lean higher;
+  // microbes never get a useful roll. Used to stagger sapience emergence
+  // so multiple clades don't all hit stage 6 on the same step.
+  var encBase = 0.4 + Math.random() * 0.4;
+  if (bodyPlanId === 'mammal') encBase += 0.25;
+  else if (bodyPlanId === 'avian') encBase += 0.15;
+  else if (bodyPlanId === 'reptile') encBase += 0.05;
+  else if (bodyPlanId === 'aquatic') encBase += 0.05;
+  else if (bodyPlanId === 'microbe' || bodyPlanId === 'algal' || bodyPlanId === 'fungal') encBase = Math.min(encBase, 0.4);
+  return {
+    id: (SIM.cladeNextId = (SIM.cladeNextId || 0) + 1),
+    name: opts.name || generateCladeName(),
+    bodyPlan: bodyPlanId,
+    traits: traits,
+    stage: stage,
+    biomass: opts.biomass != null ? opts.biomass : 0.005,
+    bornYear: SIM.year,
+    bornAge: SIM.age,
+    parentId: opts.parentId || null,
+    extinct: false,
+    isSapient: false,
+    hasCiv: false,
+    enceph: clamp(encBase, 0.05, 1.0)
+  };
+}
+
+// Convenience: max stage among living clades. Used to derive SIM.lifeStage.
+function maxLivingStage() {
+  if (!SIM.clades || !SIM.clades.length) return 0;
+  var m = 0;
+  for (var i = 0; i < SIM.clades.length; i++) {
+    var c = SIM.clades[i];
+    if (!c.extinct && c.biomass > 0.001 && c.stage > m) m = c.stage;
+  }
+  return m;
+}
+function livingClades() {
+  var out = [];
+  if (!SIM.clades) return out;
+  for (var i=0;i<SIM.clades.length;i++) if (!SIM.clades[i].extinct && SIM.clades[i].biomass > 0.0005) out.push(SIM.clades[i]);
+  return out;
+}
+function sapientClades() {
+  var out = [];
+  var live = livingClades();
+  for (var i=0;i<live.length;i++) if (live[i].isSapient) out.push(live[i]);
+  return out;
+}
 
 // ----- Tectonics -----
 function stepTectonics(W, dtY) {
@@ -1033,6 +1201,31 @@ function stepClimate(W, dtY) {
   SIM.landFrac    = landCount / n;
   SIM.iceFrac     = iceCount / n;
   SIM.vegFrac     = vegSum / n;
+
+  // --- Tipping-point detection (Budyko-Sellers saddle-node) ---
+  // The ice-albedo feedback has two stable branches (warm / snowball) separated
+  // by an unstable intermediate. We latch a flag when the system crosses into
+  // each branch so the event feed can announce the tipping moment.
+  var prevIF = SIM._prevIceFrac || 0;
+  var curIF  = SIM.iceFrac;
+  var prevT  = SIM._prevTemp || 14;
+  var curT   = SIM.globalTemp;
+  if (!SIM._snowballFlag && curIF > 0.78 && prevIF <= 0.78) {
+    SIM._snowballFlag = true;
+    notifyEvent('Snowball Earth — ice-albedo runaway. Only CO₂ buildup can thaw us.', 'warn');
+  } else if (SIM._snowballFlag && curIF < 0.55 && prevIF >= 0.55) {
+    SIM._snowballFlag = false;
+    notifyEvent('Snowball deglaciation — greenhouse overpowers albedo.', 'good');
+  }
+  if (!SIM._hothouseFlag && curT > 45 && prevT <= 45) {
+    SIM._hothouseFlag = true;
+    notifyEvent('Runaway greenhouse — water-vapor feedback dominant.', 'warn');
+  } else if (SIM._hothouseFlag && curT < 32 && prevT >= 32) {
+    SIM._hothouseFlag = false;
+    notifyEvent('Greenhouse recovery — climate re-stabilizing.', 'good');
+  }
+  SIM._prevIceFrac = curIF;
+  SIM._prevTemp = curT;
 }
 
 // ----- Hydrology: moisture diffusion + ice + sea level -----
@@ -1100,15 +1293,20 @@ function stepHydrology(W, dtY) {
   var iceVolOld = 0, iceVolNew = 0;
   var ice = d.iceDepth;
   for (var i = 0; i < n; i++) iceVolOld += ice[i];
+  // Asymmetric freeze / melt thresholds create a Budyko-style hysteresis window:
+  // ice forms at T < -2 °C, persists until T > +3 °C, and thick ice resists
+  // melting via a thickness-weighted factor (glacial mass + high local albedo
+  // that keeps the surface cold even when global forcing pushes warmer).
   for (var i = 0; i < n; i++) {
     var T2v = d.temperature[i];
     var isLand = d.bedrock[i] > SEA;
     var prev = ice[i];
-    if (T2v < -4) {
-      var growth = 0.04 * (-(T2v + 4) / 20) * step + P[i] * 0.5 * step;
+    if (T2v < -2) {
+      var growth = 0.04 * (-(T2v + 2) / 20) * step + P[i] * 0.5 * step;
       ice[i] = clamp(prev + growth, 0, isLand ? 0.6 : 0.12);
-    } else if (T2v > 1) {
-      var melt = 0.06 * (T2v - 1) / 20 * step;
+    } else if (T2v > 3) {
+      var thicknessResist = 1 / (1 + 3.5 * prev);  // 1 at 0m, ~0.22 at 0.1m
+      var melt = 0.06 * (T2v - 3) / 20 * step * thicknessResist;
       ice[i] = Math.max(0, prev - melt);
     }
     iceVolNew += ice[i];
@@ -1193,8 +1391,13 @@ function stepGlobal(W, dtY) {
   var oceanOutgas = (T - 15) * 0.10;
 
   // --- CO2 balance ---
+  // Silicate weathering is the long-term CO2 thermostat, but it requires
+  // liquid water and exposed rock. A snowball-covered planet shuts it off,
+  // so volcanic CO2 accumulates until the greenhouse overwhelms the albedo
+  // lock — the escape mechanism for Snowball Earth.
   var volc = 3.0;
   var weath = T > 0 ? 0.18 * T + 0.004 * T * T : 0;
+  weath *= clamp(1 - 0.85 * SIM.iceFrac, 0.05, 1);
   var plantDraw = SIM.lifeStage >= 4 ? 4.0 * SIM.vegFrac : 0;
   var fireC = SIM.fireCarbon || 0;  // ppm released this step by wildfires
   SIM.fireCarbon = 0;
@@ -1275,12 +1478,14 @@ var EVENTS = [
       }
       var avgT = 0; for (var i = 0; i < d.temperature.length; i++) avgT += (d.temperature[i] -= 0.6);
       SIM.globalTemp = avgT / d.temperature.length;
+      applyHazard('asteroid', 0.04);
     }
   },
   { name: 'Solar flare warms the surface', kind: 'warn', minStage: 0, weight: 0.8,
     effect: function() {
       var d = WORLD.data;
       for (var i = 0; i < d.temperature.length; i++) d.temperature[i] += 1.6;
+      applyHazard('flare', 0.015);
     }
   },
   { name: 'Supervolcano erupts', kind: 'warn', minStage: 0, weight: 0.6,
@@ -1293,25 +1498,42 @@ var EVENTS = [
       // Local uplift at one tile
       var ti = (Math.random()*d.bedrock.length)|0;
       d.bedrock[ti] += 0.18;
+      applyHazard('volcano', 0.025);
     }
   },
   { name: 'Magnetic field reversal', kind: '', minStage: 1, weight: 0.5,
-    effect: function() { /* cosmetic only */ }
+    effect: function() {
+      // Mild radiation pulse — hard-shelled clades resist
+      applyHazard('radiation', 0.008);
+    }
   },
   { name: 'Cambrian-style radiation event', kind: 'good', minStage: 3, weight: 0.4,
     effect: function() {
       var d = WORLD.data;
       for (var i = 0; i < d.vegetation.length; i++) d.vegetation[i] = Math.max(d.vegetation[i], 0.2);
+      // Gift: surviving clades gain a free mutation
+      for (var k = 0; k < SIM.clades.length; k++) {
+        var c = SIM.clades[k];
+        if (!c.extinct && Math.random() < 0.6) tryMutate(c);
+      }
     }
   },
   { name: 'Mass coral bleaching', kind: 'warn', minStage: 4, weight: 0.4,
     effect: function() {
-      // Visual marker only; future hook for ocean ecosystem
+      // Hits aquatic producers/consumers preferentially
+      for (var i = 0; i < SIM.clades.length; i++) {
+        var c = SIM.clades[i];
+        if (c.extinct) continue;
+        var bp = bodyPlan(c.bodyPlan);
+        if (bp && bp.habitat === 'sea') c.biomass = Math.max(0, c.biomass - 0.02);
+      }
+      recomputeLifeStage();
     }
   },
   { name: 'Pandemic strikes', kind: 'warn', minStage: 7, weight: 0.5,
     effect: function() {
       notifyEvent('Civilization recovers slowly.', '');
+      applyHazard('pandemic', 0.05);
     }
   },
   { name: 'Industrial breakthrough', kind: 'good', minStage: 7, weight: 0.5,
@@ -1325,6 +1547,7 @@ var EVENTS = [
       var d = WORLD.data;
       for (var i = 0; i < d.temperature.length; i++) d.temperature[i] -= 12;
       SIM.sunOverride = Math.max(0.85, SIM.sunOverride - 0.04);
+      applyHazard('snowball', 0.05);
     }
   }
 ];
@@ -1355,13 +1578,222 @@ function stepEvents(dtY) {
   stepEventsCooldown = 30;  // ~3 My min between events
 }
 
+// ----- Per-clade environmental fitness -----
+// Returns a multiplier 0..~1.4 indicating how well this clade matches current
+// global conditions. Used to drive biomass change each step.
+function cladeFitness(c) {
+  var bp = bodyPlan(c.bodyPlan);
+  if (!bp) return 0;
+  var T = SIM.globalTemp;
+  var f = 1.0;
+  // Temperature tolerance window (broader for cold/heat traits)
+  var lo = -8, hi = 42;
+  if (c.traits.indexOf('cold') >= 0) lo -= 12;
+  if (c.traits.indexOf('heat') >= 0) hi += 14;
+  if (T < lo || T > hi) f *= 0.2;
+  else if (T < lo + 6) f *= 0.6;
+  else if (T > hi - 6) f *= 0.6;
+  // Habitat match
+  if (bp.habitat === 'land' && SIM.landFrac < 0.06) f *= 0.25;
+  if (bp.habitat === 'sea'  && SIM.landFrac > 0.92) f *= 0.4;
+  // Producers depend on light & water
+  if (bp.niche === 'producer') {
+    if (bp.habitat === 'land') f *= 0.4 + 1.6 * SIM.vegFrac; // already-vegetated land helps plants
+    if (bp.habitat === 'sea')  f *= 0.6 + 0.4 * (1 - SIM.iceFrac);
+  }
+  // Consumers need food (producer biomass)
+  if (bp.niche === 'consumer') {
+    var prodMass = 0;
+    for (var i = 0; i < SIM.clades.length; i++) {
+      var o = SIM.clades[i];
+      if (o.extinct) continue;
+      var obp = bodyPlan(o.bodyPlan);
+      if (obp && obp.niche === 'producer') prodMass += o.biomass;
+    }
+    f *= 0.3 + 1.4 * Math.min(1, prodMass * 4);
+  }
+  // O2 gates: consumers need oxygen to scale up
+  if (bp.niche === 'consumer' && SIM.o2 < 0.10) f *= 0.4;
+  // Civilizations gain a productivity bump (irrigation, husbandry)
+  if (c.hasCiv) f *= 1.15;
+  return f;
+}
+
+// Apply selection-pressure damage from a hazard tag. Clades with resistant
+// traits take less, clades vulnerable take more. Called by EVENTS effects.
+function applyHazard(tag, baseHit) {
+  if (!SIM.clades || !SIM.clades.length) return;
+  for (var i = 0; i < SIM.clades.length; i++) {
+    var c = SIM.clades[i];
+    if (c.extinct) continue;
+    var hit = baseHit;
+    var resists = false, vulnerable = false;
+    for (var k = 0; k < c.traits.length; k++) {
+      var t = traitDef(c.traits[k]);
+      if (!t) continue;
+      if (t.resists && t.resists.indexOf(tag) >= 0) resists = true;
+      if (t.vulnTo && t.vulnTo.indexOf(tag) >= 0) vulnerable = true;
+    }
+    if (resists)    hit *= 0.25;
+    if (vulnerable) hit *= 1.8;
+    c.biomass = Math.max(0, c.biomass - hit);
+    if (c.biomass < 0.0008) {
+      c.extinct = true;
+      SIM.cladeLog.push({ year: SIM.year, kind: 'extinct', name: c.name, cause: tag });
+      notifyEvent(c.name + ' driven extinct.', 'warn');
+    }
+  }
+  recomputeLifeStage();
+}
+
+// Recompute the legacy SIM.lifeStage from the current clade roster.
+// Keeps existing global-chemistry/UI/CO2/CH4/civ paths working.
+function recomputeLifeStage() {
+  var m = maxLivingStage();
+  if (m !== SIM.lifeStage) SIM.lifeStage = m;
+  // Sync civilization flag — civ effects fire when at least one clade hasCiv
+  var anyCiv = false;
+  for (var i = 0; i < SIM.clades.length; i++) {
+    if (!SIM.clades[i].extinct && SIM.clades[i].hasCiv) { anyCiv = true; break; }
+  }
+  if (anyCiv && SIM.lifeStage < 7) SIM.lifeStage = 7;
+}
+
+// Try to spawn a child clade with a different body plan when conditions allow.
+// Probability is small per step; only fires when the parent is well-established.
+function trySpeciate(parent) {
+  var bp = bodyPlan(parent.bodyPlan);
+  if (!bp) return null;
+  // Successor body plan whose minStage <= parent.stage and not yet present
+  var have = {};
+  for (var i = 0; i < SIM.clades.length; i++) if (!SIM.clades[i].extinct) have[SIM.clades[i].bodyPlan] = true;
+  var candidates = [];
+  for (var j = 0; j < BODY_PLANS.length; j++) {
+    var b = BODY_PLANS[j];
+    if (have[b.id]) continue;
+    if (b.minStage > parent.stage + 1) continue;
+    // Habitat must be reachable
+    if (b.habitat === 'land' && SIM.landFrac < 0.05) continue;
+    if (b.habitat === 'sea'  && SIM.landFrac > 0.95) continue;
+    // Successor niche check: need at least one producer to seed consumers
+    if (b.niche === 'consumer') {
+      var anyProd = false;
+      for (var k = 0; k < SIM.clades.length; k++) {
+        if (SIM.clades[k].extinct) continue;
+        var obp = bodyPlan(SIM.clades[k].bodyPlan);
+        if (obp && obp.niche === 'producer' && SIM.clades[k].biomass > 0.01) { anyProd = true; break; }
+      }
+      if (!anyProd) continue;
+    }
+    candidates.push(b);
+  }
+  if (!candidates.length) return null;
+  var pick = candidates[(Math.random() * candidates.length) | 0];
+  // Inherit one parent trait, gain one new
+  var startTraits = [];
+  if (parent.traits.length) startTraits.push(parent.traits[(Math.random() * parent.traits.length) | 0]);
+  var child = makeClade(pick.id, {
+    parentId: parent.id,
+    stage: Math.max(pick.minStage, parent.stage - 1),
+    biomass: 0.004,
+    traits: startTraits
+  });
+  SIM.clades.push(child);
+  SIM.cladeLog.push({ year: SIM.year, kind: 'born', name: child.name, plan: pick.id, parent: parent.name });
+  notifyEvent('New clade arises: ' + child.name + ' (' + pick.name + ').', 'good');
+  return child;
+}
+
+// Maybe gain a random trait via mutation
+function tryMutate(c) {
+  if (c.traits.length >= 5) return;
+  if (Math.random() > 0.005) return;  // ~0.5% per step (~ one new trait per 20 My)
+  // Pick a trait not already present, weighted toward useful ones for the body plan
+  var bp = bodyPlan(c.bodyPlan);
+  var pool = [];
+  for (var i = 0; i < TRAITS.length; i++) {
+    var t = TRAITS[i];
+    if (c.traits.indexOf(t.id) >= 0) continue;
+    if (t.id === 'flight' && bp && bp.id !== 'avian' && bp.id !== 'insect') continue;
+    if (t.id === 'photo'  && bp && bp.niche !== 'producer') continue;
+    if (t.id === 'aquatic'&& bp && bp.habitat === 'land') continue;
+    pool.push(t.id);
+  }
+  if (!pool.length) return;
+  var pick = pool[(Math.random() * pool.length) | 0];
+  c.traits.push(pick);
+  SIM.cladeLog.push({ year: SIM.year, kind: 'mutate', name: c.name, trait: pick });
+}
+
+// Try advancing this clade up the evolutionary ladder. Each step has
+// global gates (matching the old monolithic ladder) plus per-clade ones.
+function tryAdvanceClade(c) {
+  var bp = bodyPlan(c.bodyPlan);
+  if (!bp) return;
+  if (c.stage >= bp.maxStage) return;
+  var age = SIM.age;
+  var nextStage = c.stage + 1;
+  var ok = false;
+  if      (c.stage === 1 && SIM.o2 > 0.003 && age > 2.0) ok = true;     // Eukaryote-grade
+  else if (c.stage === 2 && SIM.o2 > 0.025 && age > 2.7) ok = true;     // Multicellular
+  else if (c.stage === 3 && (bp.niche !== 'producer' || bp.habitat === 'land' ? SIM.o2 > 0.10 : SIM.o2 > 0.05)
+                          && age > 3.4 && (bp.habitat !== 'land' || SIM.landFrac > 0.10)) ok = true;
+  else if (c.stage === 4 && age > 3.95 && c.biomass > 0.02) ok = true;  // Diversification
+  else if (c.stage === 5 && age > 4.3 && Math.abs(SIM.globalTemp - 14) < 18
+                          && (c.traits.indexOf('social') >= 0 || c.traits.indexOf('tools') >= 0)) {
+    // Probabilistic emergence weighted by encephalization. With ench=0.7 and
+    // these roll constants, expected wait ~60 My past the gate; with ench=0.4
+    // it's ~250 My — staggers sapience across body plans instead of every
+    // suitable clade hitting stage 6 on the same step.
+    var pSap = 0.0008 * (c.enceph || 0.5);
+    if (c.traits.indexOf('social') >= 0) pSap *= 1.5;
+    if (c.traits.indexOf('tools')  >= 0) pSap *= 1.5;
+    ok = Math.random() < pSap;
+  }
+  else if (c.stage === 6 && age > 4.5 && c.biomass > 0.012 && c.traits.indexOf('tools') >= 0) {
+    var pCiv = 0.004 * (c.enceph || 0.5);
+    ok = Math.random() < pCiv;
+  }
+  if (!ok) return;
+  c.stage = nextStage;
+  if (nextStage === 6 && !c.isSapient) {
+    c.isSapient = true;
+    SIM.cladeLog.push({ year: SIM.year, kind: 'sapient', name: c.name });
+    notifyEvent(c.name + ' achieve sapience.', 'good');
+  }
+  if (nextStage === 7 && !c.hasCiv) {
+    c.hasCiv = true;
+    SIM.cladeLog.push({ year: SIM.year, kind: 'civ', name: c.name });
+    notifyEvent(c.name + ' build a civilization.', 'good');
+  }
+}
+
 function stepLife(W, dtY) {
   var n = W.tiles.length;
   var d = W.data;
   var age = SIM.age;
   var SEA = SIM.seaLevel;
-  // Vegetation growth per tile (requires plants stage)
-  var canVegetate = SIM.lifeStage >= 4;
+
+  // Bootstrap: first abiogenesis. Spawn a microbial founder clade once liquid water
+  // exists and the planet is old enough. This drives the legacy Prokaryotes stage.
+  var anyLiquid = (SIM.globalTemp > 0 && SIM.globalTemp < 55);
+  if (!SIM.clades.length && anyLiquid && age > 0.5) {
+    var founder = makeClade('microbe', { biomass: 0.01, traits: [], stage: 1 });
+    SIM.clades.push(founder);
+    SIM.cladeLog.push({ year: SIM.year, kind: 'born', name: founder.name, plan: 'microbe' });
+    notifyEvent('First clade arises: ' + founder.name + ' — microbial life stirs the seas.', 'good');
+  }
+
+  // Vegetation growth per tile is gated by *any* land-plant clade existing.
+  var canVegetate = false;
+  for (var ci = 0; ci < SIM.clades.length; ci++) {
+    var cc = SIM.clades[ci];
+    if (cc.extinct) continue;
+    var bpv = bodyPlan(cc.bodyPlan);
+    if (bpv && bpv.id === 'plant' && cc.stage >= 3) { canVegetate = true; break; }
+  }
+  // Legacy fallback so single-clade saves still vegetate via lifeStage>=4
+  if (!canVegetate && SIM.lifeStage >= 4) canVegetate = true;
   var veg = d.vegetation;
   var biomass = 0;
   for (var i = 0; i < n; i++) {
@@ -1378,28 +1810,83 @@ function stepLife(W, dtY) {
   }
   SIM.biomass = biomass / n;
 
-  // Stage advancement
-  var st = SIM.lifeStage;
-  var anyLiquid = (SIM.globalTemp > 0 && SIM.globalTemp < 55);
-  var tryAdvance = function(to, desc) {
-    if (st < to) {
-      SIM.lifeStage = to;
-      notifyEvent(desc, 'good');
+  // Per-clade dynamics: biomass logistic growth + trophic predation,
+  // mutation, advancement, speciation, extinction.
+  var dt = dtY / 1e5;
+  var clades = SIM.clades;
+  // Trophic pressure: total predator demand on producers
+  var prodMass = 0, consMass = 0;
+  for (var i = 0; i < clades.length; i++) {
+    var c = clades[i];
+    if (c.extinct) continue;
+    var bp = bodyPlan(c.bodyPlan);
+    if (!bp) continue;
+    if (bp.niche === 'producer') prodMass += c.biomass;
+    else if (bp.niche === 'consumer') consMass += c.biomass;
+  }
+  for (var i = 0; i < clades.length; i++) {
+    var c = clades[i];
+    if (c.extinct) continue;
+    var bp = bodyPlan(c.bodyPlan);
+    if (!bp) continue;
+    var fit = cladeFitness(c);
+    var fastBonus = c.traits.indexOf('fast') >= 0 ? 1.4 : 1.0;
+    // Logistic growth toward fitness-scaled carrying capacity
+    var K = 0.45 * fit;  // per-clade carrying capacity (global biomass fraction)
+    var r = 0.20 * fastBonus;  // intrinsic growth rate per dt
+    c.biomass += r * c.biomass * (1 - c.biomass / Math.max(0.001, K)) * dt;
+    // Trophic interaction
+    if (bp.niche === 'producer' && consMass > 0) {
+      // Grazing pressure
+      c.biomass -= 0.10 * c.biomass * Math.min(1, consMass * 4) * dt;
     }
-  };
-  if (st === 0 && anyLiquid && age > 0.5) tryAdvance(1, 'Prokaryotes emerge in the primordial seas.');
-  if (st === 1 && SIM.o2 > 0.003 && age > 2.0) tryAdvance(2, 'Eukaryotes appear &mdash; cells within cells.');
-  if (st === 2 && SIM.o2 > 0.03 && age > 2.7) tryAdvance(3, 'Multicellular life proliferates.');
-  if (st === 3 && SIM.o2 > 0.12 && age > 3.5 && SIM.landFrac > 0.15) tryAdvance(4, 'Plants colonize the land.');
-  if (st === 4 && age > 4.0 && SIM.vegFrac > 0.08) tryAdvance(5, 'Animals diversify across the continents.');
-  if (st === 5 && age > 4.4 && Math.abs(SIM.globalTemp - 14) < 12) tryAdvance(6, 'A sapient species is born.');
-  if (st === 6 && age > 4.52) tryAdvance(7, 'Civilization rises.');
+    if (bp.niche === 'consumer') {
+      var venomPred = c.traits.indexOf('venom') >= 0 ? 1.2 : 1.0;
+      // Consumers need producer mass; if absent, starve
+      if (prodMass < 0.005) c.biomass -= 0.15 * c.biomass * dt;
+      // Carnivores (large or venom traits) prey on smaller consumers
+      if (c.traits.indexOf('large') >= 0 || c.traits.indexOf('venom') >= 0) {
+        for (var j = 0; j < clades.length; j++) {
+          if (j === i) continue;
+          var p = clades[j];
+          if (p.extinct) continue;
+          var pbp = bodyPlan(p.bodyPlan);
+          if (!pbp || pbp.niche !== 'consumer') continue;
+          if (p.traits.indexOf('large') >= 0) continue;  // can't predate other big things easily
+          var take = 0.06 * p.biomass * c.biomass * venomPred * dt;
+          p.biomass = Math.max(0, p.biomass - take);
+          c.biomass += take * 0.6;
+        }
+      }
+    }
+    c.biomass = clamp(c.biomass, 0, 0.30);
+    if (c.biomass < 0.0006) {
+      c.extinct = true;
+      SIM.cladeLog.push({ year: SIM.year, kind: 'extinct', name: c.name, cause: 'attrition' });
+      notifyEvent(c.name + ' fade into extinction.', 'warn');
+      continue;
+    }
+    tryMutate(c);
+    tryAdvanceClade(c);
+    // Speciation: well-established clades occasionally split off a sister lineage.
+    // Lowered gate to stage>=2 so microbes (maxStage=2) can branch into algal/plant/etc.
+    // Higher rate when parent is at body-plan ceiling — that's the radiation into
+    // new niches. Tuned so first radiation takes ~50-100 My on a planet with
+    // permissive O2 / land conditions, not 5 My.
+    if (c.biomass > 0.04 && c.stage >= 2) {
+      var atCeiling = c.stage >= bp.maxStage;
+      var pSpec = atCeiling ? 0.0015 : 0.0004;
+      if (Math.random() < pSpec) trySpeciate(c);
+    }
+  }
 
-  // Extinctions on extreme conditions
-  if ((SIM.globalTemp > 55 || SIM.globalTemp < -25) && SIM.lifeStage > 0 && Math.random() < 0.001) {
-    SIM.lifeStage = Math.max(1, SIM.lifeStage - 2);
+  // Stress extinction on extreme global conditions (legacy behavior)
+  if ((SIM.globalTemp > 55 || SIM.globalTemp < -25) && Math.random() < 0.002) {
+    applyHazard(SIM.globalTemp > 55 ? 'greenhouse' : 'snowball', 0.04);
     notifyEvent('Mass extinction event!', 'warn');
   }
+
+  recomputeLifeStage();
 }
 
 // =============================================================
@@ -1494,20 +1981,11 @@ function applyBrush(centerTile, tool, radius) {
     if (!SIM.monoliths) SIM.monoliths = [];
     if (SIM.monoliths.indexOf(centerTile) < 0) SIM.monoliths.push(centerTile);
     buildMonolithGroup();
-    // Monoliths push life forward: each placement nudges to the next stage if prereqs met.
-    if (SIM.lifeStage < 7) {
-      var anyLand = SIM.landFrac > 0.05;
-      var anyLiquid = SIM.globalTemp > 0 && SIM.globalTemp < 55;
-      // Relax thresholds a bit — the monolith is a forcing function.
-      if (SIM.lifeStage === 0 && anyLiquid) SIM.lifeStage = 1;
-      else if (SIM.lifeStage === 1) { SIM.o2 = Math.max(SIM.o2, 0.004); SIM.lifeStage = 2; }
-      else if (SIM.lifeStage === 2) { SIM.o2 = Math.max(SIM.o2, 0.04);  SIM.lifeStage = 3; }
-      else if (SIM.lifeStage === 3 && anyLand) { SIM.o2 = Math.max(SIM.o2, 0.14); SIM.lifeStage = 4; }
-      else if (SIM.lifeStage === 4 && SIM.vegFrac > 0.02) SIM.lifeStage = 5;
-      else if (SIM.lifeStage === 5) SIM.lifeStage = 6;
-      else if (SIM.lifeStage === 6) SIM.lifeStage = 7;
-      notifyEvent('The monolith sings. Evolution quickens.', 'good');
-    }
+    // Monoliths push the most-advanced clade forward, or birth a starter clade
+    // if the planet is sterile. They also relax atmospheric prereqs so the
+    // forced advance actually sticks under stepLife's gates next tick.
+    monolithPush();
+    notifyEvent('The monolith sings. Evolution quickens.', 'good');
     return;
   }
 
@@ -1562,11 +2040,92 @@ function applyBrush(centerTile, tool, radius) {
     SIM.co2 += 8 * area.length / 100;
     notifyEvent('Industrial activity &mdash; CO&#8322; rising.', 'warn');
   } else if (tool === 'animals') {
-    if (SIM.lifeStage < 5 && SIM.vegFrac > 0.02) {
-      SIM.lifeStage = 5;
-      notifyEvent('Animals introduced.', 'good');
-    }
+    seedConsumerClade();
+  } else if (tool === 'grass' || tool === 'forest' || tool === 'jungle') {
+    // Painting vegetation also nudges a plant clade into existence
+    seedPlantClade();
   }
+}
+
+// Push the most-advanced clade up one stage; if no life exists, birth the
+// founder. Caller fills atmospheric prereqs so the forced advance survives
+// the next stepLife pass without being immediately reverted.
+function monolithPush() {
+  if (!SIM.clades.length) {
+    var founder = makeClade('microbe', { biomass: 0.012, traits: ['photo'], stage: 1 });
+    SIM.clades.push(founder);
+    SIM.cladeLog.push({ year: SIM.year, kind: 'born', name: founder.name, plan: 'microbe', cause: 'monolith' });
+    recomputeLifeStage();
+    return;
+  }
+  var live = livingClades();
+  if (!live.length) {
+    var rev = makeClade('microbe', { biomass: 0.01, stage: 1 });
+    SIM.clades.push(rev);
+    recomputeLifeStage();
+    return;
+  }
+  // Find the clade closest to next stage (highest stage living)
+  live.sort(function(a,b){ return b.stage - a.stage; });
+  var top = live[0];
+  var bp = bodyPlan(top.bodyPlan);
+  // Relax atmospheric thresholds so the next tick's gates pass
+  if (top.stage === 1) SIM.o2 = Math.max(SIM.o2, 0.004);
+  else if (top.stage === 2) SIM.o2 = Math.max(SIM.o2, 0.04);
+  else if (top.stage === 3) SIM.o2 = Math.max(SIM.o2, 0.14);
+  // If at body-plan ceiling, speciate into a more advanced plan
+  if (bp && top.stage >= bp.maxStage) {
+    var spawned = trySpeciate(top);
+    if (spawned) spawned.stage = Math.min(spawned.stage + 1, bodyPlan(spawned.bodyPlan).maxStage);
+    return;
+  }
+  if (top.stage < 7) {
+    top.stage++;
+    if (top.stage === 6 && !top.isSapient) {
+      top.isSapient = true;
+      SIM.cladeLog.push({ year: SIM.year, kind: 'sapient', name: top.name });
+      notifyEvent(top.name + ' awaken under the monolith.', 'good');
+    }
+    if (top.stage === 7 && !top.hasCiv) {
+      top.hasCiv = true;
+      SIM.cladeLog.push({ year: SIM.year, kind: 'civ', name: top.name });
+      notifyEvent(top.name + ' build a civilization.', 'good');
+    }
+    recomputeLifeStage();
+  }
+}
+
+// Seed a consumer clade if none exists and conditions allow
+function seedConsumerClade() {
+  // Already have one?
+  for (var i = 0; i < SIM.clades.length; i++) {
+    var c = SIM.clades[i];
+    if (c.extinct) continue;
+    var bp = bodyPlan(c.bodyPlan);
+    if (bp && bp.niche === 'consumer') return;
+  }
+  if (SIM.vegFrac < 0.01 && SIM.landFrac > 0.1) return;  // need food
+  var pick = SIM.landFrac < 0.1 ? 'aquatic' : 'insect';
+  var c = makeClade(pick, { biomass: 0.006, stage: bodyPlan(pick).minStage });
+  SIM.clades.push(c);
+  SIM.cladeLog.push({ year: SIM.year, kind: 'born', name: c.name, plan: pick, cause: 'seed' });
+  notifyEvent('Animals introduced: ' + c.name + '.', 'good');
+  recomputeLifeStage();
+}
+
+// Seed a plant clade if none exists
+function seedPlantClade() {
+  for (var i = 0; i < SIM.clades.length; i++) {
+    var c = SIM.clades[i];
+    if (c.extinct) continue;
+    if (c.bodyPlan === 'plant') return;
+  }
+  if (SIM.landFrac < 0.05) return;
+  var c = makeClade('plant', { biomass: 0.008, stage: 3, traits: ['photo'] });
+  SIM.clades.push(c);
+  SIM.cladeLog.push({ year: SIM.year, kind: 'born', name: c.name, plan: 'plant', cause: 'seed' });
+  notifyEvent('Land plants take root: ' + c.name + '.', 'good');
+  recomputeLifeStage();
 }
 
 function disasterIceAge() {
@@ -1574,16 +2133,18 @@ function disasterIceAge() {
   for (var i = 0; i < d.temperature.length; i++) d.temperature[i] -= 22;
   SIM.sunLum *= 0.95;
   notifyEvent('Ice age begins!', 'warn');
+  applyHazard('iceage', 0.06);
 }
 function disasterGreenhouse() {
   SIM.co2 = Math.min(20000, SIM.co2 * 3 + 800);
   notifyEvent('Runaway greenhouse forcing.', 'warn');
+  applyHazard('greenhouse', 0.06);
 }
 function disasterExtinction() {
-  if (SIM.lifeStage > 0) SIM.lifeStage = Math.max(1, SIM.lifeStage - 2);
   var d = WORLD.data;
   for (var i = 0; i < d.vegetation.length; i++) d.vegetation[i] *= 0.1;
   notifyEvent('Mass extinction imposed.', 'warn');
+  applyHazard('extinct', 0.10);
 }
 function disasterReset() {
   resetSim();
@@ -1620,7 +2181,21 @@ var ACHIEVEMENTS = [
     } },
   { id: 'monolith_5',    name: 'Black Pillars',     desc: 'Place 5 monoliths.',                  check: function(){ return (SIM.monoliths||[]).length >= 5; } },
   { id: 'wildfires_500', name: 'Burning World',     desc: 'Witness 500 wildfires.',              check: function(){ return (SIM.firesEverLit||0) >= 500; } },
-  { id: 'deep_time',     name: 'Deep Time',         desc: 'Reach planet age 4.5 Gy.',            check: function(){ return SIM.age >= 4.5; } }
+  { id: 'deep_time',     name: 'Deep Time',         desc: 'Reach planet age 4.5 Gy.',            check: function(){ return SIM.age >= 4.5; } },
+  { id: 'six_clades',    name: 'Diversification',   desc: 'Six living clades at once.',          check: function(){ return livingClades().length >= 6; } },
+  { id: 'two_sapients',  name: 'Convergent Minds',  desc: 'Two sapient species coexist.',        check: function(){ return sapientClades().length >= 2; } },
+  { id: 'arthropod_civ', name: 'Hive Mind',         desc: 'A non-mammalian civilization.',       check: function(){
+      var s = sapientClades();
+      for (var i=0;i<s.length;i++){ if (s[i].hasCiv && s[i].bodyPlan !== 'mammal') return true; }
+      return false; } },
+  { id: 'avian_sapient', name: 'Skyborn Minds',     desc: 'Sapient avians take flight.',         check: function(){
+      var s = sapientClades();
+      for (var i=0;i<s.length;i++){ if (s[i].bodyPlan === 'avian') return true; }
+      return false; } },
+  { id: 'survivor',      name: 'Survivor',          desc: 'A single clade lives 2 Gy.',          check: function(){
+      var live = livingClades();
+      for (var i=0;i<live.length;i++){ if ((SIM.age - live[i].bornAge) >= 2.0) return true; }
+      return false; } }
 ];
 
 function checkAchievements() {
@@ -1737,6 +2312,8 @@ function applyScenario(name) {
       }
       break;
   }
+  // Synthesize a plausible clade roster for the scenario's stage
+  synthesizeCladesForStage(SIM.lifeStage, name);
   // Let the climate engine take a few settle steps so viewed state is self-consistent
   for (var k = 0; k < 6; k++) {
     stepClimate(WORLD, 100000);
@@ -1750,6 +2327,38 @@ function applyScenario(name) {
   geometry.attributes.color.needsUpdate = true;
   refreshAllUI();
   notifyEvent('Scenario loaded: ' + name, 'good');
+}
+
+// Build a plausible clade roster matching a target stage. Used by scenarios
+// and the legacy stage-setting code paths so the new Clades panel isn't empty.
+function synthesizeCladesForStage(targetStage, scenarioName) {
+  SIM.clades = [];
+  SIM.cladeNextId = 0;
+  if (targetStage <= 0) return;
+  var add = function(plan, stage, traits, mass, flags) {
+    var c = makeClade(plan, { stage: stage, traits: (traits||[]).slice(), biomass: mass });
+    if (flags && flags.sapient) c.isSapient = true;
+    if (flags && flags.civ) { c.isSapient = true; c.hasCiv = true; }
+    SIM.clades.push(c);
+    return c;
+  };
+  // Always: a microbial substrate
+  add('microbe', Math.min(2, targetStage), ['photo'], 0.04);
+  if (targetStage >= 2) add('algal', Math.min(targetStage, 4), ['photo'], 0.05);
+  if (targetStage >= 3) add('aquatic', Math.min(targetStage, 5), ['aquatic'], 0.04);
+  if (targetStage >= 4) add('plant',   Math.min(targetStage, 6), ['photo'], 0.10);
+  if (targetStage >= 5) add('insect',  Math.min(targetStage, 6), ['hard','fast'], 0.04);
+  if (targetStage >= 5) add('reptile', Math.min(targetStage, 6), ['cold'], 0.03);
+  if (targetStage >= 6) add('mammal',  targetStage, ['social','tools'], 0.05, { sapient: targetStage >= 6, civ: targetStage >= 7 });
+  if (targetStage >= 6 && Math.random() < 0.5) add('avian', Math.min(targetStage, 6), ['flight'], 0.02);
+  // Carboniferous flavor: extra-large arthropods
+  if (scenarioName === 'carbon') add('insect', 5, ['large','hard'], 0.04);
+  // Snowball flavor: surviving microbes are cold-tolerant
+  if (scenarioName === 'snowball') {
+    for (var i = 0; i < SIM.clades.length; i++) {
+      if (SIM.clades[i].traits.indexOf('cold') < 0) SIM.clades[i].traits.push('cold');
+    }
+  }
 }
 
 // =============================================================
@@ -2584,6 +3193,15 @@ function setupUI() {
 var lastNonZeroSpeed = 1;
 var VIEW_ORDER = ['elevation','temperature','moisture','rivers','wind','biome','plate','vegetation'];
 function handleKey(e) {
+  // Console toggle: backtick or tilde. Allowed even when an input is focused
+  // — but only if that input is the console's own input (so typing ` inside
+  // a slider label doesn't open the console... actually nothing else here
+  // takes ` so just gate on the key first).
+  if (e.key === '`' || e.key === '~') {
+    e.preventDefault();
+    devConsoleToggle();
+    return;
+  }
   var tag = (e.target.tagName || '').toUpperCase();
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.metaKey || e.ctrlKey || e.altKey) return;
   var k = e.key;
@@ -2602,6 +3220,9 @@ function handleKey(e) {
     document.getElementById('btnSpin').click();
   } else if (k === 'r' || k === 'R') {
     disasterReset();
+  } else if (k === 'p' || k === 'P') {
+    phaseToggle();
+    if (PHASE.open) phaseRender();
   } else if (k === '?' || k === '/') {
     toggleHelp(true);
   } else if (k === 'Escape') {
@@ -2612,6 +3233,297 @@ function handleKey(e) {
     if (setEl && setEl.classList.contains('open'))   { toggleSettings(false); return; }
     if (bnEl && bnEl.classList.contains('open'))     { bnEl.classList.remove('open'); return; }
     openMainMenu();
+  }
+}
+
+// =============================================================
+// Developer console — toggle with backtick. Lets the player type
+// commands to spawn clades, fire events, set climate state, etc.
+// =============================================================
+var DEV_CONSOLE = { history: [], histIdx: -1, wired: false };
+
+function devConsoleToggle(force) {
+  var el = document.getElementById('devConsole');
+  if (!el) return;
+  var shouldOpen = (force === undefined) ? !el.classList.contains('open') : !!force;
+  el.classList.toggle('open', shouldOpen);
+  if (shouldOpen) {
+    devConsoleEnsureWired();
+    var input = document.getElementById('devConsoleInput');
+    if (input) { input.value = ''; setTimeout(function(){ input.focus(); }, 30); }
+    if (!DEV_CONSOLE.greeted) {
+      devConsolePrint("Biosphere Blue console. Type 'help' for commands. Press ` to close.", 'info');
+      DEV_CONSOLE.greeted = true;
+    }
+  } else {
+    document.getElementById('devConsoleInput').blur();
+  }
+}
+
+function devConsolePrint(text, cls) {
+  var out = document.getElementById('devConsoleOut');
+  if (!out) return;
+  var div = document.createElement('div');
+  if (cls) div.className = cls;
+  div.textContent = text;
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+
+function devConsoleEnsureWired() {
+  if (DEV_CONSOLE.wired) return;
+  DEV_CONSOLE.wired = true;
+  var input = document.getElementById('devConsoleInput');
+  if (!input) return;
+  input.addEventListener('keydown', function(e) {
+    if (e.key === '`' || e.key === '~') { e.preventDefault(); devConsoleToggle(false); return; }
+    if (e.key === 'Escape') { e.preventDefault(); devConsoleToggle(false); return; }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      var line = input.value;
+      input.value = '';
+      if (!line.trim()) return;
+      DEV_CONSOLE.history.push(line);
+      DEV_CONSOLE.histIdx = DEV_CONSOLE.history.length;
+      devConsolePrint('> ' + line, 'cmd');
+      try { devConsoleRun(line); }
+      catch (err) { devConsolePrint('error: ' + (err.message || err), 'err'); }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (DEV_CONSOLE.history.length === 0) return;
+      DEV_CONSOLE.histIdx = Math.max(0, DEV_CONSOLE.histIdx - 1);
+      input.value = DEV_CONSOLE.history[DEV_CONSOLE.histIdx] || '';
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      DEV_CONSOLE.histIdx = Math.min(DEV_CONSOLE.history.length, DEV_CONSOLE.histIdx + 1);
+      input.value = DEV_CONSOLE.history[DEV_CONSOLE.histIdx] || '';
+    }
+  });
+}
+
+// Find a clade by name (case-insensitive prefix match) or numeric id.
+function devFindClade(query) {
+  if (!SIM.clades || !SIM.clades.length) return null;
+  query = String(query).trim();
+  var asNum = parseInt(query, 10);
+  if (!isNaN(asNum)) {
+    for (var i = 0; i < SIM.clades.length; i++) if (SIM.clades[i].id === asNum) return SIM.clades[i];
+  }
+  var qLow = query.toLowerCase();
+  // Exact match first, then prefix among living
+  for (var i = 0; i < SIM.clades.length; i++) {
+    if (SIM.clades[i].name.toLowerCase() === qLow) return SIM.clades[i];
+  }
+  for (var i = 0; i < SIM.clades.length; i++) {
+    if (!SIM.clades[i].extinct && SIM.clades[i].name.toLowerCase().indexOf(qLow) === 0) return SIM.clades[i];
+  }
+  return null;
+}
+
+function devConsoleRun(line) {
+  var parts = line.trim().split(/\s+/);
+  var cmd = parts[0].toLowerCase();
+  var args = parts.slice(1);
+  var p = function(s, c){ devConsolePrint(s, c); };
+  switch (cmd) {
+    case 'help': case '?':
+      p('Commands:', 'info');
+      p('  help                       this list');
+      p('  list                       list living clades');
+      p('  log [n]                    last n clade-log entries (default 20)');
+      p('  status                     show climate + life summary');
+      p('  spawn <plan> [traits...]   create a clade (plans: ' + BODY_PLANS.map(function(b){return b.id;}).join(', ') + ')');
+      p('  extinct <name|id>          drive a clade to zero biomass');
+      p('  mutate <name> <trait>      add a trait (' + TRAITS.map(function(t){return t.id;}).join(', ') + ')');
+      p('  advance <name>             push clade up one stage');
+      p('  sapient <name>             grant sapience (stage 6)');
+      p('  civ <name>                 grant civilization (stage 7)');
+      p('  event <name>               fire a random-event entry by name (asteroid, volcano, ...)');
+      p('  hazard <tag> <amount>      apply a selection-pressure hit; tags: snowball iceage greenhouse asteroid volcano flare flood pandemic radiation extinct');
+      p('  disaster <kind>            iceage | greenhouse | extinct | reset');
+      p('  age <Gy>                   set planet age in billions of years');
+      p('  o2 <fraction>              set O2 (e.g. 0.21)');
+      p('  co2 <ppm>                  set CO2');
+      p('  ch4 <ppb>                  set CH4');
+      p('  temp <C>                   add to global temperature');
+      p('  sun <multiplier>           set solar luminosity slider (e.g. 1.0)');
+      p('  speed <0-4>                set sim speed');
+      p('  clear                      clear console output');
+      p('  close                      close console (or press `)');
+      break;
+    case 'list':
+      var live = livingClades();
+      if (!live.length) { p('no living clades.', 'info'); break; }
+      p('id  plan      stage  bm%   sap  traits                     name');
+      live.forEach(function(c) {
+        p(String(c.id).padStart(2) + '  ' + c.bodyPlan.padEnd(8) + '  ' + c.stage +
+          '     ' + (c.biomass*100).toFixed(1).padStart(5) +
+          (c.hasCiv?' CIV':(c.isSapient?' SAP':'    ')) +
+          ' ' + c.traits.join(',').padEnd(26) + ' ' + c.name);
+      });
+      var ex = SIM.clades.length - live.length;
+      if (ex) p('(' + ex + ' extinct not shown)', 'info');
+      break;
+    case 'log':
+      var n = parseInt(args[0], 10) || 20;
+      var entries = (SIM.cladeLog || []).slice(-n);
+      if (!entries.length) { p('no log entries.', 'info'); break; }
+      entries.forEach(function(e) {
+        p('  ' + (e.year/1e6).toFixed(1) + ' My  ' + e.kind + '  ' + (e.name||'') +
+          (e.cause?' ('+e.cause+')':'') + (e.plan?' plan='+e.plan:'') + (e.trait?' '+e.trait:''));
+      });
+      break;
+    case 'status':
+      p('age      ' + SIM.age.toFixed(3) + ' Gy');
+      p('temp     ' + SIM.globalTemp.toFixed(1) + ' °C   ice ' + (SIM.iceFrac*100).toFixed(0) + '%');
+      p('CO2      ' + SIM.co2.toFixed(0) + ' ppm    O2 ' + (SIM.o2*100).toFixed(2) + '%   CH4 ' + SIM.ch4.toFixed(0) + ' ppb');
+      p('land     ' + (SIM.landFrac*100).toFixed(0) + '%      veg ' + (SIM.vegFrac*100).toFixed(1) + '%   biomass ' + (SIM.biomass*100).toFixed(1) + '%');
+      p('lifeStage ' + SIM.lifeStage + ' (' + (STAGES[SIM.lifeStage]||{name:'?'}).name + ')');
+      p('clades   ' + livingClades().length + ' living, ' + sapientClades().length + ' sapient, ' + sapientClades().filter(function(c){return c.hasCiv;}).length + ' civ');
+      break;
+    case 'spawn': case 'seed':
+      if (!args.length) { p('usage: spawn <plan> [trait1 trait2 ...]', 'err'); break; }
+      var plan = args[0].toLowerCase();
+      if (!bodyPlan(plan)) { p('unknown plan: ' + plan, 'err'); break; }
+      var bp = bodyPlan(plan);
+      var traits = args.slice(1).filter(function(t){return !!traitDef(t);});
+      var c = makeClade(plan, { traits: traits, biomass: 0.01, stage: bp.minStage });
+      SIM.clades.push(c);
+      SIM.cladeLog.push({ year: SIM.year, kind: 'born', name: c.name, plan: plan, cause: 'console' });
+      recomputeLifeStage();
+      p('spawned ' + c.name + ' (' + plan + ', stage ' + c.stage + ', traits: ' + (c.traits.join(',')||'none') + ')', 'ok');
+      break;
+    case 'extinct':
+      if (!args.length) { p('usage: extinct <name|id>', 'err'); break; }
+      var c = devFindClade(args[0]);
+      if (!c) { p('clade not found: ' + args[0], 'err'); break; }
+      c.biomass = 0; c.extinct = true;
+      SIM.cladeLog.push({ year: SIM.year, kind: 'extinct', name: c.name, cause: 'console' });
+      recomputeLifeStage();
+      p(c.name + ' driven extinct.', 'ok');
+      break;
+    case 'mutate':
+      if (args.length < 2) { p('usage: mutate <name> <trait>', 'err'); break; }
+      var c = devFindClade(args[0]);
+      if (!c) { p('clade not found: ' + args[0], 'err'); break; }
+      var tid = args[1].toLowerCase();
+      if (!traitDef(tid)) { p('unknown trait: ' + tid, 'err'); break; }
+      if (c.traits.indexOf(tid) >= 0) { p(c.name + ' already has ' + tid, 'info'); break; }
+      c.traits.push(tid);
+      SIM.cladeLog.push({ year: SIM.year, kind: 'mutate', name: c.name, trait: tid, cause: 'console' });
+      p(c.name + ' gained trait: ' + tid, 'ok');
+      break;
+    case 'advance':
+      if (!args.length) { p('usage: advance <name>', 'err'); break; }
+      var c = devFindClade(args[0]);
+      if (!c) { p('clade not found: ' + args[0], 'err'); break; }
+      var bp = bodyPlan(c.bodyPlan);
+      if (c.stage >= bp.maxStage) { p(c.name + ' is already at body-plan ceiling (stage ' + c.stage + ')', 'info'); break; }
+      c.stage++;
+      if (c.stage === 6) c.isSapient = true;
+      if (c.stage === 7) c.hasCiv = true;
+      recomputeLifeStage();
+      p(c.name + ' advanced to stage ' + c.stage, 'ok');
+      break;
+    case 'sapient':
+      if (!args.length) { p('usage: sapient <name>', 'err'); break; }
+      var c = devFindClade(args[0]);
+      if (!c) { p('clade not found: ' + args[0], 'err'); break; }
+      c.stage = Math.max(c.stage, 6);
+      c.isSapient = true;
+      SIM.cladeLog.push({ year: SIM.year, kind: 'sapient', name: c.name, cause: 'console' });
+      recomputeLifeStage();
+      p(c.name + ' achieved sapience.', 'ok');
+      break;
+    case 'civ':
+      if (!args.length) { p('usage: civ <name>', 'err'); break; }
+      var c = devFindClade(args[0]);
+      if (!c) { p('clade not found: ' + args[0], 'err'); break; }
+      c.stage = 7;
+      c.isSapient = true;
+      c.hasCiv = true;
+      SIM.cladeLog.push({ year: SIM.year, kind: 'civ', name: c.name, cause: 'console' });
+      recomputeLifeStage();
+      p(c.name + ' built a civilization.', 'ok');
+      break;
+    case 'event':
+      if (!args.length) {
+        p('available events:', 'info');
+        EVENTS.forEach(function(e){ p('  ' + e.name); });
+        break;
+      }
+      var qLow = args.join(' ').toLowerCase();
+      var picked = null;
+      for (var i = 0; i < EVENTS.length; i++) {
+        if (EVENTS[i].name.toLowerCase().indexOf(qLow) === 0) { picked = EVENTS[i]; break; }
+      }
+      if (!picked) { p('no event matching: ' + args.join(' '), 'err'); break; }
+      picked.effect();
+      notifyEvent(picked.name, picked.kind);
+      p('fired: ' + picked.name, 'ok');
+      break;
+    case 'hazard':
+      if (args.length < 1) { p('usage: hazard <tag> [amount]', 'err'); break; }
+      var amt = parseFloat(args[1]); if (!isFinite(amt)) amt = 0.05;
+      applyHazard(args[0].toLowerCase(), amt);
+      p('applied hazard: ' + args[0] + ' (' + amt + ')', 'ok');
+      break;
+    case 'disaster':
+      var k = (args[0]||'').toLowerCase();
+      if (k === 'iceage') disasterIceAge();
+      else if (k === 'greenhouse') disasterGreenhouse();
+      else if (k === 'extinct') disasterExtinction();
+      else if (k === 'reset') disasterReset();
+      else { p('usage: disaster iceage|greenhouse|extinct|reset', 'err'); break; }
+      p('disaster: ' + k, 'ok');
+      break;
+    case 'age':
+      var v = parseFloat(args[0]); if (!isFinite(v)) { p('usage: age <Gy>', 'err'); break; }
+      SIM.age = v; SIM.year = v * 1e9;
+      p('age set to ' + v + ' Gy', 'ok');
+      break;
+    case 'o2':
+      var v = parseFloat(args[0]); if (!isFinite(v)) { p('usage: o2 <fraction>', 'err'); break; }
+      SIM.o2 = clamp(v, 0, 1);
+      p('O2 set to ' + SIM.o2, 'ok');
+      break;
+    case 'co2':
+      var v = parseFloat(args[0]); if (!isFinite(v)) { p('usage: co2 <ppm>', 'err'); break; }
+      SIM.co2 = clamp(v, 60, 25000);
+      p('CO2 set to ' + SIM.co2 + ' ppm', 'ok');
+      break;
+    case 'ch4':
+      var v = parseFloat(args[0]); if (!isFinite(v)) { p('usage: ch4 <ppb>', 'err'); break; }
+      SIM.ch4 = clamp(v, 200, 25000);
+      p('CH4 set to ' + SIM.ch4 + ' ppb', 'ok');
+      break;
+    case 'temp':
+      var v = parseFloat(args[0]); if (!isFinite(v)) { p('usage: temp <delta C>', 'err'); break; }
+      var d = WORLD && WORLD.data;
+      if (d) for (var i = 0; i < d.temperature.length; i++) d.temperature[i] += v;
+      SIM.globalTemp += v;
+      p('all tile temps shifted by ' + v + ' °C', 'ok');
+      break;
+    case 'sun':
+      var v = parseFloat(args[0]); if (!isFinite(v)) { p('usage: sun <multiplier>', 'err'); break; }
+      SIM.sunOverride = v;
+      var sl = document.getElementById('sunSlider'); if (sl) sl.value = Math.round(v * 100);
+      p('solar luminosity set to ' + v, 'ok');
+      break;
+    case 'speed':
+      var v = parseInt(args[0], 10);
+      if (isNaN(v) || v < 0 || v > 4) { p('usage: speed <0-4>', 'err'); break; }
+      setSpeed(v);
+      p('speed set to ' + v, 'ok');
+      break;
+    case 'clear':
+      document.getElementById('devConsoleOut').innerHTML = '';
+      break;
+    case 'close': case 'exit': case 'quit':
+      devConsoleToggle(false);
+      break;
+    default:
+      p('unknown command: ' + cmd + " (try 'help')", 'err');
   }
 }
 
@@ -2640,6 +3552,194 @@ function renderAchievementsList() {
   html = '<div style="color:#6080A0;font-size:0.85em;margin-bottom:6px">' + earned + ' / ' + ACHIEVEMENTS.length + ' unlocked</div>' + html;
   div.innerHTML = html;
 }
+
+// =============================================================
+// Phase-portrait overlay — a reduced 2D Budyko-Sellers model of the
+// climate's ice-albedo structure, rendered as an interactive phase
+// plane with nullclines, vector field, trajectory trail, and the
+// current-state Jacobian eigenvalues. Toggle with 'P'.
+//
+//   dT/dt ∝ T_eq(T, I, CO2, sun) - T
+//   dI/dt ∝ I*(T) - I       (with the same hysteresis gap as the sim)
+//
+// This is a decoupled pedagogic companion to stepClimate — it does
+// NOT drive the simulation; it visualizes the structural eigenvalue
+// picture of the climate's two dominant state variables.
+// =============================================================
+var PHASE = { open: false, trail: [], maxTrail: 160 };
+function phaseToggle(open) {
+  var el = document.getElementById('phaseOverlay');
+  if (!el) return;
+  PHASE.open = (open === undefined) ? !el.classList.contains('open') : !!open;
+  el.classList.toggle('open', PHASE.open);
+  el.setAttribute('aria-hidden', PHASE.open ? 'false' : 'true');
+  if (PHASE.open) PHASE.trail.length = 0;
+}
+function _phClamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+function _phTdot(T, I, CO2, sun) {
+  var alpha = 0.25 + (0.62 - 0.25) * _phClamp(I, 0, 1);
+  var co2F  = 5.2 * Math.log(Math.max(10, CO2) / 280) / Math.log(2);
+  var es    = Math.exp(17.67 * T / (T + 243.5));
+  var esRef = Math.exp(17.67 * 14 / (14 + 243.5));
+  var h2o   = _phClamp(es / esRef, 0.05, 6);
+  var h2oAmp = 1 + 0.32 * (h2o - 1);
+  var Teq   = -14 + 60 * sun * (1 - alpha) + co2F * h2oAmp;
+  return (Teq - T) * 0.02;   // pseudo-time rate; sign is what matters for nullclines
+}
+function _phIdot(T, I) {
+  // Two branches matching the in-sim ice growth/melt hysteresis (-2 / +3 °C).
+  // On the ice branch, I relaxes toward the warm-branch nullcline; on the
+  // warm branch, toward the cool-branch nullcline.
+  var Tf = (I > 0.02) ? 3 : -2;
+  var Istar = _phClamp((Tf - T) / 6, 0, 1);
+  return (Istar - I) * 0.5;
+}
+function _phJacobian(T, I, CO2, sun) {
+  var hT = 0.25, hI = 0.015;
+  var dT_dT = (_phTdot(T+hT, I, CO2, sun) - _phTdot(T-hT, I, CO2, sun)) / (2*hT);
+  var dT_dI = (_phTdot(T, I+hI, CO2, sun) - _phTdot(T, I-hI, CO2, sun)) / (2*hI);
+  var dI_dT = (_phIdot(T+hT, I)           - _phIdot(T-hT, I))           / (2*hT);
+  var dI_dI = (_phIdot(T, I+hI)           - _phIdot(T, I-hI))           / (2*hI);
+  var tau = dT_dT + dI_dI;
+  var det = dT_dT * dI_dI - dT_dI * dI_dT;
+  var disc = tau*tau - 4*det;
+  var out = { tau: tau, det: det, disc: disc, complex: disc < 0 };
+  if (disc >= 0) {
+    out.l1 = (tau + Math.sqrt(disc)) / 2;
+    out.l2 = (tau - Math.sqrt(disc)) / 2;
+  } else {
+    out.re = tau / 2;
+    out.im = Math.sqrt(-disc) / 2;
+  }
+  if (Math.abs(det) < 1e-5) out.kind = 'DEGENERATE';
+  else if (det < 0) out.kind = 'SADDLE';
+  else if (disc > 0) out.kind = (tau < 0 ? 'STABLE NODE' : 'UNSTABLE NODE');
+  else if (Math.abs(tau) < 1e-3) out.kind = 'CENTER';
+  else out.kind = (tau < 0 ? 'STABLE SPIRAL' : 'UNSTABLE SPIRAL');
+  return out;
+}
+function phaseRender() {
+  if (!PHASE.open) return;
+  var cv = document.getElementById('phaseCanvas');
+  if (!cv || !SIM) return;
+  var ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  ctx.fillStyle = '#05080F';
+  ctx.fillRect(0, 0, W, H);
+
+  var CO2 = SIM.co2, sun = SIM.sunLum || 1;
+  var tMin = -40, tMax = 60, padL = 32, padR = 10, padT = 8, padB = 22;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  function xOf(T) { return padL + (T - tMin) / (tMax - tMin) * plotW; }
+  function yOf(I) { return padT + (1 - I) * plotH; }
+
+  // Grid
+  ctx.strokeStyle = '#141C2C'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (var t = -40; t <= 60; t += 20) { ctx.moveTo(xOf(t), padT); ctx.lineTo(xOf(t), H - padB); }
+  for (var i = 0; i <= 1.001; i += 0.25) { ctx.moveTo(padL, yOf(i)); ctx.lineTo(W - padR, yOf(i)); }
+  ctx.stroke();
+  // Tick labels
+  ctx.fillStyle = '#5A7090'; ctx.font = '9px "Courier New", monospace'; ctx.textAlign = 'center';
+  for (var t2 = -40; t2 <= 60; t2 += 20) ctx.fillText(t2 + '°', xOf(t2), H - padB + 11);
+  ctx.textAlign = 'right';
+  for (var i2 = 0; i2 <= 1.001; i2 += 0.25) ctx.fillText(i2.toFixed(2), padL - 3, yOf(i2) + 3);
+  ctx.textAlign = 'center'; ctx.fillStyle = '#7C92B0';
+  ctx.fillText('T (°C)', padL + plotW/2, H - 4);
+
+  // Vector field (sparse — direction only, magnitude-normalized)
+  ctx.strokeStyle = 'rgba(100,140,180,0.35)'; ctx.lineWidth = 0.8;
+  var nx = 13, ny = 9;
+  for (var kx = 0; kx < nx; kx++) {
+    for (var ky = 0; ky < ny; ky++) {
+      var T = tMin + (tMax - tMin) * (kx + 0.5) / nx;
+      var I = (ky + 0.5) / ny;
+      var dT = _phTdot(T, I, CO2, sun), dI = _phIdot(T, I);
+      var vx = dT, vy = -dI * 40;
+      var m = Math.sqrt(vx*vx + vy*vy);
+      if (m < 1e-6) continue;
+      var L = 9;
+      vx = vx / m * L; vy = vy / m * L;
+      var x0 = xOf(T), y0 = yOf(I);
+      ctx.beginPath(); ctx.moveTo(x0 - vx*0.3, y0 - vy*0.3); ctx.lineTo(x0 + vx*0.7, y0 + vy*0.7);
+      ctx.stroke();
+    }
+  }
+
+  // T-nullcline: for each I, bisect for T where dT/dt = 0
+  ctx.strokeStyle = '#FF9060'; ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  var started = false;
+  for (var k = 0; k <= 80; k++) {
+    var I3 = k / 80;
+    var lo = -80, hi = 120;
+    for (var it = 0; it < 40; it++) {
+      var mid = (lo + hi) / 2;
+      var r = _phTdot(mid, I3, CO2, sun);
+      if (r > 0) lo = mid; else hi = mid;
+    }
+    var Tstar = (lo + hi) / 2;
+    if (Tstar < tMin || Tstar > tMax) { started = false; continue; }
+    if (!started) { ctx.moveTo(xOf(Tstar), yOf(I3)); started = true; }
+    else ctx.lineTo(xOf(Tstar), yOf(I3));
+  }
+  ctx.stroke();
+
+  // I-nullcline: two branches (cooling / warming) from the hysteresis
+  ctx.strokeStyle = '#80D0FF'; ctx.lineWidth = 1.4;
+  for (var b = 0; b < 2; b++) {
+    ctx.beginPath();
+    var first = true;
+    var Tf = b === 0 ? -2 : 3;
+    for (var k4 = 0; k4 <= 160; k4++) {
+      var T4 = tMin + (tMax - tMin) * k4 / 160;
+      var Ist = _phClamp((Tf - T4) / 6, 0, 1);
+      if (first) { ctx.moveTo(xOf(T4), yOf(Ist)); first = false; }
+      else ctx.lineTo(xOf(T4), yOf(Ist));
+    }
+    ctx.stroke();
+  }
+
+  // Trail of the live sim state
+  PHASE.trail.push([SIM.globalTemp, SIM.iceFrac]);
+  if (PHASE.trail.length > PHASE.maxTrail) PHASE.trail.shift();
+  if (PHASE.trail.length > 1) {
+    ctx.strokeStyle = 'rgba(255,208,64,0.55)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (var p = 0; p < PHASE.trail.length; p++) {
+      var pt = PHASE.trail[p];
+      if (p === 0) ctx.moveTo(xOf(pt[0]), yOf(pt[1]));
+      else         ctx.lineTo(xOf(pt[0]), yOf(pt[1]));
+    }
+    ctx.stroke();
+  }
+
+  // Live-state dot
+  var cx = xOf(SIM.globalTemp), cy = yOf(SIM.iceFrac);
+  ctx.fillStyle = '#FFD040';
+  ctx.beginPath(); ctx.arc(cx, cy, 4.5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#FFFFC0'; ctx.lineWidth = 1.3; ctx.stroke();
+
+  // Classification panel
+  var J = _phJacobian(SIM.globalTemp, SIM.iceFrac, CO2, sun);
+  var info = document.getElementById('phaseInfo');
+  if (info) {
+    var lamLine;
+    if (J.complex) {
+      lamLine = '&lambda; = ' + J.re.toFixed(2) + ' &plusmn; ' + J.im.toFixed(2) + 'i';
+    } else {
+      lamLine = '&lambda;&#8321; = ' + J.l1.toFixed(2) + '  &lambda;&#8322; = ' + J.l2.toFixed(2);
+    }
+    info.innerHTML =
+      '<div><span style="color:#FF9060">━</span> T-nullcline &nbsp; ' +
+      '<span style="color:#80D0FF">━</span> I-nullcline (two hysteresis branches)</div>' +
+      '<div style="color:#7890B0">CO&#8322; = ' + Math.round(CO2) + ' ppm &nbsp; sun = ' + sun.toFixed(2) + '</div>' +
+      '<div>&tau; = ' + J.tau.toFixed(3) + ' &nbsp; &Delta; = ' + J.det.toFixed(3) + '</div>' +
+      '<div>' + lamLine + '</div>' +
+      '<div class="kind">' + J.kind + '</div>';
+  }
+}
+
 function setSpeed(s) {
   SIM.speed = s;
   if (s !== 0) lastNonZeroSpeed = s;
@@ -2758,6 +3858,45 @@ function updateLifePanel() {
     html += '<div class="'+cls+'" title="'+STAGES[i].name+'"></div>';
   }
   dots.innerHTML = html;
+  // Clade list
+  var listEl = document.getElementById('cladeList');
+  if (!listEl) return;
+  var live = livingClades();
+  if (!live.length) {
+    listEl.innerHTML = '<div class="clade-empty">No life yet.</div>';
+    return;
+  }
+  // Sort: civ first, then sapients, then by biomass desc
+  live.sort(function(a, b){
+    var as = (a.hasCiv?2:0) + (a.isSapient?1:0);
+    var bs = (b.hasCiv?2:0) + (b.isSapient?1:0);
+    if (as !== bs) return bs - as;
+    return b.biomass - a.biomass;
+  });
+  var out = '';
+  for (var k = 0; k < live.length; k++) {
+    var c = live[k];
+    var bp = bodyPlan(c.bodyPlan) || { name: '?', color: '#888', sym: '?' };
+    var cls = 'clade-row';
+    if (c.hasCiv) cls += ' civ';
+    else if (c.isSapient) cls += ' sapient';
+    var traits = '';
+    for (var t = 0; t < c.traits.length; t++) {
+      var td = traitDef(c.traits[t]);
+      if (td) traits += (traits ? ', ' : '') + td.name.toLowerCase();
+    }
+    if (!traits) traits = '<span style="color:#4A6080">no traits</span>';
+    var stagePct = Math.round(c.stage / 7 * 100);
+    var mark = c.hasCiv ? ' <span class="cmark">civ</span>' : (c.isSapient ? ' <span class="cmark">sapient</span>' : '');
+    out += '<div class="'+cls+'" style="border-left-color:'+(c.hasCiv?'#80F0A0':(c.isSapient?'#FFD040':bp.color))+'" title="age '+(SIM.age - c.bornAge).toFixed(2)+' Gy">'
+        +  '<div><span class="cn">'+c.name+'</span><span class="cb">'+bp.name+mark+'</span></div>'
+        +  '<div class="ct">'+traits+'</div>'
+        +  '<div style="margin-top:3px;color:#6080A0;font-size:0.85em">stage '+c.stage+' / 7'
+        +  '<span class="cbar"><i style="width:'+stagePct+'%"></i></span> '
+        +  (c.biomass*100).toFixed(1)+'%</div>'
+        +  '</div>';
+  }
+  listEl.innerHTML = out;
 }
 
 function updateInfoPanel() {
@@ -2778,7 +3917,42 @@ function updateInfoPanel() {
     '<div class="row"><span>Plate</span><b>#' + d.plates[selectedTile] + (d.plateInfo[d.plates[selectedTile]].oceanic ? ' (ocean)' : ' (cont)') + '</b></div>' +
     '<div class="row"><span>River flow</span><b>' + d.riverFlow[selectedTile].toFixed(1) + '</b></div>' +
     '<div class="row"><span>Precip</span><b>' + ((BUF.Precip ? BUF.Precip[selectedTile] : 0) * 100).toFixed(2) + '</b></div>' +
-    '<div class="row"><span>Wind</span><b>' + (WORLD.tiles[selectedTile].windSpeed * 60).toFixed(1) + ' kph</b></div>';
+    '<div class="row"><span>Wind</span><b>' + (WORLD.tiles[selectedTile].windSpeed * 60).toFixed(1) + ' kph</b></div>' +
+    cladesAtTileHTML(selectedTile);
+}
+
+// Best-effort: enumerate which living clades would inhabit this tile given
+// habitat (sea/land), local temperature window, and food. We don't track
+// per-tile clade populations; this is a derived label.
+function cladesAtTileHTML(ti) {
+  if (!SIM.clades || !SIM.clades.length) return '';
+  var d = WORLD.data;
+  var onLand = d.bedrock[ti] > SIM.seaLevel;
+  var T = d.temperature[ti];
+  var live = livingClades();
+  var hits = [];
+  for (var i = 0; i < live.length; i++) {
+    var c = live[i];
+    var bp = bodyPlan(c.bodyPlan);
+    if (!bp) continue;
+    if (bp.habitat === 'land' && !onLand) continue;
+    if (bp.habitat === 'sea'  &&  onLand) continue;
+    var lo = -8, hi = 42;
+    if (c.traits.indexOf('cold') >= 0) lo -= 12;
+    if (c.traits.indexOf('heat') >= 0) hi += 14;
+    if (T < lo || T > hi) continue;
+    hits.push(c);
+  }
+  if (!hits.length) return '<div class="row"><span>Fauna/flora</span><b style="color:#4A6080">none</b></div>';
+  hits.sort(function(a,b){return b.biomass - a.biomass;});
+  var max = Math.min(4, hits.length);
+  var names = '';
+  for (var k = 0; k < max; k++) {
+    var bp2 = bodyPlan(hits[k].bodyPlan) || {};
+    names += (names ? ', ' : '') + '<span style="color:'+(bp2.color||'#B0C8E0')+'">'+hits[k].name+'</span>';
+  }
+  if (hits.length > max) names += ' +' + (hits.length - max);
+  return '<div class="row" style="display:block"><span>Inhabitants</span><div style="margin-top:2px;font-size:0.92em">'+names+'</div></div>';
 }
 
 function updateYearDisplay() {
@@ -2871,6 +4045,7 @@ function animate() {
     }
     if (frameCount % 6 === 0) refreshAllUI();
   }
+  if (PHASE.open && (frameCount % 3 === 0)) phaseRender();
 
   // Seasons advance on real time so you can watch the planet breathe even while paused.
   if (SIM && SIM.showSeasons) {
@@ -2979,7 +4154,8 @@ function saveWorld(slot) {
       ch4: SIM.ch4, h2o: SIM.h2o, firesEverLit: SIM.firesEverLit,
       monoliths: SIM.monoliths, sunOverride: SIM.sunOverride, co2Forcing: SIM.co2Forcing,
       axialTilt: SIM.axialTilt, seasonPhase: SIM.seasonPhase, showSeasons: SIM.showSeasons,
-      geothermal: SIM.geothermal
+      geothermal: SIM.geothermal,
+      clades: SIM.clades, cladeNextId: SIM.cladeNextId, cladeLog: (SIM.cladeLog || []).slice(-40)
     },
     plateInfo: d.plateInfo,
     plateCount: d.plateCount,
@@ -3022,6 +4198,20 @@ function loadWorld(slot) {
     d.plateCount  = p.plateCount;
     for (var k in p.sim) SIM[k] = p.sim[k];
     SIM.lastEventYear = {};
+    // Backfill clade fields for old saves predating the clade system
+    if (!SIM.clades) {
+      SIM.clades = [];
+      SIM.cladeNextId = 0;
+      SIM.cladeLog = [];
+      synthesizeCladesForStage(SIM.lifeStage || 0, '');
+    } else {
+      if (typeof SIM.cladeNextId !== 'number') {
+        var maxId = 0;
+        for (var i = 0; i < SIM.clades.length; i++) if (SIM.clades[i].id > maxId) maxId = SIM.clades[i].id;
+        SIM.cladeNextId = maxId;
+      }
+      if (!SIM.cladeLog) SIM.cladeLog = [];
+    }
     setSpeed(SIM.speed);
     stepBiomes(WORLD);
     updateMeshPositions();
@@ -3480,5 +4670,18 @@ setInterval(function() {
 
 window.addEventListener('load', function() { init(); wireMusicButton(); wireSaveLoadButtons(); });
 </script>
+<div id="phaseOverlay" aria-hidden="true">
+  <canvas id="phaseCanvas" width="340" height="260"></canvas>
+  <div id="phaseInfo"></div>
+  <div id="phaseCaption">PHASE PORTRAIT &middot; press P to close</div>
+</div>
+
+<div id="devConsole" aria-hidden="true">
+  <div id="devConsoleOut"></div>
+  <div id="devConsoleIn">
+    <span class="prompt">&gt;</span>
+    <input id="devConsoleInput" type="text" autocomplete="off" spellcheck="false" placeholder="type a command, or 'help' &mdash; backtick to close">
+  </div>
+</div>
 </body>
 </html>
