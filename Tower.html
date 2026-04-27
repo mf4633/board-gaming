@@ -28,10 +28,11 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
 #towerCanvas.bulldozing { cursor: not-allowed; }
 
 .hud { position: absolute; background: rgba(12,18,26,0.82); border: 1px solid #3A4858; border-radius: 6px; padding: 8px 12px; font-family: 'Courier New', monospace; font-size: 0.85em; color: #C0D0E0; pointer-events: auto; z-index: 10; backdrop-filter: blur(3px); }
-.draggable-hud { cursor: move; user-select: none; }
+.draggable-hud { cursor: move; user-select: none; padding-top: 18px !important; }
 .draggable-hud.dragging { box-shadow: 0 0 0 2px #FFD060, 0 8px 24px rgba(0,0,0,0.6); opacity: 0.9; z-index: 999 !important; }
-.draggable-hud::before { content: '\2630'; position: absolute; top: 2px; right: 4px; color: rgba(255,208,96,0.35); font-size: 0.7em; pointer-events: none; }
-.draggable-hud:hover::before { color: rgba(255,208,96,0.85); }
+/* Explicit drag strip across the top so the hitbox is unmistakable */
+.draggable-hud::before { content: '\2630\00a0\00a0\00a0drag'; position: absolute; top: 0; left: 0; right: 0; height: 14px; background: rgba(255,208,96,0.10); color: rgba(255,208,96,0.55); font-size: 0.62em; line-height: 14px; text-align: center; letter-spacing: 0.2em; pointer-events: none; border-bottom: 1px solid rgba(255,208,96,0.18); border-radius: 6px 6px 0 0; }
+.draggable-hud:hover::before { background: rgba(255,208,96,0.18); color: rgba(255,208,96,0.95); }
 .hud b { color: #7AB0E0; font-size: 0.8em; letter-spacing: 1.5px; }
 .hud .val { color: #60E090; font-weight: bold; }
 .hud .warn { color: #E0A040; }
@@ -87,7 +88,7 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
 .star-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(40,30,10,0.96); border: 3px solid #FFD040; color: #FFEE80; padding: 20px 36px; border-radius: 12px; font-family: Georgia, serif; font-size: 1.4em; z-index: 60; pointer-events: none; text-align: center; opacity: 0; transition: opacity 0.5s; box-shadow: 0 0 40px rgba(255,208,64,0.4); }
 .star-popup.show { opacity: 1; }
 
-#infoPanel { position: absolute; top: 150px; left: 12px; background: rgba(12,18,26,0.95); border: 1.5px solid #5A7898; border-radius: 8px; padding: 12px 16px; font-family: 'Courier New', monospace; font-size: 0.82em; color: #C0D0E0; min-width: 250px; max-width: 320px; z-index: 25; display: none; box-shadow: 0 4px 18px rgba(0,0,0,0.55); }
+#infoPanel { position: absolute; top: 380px; left: 12px; background: rgba(12,18,26,0.95); border: 1.5px solid #5A7898; border-radius: 8px; padding: 12px 16px; font-family: 'Courier New', monospace; font-size: 0.82em; color: #C0D0E0; min-width: 250px; max-width: 320px; z-index: 25; display: none; box-shadow: 0 4px 18px rgba(0,0,0,0.55); }
 #infoPanel.show { display: block; }
 #infoPanel h4 { color: #9ADBFF; font-family: Georgia, serif; font-size: 1.15em; margin-bottom: 8px; letter-spacing: 1.5px; border-bottom: 1px solid #3A4858; padding-bottom: 4px; }
 #infoPanel .row { display: flex; justify-content: space-between; margin: 3px 0; }
@@ -121,7 +122,7 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
 #loadBtn { right: 140px; }
 #saveBtn:hover, #loadBtn:hover { background: #1A2030; color: #FFD060; border-color: #FFD060; }
 
-#questPanel { position: absolute; top: 150px; right: 12px; background: rgba(16,22,32,0.94); border: 1.5px solid #5A7898; border-radius: 8px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 0.78em; color: #B0C8E0; width: 280px; z-index: 23; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.55); }
+#questPanel { position: absolute; top: 360px; right: 12px; background: rgba(16,22,32,0.94); border: 1.5px solid #5A7898; border-radius: 8px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 0.78em; color: #B0C8E0; width: 280px; z-index: 23; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.55); }
 #questPanel.show { display: block; }
 #questPanel h4 { color: #FFD060; font-family: Georgia, serif; font-size: 0.95em; margin-bottom: 6px; letter-spacing: 1.5px; }
 #questPanel .quest-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px dotted #2A3040; }
@@ -129,7 +130,7 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
 #questPanel .q-text { color: #D0E0F0; }
 #questPanel .q-reward { color: #90E090; font-weight: bold; }
 
-#requestsPanel { position: absolute; top: 150px; right: 310px; background: rgba(32,22,16,0.94); border: 1.5px solid #A07858; border-radius: 8px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 0.76em; color: #D8C0A0; width: 280px; z-index: 23; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.55); }
+#requestsPanel { position: absolute; top: 280px; right: 310px; background: rgba(32,22,16,0.94); border: 1.5px solid #A07858; border-radius: 8px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 0.76em; color: #D8C0A0; width: 280px; z-index: 23; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.55); }
 #requestsPanel.show { display: block; }
 #requestsPanel h4 { color: #FFA070; font-family: Georgia, serif; font-size: 0.95em; margin-bottom: 6px; letter-spacing: 1.5px; }
 #requestsPanel .quest-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px dotted #403020; }
@@ -2713,6 +2714,7 @@ function placeAtCursor() {
   else if (build.mode === 'addcar') addElevatorCar(cell.x, cell.y);
   else if (build.mode === 'identify') { var uid = state.grid[cell.x+','+cell.y]; if (uid) showUnitInfo(uid); }
   else if (build.mode === 'renovate') renovateAt(cell.x, cell.y);
+  else if (build.mode === 'extinguish') extinguishAt(cell.x, cell.y);
   else if (build.mode) placeUnit(build.mode, cell.x, cell.y);
 }
 
@@ -2897,6 +2899,8 @@ function renderPalette() {
           '<span class="pb-name">+ Car</span><span class="pb-cost">$' + Math.round(carCost/1000) + 'k</span></div>';
   html += '<div class="pal-btn" data-unit="identify" onclick="setBuild(\'identify\')">' +
           '<span class="pb-name">Identify</span><span class="pb-cost">inspect</span></div>';
+  html += '<div class="pal-btn" data-unit="extinguish" onclick="setBuild(\'extinguish\')">' +
+          '<span class="pb-name">Extinguish</span><span class="pb-cost">$20k</span></div>';
   var renoLocked = state.stars < 4;
   html += '<div class="pal-btn' + (renoLocked ? ' locked' : '') + '" data-unit="renovate" ' + (renoLocked ? '' : 'onclick="setBuild(\'renovate\')"') + '>' +
           '<span class="pb-name">Renovate</span><span class="pb-cost">' + (renoLocked ? 'locked \u26054' : '$40k') + '</span></div>';
@@ -3042,7 +3046,8 @@ function updateBuildHint() {
   if (build.bulldoze) msg = 'Click a unit to bulldoze it.';
   else if (build.mode === 'addcar') msg = 'Click an elevator shaft cell to add a car ($' + Math.round(80000 * costMultiplier.elevator / 1000) + 'k).';
   else if (build.mode === 'identify') msg = 'Click any unit to inspect its stats, satisfaction, and complaints.';
-  else if (build.mode === 'renovate') msg = 'Click a unit to renovate ($40k). Resets satisfaction and repairs damage.';
+  else if (build.mode === 'extinguish') msg = 'Click a damaged unit to extinguish ($20k). Repairs fire damage in place — keeps the unit, no bulldoze.';
+  else if (build.mode === 'renovate') msg = 'Click a unit to renovate ($40k). Repairs damage and resets satisfaction in place — keeps tenants, no bulldoze.';
   else {
     var u = UNITS[build.mode];
     msg = 'Place ' + u.name + ' (click to build, ESC to cancel)';
@@ -3113,10 +3118,23 @@ function canPlace(type, gx, gy) {
       if (state.grid[x+','+y]) return { ok: false, reason: 'Cell occupied' };
     }
   }
+  // Elevators and stairs are vertical-transport columns: each cell above ground must have
+  // a unit directly below in the SAME column, so the shaft connects all the way down to
+  // a lobby. No lateral cantilever — that's how players ended up with shafts hanging in
+  // mid-air (built upward from a lone lateral support, then chained the column to the sky).
+  if (u.isElevator || type === 'stairs') {
+    for (var ecdy = 0; ecdy < u.h; ecdy++) {
+      var ecy = gy + ecdy;
+      if (ecy <= 0) continue;
+      if (ecdy > 0) continue;
+      if (!state.grid[gx + ',' + (ecy - 1)]) {
+        return { ok: false, reason: u.isElevator ? 'Elevator must connect down to lobby' : 'Stairs must connect down to lobby' };
+      }
+    }
+    return { ok: true };
+  }
   // Structural cantilever: each cell at floors above ground needs a supporting cell
   // within ±2 tiles on the floor directly below. Ground (y=0) and basement (y<0) don't need support.
-  // Elevator shafts + stairs pass through unsupported because they connect vertically, but the
-  // bottom cell of the shaft/stair still needs support.
   for (var cdx = 0; cdx < u.w; cdx++) {
     for (var cdy = 0; cdy < u.h; cdy++) {
       var cx = gx + cdx, cy = gy + cdy;
@@ -3127,7 +3145,7 @@ function canPlace(type, gx, gy) {
       for (var lx = cx - 2; lx <= cx + 2; lx++) {
         if (state.grid[lx + ',' + (cy - 1)]) { supported = true; break; }
       }
-      if (!supported) return { ok: false, reason: 'No support — max 2-tile cantilever' };
+      if (!supported) return { ok: false, reason: 'No support — needs a unit within 2 tiles directly below' };
     }
   }
   return { ok: true };
@@ -3185,11 +3203,15 @@ function bulldozeAt(gx, gy) {
 }
 
 function rebuildElevators() {
-  // Keep existing shafts' car configs if the shaft at same (shaftX, minY-ish) still exists.
-  // Per-car queues are carried over with cars; stale queue floors outside the new range are dropped.
+  // Re-derive shafts from the grid. Each prev car is assigned to AT MOST ONE new shaft
+  // (the one whose floor range contains the car's current y), so a split shaft does not
+  // duplicate cars/passengers across the two new sub-shafts. Riders whose destination is
+  // outside the new range are ejected at the nearest reachable floor.
   var prev = state.elevators || [];
   state.elevators = [];
   var used = {};
+  var newShafts = []; // collect first, attach cars in a second pass
+
   for (var key in state.grid) {
     var uid = state.grid[key];
     var unit = state.units[uid];
@@ -3199,66 +3221,97 @@ function rebuildElevators() {
     var x = parseInt(parts[0]);
     var y = parseInt(parts[1]);
     var isExpress = !!UNITS[unit.type].express;
-    var sameType = function(gy) {
-      var u2 = state.units[state.grid[x+','+gy]];
-      if (!u2 || !UNITS[u2.type].isElevator) return false;
-      return !!UNITS[u2.type].express === isExpress;
-    };
+    var sameType = (function(sx, sExp) {
+      return function(gy) {
+        var u2 = state.units[state.grid[sx+','+gy]];
+        if (!u2 || !UNITS[u2.type].isElevator) return false;
+        return !!UNITS[u2.type].express === sExp;
+      };
+    })(x, isExpress);
     var bot = y;
     while (sameType(bot - 1)) bot--;
     var top = y;
     while (sameType(top + 1)) top++;
     for (var fy = bot; fy <= top; fy++) used[x+','+fy] = true;
-    var carryCars = [];
-    for (var pi = 0; pi < prev.length; pi++) {
-      var p = prev[pi];
-      if (p.shaftX !== x) continue;
-      if (p.maxY < bot || p.minY > top) continue;
-      for (var pcj = 0; pcj < p.cars.length; pcj++) carryCars.push(p.cars[pcj]);
-    }
-    var cars;
-    if (carryCars.length > 0) {
-      cars = [];
-      for (var ci = 0; ci < carryCars.length; ci++) {
-        var oc = carryCars[ci];
-        cars.push({
-          y: Math.max(bot, Math.min(top, oc.y)),
-          floatY: Math.max(bot, Math.min(top, oc.floatY)),
-          dir: oc.dir, passengers: oc.passengers.slice(), stopTimer: oc.stopTimer,
-          queueUp: filterQueueRange(oc.queueUp || {}, bot, top),
-          queueDown: filterQueueRange(oc.queueDown || {}, bot, top)
-        });
+    newShafts.push({ shaftX: x, minY: bot, maxY: top, express: isExpress,
+                     queueUp: {}, queueDown: {}, cars: [] });
+  }
+
+  // Distribute each prev car to exactly one new shaft (matched by shaftX + range that
+  // contains the car's current y). If no new shaft fits, the car is dropped — its
+  // passengers are released below.
+  var carriedPassengerIds = {};
+  for (var pi = 0; pi < prev.length; pi++) {
+    var p = prev[pi];
+    for (var pcj = 0; pcj < p.cars.length; pcj++) {
+      var oc = p.cars[pcj];
+      var dest = null;
+      for (var nsi = 0; nsi < newShafts.length; nsi++) {
+        var ns = newShafts[nsi];
+        if (ns.shaftX !== p.shaftX) continue;
+        if (oc.y < ns.minY || oc.y > ns.maxY) continue;
+        if (ns.express !== p.express) continue;
+        dest = ns;
+        break;
       }
-    } else {
-      cars = [{ y: bot, floatY: bot, dir: 1, passengers: [], stopTimer: 0, queueUp: {}, queueDown: {} }];
-    }
-    var newShaft = {
-      shaftX: x, minY: bot, maxY: top,
-      express: isExpress,
-      queueUp: {}, queueDown: {}, // legacy, no longer used by dispatch
-      cars: cars
-    };
-    state.elevators.push(newShaft);
-    // Reseat passengers' inElevator pointer onto the rebuilt shaft
-    for (var ck = 0; ck < cars.length; ck++) {
-      var pIds = cars[ck].passengers;
-      for (var pj = 0; pj < pIds.length; pj++) {
-        var ag = findAgent(pIds[pj]);
-        if (ag) ag.inElevator = newShaft;
-      }
+      if (!dest) continue;
+      var newCar = {
+        y: oc.y,
+        floatY: Math.max(dest.minY, Math.min(dest.maxY, oc.floatY)),
+        dir: oc.dir,
+        passengers: oc.passengers.slice(),
+        stopTimer: oc.stopTimer,
+        queueUp: filterQueueRange(oc.queueUp || {}, dest.minY, dest.maxY),
+        queueDown: filterQueueRange(oc.queueDown || {}, dest.minY, dest.maxY)
+      };
+      dest.cars.push(newCar);
+      for (var pj = 0; pj < newCar.passengers.length; pj++) carriedPassengerIds[newCar.passengers[pj]] = true;
     }
   }
-  // Free any agent stranded in a destroyed shaft (passenger-id not present in any current car)
-  var liveIds = {};
+
+  // Any new shaft with no carried cars gets a fresh default car at the bottom.
+  for (var ki = 0; ki < newShafts.length; ki++) {
+    if (newShafts[ki].cars.length === 0) {
+      newShafts[ki].cars.push({ y: newShafts[ki].minY, floatY: newShafts[ki].minY,
+                                 dir: 1, passengers: [], stopTimer: 0, queueUp: {}, queueDown: {} });
+    }
+    state.elevators.push(newShafts[ki]);
+  }
+
+  // Reseat inElevator pointer + eject riders whose destination is now unreachable.
   for (var sj = 0; sj < state.elevators.length; sj++) {
-    for (var sk = 0; sk < state.elevators[sj].cars.length; sk++) {
-      var pp = state.elevators[sj].cars[sk].passengers;
-      for (var sl = 0; sl < pp.length; sl++) liveIds[pp[sl]] = true;
+    var shaft = state.elevators[sj];
+    for (var sk = 0; sk < shaft.cars.length; sk++) {
+      var car = shaft.cars[sk];
+      for (var qi = car.passengers.length - 1; qi >= 0; qi--) {
+        var ag = findAgent(car.passengers[qi]);
+        if (!ag) { car.passengers.splice(qi, 1); continue; }
+        var dy = desiredFloorForAgent(ag);
+        var unreachable = (dy < shaft.minY || dy > shaft.maxY);
+        // Express rider whose hub-transfer floor is no longer a hub also gets ejected.
+        if (!unreachable && shaft.express && ag.transferAt != null && !isHubFloor(ag.transferAt)) {
+          unreachable = true;
+        }
+        if (unreachable) {
+          var dropY = Math.max(shaft.minY, Math.min(shaft.maxY, car.y));
+          ag.y = dropY;
+          ag.inElevator = null;
+          ag.assignedCar = null;
+          ag.transferAt = null;
+          ag.waiting = false;
+          ag.waitTicks = 0;
+          car.passengers.splice(qi, 1);
+        } else {
+          ag.inElevator = shaft;
+        }
+      }
     }
   }
+
+  // Free any agent whose inElevator pointed at a now-dead shaft (id no longer aboard any car).
   for (var ai = 0; ai < state.agents.length; ai++) {
     var a = state.agents[ai];
-    if (a.inElevator && !liveIds[a.id]) {
+    if (a.inElevator && !carriedPassengerIds[a.id]) {
       a.inElevator = null;
       a.waiting = false;
       a.waitTicks = 0;
@@ -4030,6 +4083,23 @@ function tickCar(e, c, carIdx) {
   // Express cars only service hub floors (lobby + skylobbies). They pass through everything else.
   var canService = !e.express || isHubFloor(c.y);
   var didStop = false;
+  // Safety net: any rider whose desired floor is outside this shaft's current range
+  // is force-dropped at the closest reachable floor — covers shaft edits and stale state
+  // that the rebuild may have missed. Without this, riders ride forever.
+  for (var si = c.passengers.length - 1; si >= 0; si--) {
+    var sa = findAgent(c.passengers[si]);
+    if (!sa) { c.passengers.splice(si, 1); continue; }
+    var sd = desiredFloorForAgent(sa);
+    if (sd < e.minY || sd > e.maxY) {
+      sa.inElevator = null;
+      sa.assignedCar = null;
+      sa.transferAt = null;
+      sa.y = c.y;
+      sa.waiting = false;
+      sa.waitTicks = 0;
+      c.passengers.splice(si, 1);
+    }
+  }
   if (canService) {
     // Drop off passengers at this floor
     for (var i = c.passengers.length - 1; i >= 0; i--) {
@@ -4045,6 +4115,25 @@ function tickCar(e, c, carIdx) {
         didStop = true;
       }
     }
+  } else if (e.express) {
+    // Express car at a non-hub: normally we don't service. But if a rider's transfer
+    // hub disappeared mid-ride and their desired floor matches here, drop them anyway
+    // rather than ride them to nowhere.
+    for (var ei = c.passengers.length - 1; ei >= 0; ei--) {
+      var ea = findAgent(c.passengers[ei]);
+      if (!ea) { c.passengers.splice(ei, 1); continue; }
+      if (ea.transferAt != null && !isHubFloor(ea.transferAt) && desiredFloorForAgent(ea) === c.y) {
+        ea.inElevator = null;
+        ea.assignedCar = null;
+        ea.transferAt = null;
+        ea.y = c.y;
+        c.passengers.splice(ei, 1);
+        c.stopTimer = 8;
+        didStop = true;
+      }
+    }
+  }
+  if (canService) {
     // Pick up passengers waiting in our direction (only those assigned to THIS car)
     var queue = c.dir > 0 ? c.queueUp : c.queueDown;
     var maxCap = 8 + Math.max(0, (state.stars || 1) - 1) * 2; // 8/10/12/14/16 by star tier
@@ -5211,8 +5300,8 @@ function upgradeUnit(uid) {
 /* ===== GUIDED TUTORIAL (first-run handheld walkthrough) ===== */
 var GUIDED_TUTORIAL = [
   { id: 'place_lobby',   title: 'Place a Lobby',       body: 'Click LOBBY in the palette below, then click on the ground floor to place it.', check: function() { return countUnits('lobby') >= 1; } },
-  { id: 'place_office',  title: 'Build an Office',     body: 'Offices pay rent during business hours. Click OFFICE and place one above the lobby. New floors must be supported — max 2-tile cantilever above the floor below.', check: function() { return countUnits('office') >= 1; } },
-  { id: 'place_elev',    title: 'Add an Elevator',     body: 'Stairs-only floors lose satisfaction fast. Drag an ELEVATOR shaft from your lobby upward so tenants can reach their floors.', check: function() { return countUnits('elevator') >= 2 || countUnits('stairs') >= 2; } },
+  { id: 'place_office',  title: 'Build an Office',     body: 'Offices pay rent during business hours. Click OFFICE and place one above the lobby. Each cell needs a unit within 2 tiles directly below it for support — green marks under your cursor mean OK, red means no support.', check: function() { return countUnits('office') >= 1; } },
+  { id: 'place_elev',    title: 'Add an Elevator',     body: 'Stairs-only floors lose satisfaction fast. Pick the ELEVATOR tool, click on a lobby cell, then drag UP to paint a shaft floor by floor. Shafts must connect all the way down to a lobby — no mid-air placement.', check: function() { return countUnits('elevator') >= 2 || countUnits('stairs') >= 2; } },
   { id: 'wait_day',      title: 'Let a Day Pass',      body: 'Press 3 or 9 to speed up time. Tenants arrive at 8 AM. Watch the MARKET panel — if supply outpaces demand, prices crash.', check: function() { return state.day >= 2; } },
   { id: 'reach_2star',   title: 'Reach 2★',            body: 'Add offices, condos, amenities. 300 population promotes you and unlocks new unit types.', check: function() { return state.stars >= 2; } },
   { id: 'tall_tower',    title: 'Going Tall',          body: 'Above floor ~20 tenants start hating the long commute. At 3★ a SKYLOBBY acts as a second hub — build one mid-tower to reset the penalty.', check: function() { return state.stars >= 3 && (countUnits('skylobby') >= 1 || highestOccupiedFloor() < 20); } },
@@ -5426,6 +5515,34 @@ function render() {
   ctx.strokeStyle = '#8A6A38';
   ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(0, streetY); ctx.lineTo(W, streetY); ctx.stroke();
+  // Buildable-zone boundary: shade the off-grid columns and draw boundary posts
+  // so players can see the lot edges without panning. Without this, the canvas
+  // appears infinite and the "Out of bounds" rejection feels mysterious.
+  var lotLeftX = worldToScreen(0, 0).x;
+  var lotRightX = worldToScreen(GRID_W, 0).x;
+  if (lotLeftX > 0) {
+    ctx.fillStyle = 'rgba(0,0,0,0.32)';
+    ctx.fillRect(0, 0, lotLeftX, streetY);
+  }
+  if (lotRightX < W) {
+    ctx.fillStyle = 'rgba(0,0,0,0.32)';
+    ctx.fillRect(lotRightX, 0, W - lotRightX, streetY);
+  }
+  ctx.strokeStyle = 'rgba(255,208,96,0.35)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(lotLeftX, 0); ctx.lineTo(lotLeftX, streetY);
+  ctx.moveTo(lotRightX, 0); ctx.lineTo(lotRightX, streetY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // Lot label so the boundary is unmistakable
+  ctx.fillStyle = 'rgba(255,208,96,0.55)';
+  ctx.font = 'bold 9px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('← LOT EDGE', lotLeftX + 4, 14);
+  ctx.textAlign = 'right';
+  ctx.fillText('LOT EDGE →', lotRightX - 4, 14);
   // Grid lines (subtle)
   ctx.strokeStyle = 'rgba(255,255,255,0.05)';
   ctx.lineWidth = 1;
@@ -6523,13 +6640,29 @@ function drawUnit(u) {
       ctx.stroke();
     }
   } else if (u.type === 'elevator') {
-    // Shaft walls
+    // Dedicated shaft: dark interior + guide rails so it reads as a separate column
+    // even when sandwiched between offices/condos.
+    ctx.fillStyle = '#1E1F26';
+    ctx.fillRect(x, y, w, h);
     ctx.fillStyle = '#383A42';
     ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
     ctx.strokeStyle = '#1A1C24';
     ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+    // Guide rails (twin vertical lines)
+    ctx.strokeStyle = '#5C6068';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(x + w * 0.32, y); ctx.lineTo(x + w * 0.32, y + h);
+    ctx.moveTo(x + w * 0.68, y); ctx.lineTo(x + w * 0.68, y + h);
+    ctx.stroke();
+    // Floor-line door slot at the bottom (where the car opens)
+    ctx.fillStyle = '#22242C';
+    ctx.fillRect(x + w * 0.18, y + h - 4, w * 0.64, 2);
+    ctx.lineWidth = 1;
   } else if (u.type === 'expressElevator') {
     // Darker shaft with gold accent rails to mark express
+    ctx.fillStyle = '#10081A';
+    ctx.fillRect(x, y, w, h);
     ctx.fillStyle = '#1F1830';
     ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
     ctx.strokeStyle = '#FFD060';
@@ -6538,6 +6671,9 @@ function drawUnit(u) {
     ctx.moveTo(x + 2, y + 1); ctx.lineTo(x + 2, y + h - 1);
     ctx.moveTo(x + w - 2, y + 1); ctx.lineTo(x + w - 2, y + h - 1);
     ctx.stroke();
+    // Floor-line door slot
+    ctx.fillStyle = '#0A040E';
+    ctx.fillRect(x + w * 0.18, y + h - 4, w * 0.64, 2);
     ctx.lineWidth = 1;
   }
   // Satisfaction indicator (top-right corner dot) — only for units that can have tenants
@@ -6745,14 +6881,19 @@ function drawHoverPreview() {
     ctx.textAlign = 'center';
     ctx.fillText(check.reason, tl2.x + Math.max(70, def.w * CELL_W / 2), tl2.y - 5);
   }
-  // Cantilever support diagnostic: mark the row below with green=supported / red=unsupported
-  // footprints for each column of the new unit, so the user sees WHY a placement fails.
+  // Support diagnostic: mark the row below with green=supported / red=unsupported.
+  // Elevators / stairs use a strict same-column rule; everything else uses ±2 cantilever.
   if (gy >= 1 && def.h >= 1) {
+    var verticalOnly = !!def.isElevator || build.mode === 'stairs';
     for (var cdx = 0; cdx < def.w; cdx++) {
       var cx = gx + cdx;
       var supCell = null;
-      for (var lx = cx - 2; lx <= cx + 2; lx++) {
-        if (state.grid[lx + ',' + (gy - 1)]) { supCell = lx; break; }
+      if (verticalOnly) {
+        if (state.grid[cx + ',' + (gy - 1)]) supCell = cx;
+      } else {
+        for (var lx = cx - 2; lx <= cx + 2; lx++) {
+          if (state.grid[lx + ',' + (gy - 1)]) { supCell = lx; break; }
+        }
       }
       var markColor = supCell !== null ? 'rgba(80,224,128,0.45)' : 'rgba(224,64,64,0.55)';
       var mpos = worldToScreen(cx, gy - 1);
@@ -6869,6 +7010,8 @@ function onClick(e) {
     if (uid) showUnitInfo(uid); else hideUnitInfo();
   } else if (build.mode === 'renovate') {
     renovateAt(cell.x, cell.y);
+  } else if (build.mode === 'extinguish') {
+    extinguishAt(cell.x, cell.y);
   } else if (build.mode === 'elevator' || build.mode === 'expressElevator' || build.mode === 'stairs') {
     // Drag-build tool — placement already happened on mousedown, nothing to do
   } else if (build.mode) {
@@ -6888,6 +7031,24 @@ function renovateAt(gx, gy) {
   u.quality = 1.0;
   showToast('Renovated ' + UNITS[u.type].name);
   logEvent('Renovated ' + UNITS[u.type].name + ' @ floor ' + floorLabel(u.y) + ' (-$40,000)', 'good');
+}
+
+function extinguishAt(gx, gy) {
+  var uid = state.grid[gx+','+gy];
+  if (!uid) { showToast('Click a damaged unit to extinguish'); return; }
+  var u = state.units[uid];
+  if (!u.damaged) { showToast(UNITS[u.type].name + ' is not damaged'); return; }
+  if (state.cash < 20000) { showToast('Need $20,000'); return; }
+  state.cash -= 20000;
+  u.damaged = false;
+  // Clear lingering fire-event entries for this unit so the icon/log stops flagging it.
+  if (state.events) {
+    state.events = state.events.filter(function(ev) { return !(ev.kind === 'fire' && ev.unitId == uid); });
+  }
+  if (state.stats) state.stats.firesHandled++;
+  showToast('Extinguished fire at ' + UNITS[u.type].name);
+  logEvent('Extinguished fire at ' + UNITS[u.type].name + ' (floor ' + floorLabel(u.y) + ', -$20,000)', 'good');
+  sfx('build');
 }
 var touchState = { active: false, startX: 0, startY: 0, camX0: 0, camY0: 0, lastDist: 0, moved: 0 };
 function onTouchStart(e) {
@@ -6938,6 +7099,7 @@ function onTouchEnd(e) {
     else if (build.mode === 'addcar') addElevatorCar(cell.x, cell.y);
     else if (build.mode === 'identify') { var uid = state.grid[cell.x+','+cell.y]; if (uid) showUnitInfo(uid); }
     else if (build.mode === 'renovate') renovateAt(cell.x, cell.y);
+    else if (build.mode === 'extinguish') extinguishAt(cell.x, cell.y);
     else if (build.mode) placeUnit(build.mode, cell.x, cell.y);
   }
   touchState.active = false;
