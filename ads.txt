@@ -1,7 +1,7 @@
 # Authorized Digital Sellers (ads.txt)
 # https://iabtechlab.com/ads-txt/
 #
-# AdSense requires this file at the root of the served domain after approval.
+# AdSense requires this file at https://boardgaminghub.com/ads.txt after approval.
 # REPLACE pub-XXXXXXXXXXXXXXXX with your real Google AdSense publisher ID
 # (from your AdSense account → Account → Account information).
 # The line below is the single line every AdSense site needs.
