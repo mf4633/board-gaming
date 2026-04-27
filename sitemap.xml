@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://boardgaminghub.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://boardgaminghub.com/play.html</loc><changefreq>weekly</changefreq><priority>0.95</priority></url>
+  <url><loc>https://boardgaminghub.com/about.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://boardgaminghub.com/privacy.html</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>
+  <url><loc>https://boardgaminghub.com/Agora.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Apoapsis.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Aresia.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Backgammon.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/BiosphereBlue.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Bisque.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/BonnevilleSpillwayOperator.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Chess.html</loc><priority>0.85</priority></url>
+  <url><loc>https://boardgaminghub.com/Cliffwalkers.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Convergence.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Doctrine.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Floodline.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Go.html</loc><priority>0.85</priority></url>
+  <url><loc>https://boardgaminghub.com/Mancala.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Odyssey.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Othello.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/PenteGrammai.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Senet.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Tidelands.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Tower.html</loc><priority>0.8</priority></url>
+  <url><loc>https://boardgaminghub.com/Ur.html</loc><priority>0.8</priority></url>
+</urlset>
