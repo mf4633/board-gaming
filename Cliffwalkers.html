@@ -18,12 +18,12 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; height: 100%; user-select: none; }
-  #game { display: grid; grid-template-rows: 44px 1fr 96px; height: 100vh; gap: 4px; padding: 4px; }
+  #game { display: grid; grid-template-rows: 44px 1fr auto; height: 100vh; gap: 4px; padding: 4px; }
   #topbar { background: var(--panel); border-radius: 6px; display: flex; align-items: center; padding: 0 14px; gap: 14px; flex-wrap: nowrap; overflow-x: auto; }
   #canvaswrap { background: #000; border-radius: 6px; position: relative; overflow: hidden; }
   #canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; cursor: crosshair; }
   #minimap { position: absolute; right: 8px; top: 8px; background: rgba(10,14,20,0.85); border: 1px solid var(--accent); border-radius: 4px; image-rendering: pixelated; cursor: pointer; }
-  #skillbar { background: var(--panel); border-radius: 6px; padding: 8px; display: flex; gap: 4px; align-items: stretch; overflow-x: auto; }
+  #skillbar { background: var(--panel); border-radius: 6px; padding: 8px; display: flex; gap: 4px; align-items: stretch; flex-wrap: wrap; }
   .skill { background: var(--panel2); border-radius: 4px; padding: 4px 6px; cursor: pointer; border: 2px solid transparent; min-width: 64px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; transition: background 0.1s; flex: 1; max-width: 110px; }
   .skill:hover:not(.locked) { background: #263142; }
   .skill.active { border-color: var(--accent); background: #1e2c42; }
@@ -71,6 +71,10 @@
   .level-card .best { color: var(--accent2); font-size: 11px; margin-top: 4px; }
   .level-card .best.gold { color: #fde68a; }
   .level-card .blurb { color: var(--dim); font-size: 11px; margin-top: 6px; line-height: 1.4; font-style: italic; }
+  .chapter-divider { grid-column: 1 / -1; padding: 18px 4px 6px; border-bottom: 1px solid #2a3540; margin-top: 6px; display: flex; align-items: baseline; gap: 10px; }
+  .chapter-divider .ch-label { color: var(--accent2); font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: bold; }
+  .chapter-divider .ch-name { color: var(--text); font-size: 16px; }
+  .chapter-divider .ch-range { color: var(--dim); font-size: 11px; margin-left: auto; }
   .difficulty-pill { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; background: #475569; color: white; }
   .difficulty-pill.easy { background: #166534; }
   .difficulty-pill.medium { background: #a16207; }
@@ -86,6 +90,9 @@
 
   .key { display: inline-block; padding: 1px 6px; background: var(--panel2); border: 1px solid #475569; border-radius: 3px; font-size: 11px; font-family: monospace; }
 
+  body.touch .hot,
+  body.touch .hotkey-hint { display: none; }
+
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -93,7 +100,7 @@
 
   /* Mobile */
   @media (max-width: 720px) {
-    #game { grid-template-rows: 38px 1fr 84px; gap: 2px; padding: 2px; }
+    #game { grid-template-rows: 38px 1fr auto; gap: 2px; padding: 2px; }
     #topbar { padding: 0 6px; gap: 6px; font-size: 10px; }
     #topbar .stat { padding: 2px 5px; min-width: 38px; font-size: 9px; }
     #topbar .stat b { font-size: 11px; }
@@ -172,7 +179,7 @@
     <div class="stat ok"><b id="savedCount">0/0</b><span>SAVED</span></div>
     <div class="stat"><b id="aliveCount">0</b><span>ALIVE</span></div>
     <div class="stat"><b id="targetTxt">--%</b><span>TARGET</span></div>
-    <div class="stat"><b id="rrTxt">--</b><span>RATE</span></div>
+    <div class="stat"><b id="rrTxt">--</b><span>SPAWN</span></div>
     <div class="speed-btns" id="speedBtns">
       <button data-speed="0">⏸</button>
       <button data-speed="1" class="active">1×</button>
@@ -193,13 +200,13 @@
     <div class="skill" data-skill="basher"><div class="name">Basher</div><div class="count">0</div><div class="hot">[6]</div></div>
     <div class="skill" data-skill="miner"><div class="name">Miner</div><div class="count">0</div><div class="hot">[7]</div></div>
     <div class="skill" data-skill="digger"><div class="name">Digger</div><div class="count">0</div><div class="hot">[8]</div></div>
-    <div style="display:flex; flex-direction:column; gap:3px; min-width:64px;">
-      <button id="rrUp" style="padding:4px;">RR +</button>
-      <button id="rrDn" style="padding:4px;">RR −</button>
+    <div style="display:flex; flex-direction:column; gap:3px; min-width:72px; align-self:stretch;">
+      <button id="rrUp" style="flex:1; font-size:13px;" title="Faster spawn">Spawn ▲</button>
+      <button id="rrDn" style="flex:1; font-size:13px;" title="Slower spawn">Spawn ▼</button>
     </div>
-    <div style="display:flex; flex-direction:column; gap:3px; min-width:64px;">
-      <button id="pauseBtn" class="ghost" style="padding:4px;">⏸ Pause</button>
-      <button id="nukeBtn" class="danger" style="padding:4px;" title="Bomb everyone">☢ Nuke</button>
+    <div style="display:flex; flex-direction:column; gap:3px; min-width:72px; align-self:stretch;">
+      <button id="pauseBtn" class="ghost" style="flex:1; font-size:13px;">⏸ Pause</button>
+      <button id="nukeBtn" class="danger" style="flex:1; font-size:13px;" title="Bomb everyone">☢ Nuke</button>
     </div>
   </div>
 </div>
@@ -212,6 +219,11 @@
 
 <script>
 'use strict';
+
+// Touch-device detection — hides hotkey labels.
+if (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+  document.body.classList.add('touch');
+}
 
 // =====================================================================
 // CONFIG / CONSTANTS
@@ -419,6 +431,162 @@ const LEVELS = [
     ]
   }
 ];
+
+// =====================================================================
+// LEVEL GENERATOR — produces L7..L100 using verified-solvable templates,
+// scaled by difficulty band.
+// =====================================================================
+
+(function generateExtraLevels() {
+  const zeros = () => ({ climber: 0, floater: 0, bomber: 0, blocker: 0, builder: 0, basher: 0, miner: 0, digger: 0 });
+  const themes = ['dirt', 'jungle', 'ice', 'hell'];
+
+  function tDig(name, count, diggers, target, theme) {
+    return {
+      name, blurb: '', difficulty: 'easy', theme,
+      time: 180, count, target,
+      minRR: 30, maxRR: 99, startRR: 50,
+      skills: Object.assign(zeros(), { digger: diggers }),
+      spawn: { x: 500, y: 30 }, exit: { x: 500, y: 188 },
+      geometry: [
+        ['rect', 0,   190, 1600, 10, 'steel'],
+        ['rect', 290, 60,  420, 130, 'dirt'],
+        ['rect', 290, 48,  12, 12, 'dirt'],
+        ['rect', 700, 48,  12, 12, 'dirt'],
+      ],
+    };
+  }
+
+  function tFloat(name, count, floaters, target, theme, ledgeW) {
+    const lW = ledgeW || 600;
+    return {
+      name, blurb: '', difficulty: 'easy', theme,
+      time: 180, count, target,
+      minRR: 20, maxRR: 80, startRR: 30,
+      skills: Object.assign(zeros(), { floater: floaters }),
+      spawn: { x: 80, y: 30 }, exit: { x: 1500, y: 184 },
+      geometry: [
+        ['rect', 0, 188, 1600, 12, 'steel'],
+        ['rect', 0,  50,  lW,  6, 'dirt'],
+        ['rect', 0,  56,  12, 132, 'dirt'],
+      ],
+    };
+  }
+
+  function tBash(name, count, bashers, target, theme, walls) {
+    const geom = [['rect', 0, 130, 1600, 70, 'dirt']];
+    for (const w of walls) geom.push(['rect', w.x, 30, w.thick, 100, 'dirt']);
+    return {
+      name, blurb: '', difficulty: 'medium', theme,
+      time: 200, count, target,
+      minRR: 30, maxRR: 99, startRR: 50,
+      skills: Object.assign(zeros(), { basher: bashers }),
+      spawn: { x: 80, y: 110 }, exit: { x: 1500, y: 128 },
+      geometry: geom,
+    };
+  }
+
+  function tClimb(name, count, climbers, target, theme) {
+    return {
+      name, blurb: '', difficulty: 'medium', theme,
+      time: 240, count, target,
+      minRR: 30, maxRR: 99, startRR: 50,
+      skills: Object.assign(zeros(), { climber: climbers }),
+      spawn: { x: 80, y: 110 }, exit: { x: 1500, y: 128 },
+      geometry: [
+        ['rect', 0, 130, 1600, 70, 'dirt'],
+        ['rect', 0, 30,  600, 6,  'dirt'],
+        ['rect', 600, 30, 12,  100, 'dirt'],
+        ['rect', 612, 30, 800, 6,  'dirt'],
+        ['rect', 1411, 60, 70, 6, 'dirt'],
+        ['rect', 1480, 90, 60, 6, 'dirt'],
+      ],
+    };
+  }
+
+  function tBuild(name, count, builders, target, theme) {
+    return {
+      name, blurb: '', difficulty: 'medium', theme,
+      time: 240, count, target,
+      minRR: 30, maxRR: 99, startRR: 40,
+      skills: Object.assign(zeros(), { builder: builders }),
+      spawn: { x: 80, y: 30 }, exit: { x: 1500, y: 48 },
+      geometry: [
+        ['rect', 0,    50, 512, 6,  'dirt'],
+        ['rect', 0,    56, 12, 144, 'dirt'],
+        ['rect', 524,  50, 1076, 6, 'dirt'],
+        ['rect', 0,    198, 1600, 2, 'steel'],
+      ],
+    };
+  }
+
+  function tCombo(name, count, target, theme) {
+    return {
+      name, blurb: '', difficulty: 'extreme', theme,
+      time: 360, count, target,
+      minRR: 20, maxRR: 60, startRR: 25,
+      skills: Object.assign(zeros(), { climber: 4, floater: count, blocker: 2, builder: 4, basher: 4 }),
+      spawn: { x: 80, y: 30 }, exit: { x: 1500, y: 184 },
+      geometry: [
+        ['rect', 0, 188, 1600, 12, 'steel'],
+        ['rect', 0,  50, 600, 6,  'dirt'],
+        ['rect', 0,  56, 12, 132, 'dirt'],
+        ['rect', 1180, 80, 40, 108, 'dirt'],
+      ],
+    };
+  }
+
+  const NAMES = [
+    "Deeper Dig","Quiet Drop","Plain Path","Up & Down","Skip the Gap","Ditch","Soft Falls","Knock Twice","Window Climb","Patch Bridge",
+    "Twice as Far","Slow Snow","Three Walls","Tall Tower","Wider Gap","Dig Twice","Double Drop","Fourfold Bash","Climb Higher","Two-Brick Bridge",
+    "Mound Master","Falls Of Forgetting","Twin Walls","Spire","Long Span","Down To Bedrock","Soft Hover","Knock-Knock-Knock","High Spire","Five Bricks",
+    "Granite Dig","Air Drift","Mortar Wall","Skyrise","Wide Span","Pit","Featherfall","Triple Bash","Zenith","Long Bridge",
+    "Excavate","Updraft","Bashing Dance","Cloudwalk","Span Master","Buried","Lemming Lift","Wall After Wall","Beanstalk","The Long Span",
+    "Underground","Float On","Smash & Cross","Stairway","Bridge of Sighs","Drilling","Updraft II","Brick & Bash","Climber's Pride","Span The Air",
+    "Sink Hole","Float Forever","Triple Tunnel","Roof Run","Five-Brick Span","Below The Floor","Soft Sky","Quad Bash","Vertical","Slim Walk",
+    "Underburrow","Drift Down","Five Walls","Stratosphere","Span Of Spans","Mole Run","Hover Hard","Heavy Bash","Crow's Nest","One Brick Short",
+    "Down We Go","Air Time","The Long Tunnel","Sky High","Span To Glory","Buried Deep","Featherweight","Wall Mash","Skyhook","Final Bridge",
+    "Endgame Dig","Endgame Float","Endgame Bash","Endgame Climb"
+  ];
+
+  function band(i) {
+    if (i < 20) return 'easy';
+    if (i < 50) return 'medium';
+    if (i < 80) return 'hard';
+    return 'extreme';
+  }
+
+  for (let i = 0; i < 94; i++) {
+    const name = NAMES[i] || `Trial ${i + 7}`;
+    const theme = themes[Math.floor(i / 24) % themes.length];
+    const diff = band(i);
+    const count = Math.min(20, 10 + Math.floor(i / 8));
+    const target = Math.max(3, count - 3 - Math.floor(i / 30));
+    const tmplPick = i % 5;
+    let lvl;
+    if (i >= 74) {
+      lvl = tCombo(name, count, target, theme);
+    } else if (tmplPick === 0) {
+      lvl = tDig(name, count, Math.max(3, 6 - Math.floor(i / 25)), target, theme);
+    } else if (tmplPick === 1) {
+      const ledgeW = 500 + (i * 17) % 500;
+      lvl = tFloat(name, count, count, target, theme, ledgeW);
+    } else if (tmplPick === 2) {
+      const numWalls = 1 + (i % 4);
+      const walls = [];
+      for (let w = 0; w < numWalls; w++) {
+        walls.push({ x: 300 + w * 280, thick: 30 + (i % 3) * 10 });
+      }
+      lvl = tBash(name, count, numWalls + 2, target, theme, walls);
+    } else if (tmplPick === 3) {
+      lvl = tClimb(name, count, count, target, theme);
+    } else {
+      lvl = tBuild(name, count, Math.max(3, 8 - Math.floor(i / 20)), target, theme);
+    }
+    lvl.difficulty = diff;
+    LEVELS.push(lvl);
+  }
+})();
 
 // =====================================================================
 // TERRAIN
@@ -1214,6 +1382,7 @@ class Game {
     this.skillsRemaining = {};
     this.speed = 1; // 0=paused, 1=normal, 3=fast
     this.mouseX = 0; this.mouseY = 0;
+    this.mouseActive = false; // edge-pan only after a real mousemove
     this.gameState = 'menu'; // menu, playing, won, lost
     this.tickCount = 0;
     this.unlocked = this.loadProgress();
@@ -1254,7 +1423,9 @@ class Game {
     this.releaseRate = lvl.startRR;
     this.timeRemaining = lvl.time * TICK_HZ;
     this.skillsRemaining = Object.assign({}, lvl.skills);
-    this.activeSkill = null;
+    // Pre-select the most-stocked skill so first lemming click does the obvious thing.
+    const stocked = Object.entries(this.skillsRemaining).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+    this.activeSkill = stocked.length ? stocked[0][0] : null;
     this.cameraX = Math.max(0, lvl.spawn.x - 200);
     this.tickCount = 0;
     this.gameState = 'playing';
@@ -1334,11 +1505,14 @@ class Game {
   // --- Scrolling ---
   updateCamera(dt) {
     if (this.gameState !== 'playing') return;
-    // Edge-scroll based on mouse
+    // Edge-scroll based on mouse — but only after a real cursor enters the canvas.
+    // (Touch devices never set mouseActive, so edge-pan is disabled there.)
     const w = this.canvas.width;
     const edge = 60;
-    if (this.mouseX < edge) this.cameraX -= this.scrollEdgeSpeed * (1 - this.mouseX / edge);
-    else if (this.mouseX > w - edge) this.cameraX += this.scrollEdgeSpeed * (1 - (w - this.mouseX) / edge);
+    if (this.mouseActive) {
+      if (this.mouseX < edge) this.cameraX -= this.scrollEdgeSpeed * (1 - this.mouseX / edge);
+      else if (this.mouseX > w - edge) this.cameraX += this.scrollEdgeSpeed * (1 - (w - this.mouseX) / edge);
+    }
     // Keyboard
     if (this.keyLeft) this.cameraX -= 4;
     if (this.keyRight) this.cameraX += 4;
@@ -1513,6 +1687,7 @@ class Game {
     const m = document.getElementById('modalContent');
     const isPerfect = this.savedCount === this.level.count;
     const next = this.levelIdx + 1 < LEVELS.length;
+    if (!next) return this.showVictoryScreen();
     m.innerHTML = `
       <h1 style="color:var(--ok)">${isPerfect ? '★ Perfect!' : 'Level Complete'}</h1>
       <p class="tagline">${this.level.name}</p>
@@ -1530,6 +1705,37 @@ class Game {
     } else {
       document.getElementById('btnAll').onclick = () => this.showMenu();
     }
+    document.getElementById('btnMenu').onclick = () => this.showMenu();
+  }
+
+  showVictoryScreen() {
+    const overlay = document.getElementById('overlay');
+    const m = document.getElementById('modalContent');
+    const totalSaved = Object.values(this.unlocked.best || {}).reduce((a, b) => a + b, 0) + this.savedCount;
+    const perfectRuns = Object.entries(this.unlocked.best || {}).filter(([i, n]) => {
+      const lvl = LEVELS[parseInt(i)];
+      return lvl && n >= lvl.count;
+    }).length + (this.savedCount === this.level.count ? 1 : 0);
+    m.innerHTML = `
+      <h1 style="color:var(--ok); font-size:42px; letter-spacing:0.08em;">★ VICTORY ★</h1>
+      <p class="tagline">You saved them all.</p>
+      <p style="font-size:16px; line-height:1.6;">
+        A hundred cliffs scaled. A hundred chasms bridged. A hundred mounds tunneled.
+        The wee folk sing your name from the highest spires to the deepest pits.
+      </p>
+      <div style="display:flex; gap:24px; margin: 24px 0; flex-wrap:wrap;">
+        <div class="stat" style="padding: 10px 16px;"><b style="font-size:22px;">${totalSaved}</b><span>WEE FOLK SAVED</span></div>
+        <div class="stat" style="padding: 10px 16px;"><b style="font-size:22px;">${perfectRuns}</b><span>PERFECT RUNS</span></div>
+        <div class="stat" style="padding: 10px 16px;"><b style="font-size:22px;">${LEVELS.length}</b><span>LEVELS BEATEN</span></div>
+      </div>
+      <p style="color:var(--dim); font-size:13px; font-style:italic;">Thanks for playing.</p>
+      <div style="display:flex; gap:10px; margin-top:18px;">
+        <button id="btnRetry" class="warn">Replay Final Level</button>
+        <button id="btnMenu" class="ghost">Level Select</button>
+      </div>
+    `;
+    overlay.style.display = 'flex';
+    document.getElementById('btnRetry').onclick = () => { overlay.style.display = 'none'; this.loadLevel(this.levelIdx); };
     document.getElementById('btnMenu').onclick = () => this.showMenu();
   }
 
@@ -1554,8 +1760,14 @@ class Game {
   showMenu() {
     const overlay = document.getElementById('overlay');
     const m = document.getElementById('modalContent');
+    const CHAPTER_NAMES = ['Tutorial', 'Apprentice', 'Journeyman', 'Master', 'Grandmaster'];
+    const CHAPTER_SIZE = 20;
     let levelsHtml = '';
     LEVELS.forEach((l, i) => {
+      if (i % CHAPTER_SIZE === 0) {
+        const ch = Math.floor(i / CHAPTER_SIZE);
+        levelsHtml += `<div class="chapter-divider"><span class="ch-label">Chapter ${ch + 1}</span> <span class="ch-name">${CHAPTER_NAMES[ch] || ''}</span> <span class="ch-range">L${i + 1}–L${Math.min(i + CHAPTER_SIZE, LEVELS.length)}</span></div>`;
+      }
       const locked = i + 1 > this.unlocked.unlocked;
       const best = this.unlocked.best[i] || 0;
       const isGold = best === l.count;
@@ -1570,18 +1782,25 @@ class Game {
         ${best > 0 ? `<div class="best ${isGold ? 'gold' : ''}">${isGold ? '★ ' : ''}Best: saved ${best}/${l.count}</div>` : ''}
       </div>`;
     });
+    const continueIdx = Math.min(this.unlocked.unlocked - 1, LEVELS.length - 1);
+    const showContinue = continueIdx > 0;
     m.innerHTML = `
       <h1>CLIFFWALKERS</h1>
       <p class="tagline">Save the wee folk.</p>
       <p>Click a skill below the playfield, then click on a lemming to assign it. Save the target number to advance.</p>
-      <p style="font-size:11px; color:var(--dim);">
+      <p class="hotkey-hint" style="font-size:11px; color:var(--dim);">
         Hotkeys: <span class="key">1-8</span> select skill ·
         <span class="key">P</span> pause ·
         <span class="key">F</span> fast-forward ·
         <span class="key">N</span> nuke ·
-        <span class="key">+ −</span> release rate ·
+        <span class="key">+ −</span> spawn rate ·
         <span class="key">← →</span> scroll
       </p>
+      ${showContinue ? `
+        <button id="btnContinue" class="warn" style="font-size:15px; padding:10px 20px; margin-top: 4px;">
+          Continue → Level ${continueIdx + 1}: ${LEVELS[continueIdx].name}
+        </button>
+      ` : ''}
       <h2>Choose your level</h2>
       <div class="levels">${levelsHtml}</div>
       <div style="margin-top:18px; display:flex; gap:10px;">
@@ -1597,6 +1816,12 @@ class Game {
         this.loadLevel(idx);
       };
     });
+    if (showContinue) {
+      document.getElementById('btnContinue').onclick = () => {
+        overlay.style.display = 'none';
+        this.loadLevel(continueIdx);
+      };
+    }
     document.getElementById('resetProgress').onclick = () => {
       if (confirm('Reset all progress?')) {
         this.unlocked = { unlocked: 1, best: {} };
@@ -1658,7 +1883,9 @@ canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
   game.mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
   game.mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+  game.mouseActive = true;
 });
+canvas.addEventListener('mouseleave', () => { game.mouseActive = false; });
 canvas.addEventListener('mousedown', e => {
   if (e.button === 2) { game.activeSkill = null; game.updateUI(); return; }
   const rect = canvas.getBoundingClientRect();
