@@ -23,9 +23,11 @@ BOARD_GAMES = [
 
 SIMS = [
     ("Apoapsis.html",                 "Apoapsis",           "3D rocket flight sim"),
-    ("BonnevilleSpillwayOperator.html","Bonneville Spillway","Columbia River dam operator"),
-    ("Floodline.html",                "Floodline",          "California flood defense"),
     ("BiosphereBlue.html",            "Biosphere Blue",     "Planet-scale geosim"),
+    ("BonnevilleSpillwayOperator.html","Bonneville Spillway","Columbia River dam operator"),
+    ("Cliffwalkers.html",             "Cliffwalkers",       "Save the wee folk"),
+    ("Doctrine.html",                 "Doctrine",           "Geopolitical sim, 1990–2050"),
+    ("Floodline.html",                "Floodline",          "California flood defense"),
     ("Tower.html",                    "Tower",              "High-rise operations"),
 ]
 
