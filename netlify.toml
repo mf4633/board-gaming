@@ -1,0 +1,5 @@
+# Serve SVG favicon when browsers auto-request /favicon.ico
+[[redirects]]
+  from = "/favicon.ico"
+  to = "/favicon.svg"
+  status = 200
