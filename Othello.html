@@ -184,6 +184,8 @@ button:hover { background: #243020; }
   #gameNav .nav-menu { position: static; right: auto; min-width: 0; border: none; border-top: 1px solid #3A6040; box-shadow: none; }
 }
 </style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Board Games","item":"https://boardgaminghub.com/#board"},{"@type":"ListItem","position":3,"name":"Othello","item":"https://boardgaminghub.com/Othello.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How is Othello different from chess?","acceptedAnswer":{"@type":"Answer","text":"Othello takes minutes to learn; chess years. Othello games typically end in 60 moves; chess can stretch hundreds. Othello also features the famous \"mobility paradox\" — having many pieces early is often a disadvantage."}},{"@type":"Question","name":"Best Othello opening strategy?","acceptedAnswer":{"@type":"Answer","text":"Counterintuitively, prefer to have FEWER disks early. More disks reduce your move options and give opponent more flanking targets. Aim for \"quiet\" central play; corners and edges become decisive in the endgame."}},{"@type":"Question","name":"Is Othello solved?","acceptedAnswer":{"@type":"Answer","text":"8×8 Othello is not yet weakly solved (as of 2026), but engines play above all-time human champion level. 6×6 was weakly solved in 1993 (draw with perfect play)."}},{"@type":"Question","name":"What's the corner strategy?","acceptedAnswer":{"@type":"Answer","text":"Corners are permanent (can never be flipped). Avoid giving your opponent access to a corner; squares adjacent to corners (\"X-squares\") often hand the corner to opponent if you play them early."}}]}</script>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464"
         crossorigin="anonymous"></script>
 </head>
@@ -730,6 +732,28 @@ function toggleRules() { document.getElementById('rulesPanel').classList.toggle(
 newGame();
 </script>
 <script src="/analytics.js"></script>
+<section class="seo-content">
+  <h2>About Othello</h2>
+  <p>Othello (also called Reversi) is a two-player abstract strategy game on an 8×8 board. Each side has 64 disks white-on-one-side and black-on-the-other. Players alternate placing disks; any disks flanked between two of your color flip to your color. Whoever has the most disks of their color when the board fills wins.</p>
+
+  <h3>How to play</h3>
+  <p>Each turn, place one disk on any empty square that flanks at least one enemy disk (in any direction — horizontal, vertical, or diagonal) between your new disk and another of your existing disks. All flanked enemies flip. If you have no legal placement, you pass. Game ends when neither side can move.</p>
+
+  <h3>Frequently asked questions</h3>
+  <details><summary>How is Othello different from chess?</summary><p>Othello takes minutes to learn; chess years. Othello games typically end in 60 moves; chess can stretch hundreds. Othello also features the famous "mobility paradox" — having many pieces early is often a disadvantage.</p></details>
+  <details><summary>Best Othello opening strategy?</summary><p>Counterintuitively, prefer to have FEWER disks early. More disks reduce your move options and give opponent more flanking targets. Aim for "quiet" central play; corners and edges become decisive in the endgame.</p></details>
+  <details><summary>Is Othello solved?</summary><p>8×8 Othello is not yet weakly solved (as of 2026), but engines play above all-time human champion level. 6×6 was weakly solved in 1993 (draw with perfect play).</p></details>
+  <details><summary>What's the corner strategy?</summary><p>Corners are permanent (can never be flipped). Avoid giving your opponent access to a corner; squares adjacent to corners ("X-squares") often hand the corner to opponent if you play them early.</p></details>
+
+  <h3>Related games</h3>
+  <ul>
+    <li><a href="Chess.html">Chess</a> — two-player abstract strategy.</li>
+    <li><a href="Go.html">Go</a> — territory and influence.</li>
+    <li><a href="Backgammon.html">Backgammon</a> — dice race classic.</li>
+    <li><a href="Mancala.html">Mancala</a> — ancient count-and-capture.</li>
+  </ul>
+</section>
+
 <section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
   <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>
   <p style="color:#8098a8;font-size:0.9em;margin-bottom:18px;line-height:1.5;">Sign in with GitHub to share strategies, ask questions, or report a bug.</p>

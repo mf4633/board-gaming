@@ -166,6 +166,8 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 .map-legend { position: absolute; bottom: 30px; right: 10px; background: rgba(10,20,40,0.7); border: 1px solid #1A2A40; padding: 6px 10px; font-size: 0.65em; color: #8098B0; border-radius: 4px; z-index: 11; font-family: 'Courier New', monospace; }
 .map-legend span.sw { display: inline-block; width: 18px; height: 2px; vertical-align: middle; margin-right: 4px; }
 </style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Simulations","item":"https://boardgaminghub.com/#sims"},{"@type":"ListItem","position":3,"name":"Apoapsis","item":"https://boardgaminghub.com/Apoapsis.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is apoapsis?","acceptedAnswer":{"@type":"Answer","text":"The highest point of an orbit — opposite of periapsis (lowest point). On Earth it's \"apogee\"; for the Sun it's \"aphelion\". The game is named after this orbital concept."}},{"@type":"Question","name":"Is the physics realistic?","acceptedAnswer":{"@type":"Answer","text":"Yes — full Newtonian gravity (no patched-conics simplification), realistic engine ISP/thrust specs, and atmospheric drag with altitude-dependent density. Trajectory matches what Kerbal Space Program calls \"Realism Overhaul\" closely."}},{"@type":"Question","name":"What's a good gravity-turn altitude?","acceptedAnswer":{"@type":"Answer","text":"Begin pitching over at ~5 km, target ~45° pitch by 20 km. Earlier pitch wastes fuel on horizontal velocity at sea level (high drag); later pitch wastes fuel fighting gravity."}},{"@type":"Question","name":"Can I land on the Moon?","acceptedAnswer":{"@type":"Answer","text":"Single-stage to orbit and a circumlunar flyby are both achievable with the default rocket. A surface-landing mission requires a custom multi-stage build."}}]}</script>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464"
         crossorigin="anonymous"></script>
 </head>
@@ -3163,6 +3165,28 @@ renderCatalog();
 loadPreset('orbital');
 maybeShowTutorial();
 </script>
+<section class="seo-content">
+  <h2>About Apoapsis</h2>
+  <p>Apoapsis is a 3D rocket-flight simulation. Plan an ascent profile, manage staging, and reach a stable orbit around Earth — or beyond. Real Newtonian gravity (no patched conics simplification), realistic engine specifications, and atmospheric drag matter to your trajectory.</p>
+
+  <h3>How to play</h3>
+  <p>Configure your rocket: payload, stages, fuel mass. Throttle up, gravity-turn during ascent, stage at appropriate altitudes, circularize at apoapsis to lock in orbit. Three.js renders the trajectory in 3D; orbit parameters update live.</p>
+
+  <h3>Frequently asked questions</h3>
+  <details><summary>What is apoapsis?</summary><p>The highest point of an orbit — opposite of periapsis (lowest point). On Earth it's "apogee"; for the Sun it's "aphelion". The game is named after this orbital concept.</p></details>
+  <details><summary>Is the physics realistic?</summary><p>Yes — full Newtonian gravity (no patched-conics simplification), realistic engine ISP/thrust specs, and atmospheric drag with altitude-dependent density. Trajectory matches what Kerbal Space Program calls "Realism Overhaul" closely.</p></details>
+  <details><summary>What's a good gravity-turn altitude?</summary><p>Begin pitching over at ~5 km, target ~45° pitch by 20 km. Earlier pitch wastes fuel on horizontal velocity at sea level (high drag); later pitch wastes fuel fighting gravity.</p></details>
+  <details><summary>Can I land on the Moon?</summary><p>Single-stage to orbit and a circumlunar flyby are both achievable with the default rocket. A surface-landing mission requires a custom multi-stage build.</p></details>
+
+  <h3>Related games</h3>
+  <ul>
+    <li><a href="BiosphereBlue.html">BiosphereBlue</a> — planet-scale geosim.</li>
+    <li><a href="BonnevilleSpillwayOperator.html">BonnevilleSpillwayOperator</a> — dam operator sim.</li>
+    <li><a href="Doctrine.html">Doctrine</a> — geopolitical sim.</li>
+    <li><a href="Floodline.html">Floodline</a> — flood defense sim.</li>
+  </ul>
+</section>
+
 <script src="/analytics.js"></script>
 <script src="/nav.js" defer></script>
 </body>

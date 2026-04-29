@@ -162,6 +162,8 @@
     canvas { touch-action: none; }  /* Prevent browser pinch-zoom */
   }
 </style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Simulations","item":"https://boardgaminghub.com/#sims"},{"@type":"ListItem","position":3,"name":"Floodline","item":"https://boardgaminghub.com/Floodline.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is this based on real California floods?","acceptedAnswer":{"@type":"Answer","text":"Yes — the six scenarios reproduce real events: 1986 Yuba, 1997 New Year's, 2006 Sacramento, 2017 Oroville spillway, plus two synthetic ARkStorm scenarios from the USGS multi-hazard project."}},{"@type":"Question","name":"How accurate is the hydrology?","acceptedAnswer":{"@type":"Answer","text":"First-order accurate for routing and storage; simplified for pump and gate response curves. Scenarios are calibrated against published post-event reports from DWR and USACE."}},{"@type":"Question","name":"What's the hardest scenario?","acceptedAnswer":{"@type":"Answer","text":"2017 Oroville. Three independent failure modes (auxiliary spillway erosion, main spillway erosion, downstream evacuation logistics) all in 72 hours of game time."}},{"@type":"Question","name":"Where can I buy it?","acceptedAnswer":{"@type":"Answer","text":"itch.io and Steam — search \"Floodline\". Single $2 purchase; free in-browser demo at boardgaminghub.com/Floodline.html."}}]}</script>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464"
         crossorigin="anonymous"></script>
 </head>
@@ -5238,6 +5240,28 @@ document.getElementById('overlay').style.display = 'none';
 requestAnimationFrame(titleBgLoop);
 requestAnimationFrame(loop);
 </script>
+<section class="seo-content">
+  <h2>About Floodline</h2>
+  <p>Floodline is a California flood-defense simulation built on real water-system physics — levees, weirs, pump stations, and reservoir releases. Six historical scenarios span the 1986 Yuba flood to the 2017 Oroville spillway crisis. $2 indie release on itch.io and Steam.</p>
+
+  <h3>How to play</h3>
+  <p>Each scenario starts with an inflow forecast and current system state. Choose levee inspections, pump activation, gate operations, and (in some scenarios) controlled-flooding releases. Score points for protected area, lose for inundation. Real CA water hydrology.</p>
+
+  <h3>Frequently asked questions</h3>
+  <details><summary>Is this based on real California floods?</summary><p>Yes — the six scenarios reproduce real events: 1986 Yuba, 1997 New Year's, 2006 Sacramento, 2017 Oroville spillway, plus two synthetic ARkStorm scenarios from the USGS multi-hazard project.</p></details>
+  <details><summary>How accurate is the hydrology?</summary><p>First-order accurate for routing and storage; simplified for pump and gate response curves. Scenarios are calibrated against published post-event reports from DWR and USACE.</p></details>
+  <details><summary>What's the hardest scenario?</summary><p>2017 Oroville. Three independent failure modes (auxiliary spillway erosion, main spillway erosion, downstream evacuation logistics) all in 72 hours of game time.</p></details>
+  <details><summary>Where can I buy it?</summary><p>itch.io and Steam — search "Floodline". Single $2 purchase; free in-browser demo at boardgaminghub.com/Floodline.html.</p></details>
+
+  <h3>Related games</h3>
+  <ul>
+    <li><a href="BonnevilleSpillwayOperator.html">BonnevilleSpillwayOperator</a> — dam operator sim.</li>
+    <li><a href="BiosphereBlue.html">BiosphereBlue</a> — planet-scale geosim.</li>
+    <li><a href="Tower.html">Tower</a> — high-rise operations.</li>
+    <li><a href="Apoapsis.html">Apoapsis</a> — 3D rocket flight.</li>
+  </ul>
+</section>
+
 <script src="/analytics.js"></script>
 <script src="/nav.js" defer></script>
 </body>
