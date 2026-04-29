@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#fff7f3" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1a1424" media="(prefers-color-scheme: dark)" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<title>LovedWords</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<style>
+  /* ==========================================================
+     LovedWords — design system
+     ========================================================== */
+  :root {
+    --bg:        #fff7f3;
+    --bg-soft:   #ffece2;
+    --surface:   #ffffff;
+    --surface-2: #fff1e8;
+    --ink:       #2b2238;
+    --ink-soft:  #6b5c75;
+    --ink-faint: #a89cb1;
+    --accent:    #eb6e82;
+    --accent-2:  #ffb3a0;
+    --warn:      #d96b6b;
+    --good:      #6bbf8d;
+    --shadow-sm: 0 4px 12px rgba(43, 34, 56, 0.08);
+    --shadow:    0 14px 32px rgba(43, 34, 56, 0.12);
+    --shadow-lg: 0 28px 60px rgba(43, 34, 56, 0.18);
+    --radius:    24px;
+    --radius-lg: 32px;
+    --radius-sm: 14px;
+
+    --t-fast:   .18s cubic-bezier(.2,.8,.2,1);
+    --t-med:    .32s cubic-bezier(.2,.8,.2,1);
+    --t-spring: .48s cubic-bezier(.34, 1.56, .64, 1);
+
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Inter", system-ui, sans-serif;
+  }
+  [data-theme="forest"] {
+    --bg: #f4f7f2; --bg-soft: #e8efe3; --surface: #ffffff; --surface-2: #eef3e9;
+    --ink: #2a3a2c; --ink-soft: #5a6c5d; --ink-faint: #98a89c;
+    --accent: #5e9d6a; --accent-2: #b8d4a8;
+  }
+  [data-theme="ocean"] {
+    --bg: #f1f6fb; --bg-soft: #e2eef8; --surface: #ffffff; --surface-2: #e8f0f8;
+    --ink: #1f3a52; --ink-soft: #5a7390; --ink-faint: #98aabc;
+    --accent: #5594c4; --accent-2: #a8cce4;
+  }
+  [data-theme="night"] {
+    --bg: #1a1424; --bg-soft: #241a30; --surface: #2a1f3a; --surface-2: #3a2a52;
+    --ink: #f0eaf5; --ink-soft: #b4a8c4; --ink-faint: #7a6c8c;
+    --accent: #d997b1; --accent-2: #b58df1;
+    --shadow-sm: 0 4px 12px rgba(0,0,0,0.3);
+    --shadow:    0 14px 32px rgba(0,0,0,0.4);
+    --shadow-lg: 0 28px 60px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100dvh; overflow: hidden;
+    background: var(--bg); color: var(--ink);
+    font-family: var(--font);
+    user-select: none; -webkit-user-select: none;
+    overscroll-behavior: none; touch-action: none;
+    transition: background var(--t-med), color var(--t-med);
+  }
+  body { font-feature-settings: "ss01", "kern"; }
+  button {
+    font-family: inherit; cursor: pointer; border: none;
+    color: inherit; background: none;
+  }
+  input, textarea {
+    font-family: inherit; color: inherit;
+  }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+
+  /* ==========================================================
+     Splash / boot
+     ========================================================== */
+  #splash {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px;
+    transition: opacity .4s ease;
+  }
+  #splash.gone { opacity: 0; pointer-events: none; }
+  #splash img { width: 110px; height: 110px; border-radius: 26px; box-shadow: var(--shadow); }
+  #splash .name {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  #splash .tag { color: var(--ink-soft); font-size: 14px; }
+
+  /* ==========================================================
+     Onboarding (first run)
+     ========================================================== */
+  #onboard {
+    position: fixed; inset: 0; z-index: 800;
+    background: var(--bg);
+    display: none; flex-direction: column;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  #onboard.open { display: flex; }
+  .onboard-pages {
+    flex: 1; display: flex;
+    transform: translateX(0);
+    transition: transform .4s cubic-bezier(.2,.8,.2,1);
+  }
+  .onboard-page {
+    flex: 0 0 100%;
+    padding: 40px 32px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 18px; text-align: center;
+  }
+  .onboard-art {
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 96px;
+    box-shadow: var(--shadow-sm);
+  }
+  .onboard-page h2 {
+    margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .onboard-page p {
+    margin: 0; max-width: 320px;
+    color: var(--ink-soft); font-size: 16px; line-height: 1.5;
+  }
+  .onboard-foot {
+    padding: 16px 24px 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .onboard-dots { flex: 1; display: flex; justify-content: center; gap: 8px; }
+  .onboard-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ink-faint); opacity: .4;
+    transition: all var(--t-med);
+  }
+  .onboard-dot.active { background: var(--accent); opacity: 1; width: 24px; border-radius: 4px; }
+
+  /* ==========================================================
+     Toddler deck (default screen)
+     ========================================================== */
+  #deck-screen {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  #deck-screen.hidden { display: none; }
+  #deck-area {
+    flex: 1; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card {
+    position: absolute;
+    width: min(86vw, 86vh);
+    height: min(86vw, 86vh);
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    overflow: hidden;
+    transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s, box-shadow .3s;
+    will-change: transform, opacity;
+  }
+  .card .art {
+    flex: 1; width: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background-size: cover; background-position: center;
+    font-size: clamp(120px, 38vmin, 280px);
+    line-height: 1;
+    position: relative;
+  }
+  .card .label {
+    width: 100%;
+    padding: 20px 0 26px;
+    text-align: center;
+    font-weight: 800;
+    font-size: clamp(28px, 7vmin, 64px);
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    background: rgba(255,255,255,0.92);
+    border-top: 2px solid rgba(43,34,56,0.05);
+    backdrop-filter: blur(8px);
+  }
+  [data-theme="night"] .card .label {
+    background: rgba(42, 31, 58, 0.92);
+    border-top-color: rgba(255,255,255,0.06);
+  }
+  .card.flying-left { transform: translateX(-140vw) rotate(-12deg); opacity: 0; }
+  .card.flying-right { transform: translateX(140vw) rotate(12deg); opacity: 0; }
+  .card.entering { transform: scale(0.85) translateY(20px); opacity: 0; }
+  .card.idle { transform: scale(1) translateY(0); opacity: 1; }
+  .card.tapped { animation: pulse .5s ease-out; }
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+
+  /* tinted backgrounds rotate through palette */
+  .card[data-tint="0"] { background: linear-gradient(140deg, var(--surface), #ffe6ee 120%); }
+  .card[data-tint="1"] { background: linear-gradient(140deg, var(--surface), #fff0d6 120%); }
+  .card[data-tint="2"] { background: linear-gradient(140deg, var(--surface), #ddf5ec 120%); }
+  .card[data-tint="3"] { background: linear-gradient(140deg, var(--surface), #dfeaff 120%); }
+  .card[data-tint="4"] { background: linear-gradient(140deg, var(--surface), #ecdffd 120%); }
+  .card[data-tint="5"] { background: linear-gradient(140deg, var(--surface), #fdffd6 120%); }
+  [data-theme="night"] .card[data-tint="0"] { background: linear-gradient(140deg, var(--surface), #3a2a40 120%); }
+  [data-theme="night"] .card[data-tint="1"] { background: linear-gradient(140deg, var(--surface), #3a3326 120%); }
+  [data-theme="night"] .card[data-tint="2"] { background: linear-gradient(140deg, var(--surface), #2a3a30 120%); }
+  [data-theme="night"] .card[data-tint="3"] { background: linear-gradient(140deg, var(--surface), #2a304a 120%); }
+  [data-theme="night"] .card[data-tint="4"] { background: linear-gradient(140deg, var(--surface), #38284a 120%); }
+  [data-theme="night"] .card[data-tint="5"] { background: linear-gradient(140deg, var(--surface), #3a3a26 120%); }
+
+  /* ripple ring when voice plays */
+  .card.playing::before {
+    content: "";
+    position: absolute;
+    width: 70%; height: 70%;
+    border-radius: 50%;
+    border: 4px solid var(--accent);
+    opacity: 0;
+    animation: ripple 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+    pointer-events: none;
+  }
+  @keyframes ripple {
+    0% { transform: scale(0.6); opacity: 0.4; }
+    100% { transform: scale(1.4); opacity: 0; }
+  }
+
+  /* nav arrows — subtle, on desktop or anyone with a mouse */
+  .nav-arrow {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 22px; font-weight: 700;
+    box-shadow: var(--shadow-sm);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 5;
+    opacity: 0.7;
+    transition: opacity var(--t-fast), transform var(--t-fast);
+  }
+  .nav-arrow:hover { opacity: 1; }
+  .nav-arrow:active { transform: translateY(-50%) scale(0.92); }
+  .nav-arrow.left  { left: 12px; }
+  .nav-arrow.right { right: 12px; }
+
+  /* progress dots at bottom */
+  #deck-progress {
+    display: flex; justify-content: center; gap: 6px;
+    padding: 12px 24px max(12px, env(safe-area-inset-bottom));
+    flex-wrap: wrap;
+  }
+  #deck-progress .pdot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ink-faint); opacity: .4;
+    transition: all var(--t-fast);
+  }
+  #deck-progress .pdot.active {
+    background: var(--accent); opacity: 1; width: 18px; border-radius: 3px;
+  }
+
+  /* parent gate corner button — tiny, top left, easy to ignore */
+  #gate-btn {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    left: max(10px, env(safe-area-inset-left));
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.04);
+    color: var(--ink-faint);
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10; opacity: 0.4;
+    transition: opacity var(--t-fast), transform var(--t-fast);
+  }
+  #gate-btn:hover { opacity: 0.9; }
+  #gate-btn:active { transform: scale(0.92); }
+  [data-theme="night"] #gate-btn { background: rgba(255,255,255,0.06); }
+
+  /* deck name pill (top center) — shows current deck */
+  #deck-pill {
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top));
+    left: 50%; transform: translateX(-50%);
+    background: var(--surface);
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 13px; font-weight: 700;
+    color: var(--ink-soft);
+    box-shadow: var(--shadow-sm);
+    z-index: 9; opacity: 0.85;
+    max-width: 60vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* ==========================================================
+     Modal scrim + adult admin
+     ========================================================== */
+  .scrim {
+    position: fixed; inset: 0;
+    background: rgba(20,15,30,0.5);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+    backdrop-filter: blur(6px);
+    touch-action: auto;
+    animation: scrim-in .25s ease-out;
+  }
+  .scrim.open { display: flex; }
+  @keyframes scrim-in { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    width: 100%; max-width: 480px;
+    max-height: 90dvh;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    animation: modal-in .35s cubic-bezier(.34, 1.56, .64, 1);
+  }
+  @keyframes modal-in {
+    from { transform: translateY(20px) scale(0.96); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .modal-head {
+    padding: 22px 24px 16px;
+    border-bottom: 1px solid var(--surface-2);
+  }
+  .modal-head h2 {
+    margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.02em;
+  }
+  .modal-head p { margin: 4px 0 0; color: var(--ink-soft); font-size: 14px; }
+  .modal-body {
+    flex: 1; overflow-y: auto;
+    padding: 20px 24px;
+  }
+  .modal-foot {
+    padding: 16px 24px max(16px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--surface-2);
+    display: flex; gap: 10px;
+  }
+
+  /* ==========================================================
+     Parent gate
+     ========================================================== */
+  .gate-math {
+    font-size: 36px; font-weight: 800; text-align: center;
+    margin: 8px 0 18px;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+  }
+  .gate-options {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  .gate-options button {
+    padding: 18px 0;
+    font-size: 22px; font-weight: 700;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    transition: transform var(--t-fast), background var(--t-fast);
+  }
+  .gate-options button:active { transform: scale(0.94); }
+  .gate-options button.shake { animation: shake .35s; background: #ffd2d2; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+
+  /* ==========================================================
+     Admin: tabs + lists
+     ========================================================== */
+  #admin-modal { max-width: 560px; height: 90dvh; }
+  .admin-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 18px 22px 6px;
+  }
+  .admin-head .logo {
+    width: 36px; height: 36px; border-radius: 9px;
+    background-image: url('icons/icon-192.png');
+    background-size: cover;
+    box-shadow: var(--shadow-sm);
+  }
+  .admin-head .title { flex: 1; font-size: 19px; font-weight: 800; }
+  .admin-head .closex {
+    width: 36px; height: 36px;
+    background: var(--surface-2);
+    border-radius: 50%; font-size: 16px;
+  }
+  .tabs {
+    display: flex; gap: 4px;
+    padding: 8px 22px 0;
+  }
+  .tab {
+    flex: 1; padding: 12px 0;
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 14px; font-weight: 700;
+    border-radius: 10px;
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+  .tab.active { color: var(--ink); background: var(--surface-2); }
+  .tab-body {
+    flex: 1; overflow-y: auto;
+    padding: 16px 22px;
+  }
+  .tab-body[hidden] { display: none; }
+
+  /* card list rows */
+  .row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    transition: transform var(--t-fast);
+  }
+  .row:active { transform: scale(0.99); }
+  .row .thumb {
+    width: 56px; height: 56px;
+    border-radius: 12px;
+    background-size: cover; background-position: center;
+    background-color: var(--bg-soft);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; flex-shrink: 0;
+  }
+  .row .name { flex: 1; font-weight: 700; font-size: 15px; }
+  .row .meta { font-size: 11px; color: var(--ink-faint); margin-top: 2px; font-weight: 500; }
+  .row .icon-btn {
+    width: 38px; height: 38px;
+    background: transparent;
+    border-radius: 10px;
+    font-size: 16px; color: var(--ink-soft);
+  }
+  .row .icon-btn:active { background: rgba(0,0,0,0.06); }
+
+  .deck-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 12px;
+    margin-bottom: 8px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+  }
+  .deck-row .swatch {
+    width: 14px; height: 14px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .deck-row.active { background: var(--accent); color: white; }
+  .deck-row.active .swatch { box-shadow: 0 0 0 2px rgba(255,255,255,0.5); }
+
+  /* buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 20px;
+    background: var(--ink); color: var(--bg);
+    border-radius: var(--radius-sm);
+    font-size: 15px; font-weight: 700;
+    width: 100%;
+    transition: transform var(--t-fast), opacity var(--t-fast);
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; pointer-events: none; }
+  .btn.secondary { background: var(--surface-2); color: var(--ink); }
+  .btn.danger { background: var(--warn); color: white; }
+  .btn.accent { background: var(--accent); color: white; }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-row .btn { flex: 1; }
+
+  /* ==========================================================
+     Editor (add / edit card)
+     ========================================================== */
+  .picker {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin: 6px 0 16px;
+  }
+  .picker .pick {
+    aspect-ratio: 1.3;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px;
+    font-weight: 700; color: var(--ink); font-size: 13px;
+    transition: transform var(--t-fast), background var(--t-fast);
+  }
+  .picker .pick:active { transform: scale(0.97); }
+  .picker .pick .icon { font-size: 28px; }
+
+  .preview-photo {
+    width: 100%; aspect-ratio: 1;
+    border-radius: var(--radius);
+    background-size: cover; background-position: center;
+    background-color: var(--surface-2);
+    margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 76px; color: var(--ink-faint);
+    position: relative;
+    overflow: hidden;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid var(--surface-2);
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    font-size: 17px;
+    margin-bottom: 14px;
+    transition: border-color var(--t-fast);
+  }
+  input[type="text"]:focus { outline: none; border-color: var(--accent); }
+  input[type="file"] { display: none; }
+
+  .recorder {
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    padding: 18px;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .rec-btn {
+    width: 84px; height: 84px;
+    border-radius: 50%;
+    background: var(--warn); color: white;
+    font-size: 28px;
+    margin: 0 auto 10px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform var(--t-fast);
+    position: relative;
+  }
+  .rec-btn:active { transform: scale(0.95); }
+  .rec-btn.recording {
+    animation: rec-pulse 1.2s infinite;
+  }
+  @keyframes rec-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(217,107,107,0.5); }
+    50% { box-shadow: 0 0 0 18px rgba(217,107,107,0); }
+  }
+  .rec-status { font-size: 13px; color: var(--ink-soft); font-weight: 600; }
+  .rec-actions {
+    display: flex; gap: 10px; justify-content: center; margin-top: 12px;
+  }
+  .rec-actions button {
+    padding: 8px 14px;
+    background: var(--surface);
+    border-radius: 10px;
+    font-size: 13px; font-weight: 700; color: var(--ink);
+  }
+
+  /* settings */
+  .setting-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--surface-2);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label { flex: 1; }
+  .setting-label .name { font-weight: 700; font-size: 15px; }
+  .setting-label .desc { font-size: 12px; color: var(--ink-soft); margin-top: 2px; line-height: 1.4; }
+
+  /* segmented control */
+  .segm {
+    display: flex; gap: 4px;
+    background: var(--surface-2);
+    padding: 3px;
+    border-radius: 10px;
+  }
+  .segm button {
+    padding: 8px 12px;
+    font-size: 13px; font-weight: 700;
+    color: var(--ink-soft);
+    border-radius: 8px;
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+  .segm button.active {
+    background: var(--surface); color: var(--ink);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* toggle */
+  .toggle {
+    width: 44px; height: 26px; border-radius: 100px;
+    background: var(--ink-faint);
+    position: relative;
+    transition: background var(--t-fast);
+  }
+  .toggle::after {
+    content: "";
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: white;
+    transition: left var(--t-fast);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  .toggle.on { background: var(--good); }
+  .toggle.on::after { left: 21px; }
+
+  .swatches {
+    display: flex; gap: 8px;
+  }
+  .swatches button {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    transition: transform var(--t-fast), border-color var(--t-fast);
+  }
+  .swatches button.active { border-color: var(--ink); transform: scale(1.05); }
+
+  /* welcome (empty deck) */
+  .welcome {
+    text-align: center; padding: 36px 28px; max-width: 380px;
+  }
+  .welcome img { width: 96px; height: 96px; border-radius: 22px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .welcome h1 {
+    font-size: 32px; margin: 0 0 10px;
+    font-weight: 800; letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .welcome p { font-size: 15px; color: var(--ink-soft); line-height: 1.5; margin: 0 0 22px; }
+
+  /* toast */
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%) translateY(20px);
+    bottom: max(20px, env(safe-area-inset-bottom));
+    background: var(--ink); color: var(--bg);
+    padding: 12px 20px;
+    border-radius: 100px;
+    font-size: 14px; font-weight: 600;
+    z-index: 200; opacity: 0; pointer-events: none;
+    transition: opacity .3s, transform .3s cubic-bezier(.34, 1.56, .64, 1);
+    max-width: 80vw;
+    text-align: center;
+  }
+  .toast.show {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+  }
+
+  /* about/credits link in settings */
+  .text-link {
+    color: var(--accent); font-weight: 700; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--ink-soft);
+  }
+  .empty-state .em-art { font-size: 56px; margin-bottom: 10px; opacity: 0.5; }
+  .empty-state .em-text { font-weight: 600; font-size: 15px; }
+  .empty-state .em-sub { font-size: 13px; margin-top: 4px; color: var(--ink-faint); }
+
+  /* about modal content */
+  .about-block {
+    padding: 18px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    line-height: 1.55; font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .about-block strong { color: var(--ink); }
+
+  @media (min-width: 720px) {
+    .picker .pick { aspect-ratio: 1.6; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- Splash                                                        -->
+<!-- ============================================================ -->
+<div id="splash">
+  <img src="icons/icon-192.png" alt="" />
+  <div class="name">LovedWords</div>
+  <div class="tag">Your voice. Their first words.</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Onboarding (first run)                                       -->
+<!-- ============================================================ -->
+<div id="onboard">
+  <div class="onboard-pages" id="onboard-pages">
+    <div class="onboard-page">
+      <div class="onboard-art">💛</div>
+      <h2>Welcome to LovedWords</h2>
+      <p>Personal flashcards for your little one — with the faces and voices they love.</p>
+    </div>
+    <div class="onboard-page">
+      <div class="onboard-art">📸</div>
+      <h2>Snap, say, swipe</h2>
+      <p>Take a photo of grandma. Record yourself saying her name. Hand the phone to your child and watch them swipe through people they recognize.</p>
+    </div>
+    <div class="onboard-page">
+      <div class="onboard-art">🔒</div>
+      <h2>Private &amp; ad-free</h2>
+      <p>Everything stays on this device. No accounts. No tracking. No ads. Free, forever.</p>
+    </div>
+  </div>
+  <div class="onboard-foot">
+    <button class="btn secondary" id="onboard-skip" style="width: auto; padding: 10px 18px; font-size: 13px;">Skip</button>
+    <div class="onboard-dots" id="onboard-dots">
+      <div class="onboard-dot active"></div>
+      <div class="onboard-dot"></div>
+      <div class="onboard-dot"></div>
+    </div>
+    <button class="btn accent" id="onboard-next" style="width: auto; padding: 10px 18px; font-size: 13px;">Next</button>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Toddler deck (default)                                       -->
+<!-- ============================================================ -->
+<div id="deck-screen" class="hidden">
+  <div id="deck-pill"></div>
+  <div id="deck-area">
+    <button class="nav-arrow left"  id="nav-prev" aria-label="Previous">‹</button>
+    <button class="nav-arrow right" id="nav-next" aria-label="Next">›</button>
+  </div>
+  <div id="deck-progress"></div>
+</div>
+<button id="gate-btn" aria-label="Parent settings">⚙</button>
+
+<!-- ============================================================ -->
+<!-- Parent gate                                                  -->
+<!-- ============================================================ -->
+<div id="gate-scrim" class="scrim">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Quick check</h2>
+      <p>To keep little hands out of settings.</p>
+    </div>
+    <div class="modal-body">
+      <div class="gate-math" id="gate-math"></div>
+      <div class="gate-options" id="gate-options"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Admin (adult)                                                -->
+<!-- ============================================================ -->
+<div id="admin-scrim" class="scrim">
+  <div class="modal" id="admin-modal">
+    <div class="admin-head">
+      <div class="logo"></div>
+      <div class="title">LovedWords</div>
+      <button class="closex" id="admin-close">✕</button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="cards">Cards</button>
+      <button class="tab" data-tab="decks">Decks</button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </div>
+    <div class="tab-body" id="tab-cards">
+      <div id="card-list"></div>
+      <button class="btn accent" id="add-card-btn" style="margin-top: 14px;">+ Add card</button>
+    </div>
+    <div class="tab-body" id="tab-decks" hidden>
+      <div id="deck-list"></div>
+      <button class="btn accent" id="add-deck-btn" style="margin-top: 14px;">+ New deck</button>
+    </div>
+    <div class="tab-body" id="tab-settings" hidden>
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name">Theme</div>
+          <div class="desc">Choose a look. Night theme is easy on eyes for bedtime.</div>
+        </div>
+        <div class="swatches" id="theme-swatches"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name">Auto-play voice</div>
+          <div class="desc">Play voice automatically when a card appears.</div>
+        </div>
+        <div class="toggle" id="autoplay-toggle"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name">Haptic feedback</div>
+          <div class="desc">Subtle vibrations on tap and swipe.</div>
+        </div>
+        <div class="toggle" id="haptics-toggle"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name">Parent gate difficulty</div>
+          <div class="desc">Bigger numbers keep older kids out too.</div>
+        </div>
+        <div class="segm" id="gate-difficulty">
+          <button data-v="easy">Easy</button>
+          <button data-v="medium" class="active">Medium</button>
+          <button data-v="hard">Hard</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name">Backup &amp; share</div>
+          <div class="desc">Save all your decks and cards (with photos and recordings) to a file. Send it to another parent — they can import it on their phone.</div>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-bottom: 16px;">
+        <button class="btn secondary" id="export-btn">Export</button>
+        <button class="btn secondary" id="import-btn">Import</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json,.lovedwords" />
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name">About</div>
+          <div class="desc">
+            v1.0.0 — Made with care for parents.
+            <br><br>
+            <span class="text-link" id="about-privacy">Privacy</span> ·
+            <span class="text-link" id="about-credits">Credits</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Card editor                                                   -->
+<!-- ============================================================ -->
+<div id="edit-scrim" class="scrim">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="edit-title">New card</h2>
+    </div>
+    <div class="modal-body">
+      <div class="preview-photo" id="preview-photo">📷</div>
+      <div class="picker">
+        <button class="pick" id="pick-camera">
+          <span class="icon">📸</span><span>Take photo</span>
+        </button>
+        <button class="pick" id="pick-library">
+          <span class="icon">🖼️</span><span>Choose photo</span>
+        </button>
+      </div>
+      <input type="file" id="file-camera" accept="image/*" capture="environment" />
+      <input type="file" id="file-library" accept="image/*" />
+
+      <input type="text" id="card-name" placeholder="What is this? (e.g. Grandma)" maxlength="40" />
+
+      <div class="recorder">
+        <div class="rec-btn" id="rec-btn">●</div>
+        <div class="rec-status" id="rec-status">Tap to record voice</div>
+        <div class="rec-actions" id="rec-actions" style="display:none;">
+          <button id="rec-play">▶ Play</button>
+          <button id="rec-redo">↻ Redo</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" id="edit-cancel">Cancel</button>
+      <button class="btn accent" id="edit-save">Save</button>
+    </div>
+    <div class="modal-foot" id="edit-delete-row" style="display:none; padding-top: 0; border-top: none;">
+      <button class="btn danger" id="edit-delete">Delete card</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Deck editor                                                   -->
+<!-- ============================================================ -->
+<div id="deck-edit-scrim" class="scrim">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="deck-edit-title">New deck</h2>
+      <p>Decks let you group cards by topic — Family, Foods, Animals, etc.</p>
+    </div>
+    <div class="modal-body">
+      <input type="text" id="deck-name" placeholder="Deck name (e.g. Family)" maxlength="30" />
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name">Color</div>
+        </div>
+        <div class="swatches" id="deck-color-swatches"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" id="deck-edit-cancel">Cancel</button>
+      <button class="btn accent" id="deck-edit-save">Save</button>
+    </div>
+    <div class="modal-foot" id="deck-delete-row" style="display:none; padding-top: 0; border-top: none;">
+      <button class="btn danger" id="deck-delete">Delete deck (cards too)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- About / privacy modal                                         -->
+<!-- ============================================================ -->
+<div id="about-scrim" class="scrim">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="about-title">About</h2>
+    </div>
+    <div class="modal-body" id="about-body"></div>
+    <div class="modal-foot">
+      <button class="btn" id="about-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+ * LovedWords v1.0.0
+ * Single-file PWA. Toddler-facing deck + adult-facing admin.
+ * No network, no analytics, no ads, no accounts.
+ * ============================================================ */
+
+const APP = {
+  version: "1.0.0",
+  startersByDeck: {
+    "First Words": [
+      { name: "Mama",   emoji: "👩" },
+      { name: "Dada",   emoji: "👨" },
+      { name: "Baby",   emoji: "👶" },
+      { name: "Dog",    emoji: "🐶" },
+      { name: "Cat",    emoji: "🐱" },
+      { name: "Ball",   emoji: "⚽" },
+      { name: "Bottle", emoji: "🍼" },
+      { name: "Apple",  emoji: "🍎" },
+    ],
+  },
+  themes: ["soft", "forest", "ocean", "night"],
+  themeSwatches: {
+    soft:   "#ffd6c2",
+    forest: "#5e9d6a",
+    ocean:  "#5594c4",
+    night:  "#241a30",
+  },
+  deckColors: ["#eb6e82", "#5e9d6a", "#5594c4", "#b58df1", "#e8a85a", "#7ab87a"],
+};
+
+/* ============================================================
+ * IndexedDB
+ * ============================================================ */
+const DB_NAME = "lovedwords";
+const DB_VERSION = 2;
+let db;
+
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains("cards")) {
+        const s = d.createObjectStore("cards", { keyPath: "id", autoIncrement: true });
+        s.createIndex("deckId", "deckId", { unique: false });
+        s.createIndex("order", "order", { unique: false });
+      }
+      if (!d.objectStoreNames.contains("decks")) {
+        d.createObjectStore("decks", { keyPath: "id", autoIncrement: true });
+      }
+      if (!d.objectStoreNames.contains("meta")) {
+        d.createObjectStore("meta", { keyPath: "key" });
+      }
+    };
+    req.onsuccess = () => { db = req.result; resolve(db); };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+const dbStore = (name, mode = "readonly") => db.transaction(name, mode).objectStore(name);
+
+const getAll = (store) => new Promise((res, rej) => {
+  const r = dbStore(store).getAll();
+  r.onsuccess = () => res(r.result || []);
+  r.onerror = () => rej(r.error);
+});
+const put = (store, val) => new Promise((res, rej) => {
+  const r = dbStore(store, "readwrite").put(val);
+  r.onsuccess = () => res(r.result);
+  r.onerror = () => rej(r.error);
+});
+const del = (store, key) => new Promise((res, rej) => {
+  const r = dbStore(store, "readwrite").delete(key);
+  r.onsuccess = () => res();
+  r.onerror = () => rej(r.error);
+});
+const getMeta = (key) => new Promise((res) => {
+  const r = dbStore("meta").get(key);
+  r.onsuccess = () => res(r.result?.value);
+  r.onerror = () => res(undefined);
+});
+const setMeta = (key, value) => put("meta", { key, value });
+
+async function getCardsForDeck(deckId) {
+  const all = await getAll("cards");
+  const cards = all.filter((c) => c.deckId === deckId);
+  cards.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  return cards;
+}
+
+/* ============================================================
+ * Settings (in-memory, mirrored to db.meta)
+ * ============================================================ */
+const settings = {
+  theme: "soft",
+  autoplay: true,
+  haptics: true,
+  gateDifficulty: "medium",
+  currentDeckId: null,
+  seenOnboarding: false,
+};
+async function loadSettings() {
+  for (const k of Object.keys(settings)) {
+    const v = await getMeta(k);
+    if (v !== undefined) settings[k] = v;
+  }
+}
+async function saveSetting(k, v) {
+  settings[k] = v;
+  await setMeta(k, v);
+}
+
+/* ============================================================
+ * Haptics & TTS
+ * ============================================================ */
+function buzz(pattern) {
+  if (!settings.haptics) return;
+  if (!("vibrate" in navigator)) return;
+  navigator.vibrate(pattern);
+}
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.85; u.pitch = 1.1;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+/* ============================================================
+ * Theme application
+ * ============================================================ */
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  const tc = { soft: "#fff7f3", forest: "#f4f7f2", ocean: "#f1f6fb", night: "#1a1424" };
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", tc[t] || "#fff7f3");
+}
+
+/* ============================================================
+ * First-run seeding
+ * ============================================================ */
+async function seedIfFirstRun() {
+  const seeded = await getMeta("seeded_v2");
+  if (seeded) return;
+
+  const decks = await getAll("decks");
+  let firstDeckId;
+  if (decks.length === 0) {
+    firstDeckId = await put("decks", {
+      name: "First Words",
+      color: APP.deckColors[0],
+      order: 0,
+      createdAt: Date.now(),
+    });
+    settings.currentDeckId = firstDeckId;
+    await saveSetting("currentDeckId", firstDeckId);
+  } else {
+    firstDeckId = settings.currentDeckId || decks[0].id;
+  }
+
+  const starters = APP.startersByDeck["First Words"];
+  for (let i = 0; i < starters.length; i++) {
+    const s = starters[i];
+    await put("cards", {
+      deckId: firstDeckId,
+      name: s.name,
+      emoji: s.emoji,
+      imageBlob: null,
+      audioBlob: null,
+      order: i,
+      playCount: 0,
+      lastPlayed: 0,
+      createdAt: Date.now() + i,
+    });
+  }
+  await setMeta("seeded_v2", true);
+}
+
+/* ============================================================
+ * Toast
+ * ============================================================ */
+const toastEl = document.getElementById("toast");
+let toastTimer = null;
+function toast(msg, ms = 1700) {
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("show"), ms);
+}
+
+/* ============================================================
+ * Object URL bookkeeping
+ * ============================================================ */
+const liveUrls = new Set();
+function makeUrl(blob) {
+  const u = URL.createObjectURL(blob);
+  liveUrls.add(u);
+  return u;
+}
+function revokeAllUrls() {
+  liveUrls.forEach((u) => URL.revokeObjectURL(u));
+  liveUrls.clear();
+}
+
+/* ============================================================
+ * Toddler deck rendering
+ * ============================================================ */
+const deckArea = document.getElementById("deck-area");
+const deckProgress = document.getElementById("deck-progress");
+const deckPill = document.getElementById("deck-pill");
+
+let deckCards = [];
+let currentIdx = 0;
+let currentDeck = null;
+
+async function loadDeck() {
+  let decks = await getAll("decks");
+  if (decks.length === 0) {
+    // edge: no decks (user wiped). create default.
+    const id = await put("decks", { name: "First Words", color: APP.deckColors[0], order: 0, createdAt: Date.now() });
+    settings.currentDeckId = id;
+    await saveSetting("currentDeckId", id);
+    decks = await getAll("decks");
+  }
+  currentDeck = decks.find((d) => d.id === settings.currentDeckId) || decks[0];
+  if (currentDeck.id !== settings.currentDeckId) {
+    settings.currentDeckId = currentDeck.id;
+    await saveSetting("currentDeckId", currentDeck.id);
+  }
+  deckCards = await getCardsForDeck(currentDeck.id);
+  currentIdx = Math.min(currentIdx, Math.max(0, deckCards.length - 1));
+  if (currentIdx < 0) currentIdx = 0;
+  deckPill.textContent = currentDeck.name;
+  renderCard();
+  renderProgress();
+}
+
+function renderProgress() {
+  deckProgress.innerHTML = "";
+  const max = Math.min(20, deckCards.length); // cap dots if many
+  for (let i = 0; i < max; i++) {
+    const d = document.createElement("div");
+    d.className = "pdot" + (i === currentIdx % max ? " active" : "");
+    deckProgress.appendChild(d);
+  }
+}
+
+function renderCard() {
+  revokeAllUrls();
+  // remove only cards/welcome — keep nav arrows in place
+  deckArea.querySelectorAll(".card, .welcome").forEach((n) => n.remove());
+
+  const navPrev = document.getElementById("nav-prev");
+  const navNext = document.getElementById("nav-next");
+
+  if (deckCards.length === 0) {
+    if (navPrev) navPrev.style.display = "none";
+    if (navNext) navNext.style.display = "none";
+    const w = document.createElement("div");
+    w.className = "welcome";
+    w.innerHTML = `
+      <img src="icons/icon-192.png" alt="">
+      <h1>LovedWords</h1>
+      <p>Add your first card. A photo of grandma, your dog, or anyone your little one loves — and your voice saying their name.</p>
+      <button class="btn accent" id="welcome-add">+ Add a card</button>
+    `;
+    deckArea.appendChild(w);
+    document.getElementById("welcome-add").addEventListener("click", openGate);
+    return;
+  }
+  if (navPrev) navPrev.style.display = deckCards.length > 1 ? "flex" : "none";
+  if (navNext) navNext.style.display = deckCards.length > 1 ? "flex" : "none";
+
+  const c = deckCards[currentIdx];
+  const cardEl = document.createElement("div");
+  cardEl.className = "card entering";
+  cardEl.dataset.tint = currentIdx % 6;
+
+  const art = document.createElement("div");
+  art.className = "art";
+  if (c.imageBlob) {
+    art.style.backgroundImage = `url(${makeUrl(c.imageBlob)})`;
+  } else {
+    art.textContent = c.emoji || "💛";
+  }
+
+  const label = document.createElement("div");
+  label.className = "label";
+  label.textContent = c.name;
+
+  cardEl.append(art, label);
+  deckArea.appendChild(cardEl);
+
+  requestAnimationFrame(() => {
+    cardEl.classList.remove("entering");
+    cardEl.classList.add("idle");
+  });
+
+  attachCardGestures(cardEl);
+
+  if (settings.autoplay) {
+    setTimeout(() => playCurrent(), 280);
+  }
+}
+
+async function bumpStats() {
+  const c = deckCards[currentIdx];
+  if (!c) return;
+  c.playCount = (c.playCount || 0) + 1;
+  c.lastPlayed = Date.now();
+  await put("cards", c);
+}
+
+function playCurrent() {
+  const c = deckCards[currentIdx];
+  if (!c) return;
+  const el = deckArea.querySelector(".card");
+  if (el) {
+    el.classList.remove("tapped", "playing");
+    void el.offsetWidth;
+    el.classList.add("tapped", "playing");
+    setTimeout(() => el.classList.remove("playing"), 1100);
+  }
+  buzz(8);
+  if (c.audioBlob) {
+    const url = makeUrl(c.audioBlob);
+    const audio = new Audio(url);
+    audio.play().catch(() => {});
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
+      liveUrls.delete(url);
+    };
+  } else {
+    speak(c.name);
+  }
+  bumpStats();
+}
+
+function next() {
+  if (deckCards.length === 0) return;
+  currentIdx = (currentIdx + 1) % deckCards.length;
+  buzz(15);
+  setTimeout(() => { renderCard(); renderProgress(); }, 220);
+}
+function prev() {
+  if (deckCards.length === 0) return;
+  currentIdx = (currentIdx - 1 + deckCards.length) % deckCards.length;
+  buzz(15);
+  setTimeout(() => { renderCard(); renderProgress(); }, 220);
+}
+
+/* ============================================================
+ * Gestures
+ * ============================================================ */
+function attachCardGestures(el) {
+  let startX = 0, startY = 0, dx = 0, dy = 0, t0 = 0, dragging = false;
+
+  const onStart = (e) => {
+    const p = e.touches ? e.touches[0] : e;
+    startX = p.clientX; startY = p.clientY;
+    dx = 0; dy = 0; t0 = Date.now(); dragging = true;
+    el.style.transition = "none";
+  };
+  const onMove = (e) => {
+    if (!dragging) return;
+    const p = e.touches ? e.touches[0] : e;
+    dx = p.clientX - startX;
+    dy = p.clientY - startY;
+    el.style.transform = `translate(${dx}px, ${dy * 0.25}px) rotate(${dx * 0.05}deg)`;
+  };
+  const onEnd = () => {
+    if (!dragging) return;
+    dragging = false;
+    el.style.transition = "";
+    const dt = Date.now() - t0;
+    const absX = Math.abs(dx), absY = Math.abs(dy);
+
+    // tap
+    if (absX < 18 && absY < 18 && dt < 350) {
+      el.style.transform = "";
+      playCurrent();
+      return;
+    }
+    // swipe horizontal
+    if (absX > 50 && absX > absY) {
+      if (dx < 0) {
+        el.classList.add("flying-left");
+        next();
+      } else {
+        el.classList.add("flying-right");
+        prev();
+      }
+      return;
+    }
+    el.style.transform = "";
+  };
+
+  el.addEventListener("touchstart", onStart, { passive: true });
+  el.addEventListener("touchmove",  onMove,  { passive: true });
+  el.addEventListener("touchend",   onEnd);
+  el.addEventListener("mousedown",  onStart);
+  window.addEventListener("mousemove", onMove);
+  window.addEventListener("mouseup",   onEnd);
+}
+
+/* ============================================================
+ * Parent gate
+ * ============================================================ */
+const gateScrim = document.getElementById("gate-scrim");
+const gateMath = document.getElementById("gate-math");
+const gateOptions = document.getElementById("gate-options");
+
+function gateRange() {
+  switch (settings.gateDifficulty) {
+    case "easy":   return { min: 1, max: 5 };
+    case "hard":   return { min: 7, max: 18 };
+    default:       return { min: 3, max: 9 };
+  }
+}
+
+function openGate() {
+  const { min, max } = gateRange();
+  const a = min + Math.floor(Math.random() * (max - min));
+  const b = min + Math.floor(Math.random() * (max - min));
+  const answer = a + b;
+  const wrongs = new Set();
+  while (wrongs.size < 2) {
+    let w = answer + (Math.floor(Math.random() * 7) - 3);
+    if (w === answer || w <= 0) w = answer + 4;
+    wrongs.add(w);
+  }
+  const opts = [answer, ...wrongs].sort(() => Math.random() - 0.5);
+  gateMath.textContent = `${a} + ${b} = ?`;
+  gateOptions.innerHTML = "";
+  opts.forEach((n) => {
+    const btn = document.createElement("button");
+    btn.textContent = n;
+    btn.addEventListener("click", () => {
+      if (n === answer) {
+        closeScrim(gateScrim);
+        openAdmin();
+      } else {
+        btn.classList.add("shake");
+        setTimeout(() => btn.classList.remove("shake"), 400);
+      }
+    });
+    gateOptions.appendChild(btn);
+  });
+  openScrim(gateScrim);
+}
+document.getElementById("gate-btn").addEventListener("click", openGate);
+
+// nav arrows
+document.getElementById("nav-prev").addEventListener("click", (e) => { e.stopPropagation(); prev(); });
+document.getElementById("nav-next").addEventListener("click", (e) => { e.stopPropagation(); next(); });
+
+function openScrim(el) { el.classList.add("open"); }
+function closeScrim(el) { el.classList.remove("open"); }
+
+/* ============================================================
+ * Admin
+ * ============================================================ */
+const adminScrim = document.getElementById("admin-scrim");
+const tabButtons = document.querySelectorAll(".tabs .tab");
+const tabBodies = {
+  cards: document.getElementById("tab-cards"),
+  decks: document.getElementById("tab-decks"),
+  settings: document.getElementById("tab-settings"),
+};
+
+document.getElementById("admin-close").addEventListener("click", () => closeScrim(adminScrim));
+
+tabButtons.forEach((b) => {
+  b.addEventListener("click", () => {
+    tabButtons.forEach((x) => x.classList.toggle("active", x === b));
+    Object.entries(tabBodies).forEach(([k, el]) => el.hidden = k !== b.dataset.tab);
+    if (b.dataset.tab === "cards") renderCardList();
+    if (b.dataset.tab === "decks") renderDeckList();
+    if (b.dataset.tab === "settings") renderSettings();
+  });
+});
+
+async function openAdmin() {
+  await renderCardList();
+  openScrim(adminScrim);
+}
+
+async function renderCardList() {
+  const list = document.getElementById("card-list");
+  list.innerHTML = "";
+
+  if (!settings.currentDeckId) {
+    list.innerHTML = `<div class="empty-state"><div class="em-art">📒</div><div class="em-text">Pick a deck first</div></div>`;
+    return;
+  }
+
+  const cards = await getCardsForDeck(settings.currentDeckId);
+  if (cards.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="em-art">📷</div><div class="em-text">No cards yet</div><div class="em-sub">Tap +Add card to begin</div></div>`;
+    return;
+  }
+  // sort newest first for parent convenience
+  cards.sort((a, b) => (b.lastPlayed || 0) - (a.lastPlayed || 0));
+  for (const c of cards) {
+    const row = document.createElement("div");
+    row.className = "row";
+    const thumb = document.createElement("div");
+    thumb.className = "thumb";
+    if (c.imageBlob) {
+      thumb.style.backgroundImage = `url(${URL.createObjectURL(c.imageBlob)})`;
+    } else {
+      thumb.textContent = c.emoji || "💛";
+    }
+    const wrap = document.createElement("div");
+    wrap.className = "name";
+    const nameDiv = document.createElement("div");
+    nameDiv.textContent = c.name + (c.audioBlob ? "  🎙" : "");
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = `Played ${c.playCount || 0} · ${c.lastPlayed ? timeAgo(c.lastPlayed) : "never"}`;
+    wrap.append(nameDiv, meta);
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "icon-btn";
+    editBtn.textContent = "✎";
+    editBtn.addEventListener("click", () => openEditExisting(c));
+
+    row.append(thumb, wrap, editBtn);
+    list.appendChild(row);
+  }
+}
+
+function timeAgo(ts) {
+  if (!ts) return "never";
+  const diff = Date.now() - ts;
+  if (diff < 60000) return "just now";
+  if (diff < 3600000) return Math.floor(diff / 60000) + "m ago";
+  if (diff < 86400000) return Math.floor(diff / 3600000) + "h ago";
+  return Math.floor(diff / 86400000) + "d ago";
+}
+
+document.getElementById("add-card-btn").addEventListener("click", openEditNew);
+
+/* ============================================================
+ * Decks tab
+ * ============================================================ */
+async function renderDeckList() {
+  const list = document.getElementById("deck-list");
+  list.innerHTML = "";
+  const decks = await getAll("decks");
+  decks.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  for (const d of decks) {
+    const row = document.createElement("div");
+    row.className = "deck-row" + (d.id === settings.currentDeckId ? " active" : "");
+    const sw = document.createElement("div");
+    sw.className = "swatch";
+    sw.style.background = d.color || APP.deckColors[0];
+    const name = document.createElement("div");
+    name.className = "name";
+    name.style.flex = "1";
+    name.style.fontWeight = "700";
+    const cardCount = (await getCardsForDeck(d.id)).length;
+    name.innerHTML = `${escapeHtml(d.name)}<div class="meta" style="opacity:0.7;font-size:11px;font-weight:500;margin-top:2px;">${cardCount} card${cardCount === 1 ? "" : "s"}</div>`;
+
+    const useBtn = document.createElement("button");
+    useBtn.className = "icon-btn";
+    useBtn.textContent = d.id === settings.currentDeckId ? "★" : "☆";
+    useBtn.title = "Use this deck";
+    useBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      settings.currentDeckId = d.id;
+      await saveSetting("currentDeckId", d.id);
+      await loadDeck();
+      await renderDeckList();
+      await renderCardList();
+      toast(`Switched to "${d.name}"`);
+    });
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "icon-btn";
+    editBtn.textContent = "✎";
+    editBtn.addEventListener("click", () => openDeckEdit(d));
+
+    row.append(sw, name, useBtn, editBtn);
+    list.appendChild(row);
+  }
+}
+document.getElementById("add-deck-btn").addEventListener("click", () => openDeckEdit(null));
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+/* ============================================================
+ * Deck editor
+ * ============================================================ */
+const deckEditScrim = document.getElementById("deck-edit-scrim");
+const deckNameInput = document.getElementById("deck-name");
+const deckEditTitle = document.getElementById("deck-edit-title");
+const deckColorSwatches = document.getElementById("deck-color-swatches");
+const deckDeleteRow = document.getElementById("deck-delete-row");
+let editingDeck = null;
+
+function paintDeckColors() {
+  deckColorSwatches.innerHTML = "";
+  APP.deckColors.forEach((c) => {
+    const b = document.createElement("button");
+    b.style.background = c;
+    if (editingDeck?.color === c) b.classList.add("active");
+    b.addEventListener("click", () => {
+      editingDeck.color = c;
+      paintDeckColors();
+    });
+    deckColorSwatches.appendChild(b);
+  });
+}
+
+function openDeckEdit(deck) {
+  editingDeck = deck ? { ...deck } : { name: "", color: APP.deckColors[0] };
+  deckEditTitle.textContent = deck ? "Edit deck" : "New deck";
+  deckNameInput.value = editingDeck.name || "";
+  paintDeckColors();
+  deckDeleteRow.style.display = deck ? "flex" : "none";
+  openScrim(deckEditScrim);
+}
+
+document.getElementById("deck-edit-cancel").addEventListener("click", () => {
+  closeScrim(deckEditScrim);
+  editingDeck = null;
+});
+
+document.getElementById("deck-edit-save").addEventListener("click", async () => {
+  const name = deckNameInput.value.trim();
+  if (!name) { toast("Name your deck"); return; }
+  editingDeck.name = name;
+  if (editingDeck.id == null) {
+    const decks = await getAll("decks");
+    editingDeck.order = decks.length;
+    editingDeck.createdAt = Date.now();
+  }
+  const id = await put("decks", editingDeck);
+  if (editingDeck.id == null) {
+    // first time created — switch to it
+    settings.currentDeckId = id;
+    await saveSetting("currentDeckId", id);
+  }
+  closeScrim(deckEditScrim);
+  editingDeck = null;
+  await loadDeck();
+  await renderDeckList();
+  toast("Deck saved");
+});
+
+document.getElementById("deck-delete").addEventListener("click", async () => {
+  if (!editingDeck?.id) return;
+  const decks = await getAll("decks");
+  if (decks.length <= 1) { toast("Need at least one deck"); return; }
+  if (!confirm(`Delete deck "${editingDeck.name}" and all its cards?`)) return;
+  const cards = await getCardsForDeck(editingDeck.id);
+  for (const c of cards) await del("cards", c.id);
+  await del("decks", editingDeck.id);
+  if (settings.currentDeckId === editingDeck.id) {
+    const remain = await getAll("decks");
+    settings.currentDeckId = remain[0].id;
+    await saveSetting("currentDeckId", remain[0].id);
+  }
+  closeScrim(deckEditScrim);
+  editingDeck = null;
+  await loadDeck();
+  await renderDeckList();
+  toast("Deck deleted");
+});
+
+/* ============================================================
+ * Card editor
+ * ============================================================ */
+const editScrim = document.getElementById("edit-scrim");
+const editTitle = document.getElementById("edit-title");
+const previewPhoto = document.getElementById("preview-photo");
+const cardNameInput = document.getElementById("card-name");
+const fileCamera = document.getElementById("file-camera");
+const fileLibrary = document.getElementById("file-library");
+const editDeleteRow = document.getElementById("edit-delete-row");
+const recBtn = document.getElementById("rec-btn");
+const recStatus = document.getElementById("rec-status");
+const recActions = document.getElementById("rec-actions");
+
+let editing = null;
+
+function freshDraft() {
+  return {
+    deckId: settings.currentDeckId,
+    name: "", imageBlob: null, audioBlob: null, emoji: null,
+  };
+}
+
+function openEditNew() {
+  editing = freshDraft();
+  editTitle.textContent = "New card";
+  editDeleteRow.style.display = "none";
+  paintEditUi();
+  closeScrim(adminScrim);
+  openScrim(editScrim);
+}
+
+function openEditExisting(c) {
+  editing = { ...c };
+  editTitle.textContent = "Edit card";
+  editDeleteRow.style.display = "flex";
+  paintEditUi();
+  closeScrim(adminScrim);
+  openScrim(editScrim);
+}
+
+function paintEditUi() {
+  cardNameInput.value = editing.name || "";
+  if (editing.imageBlob) {
+    previewPhoto.style.backgroundImage = `url(${URL.createObjectURL(editing.imageBlob)})`;
+    previewPhoto.textContent = "";
+  } else if (editing.emoji) {
+    previewPhoto.style.backgroundImage = "";
+    previewPhoto.textContent = editing.emoji;
+  } else {
+    previewPhoto.style.backgroundImage = "";
+    previewPhoto.textContent = "📷";
+  }
+  if (editing.audioBlob) {
+    recStatus.textContent = "Voice saved ✓ — tap to re-record";
+    recActions.style.display = "flex";
+  } else {
+    recStatus.textContent = "Tap to record voice";
+    recActions.style.display = "none";
+  }
+}
+
+document.getElementById("pick-camera").addEventListener("click", () => fileCamera.click());
+document.getElementById("pick-library").addEventListener("click", () => fileLibrary.click());
+
+[fileCamera, fileLibrary].forEach((input) => {
+  input.addEventListener("change", async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    try {
+      editing.imageBlob = await squareCropToBlob(f);
+      editing.emoji = null;
+      paintEditUi();
+    } catch (err) {
+      toast("Could not load image");
+    }
+    input.value = "";
+  });
+});
+
+async function squareCropToBlob(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const size = Math.min(img.width, img.height);
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+      const target = 800;
+      const canvas = document.createElement("canvas");
+      canvas.width = target; canvas.height = target;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, target, target);
+      canvas.toBlob((b) => b ? resolve(b) : reject(new Error("toBlob failed")), "image/jpeg", 0.86);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/* === Recorder === */
+let mediaRecorder = null;
+let recChunks = [];
+let recStream = null;
+let recTimer = null;
+
+recBtn.addEventListener("click", async () => {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.stop();
+    return;
+  }
+  try {
+    recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(recStream);
+    recChunks = [];
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+      editing.audioBlob = blob;
+      recStream.getTracks().forEach((t) => t.stop());
+      recBtn.classList.remove("recording");
+      clearTimeout(recTimer);
+      paintEditUi();
+      buzz([10, 60, 10]);
+    };
+    mediaRecorder.start();
+    recBtn.classList.add("recording");
+    recStatus.textContent = "Recording... tap to stop";
+    buzz(20);
+    recTimer = setTimeout(() => {
+      if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+    }, 6000);
+  } catch (err) {
+    toast("Mic permission needed");
+  }
+});
+
+document.getElementById("rec-play").addEventListener("click", () => {
+  if (!editing?.audioBlob) return;
+  const url = URL.createObjectURL(editing.audioBlob);
+  const a = new Audio(url);
+  a.play();
+  a.onended = () => URL.revokeObjectURL(url);
+});
+document.getElementById("rec-redo").addEventListener("click", () => {
+  if (!editing) return;
+  editing.audioBlob = null;
+  paintEditUi();
+});
+
+/* save / cancel / delete */
+document.getElementById("edit-cancel").addEventListener("click", async () => {
+  closeScrim(editScrim);
+  editing = null;
+  await openAdmin();
+});
+
+document.getElementById("edit-save").addEventListener("click", async () => {
+  const name = cardNameInput.value.trim();
+  if (!name) { toast("Name this card"); return; }
+  editing.name = name;
+  if (editing.id == null) {
+    const cards = await getCardsForDeck(editing.deckId);
+    editing.order = cards.length;
+    editing.createdAt = Date.now();
+    editing.playCount = 0;
+    editing.lastPlayed = 0;
+  }
+  await put("cards", editing);
+  closeScrim(editScrim);
+  editing = null;
+  await loadDeck();
+  await renderCardList();
+  toast("Saved ✓");
+  openScrim(adminScrim);
+});
+
+document.getElementById("edit-delete").addEventListener("click", async () => {
+  if (!editing?.id) return;
+  if (!confirm(`Delete "${editing.name}"?`)) return;
+  await del("cards", editing.id);
+  closeScrim(editScrim);
+  editing = null;
+  await loadDeck();
+  await renderCardList();
+  toast("Deleted");
+  openScrim(adminScrim);
+});
+
+/* ============================================================
+ * Settings tab
+ * ============================================================ */
+async function renderSettings() {
+  // theme swatches
+  const tw = document.getElementById("theme-swatches");
+  tw.innerHTML = "";
+  APP.themes.forEach((t) => {
+    const b = document.createElement("button");
+    b.style.background = APP.themeSwatches[t];
+    if (t === settings.theme) b.classList.add("active");
+    b.title = t;
+    b.addEventListener("click", async () => {
+      await saveSetting("theme", t);
+      applyTheme(t);
+      renderSettings();
+    });
+    tw.appendChild(b);
+  });
+
+  // toggles
+  document.getElementById("autoplay-toggle").classList.toggle("on", !!settings.autoplay);
+  document.getElementById("haptics-toggle").classList.toggle("on", !!settings.haptics);
+
+  // gate difficulty segmented
+  document.querySelectorAll("#gate-difficulty button").forEach((b) => {
+    b.classList.toggle("active", b.dataset.v === settings.gateDifficulty);
+  });
+}
+
+document.getElementById("autoplay-toggle").addEventListener("click", async () => {
+  await saveSetting("autoplay", !settings.autoplay);
+  renderSettings();
+});
+document.getElementById("haptics-toggle").addEventListener("click", async () => {
+  await saveSetting("haptics", !settings.haptics);
+  buzz(20);
+  renderSettings();
+});
+document.querySelectorAll("#gate-difficulty button").forEach((b) => {
+  b.addEventListener("click", async () => {
+    await saveSetting("gateDifficulty", b.dataset.v);
+    renderSettings();
+  });
+});
+
+/* ============================================================
+ * Export / Import
+ * ============================================================ */
+document.getElementById("export-btn").addEventListener("click", async () => {
+  toast("Preparing export...");
+  const decks = await getAll("decks");
+  const cards = await getAll("cards");
+  // serialize blobs as data URLs
+  const out = {
+    app: "lovedwords",
+    version: APP.version,
+    exportedAt: Date.now(),
+    decks,
+    cards: await Promise.all(cards.map(async (c) => {
+      return {
+        ...c,
+        imageBlob: c.imageBlob ? await blobToDataUrl(c.imageBlob) : null,
+        audioBlob: c.audioBlob ? await blobToDataUrl(c.audioBlob) : null,
+      };
+    })),
+  };
+  const json = JSON.stringify(out);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `lovedwords-${new Date().toISOString().slice(0, 10)}.lovedwords`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast("Exported ✓");
+});
+
+document.getElementById("import-btn").addEventListener("click", () => document.getElementById("import-file").click());
+
+document.getElementById("import-file").addEventListener("change", async (e) => {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  try {
+    const txt = await f.text();
+    const data = JSON.parse(txt);
+    if (data.app !== "lovedwords") { toast("Not a LovedWords file"); return; }
+    if (!confirm("Import will MERGE these decks/cards into your library. Continue?")) return;
+    // map imported deck IDs to new IDs (autoincrement collision avoidance)
+    const idMap = new Map();
+    for (const d of data.decks || []) {
+      const oldId = d.id;
+      delete d.id;
+      d.name = (d.name || "Imported") + " (imported)";
+      const newId = await put("decks", d);
+      idMap.set(oldId, newId);
+    }
+    for (const c of data.cards || []) {
+      delete c.id;
+      c.deckId = idMap.get(c.deckId) || settings.currentDeckId;
+      c.imageBlob = c.imageBlob ? await dataUrlToBlob(c.imageBlob) : null;
+      c.audioBlob = c.audioBlob ? await dataUrlToBlob(c.audioBlob) : null;
+      await put("cards", c);
+    }
+    await loadDeck();
+    await renderCardList();
+    await renderDeckList();
+    toast("Imported ✓");
+  } catch (err) {
+    toast("Could not read file");
+    console.error(err);
+  }
+  e.target.value = "";
+});
+
+function blobToDataUrl(blob) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
+}
+async function dataUrlToBlob(url) {
+  const r = await fetch(url);
+  return r.blob();
+}
+
+/* ============================================================
+ * About / privacy
+ * ============================================================ */
+const aboutScrim = document.getElementById("about-scrim");
+const aboutTitle = document.getElementById("about-title");
+const aboutBody = document.getElementById("about-body");
+
+document.getElementById("about-close").addEventListener("click", () => closeScrim(aboutScrim));
+
+document.getElementById("about-privacy").addEventListener("click", () => {
+  aboutTitle.textContent = "Privacy";
+  aboutBody.innerHTML = `
+    <div class="about-block">
+      <strong>Everything stays on your device.</strong>
+      LovedWords does not have user accounts, does not connect to a server, and does not include analytics, advertising, or third-party trackers.
+    </div>
+    <div class="about-block">
+      <strong>Photos and recordings:</strong> stored locally in your phone's app storage. They are never uploaded.
+    </div>
+    <div class="about-block">
+      <strong>Permissions:</strong> camera (to take photos), microphone (to record voice), storage (to save the cards). All optional — the app still works with the starter cards if you say no.
+    </div>
+    <div class="about-block">
+      <strong>Children's privacy:</strong> No data is collected from anyone, child or adult. Per Google Play's Designed for Families policy, this app collects no personal information.
+    </div>
+    <div class="about-block">
+      <strong>Sharing:</strong> The Export feature creates a file you can send to another parent. You decide who sees it. We don't see anything.
+    </div>
+  `;
+  openScrim(aboutScrim);
+});
+
+document.getElementById("about-credits").addEventListener("click", () => {
+  aboutTitle.textContent = "Credits";
+  aboutBody.innerHTML = `
+    <div class="about-block">
+      Made with care for parents and toddlers everywhere.
+    </div>
+    <div class="about-block">
+      <strong>What this app uses:</strong>
+      No frameworks. No CDN libraries. Just your browser, your photos, and your voice.
+    </div>
+    <div class="about-block">
+      <strong>Free, forever.</strong> No ads. No subscriptions. No "pro" tier. If you find this useful, the highest compliment is sharing it with another parent.
+    </div>
+  `;
+  openScrim(aboutScrim);
+});
+
+/* ============================================================
+ * Onboarding
+ * ============================================================ */
+const onboardEl = document.getElementById("onboard");
+const onboardPages = document.getElementById("onboard-pages");
+const onboardDots = document.querySelectorAll(".onboard-dot");
+const onboardNext = document.getElementById("onboard-next");
+const onboardSkip = document.getElementById("onboard-skip");
+let onboardIdx = 0;
+
+function renderOnboard() {
+  onboardPages.style.transform = `translateX(-${onboardIdx * 100}%)`;
+  onboardDots.forEach((d, i) => d.classList.toggle("active", i === onboardIdx));
+  onboardNext.textContent = onboardIdx === 2 ? "Get started" : "Next";
+}
+
+onboardNext.addEventListener("click", async () => {
+  if (onboardIdx < 2) {
+    onboardIdx++;
+    renderOnboard();
+  } else {
+    await saveSetting("seenOnboarding", true);
+    onboardEl.classList.remove("open");
+    document.getElementById("deck-screen").classList.remove("hidden");
+  }
+});
+onboardSkip.addEventListener("click", async () => {
+  await saveSetting("seenOnboarding", true);
+  onboardEl.classList.remove("open");
+  document.getElementById("deck-screen").classList.remove("hidden");
+});
+
+/* ============================================================
+ * Boot
+ * ============================================================ */
+(async () => {
+  try {
+    await openDb();
+    await loadSettings();
+    applyTheme(settings.theme || "soft");
+    await seedIfFirstRun();
+    await loadDeck();
+
+    // splash → onboarding or deck
+    setTimeout(() => {
+      document.getElementById("splash").classList.add("gone");
+      if (!settings.seenOnboarding) {
+        onboardEl.classList.add("open");
+        renderOnboard();
+      } else {
+        document.getElementById("deck-screen").classList.remove("hidden");
+      }
+    }, 700);
+  } catch (err) {
+    console.error("boot failed", err);
+    toast("Could not start. Refresh?");
+  }
+})();
+
+// keyboard nav for desktop
+window.addEventListener("keydown", (e) => {
+  if (document.querySelector(".scrim.open")) return;
+  if (document.getElementById("onboard").classList.contains("open")) return;
+  if (e.key === "ArrowRight") next();
+  else if (e.key === "ArrowLeft") prev();
+  else if (e.key === " ") { e.preventDefault(); playCurrent(); }
+  else if (e.key === "g" || e.key === "G") openGate();
+});
+
+// stop background audio if app goes to background
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && "speechSynthesis" in window) speechSynthesis.cancel();
+});
+</script>
+</body>
+</html>

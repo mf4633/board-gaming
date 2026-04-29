@@ -1,0 +1,16 @@
+{
+  "name": "LovedWords",
+  "short_name": "LovedWords",
+  "description": "Personal flashcards in your own voice. Free. No ads.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff7f3",
+  "theme_color": "#fff7f3",
+  "categories": ["education", "kids"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
