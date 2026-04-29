@@ -19,6 +19,8 @@
   "applicationCategory": "Game", "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Minesweeper","item":"https://boardgaminghub.com/Minesweeper.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What do the numbers in Minesweeper mean?","acceptedAnswer":{"@type":"Answer","text":"A number on a revealed cell shows how many mines lie among the 8 cells immediately surrounding it. A blank revealed cell has 0 adjacent mines (and the game auto-cascades, opening neighbors). A 1 means exactly one of the 8 neighbors is a mine; a 2 means exactly two; and so on up to 8 (rare)."}},{"@type":"Question","name":"What's the difference between Beginner, Intermediate, and Expert?","acceptedAnswer":{"@type":"Answer","text":"Beginner is 9×9 with 10 mines (~12% density). Intermediate is 16×16 with 40 mines (~16%). Expert is 30×16 with 99 mines (~21%). Higher density makes deductions harder and more likely to require a 50/50 guess."}},{"@type":"Question","name":"What is a chord click?","acceptedAnswer":{"@type":"Answer","text":"A chord (left+right click together, or middle-click) on a revealed numbered cell automatically opens all unflagged neighbors — but only if the number of flagged neighbors equals the number on the cell. Speeds up clearing significantly once you've flagged the obvious mines around a number."}},{"@type":"Question","name":"Can every Minesweeper game be solved without guessing?","acceptedAnswer":{"@type":"Answer","text":"No. Standard Minesweeper allows positions where the only safe cell can't be deduced from the visible numbers — a forced 50/50 guess. Some implementations (\"no-guess\" Minesweeper) use only solvable boards; the classic version does not. Approximately 20–30% of Expert games contain at least one unforced guess."}},{"@type":"Question","name":"What's the best Minesweeper strategy?","acceptedAnswer":{"@type":"Answer","text":"Open corners and edges first — they have fewer neighbors so numbers there are higher-information. Flag mines as you identify them so chord-click works. When stuck, look at numbers along the borders of unrevealed regions for forced deductions. Save guesses for when no logic remains, and prefer cells far from numbered constraints (lower local mine density)."}}]}</script>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464" crossorigin="anonymous"></script>
 <style>
   * { box-sizing: border-box; }
@@ -227,6 +229,54 @@
 })();
 </script>
 <script src="/analytics.js"></script>
+<section class="seo-content">
+  <h2>About Minesweeper</h2>
+  <p>Minesweeper is a single-player logic puzzle: uncover every safe cell on a grid without detonating any of the hidden mines. Numbers on revealed cells tell you exactly how many mines lie among the 8 surrounding cells. Originated as a 1980s mainframe game, popularized worldwide when Microsoft bundled it with Windows 3.1 in 1992.</p>
+
+  <h3>How to play</h3>
+  <p>Left-click to reveal a cell; right-click to flag a suspected mine. The first click is always safe — if it would otherwise hit a mine, the mine is moved. Revealing a 0-cell auto-cascades, opening all neighbors recursively (this is what produces the satisfying flood-open). Numbers 1–8 indicate exactly how many of the 8 neighboring cells contain mines.</p>
+
+  <h3>Number colors (classic Windows palette)</h3>
+  <table>
+    <thead><tr><th class="num">Number</th><th>Color</th><th>Adjacent mines</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>Blue</td><td>1</td></tr>
+      <tr><td class="num">2</td><td>Green</td><td>2</td></tr>
+      <tr><td class="num">3</td><td>Red</td><td>3</td></tr>
+      <tr><td class="num">4</td><td>Dark blue</td><td>4</td></tr>
+      <tr><td class="num">5</td><td>Maroon</td><td>5</td></tr>
+      <tr><td class="num">6</td><td>Cyan</td><td>6</td></tr>
+      <tr><td class="num">7</td><td>Black</td><td>7</td></tr>
+      <tr><td class="num">8</td><td>Gray</td><td>8 (rare)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Standard difficulty grids</h3>
+  <table>
+    <thead><tr><th>Difficulty</th><th>Grid</th><th class="num">Mines</th><th class="num">Density</th></tr></thead>
+    <tbody>
+      <tr><td>Beginner</td><td>9×9</td><td class="num">10</td><td class="num">12.3%</td></tr>
+      <tr><td>Intermediate</td><td>16×16</td><td class="num">40</td><td class="num">15.6%</td></tr>
+      <tr><td>Expert</td><td>30×16</td><td class="num">99</td><td class="num">20.6%</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Frequently asked questions</h3>
+  <details><summary>What do the numbers mean?</summary><p>The number on a revealed cell is exactly how many of its 8 surrounding cells contain a mine. A 1 means exactly one neighbor is a mine; a 0 (blank) means none.</p></details>
+  <details><summary>Beginner / Intermediate / Expert sizes?</summary><p>Beginner 9×9 / 10 mines, Intermediate 16×16 / 40 mines, Expert 30×16 / 99 mines.</p></details>
+  <details><summary>What's a chord click?</summary><p>Left+right click together (or middle-click) on a numbered cell auto-opens all unflagged neighbors — but only if the flag count around it equals the number on the cell. Big speedup once you've flagged the obvious mines.</p></details>
+  <details><summary>Can every Minesweeper be solved without guessing?</summary><p>No. The classic version allows positions where the only safe cell can't be deduced from the visible numbers — a forced 50/50 guess. Some variants ("no-guess" Minesweeper) only generate solvable boards.</p></details>
+  <details><summary>Best strategy?</summary><p>Open corners and edges first (fewer neighbors → higher-information numbers). Flag mines as you identify them so chord-click works. Save guesses for when no logic remains, and prefer cells far from numbered constraints.</p></details>
+
+  <h3>Related games</h3>
+  <ul>
+    <li><a href="Sudoku.html">Sudoku</a> — pure-logic puzzle, also no luck if well-formed.</li>
+    <li><a href="2048.html">2048</a> — solo number puzzle.</li>
+    <li><a href="Solitaire.html">Solitaire</a> — solo card game.</li>
+    <li><a href="Chess.html">Chess</a> — two-player strategic logic.</li>
+  </ul>
+</section>
+
 <section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
   <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>
   <p style="color:#8098a8;font-size:0.9em;margin-bottom:18px;line-height:1.5;">Sign in with GitHub to share strategies, ask questions, or report a bug.</p>

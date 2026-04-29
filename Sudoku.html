@@ -19,6 +19,8 @@
   "applicationCategory": "Game", "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Sudoku","item":"https://boardgaminghub.com/Sudoku.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What are the rules of sudoku?","acceptedAnswer":{"@type":"Answer","text":"Fill the 9×9 grid with digits 1–9 so that every row, every column, and every 3×3 box contains each digit exactly once. The puzzle starts with some cells already filled (clues); a well-formed puzzle has exactly one solution reachable by logic alone — no guessing required."}},{"@type":"Question","name":"What's the difference between a naked single and a hidden single?","acceptedAnswer":{"@type":"Answer","text":"Naked single: a cell where only one digit is still possible after eliminating digits already in its row, column, and box. Hidden single: a digit that has only one possible cell in a particular row, column, or box, even if that cell could in principle hold other digits. Both are the easiest deductions; expert puzzles require chains of these plus advanced techniques (X-Wing, Swordfish)."}},{"@type":"Question","name":"How do pencil marks work?","acceptedAnswer":{"@type":"Answer","text":"Pencil marks (or candidates) are small notes inside an empty cell listing the digits still possible there. As you fill cells and eliminate possibilities, you erase pencil marks accordingly. They make advanced techniques tractable — most expert puzzles are unsolvable without them."}},{"@type":"Question","name":"Can every sudoku be solved by logic alone?","acceptedAnswer":{"@type":"Answer","text":"Every well-formed (single-solution) sudoku CAN be solved by some logical chain — but the chain may require techniques most humans don't use (forcing chains, nishio, etc.). Most published \"expert\" puzzles are solvable with X-Wing, swordfish, and unique-rectangle techniques. The minimum number of clues for a unique-solution sudoku is 17 (proven 2012)."}},{"@type":"Question","name":"What's the difference between easy and expert difficulty?","acceptedAnswer":{"@type":"Answer","text":"Easy puzzles solve with naked-singles and hidden-singles only. Medium adds naked pairs and pointing pairs. Hard requires X-Wings and swordfish. Expert requires chains and unique-rectangle reasoning. The clue count is a poor proxy for difficulty — a 30-clue \"expert\" can be much harder than a 24-clue \"hard\"."}}]}</script>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464" crossorigin="anonymous"></script>
 <style>
   * { box-sizing: border-box; }
@@ -304,6 +306,46 @@
 })();
 </script>
 <script src="/analytics.js"></script>
+<section class="seo-content">
+  <h2>About Sudoku</h2>
+  <p>Sudoku is a logic-based number-placement puzzle. Fill a 9×9 grid with digits 1 through 9 so that every row, every column, and every 3×3 box contains each digit exactly once. The puzzle starts with some cells already filled (clues); a properly-formed sudoku has exactly one solution and is deducible by logic alone — no guessing required.</p>
+
+  <h3>How to play</h3>
+  <p>Tap a cell, then tap a digit 1–9 to place it. Use pencil marks to record what's still possible in each cell — essential at hard and expert difficulty. As you place a digit, eliminate it from the same row, column, and 3×3 box. The puzzle is complete when every row, column, and box contains 1–9 with no duplicates.</p>
+
+  <h3>Solving techniques by difficulty</h3>
+  <table>
+    <thead><tr><th>Technique</th><th>Description</th><th>Difficulty</th></tr></thead>
+    <tbody>
+      <tr><td>Naked single</td><td>Cell has only one possible digit after eliminations</td><td>Easy</td></tr>
+      <tr><td>Hidden single</td><td>A digit has only one possible cell in a row, column, or box</td><td>Easy</td></tr>
+      <tr><td>Naked pair / triple</td><td>Two (or three) cells in a unit share the same two (or three) candidates</td><td>Medium</td></tr>
+      <tr><td>Pointing pair / triple</td><td>A box's only spots for a digit lie in one row or column — eliminate from the rest of that row/column</td><td>Medium</td></tr>
+      <tr><td>X-Wing</td><td>Two parallel rows have two candidate cells each in the same two columns — eliminate that digit elsewhere in those columns</td><td>Hard</td></tr>
+      <tr><td>Swordfish</td><td>X-Wing extended to 3 rows / 3 columns</td><td>Expert</td></tr>
+      <tr><td>Coloring / chains</td><td>Trace a candidate's implications through the grid until it forces a contradiction</td><td>Expert</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Logical reachability</h3>
+  <p>Every well-formed sudoku has exactly one solution and is logically deducible. The minimum number of clues for a unique-solution sudoku is <strong>17</strong> (proven by computer search, 2012). Most published expert puzzles solve with X-Wing + swordfish + unique-rectangle techniques; harder ones require chains.</p>
+
+  <h3>Frequently asked questions</h3>
+  <details><summary>What are the rules?</summary><p>Fill the 9×9 grid with digits 1–9 so each row, each column, and each 3×3 box contains every digit exactly once. Some cells start pre-filled.</p></details>
+  <details><summary>Naked single vs hidden single?</summary><p>Naked single: a cell has only one possible digit. Hidden single: a digit has only one possible cell in a row, column, or box. Both are the easiest deductions.</p></details>
+  <details><summary>How do pencil marks work?</summary><p>Small notes inside an empty cell listing the digits still possible there. As you fill cells and eliminate possibilities, erase marks accordingly. Most expert puzzles are unsolvable without them.</p></details>
+  <details><summary>Can every sudoku be solved by logic alone?</summary><p>Every well-formed (single-solution) sudoku is logically solvable in principle. In practice, expert puzzles may require techniques most humans don't use day-to-day.</p></details>
+  <details><summary>Easy vs Expert difficulty?</summary><p>Easy = naked + hidden singles only. Medium adds naked pairs and pointing pairs. Hard requires X-Wings and swordfish. Expert requires chains and unique-rectangle reasoning.</p></details>
+
+  <h3>Related games</h3>
+  <ul>
+    <li><a href="Minesweeper.html">Minesweeper</a> — pure-deduction logic puzzle.</li>
+    <li><a href="2048.html">2048</a> — number puzzle with movement.</li>
+    <li><a href="Chess.html">Chess</a> — strategic logic across moves.</li>
+    <li><a href="Mahjong.html">Mahjong Solitaire</a> — pattern-matching puzzle.</li>
+  </ul>
+</section>
+
 <section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
   <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>
   <p style="color:#8098a8;font-size:0.9em;margin-bottom:18px;line-height:1.5;">Sign in with GitHub to share strategies, ask questions, or report a bug.</p>

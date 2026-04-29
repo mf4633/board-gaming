@@ -19,6 +19,8 @@
   "applicationCategory": "Game", "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Solitaire","item":"https://boardgaminghub.com/Solitaire.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I win Klondike Solitaire?","acceptedAnswer":{"@type":"Answer","text":"Build all four foundations from Ace to King by suit. The tableau is built downward with alternating colors; foundations are built upward by suit. Use the stock and waste pile to feed cards you cannot place directly on the tableau. The game is won when all 52 cards have moved to the foundations."}},{"@type":"Question","name":"What does smart-click do?","acceptedAnswer":{"@type":"Answer","text":"Smart-click (also called auto-move) sends a card to its best legal destination automatically — a foundation if it can go there, or the most useful tableau slot otherwise. Saves time once many cards are in play."}},{"@type":"Question","name":"What's the difference between Draw 1 and Draw 3?","acceptedAnswer":{"@type":"Answer","text":"Draw 1 deals one card from the stock to the waste at a time and lets you play it directly. Draw 3 deals three cards face-up but only the top is playable, making the game considerably harder. Draw 1 wins about 80% of deals with perfect play; Draw 3 closer to 5%."}},{"@type":"Question","name":"Are all Klondike deals winnable?","acceptedAnswer":{"@type":"Answer","text":"No. With perfect play and Draw 1 rules, an estimated 80–82% of deals are solvable. Draw 3 falls to roughly 4–5%. Some deals are mathematically unwinnable from the start; the rate is higher when undo is permitted."}},{"@type":"Question","name":"What is the talon (stock and waste)?","acceptedAnswer":{"@type":"Answer","text":"After dealing the tableau, the remaining 24 cards form the stock pile, face-down. Clicking the stock turns the top card (or three) onto the waste pile, where the top card is playable. When the stock empties you can usually recycle the waste back into the stock."}}]}</script>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464" crossorigin="anonymous"></script>
 <style>
   * { box-sizing: border-box; }
@@ -368,6 +370,43 @@
 })();
 </script>
 <script src="/analytics.js"></script>
+<section class="seo-content">
+  <h2>About Klondike Solitaire</h2>
+  <p>Klondike is the canonical Solitaire — a single-player card game using a standard 52-card deck where the goal is to build four foundation piles from Ace to King by suit. Originated in late-19th-century North America and bundled with Microsoft Windows since 1990, Klondike is the most-played card game in the world.</p>
+
+  <h3>How to play</h3>
+  <p>The deal puts 28 cards into a 7-column tableau (1 card in column 1, 2 in column 2, … 7 in column 7) — only the bottom card in each column is face-up. The remaining 24 cards form the stock; the four foundation slots and the waste pile start empty. Build the tableau downward in alternating colors (e.g., black 7 on red 8); flip a face-down card when the cards on top of it are moved. Build foundations upward by suit, starting from Ace. You may move the top card of the waste, the top of any tableau column, or any face-up run as a group.</p>
+
+  <h3>Layout reference</h3>
+  <table>
+    <thead><tr><th>Element</th><th>Cards</th><th>Build rule</th></tr></thead>
+    <tbody>
+      <tr><td>Tableau</td><td>7 columns, 28 cards (1+2+…+7)</td><td>Down by alternating color</td></tr>
+      <tr><td>Stock</td><td>24 cards face-down</td><td>Click to deal to waste</td></tr>
+      <tr><td>Waste</td><td>0–24 cards</td><td>Top card playable</td></tr>
+      <tr><td>Foundations</td><td>4 piles, one per suit</td><td>Up from Ace (♠♥♦♣) to King</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Win condition &amp; solvability</h3>
+  <p>Win by moving all 52 cards onto the foundations. Solvability with perfect play: <strong>~80% Draw 1</strong>, <strong>~5% Draw 3</strong>. The casual win rate is much lower because most human players don't backtrack optimally. Allowing unlimited undo nearly closes the gap.</p>
+
+  <h3>Frequently asked questions</h3>
+  <details><summary>How do I win Klondike?</summary><p>Build all four foundations from Ace to King by suit. Use the tableau (down, alternating colors) and the stock-waste cycle to feed cards onto the foundations. The game ends when all 52 cards have moved up.</p></details>
+  <details><summary>What does smart-click do?</summary><p>Auto-moves the clicked card to its best legal destination — usually a foundation if eligible, otherwise the most useful tableau column.</p></details>
+  <details><summary>Draw 1 vs Draw 3?</summary><p>Draw 1 deals one stock card at a time, directly playable. Draw 3 deals three face-up but only the top is playable, making the game far harder. Draw 1 wins ~80% of deals; Draw 3 ~5%.</p></details>
+  <details><summary>Are all deals winnable?</summary><p>No. With perfect Draw 1 play, ~80–82% of random deals are solvable. Some are mathematically dead from the deal.</p></details>
+  <details><summary>What is the talon?</summary><p>The combined stock + waste pile. Stock starts with 24 face-down cards; clicking deals to the waste. When stock empties, the waste typically recycles back — usually unlimited times.</p></details>
+
+  <h3>Related games</h3>
+  <ul>
+    <li><a href="Mahjong.html">Mahjong Solitaire</a> — solo tile-matching, similar pace.</li>
+    <li><a href="Sudoku.html">Sudoku</a> — pure logic, no luck.</li>
+    <li><a href="2048.html">2048</a> — slide-and-merge solo puzzle.</li>
+    <li><a href="Chess.html">Chess</a> — two-player abstract strategy.</li>
+  </ul>
+</section>
+
 <section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
   <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>
   <p style="color:#8098a8;font-size:0.9em;margin-bottom:18px;line-height:1.5;">Sign in with GitHub to share strategies, ask questions, or report a bug.</p>

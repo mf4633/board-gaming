@@ -19,6 +19,8 @@
   "applicationCategory": "Game", "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Mahjong Solitaire","item":"https://boardgaminghub.com/Mahjong.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do you play Mahjong Solitaire?","acceptedAnswer":{"@type":"Answer","text":"Tap two matching free tiles to remove them as a pair. A tile is free if no tile sits on top of it AND its left or right side is unblocked. Win by removing every tile from the layout. Mahjong Solitaire uses the same 144-tile set as the four-player tile game but is a different game — it is single-player matching, not the betting/scoring game."}},{"@type":"Question","name":"What does it mean for a tile to be free?","acceptedAnswer":{"@type":"Answer","text":"A tile is free (selectable) when (1) no tile sits on top of it AND (2) at least one of its left or right edges is open (no tile directly beside it on that side). A tile blocked by neighbors on both sides cannot be matched until one of those neighbors is removed."}},{"@type":"Question","name":"What tile types are in the set?","acceptedAnswer":{"@type":"Answer","text":"The 144-tile set: 108 suit tiles (Bamboo, Characters, Dots — each 1–9 in 4 copies = 36 per suit), 16 Wind honors (East/South/West/North × 4), 12 Dragon honors (Red/Green/White × 4), and 8 bonus tiles (4 Flowers + 4 Seasons). Suits and honors must match the exact tile to pair. Flowers match any other Flower; Seasons match any other Season — so all 4 Flowers and all 4 Seasons are mutually pairable."}},{"@type":"Question","name":"Are all Mahjong Solitaire layouts solvable?","acceptedAnswer":{"@type":"Answer","text":"Layouts vary. Many implementations (and this one) generate boards that are guaranteed solvable; others shuffle randomly and may produce dead-ends. Even on a solvable board, you can lock yourself out by removing pairs in the wrong order. The classic Turtle layout is solvable about 75% of the time with random pairings; near 100% with foresight."}},{"@type":"Question","name":"How is Mahjong Solitaire different from Mahjong (the four-player game)?","acceptedAnswer":{"@type":"Answer","text":"Different games sharing the same tile set. Four-player Mahjong is a turn-based draw-and-discard betting game similar to Rummy, scored by hand value. Mahjong Solitaire is a single-player tile-matching puzzle, invented in the late 1970s for early personal computers. They share tiles but no rules."}}]}</script>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464" crossorigin="anonymous"></script>
 <style>
   * { box-sizing: border-box; }
@@ -257,6 +259,44 @@
 })();
 </script>
 <script src="/analytics.js"></script>
+<section class="seo-content">
+  <h2>About Mahjong Solitaire</h2>
+  <p>Mahjong Solitaire is a single-player tile-matching puzzle using the 144-tile mahjong set. Match pairs of identical (or matching-category) free tiles to remove them from a stacked layout. Despite the shared name and tile set, this is a different game from <em>full</em> Mahjong (the four-player draw-and-discard game). Mahjong Solitaire was invented in 1981 for early personal computers and popularized as <em>Shanghai</em> in 1986.</p>
+
+  <h3>How to play</h3>
+  <p>Tap two matching free tiles to remove them as a pair. A tile is <strong>free</strong> when (1) no tile sits on top of it AND (2) at least one of its left or right edges has no tile directly beside it. Win by clearing every tile from the layout. You can lock yourself out by removing tiles in the wrong order even on a solvable board, so plan ahead — tiles buried deeper require their cover removed first.</p>
+
+  <h3>Tile set: 144 tiles</h3>
+  <table>
+    <thead><tr><th>Category</th><th>Tiles</th><th class="num">Count</th><th>Match rule</th></tr></thead>
+    <tbody>
+      <tr><td>Bamboo (1–9)</td><td>One suit, 4 of each</td><td class="num">36</td><td>Exact tile</td></tr>
+      <tr><td>Characters (1–9)</td><td>One suit, 4 of each</td><td class="num">36</td><td>Exact tile</td></tr>
+      <tr><td>Dots / Circles (1–9)</td><td>One suit, 4 of each</td><td class="num">36</td><td>Exact tile</td></tr>
+      <tr><td>Winds (E, S, W, N)</td><td>Honor — 4 of each</td><td class="num">16</td><td>Exact tile</td></tr>
+      <tr><td>Dragons (Red, Green, White)</td><td>Honor — 4 of each</td><td class="num">12</td><td>Exact tile</td></tr>
+      <tr><td>Flowers (4 unique)</td><td>Bonus — 1 each</td><td class="num">4</td><td>Any flower matches</td></tr>
+      <tr><td>Seasons (4 unique)</td><td>Bonus — 1 each</td><td class="num">4</td><td>Any season matches</td></tr>
+      <tr><td><strong>Total</strong></td><td>—</td><td class="num"><strong>144</strong></td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Frequently asked questions</h3>
+  <details><summary>How do you play?</summary><p>Tap two matching free tiles to remove the pair. Repeat until the board is empty. A tile is free when nothing is on top of it AND its left or right side is open.</p></details>
+  <details><summary>What does "free" mean?</summary><p>(1) No tile sits on top of it. (2) At least one of its left or right edges has no neighbor. A tile blocked on both sides is not selectable until a neighbor is removed.</p></details>
+  <details><summary>What tile types are there?</summary><p>108 suit tiles (Bamboo, Characters, Dots — each 1–9 in 4 copies), 16 Winds, 12 Dragons, 4 Flowers, 4 Seasons. Suits and honors require exact match; Flowers and Seasons match any tile of the same category.</p></details>
+  <details><summary>Are all layouts solvable?</summary><p>Many implementations (this one included) generate guaranteed-solvable boards. Even on a solvable board, removing pairs in the wrong order can lock you out — foresight matters.</p></details>
+  <details><summary>How is this different from full Mahjong?</summary><p>Full Mahjong is a four-player turn-based draw-and-discard game similar to Rummy, scored by hand value. Mahjong Solitaire is a single-player tile-matching puzzle. They share the tile set; nothing else.</p></details>
+
+  <h3>Related games</h3>
+  <ul>
+    <li><a href="Solitaire.html">Solitaire</a> — solo card game, similar pace.</li>
+    <li><a href="Sudoku.html">Sudoku</a> — pure-logic puzzle.</li>
+    <li><a href="Minesweeper.html">Minesweeper</a> — deduction puzzle.</li>
+    <li><a href="2048.html">2048</a> — solo number puzzle.</li>
+  </ul>
+</section>
+
 <section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
   <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>
   <p style="color:#8098a8;font-size:0.9em;margin-bottom:18px;line-height:1.5;">Sign in with GitHub to share strategies, ask questions, or report a bug.</p>

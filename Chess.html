@@ -34,6 +34,8 @@
     "applicationCategory": "Game", "operatingSystem": "Any",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
   </script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Chess","item":"https://boardgaminghub.com/Chess.html"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How does each chess piece move?","acceptedAnswer":{"@type":"Answer","text":"King: 1 square in any direction (also castling). Queen: any distance along ranks, files, or diagonals. Rook: any distance along ranks or files. Bishop: any distance along diagonals. Knight: L-shape (2+1), the only piece that jumps over others. Pawn: forward 1 square (or 2 from its starting rank), captures diagonally, promotes on reaching rank 8."}},{"@type":"Question","name":"What is castling and when can I do it?","acceptedAnswer":{"@type":"Answer","text":"Castling is a special two-piece king-and-rook move performed in one turn. Conditions: the king and the chosen rook have not yet moved; no pieces sit between them; the king is not currently in check; and the king does not pass through or land on a square attacked by an enemy piece. Kingside castling places the king on g-file, rook on f-file. Queenside places the king on c-file, rook on d-file."}},{"@type":"Question","name":"What is en passant?","acceptedAnswer":{"@type":"Answer","text":"When an enemy pawn advances two squares from its starting rank and ends beside one of your pawns, you may capture it on your very next move as if it had moved only one square. The capturing pawn moves diagonally to the square the enemy pawn passed over. Must be played on the immediate next turn or the right is lost."}},{"@type":"Question","name":"What's the difference between checkmate and stalemate?","acceptedAnswer":{"@type":"Answer","text":"Checkmate: the side to move is in check with no legal escape — game ends, checkmating side wins. Stalemate: the side to move is NOT in check but has no legal moves at all — game ends in a draw. Stalemating a winning position is a common way for beginners to throw away material advantage."}},{"@type":"Question","name":"What's a good chess opening for beginners?","acceptedAnswer":{"@type":"Answer","text":"For White, 1.e4 leads to open tactical games — try the Italian Game (1.e4 e5 2.Nf3 Nc6 3.Bc4) or the Ruy Lopez (3.Bb5). For Black against 1.e4, the Caro-Kann (1...c6) and French (1...e6) are solid. Against 1.d4, the Slav (1...d5 2.c4 c6) and King's Indian (1...Nf6 2.c4 g6) are widely played. The principles — control the center, develop minor pieces before queens or rooks, castle early, connect rooks — matter more than memorized lines below ~1500 Elo."}},{"@type":"Question","name":"What is the 50-move rule?","acceptedAnswer":{"@type":"Answer","text":"If 50 consecutive moves are made by both sides with no capture and no pawn move, either player may claim a draw. The counter resets on every capture or pawn push. The threefold-repetition rule is similar: if the same position (with the same player to move and same castling/en-passant rights) occurs three times, either side may claim a draw."}}]}</script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♟️</text></svg>">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1416,6 +1418,71 @@
 </script>
 
 <script src="/analytics.js"></script>
+
+<section class="seo-content">
+  <h2>About Chess</h2>
+  <p>Chess is a two-player abstract strategy game played on an 8×8 board with 32 pieces (16 per side). The objective is <strong>checkmate</strong>: deliver an attack on the opposing king from which there is no legal escape. Recorded in essentially its modern form since the 15th century, chess is the most-played and most-studied board game in the world.</p>
+
+  <h3>How to play</h3>
+  <p>Each side starts with 1 king, 1 queen, 2 rooks, 2 bishops, 2 knights, and 8 pawns. White moves first; players alternate one move per turn. A move must either place the king out of check, prevent check, or simply develop a piece toward the opposing position. Three special moves — <strong>castling</strong>, <strong>en passant</strong>, and <strong>pawn promotion</strong> — round out the standard rules.</p>
+
+  <h3>Piece movement reference</h3>
+  <table>
+    <thead><tr><th>Piece</th><th>Movement</th><th class="num">Approx. value</th></tr></thead>
+    <tbody>
+      <tr><td>King ♔</td><td>1 square in any direction; also castling, once per game</td><td class="num">—</td></tr>
+      <tr><td>Queen ♕</td><td>Any distance along ranks, files, or diagonals</td><td class="num">9</td></tr>
+      <tr><td>Rook ♖</td><td>Any distance along ranks or files</td><td class="num">5</td></tr>
+      <tr><td>Bishop ♗</td><td>Any distance along diagonals</td><td class="num">3</td></tr>
+      <tr><td>Knight ♘</td><td>L-shape (2+1); the only piece that jumps over others</td><td class="num">3</td></tr>
+      <tr><td>Pawn ♙</td><td>Forward 1 (or 2 from starting rank); captures diagonally; promotes on rank 8</td><td class="num">1</td></tr>
+    </tbody>
+  </table>
+
+  <h3>How games end</h3>
+  <ul>
+    <li><strong>Checkmate</strong> — king in check with no legal escape (win for the checkmating side).</li>
+    <li><strong>Stalemate</strong> — side to move has no legal moves but is NOT in check (draw).</li>
+    <li><strong>50-move rule</strong> — 50 consecutive moves with no capture and no pawn move (draw can be claimed).</li>
+    <li><strong>Threefold repetition</strong> — the same position occurs three times with the same player to move (draw can be claimed).</li>
+    <li><strong>Insufficient material</strong> — neither side has enough pieces to force checkmate (automatic draw).</li>
+  </ul>
+
+  <h3>Frequently asked questions</h3>
+  <details>
+    <summary>How does each chess piece move?</summary>
+    <p>King: 1 square in any direction (also castling). Queen: any distance along ranks, files, or diagonals. Rook: any distance along ranks or files. Bishop: any distance along diagonals. Knight: L-shape (2+1), the only piece that jumps. Pawn: forward 1 (or 2 from starting rank), captures diagonally, promotes on rank 8.</p>
+  </details>
+  <details>
+    <summary>What is castling and when can I do it?</summary>
+    <p>A special king + rook move done on one turn. Conditions: neither piece has moved; no pieces between them; the king is not in check; the king does not pass through or land on a square under attack. Kingside puts the king on g-file and the rook on f-file; queenside puts the king on c-file and rook on d-file.</p>
+  </details>
+  <details>
+    <summary>What is en passant?</summary>
+    <p>When an enemy pawn advances two squares from its starting rank and ends beside your pawn, you may capture it as if it had moved only one square — but only on your very next move.</p>
+  </details>
+  <details>
+    <summary>Checkmate vs stalemate?</summary>
+    <p>Checkmate ends the game with a win for the checkmating side. Stalemate — no legal moves but the king is not in check — ends the game in a draw. A common way beginners throw away winning positions.</p>
+  </details>
+  <details>
+    <summary>What's a good opening for beginners?</summary>
+    <p>For White, 1.e4 leads to open tactical games — try the Italian Game (1.e4 e5 2.Nf3 Nc6 3.Bc4) or Ruy Lopez (3.Bb5). For Black against 1.e4: Caro-Kann (1...c6) or French (1...e6) are solid. The principles — control the center, develop minor pieces, castle early, connect rooks — matter more than memorized lines below ~1500 Elo.</p>
+  </details>
+  <details>
+    <summary>What's the 50-move rule?</summary>
+    <p>If 50 consecutive moves go by with no capture and no pawn move, either side may claim a draw. The counter resets on every capture or pawn push.</p>
+  </details>
+
+  <h3>Related games</h3>
+  <ul>
+    <li><a href="Go.html">Go</a> — territory-and-influence strategy on a 19×19 board.</li>
+    <li><a href="Othello.html">Othello</a> — capture-by-flanking, dramatically shorter games than chess.</li>
+    <li><a href="Backgammon.html">Backgammon</a> — race-and-tactics, dice-driven counterpart to chess.</li>
+    <li><a href="Mancala.html">Mancala</a> — ancient count-and-capture, fast learning curve.</li>
+  </ul>
+</section>
+
 <section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
   <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>
   <p style="color:#8098a8;font-size:0.9em;margin-bottom:18px;line-height:1.5;">Sign in with GitHub to share strategies, ask questions, or report a bug.</p>

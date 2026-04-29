@@ -27,6 +27,8 @@
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
 }
 </script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"2048","item":"https://boardgaminghub.com/2048.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do you play 2048?","acceptedAnswer":{"@type":"Answer","text":"Use arrow keys (or swipe on touch devices) to slide every tile in one direction. When two adjacent tiles with the same number meet, they merge into a single tile of double value. After every move a new 2 (90% of the time) or 4 (10%) appears in a random empty cell. The game ends when no moves are possible."}},{"@type":"Question","name":"What's the best 2048 strategy?","acceptedAnswer":{"@type":"Answer","text":"Pin the largest tile in one corner (most players use bottom-right) and never move it. Build a snake-pattern descending row that feeds into that corner: e.g., bottom row left-to-right increasing, second row right-to-left, etc. Avoid pressing the direction that would shift the corner — typically Up if your corner is bottom-right. With perfect play this strategy reaches 2048 reliably and 4096 often."}},{"@type":"Question","name":"What's the highest tile possible in 2048?","acceptedAnswer":{"@type":"Answer","text":"Theoretical maximum is 131,072 (2^17), achieved by merging tiles up to that value on a 4×4 grid. Practically the cap is far lower because once tiles fill the board and the highest tile cannot be merged, you lose. The 2048 tile (the win condition) is reached by ~5–10% of casual players; 4096 by perhaps 1%."}},{"@type":"Question","name":"How is the score calculated?","acceptedAnswer":{"@type":"Answer","text":"Each merge adds the value of the new tile to your score. Two 2s → 4 (+4). Two 8s → 16 (+16). Two 1024s → 2048 (+2048). Total score after reaching 2048 from a fresh game is around 20,000; reaching 4096 around 50,000."}},{"@type":"Question","name":"Why does the same tile keep spawning in the wrong place?","acceptedAnswer":{"@type":"Answer","text":"Spawn position is uniformly random among empty cells. It feels biased after a streak but isn't. The 2 vs 4 spawn is weighted 90/10 — getting a 4 spawn is meaningful because it skips a doubling step (and slightly accelerates filling the board)."}}]}</script>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464" crossorigin="anonymous"></script>
 <style>
   * { box-sizing: border-box; }
@@ -236,6 +238,46 @@
 })();
 </script>
 <script src="/analytics.js"></script>
+<section class="seo-content">
+  <h2>About 2048</h2>
+  <p>2048 is a single-player tile-merging puzzle on a 4×4 grid, designed by Italian programmer Gabriele Cirulli in 2014 and released as open-source the same week. The goal is to combine matching numbered tiles by sliding them, doubling each merge until you create a tile valued <strong>2048</strong>. Game ends when no further moves are possible.</p>
+
+  <h3>How to play</h3>
+  <p>Press an arrow key (or swipe on touch) to slide every tile in that direction. Two adjacent tiles with the same number merge into one of double value. After every move, a new <strong>2</strong> (90% of the time) or <strong>4</strong> (10%) appears in a random empty cell. The board fills as you fail to merge; the game ends when no slide produces movement or merge.</p>
+
+  <h3>Tile values &amp; scoring</h3>
+  <table>
+    <thead><tr><th>Tile</th><th>Source</th><th class="num">Score on merge</th></tr></thead>
+    <tbody>
+      <tr><td>2</td><td>Spawn (90%)</td><td class="num">—</td></tr>
+      <tr><td>4</td><td>Spawn (10%) or two 2s</td><td class="num">+4</td></tr>
+      <tr><td>8</td><td>Two 4s</td><td class="num">+8</td></tr>
+      <tr><td>16, 32, 64, 128</td><td>Two of half-value</td><td class="num">+value</td></tr>
+      <tr><td>256, 512, 1024</td><td>Two of half-value</td><td class="num">+value</td></tr>
+      <tr><td><strong>2048</strong> (win)</td><td>Two 1024s</td><td class="num"><strong>+2048</strong></td></tr>
+      <tr><td>4096, 8192…</td><td>Continue past the win</td><td class="num">+value</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Strategy: corner + snake</h3>
+  <p>The dominant strategy is the <strong>corner snake</strong>: pin your largest tile in one corner (most use bottom-right) and never move it. Build a descending zig-zag from that corner: bottom row right-to-left increasing, second row left-to-right, etc. Avoid pressing the direction that would shift the corner away — typically Up if your corner is bottom-right. With perfect play this strategy reaches 2048 reliably and 4096 often.</p>
+
+  <h3>Frequently asked questions</h3>
+  <details><summary>How do you play 2048?</summary><p>Arrow keys or swipe to slide all tiles in one direction. Adjacent matching tiles merge into one of double value. A new 2 or 4 spawns each move. Reach 2048 to win; keep going for higher tiles.</p></details>
+  <details><summary>Best strategy?</summary><p>Pin the largest tile in a corner; never move it. Build a snake-pattern row that feeds into it. Avoid pressing the direction that would shift the corner.</p></details>
+  <details><summary>Highest tile possible?</summary><p>Theoretically 131,072 (2¹⁷). Practically the game ends earlier when the board fills. The 2048 win tile is reached by ~5–10% of casual players; 4096 by ~1%.</p></details>
+  <details><summary>How is the score calculated?</summary><p>Each merge adds the value of the new tile to your score. Reaching 2048 from a fresh game scores ~20,000; reaching 4096 ~50,000.</p></details>
+  <details><summary>Why does the same spot keep spawning?</summary><p>Spawn position is uniformly random among empty cells. It feels biased after a streak but isn't. The 2-vs-4 spawn is weighted 90/10.</p></details>
+
+  <h3>Related games</h3>
+  <ul>
+    <li><a href="Sudoku.html">Sudoku</a> — number puzzle, pure logic.</li>
+    <li><a href="Solitaire.html">Solitaire</a> — solo card game, similar pace.</li>
+    <li><a href="Minesweeper.html">Minesweeper</a> — solo logic puzzle, deduction-driven.</li>
+    <li><a href="Mahjong.html">Mahjong Solitaire</a> — solo pattern matching.</li>
+  </ul>
+</section>
+
 <section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
   <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>
   <p style="color:#8098a8;font-size:0.9em;margin-bottom:18px;line-height:1.5;">Sign in with GitHub to share strategies, ask questions, or report a bug.</p>
