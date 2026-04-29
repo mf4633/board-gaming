@@ -40,13 +40,24 @@
 
     body {
       font-family: 'Georgia', serif;
-      background: #1A1410;
+      background:
+        radial-gradient(ellipse at top, #2a1a0e 0%, transparent 65%),
+        radial-gradient(ellipse at bottom, #100a06 0%, transparent 60%),
+        #1A1410;
       color: #D8C8B0;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 20px;
       min-height: 100vh;
+    }
+
+    h1 {
+      background: linear-gradient(180deg, #E8C078 0%, #D4A860 50%, #B88840 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
     }
 
     h1 {
@@ -132,16 +143,24 @@
     .captured-area {
       display: flex;
       flex-wrap: wrap;
-      gap: 2px;
+      gap: 1px;
       justify-content: center;
-      max-width: 100px;
-      min-height: 30px;
+      max-width: 110px;
+      min-height: 64px;
+      background:
+        linear-gradient(135deg, rgba(60, 30, 18, 0.55), rgba(30, 18, 10, 0.85)),
+        repeating-linear-gradient(45deg, transparent 0 4px, rgba(0,0,0,0.08) 4px 6px);
+      border: 1px solid #4A3828;
+      border-radius: 4px;
+      padding: 6px 4px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
     }
 
     .captured-piece {
-      font-size: 1.3em;
-      opacity: 0.7;
-      line-height: 1.2;
+      font-size: 1.25em;
+      opacity: 0.85;
+      line-height: 1.0;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));
     }
 
     .board-wrapper {
@@ -160,8 +179,11 @@
     .coord-top span, .coord-bottom span {
       flex: 1;
       text-align: center;
-      font-size: 0.65em;
-      color: #6B5A48;
+      font-size: 0.72em;
+      color: #B89868;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      text-transform: uppercase;
     }
 
     .coord-left, .coord-right {
@@ -178,17 +200,22 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.65em;
-      color: #6B5A48;
+      font-size: 0.72em;
+      color: #B89868;
+      font-weight: 700;
     }
 
     .board {
       display: grid;
       grid-template-columns: repeat(8, 64px);
       grid-template-rows: repeat(8, 64px);
-      border: 3px solid #8B7355;
+      border: 6px solid;
+      border-image: linear-gradient(135deg, #6B4E37, #B88840 30%, #6B4E37 60%, #4A3322) 1;
       border-radius: 3px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.6),
+        0 6px 18px rgba(0,0,0,0.55),
+        inset 0 0 1px rgba(255,220,160,0.18);
     }
 
     .cell {
@@ -202,59 +229,108 @@
       font-size: 2.4em;
       user-select: none;
       -webkit-user-select: none;
-      transition: background-color 0.15s;
+      transition: filter 0.15s, box-shadow 0.15s;
     }
 
-    .cell.light { background: #C8B088; }
-    .cell.dark { background: #6B4E37; }
+    /* Wood-grain board: a base color + faint repeating linear-gradient mimics
+       the vertical streak of finished hardwood. Both colors and the noise
+       pattern are paired to the square shade. */
+    .cell.light {
+      background:
+        repeating-linear-gradient(
+          92deg,
+          rgba(110, 70, 35, 0.0) 0px,
+          rgba(110, 70, 35, 0.10) 2px,
+          rgba(110, 70, 35, 0.0) 4px,
+          rgba(60, 35, 18, 0.06) 7px,
+          rgba(110, 70, 35, 0.0) 11px),
+        linear-gradient(135deg, #D4B68A 0%, #C8A878 50%, #B89860 100%);
+    }
+    .cell.dark {
+      background:
+        repeating-linear-gradient(
+          88deg,
+          rgba(0, 0, 0, 0.0) 0px,
+          rgba(0, 0, 0, 0.10) 2px,
+          rgba(0, 0, 0, 0.0) 4px,
+          rgba(255, 220, 170, 0.04) 7px,
+          rgba(0, 0, 0, 0.0) 11px),
+        linear-gradient(135deg, #7A5A3A 0%, #6B4E37 50%, #543C28 100%);
+    }
+
+    .cell:hover:not(.selected) {
+      filter: brightness(1.12);
+    }
 
     .cell.selected {
       animation: goldenPulse 1.2s ease-in-out infinite;
+      z-index: 2;
     }
 
     .cell.check-highlight {
-      background: radial-gradient(circle, #CC3333 0%, transparent 70%);
+      box-shadow: inset 0 0 18px 2px rgba(220, 50, 50, 0.85);
+      animation: checkPulse 0.9s ease-in-out infinite;
     }
 
-    .cell.light.check-highlight {
-      background: radial-gradient(circle, #CC3333 0%, #C8B088 70%);
+    @keyframes checkPulse {
+      0%, 100% { box-shadow: inset 0 0 18px 2px rgba(220, 50, 50, 0.85); }
+      50%      { box-shadow: inset 0 0 28px 4px rgba(255, 80, 80, 1.0); }
     }
 
-    .cell.dark.check-highlight {
-      background: radial-gradient(circle, #CC3333 0%, #6B4E37 70%);
+    /* Last-move highlight: subtle warm overlay + golden inset border. Stays
+       visible against the wood grain without changing the underlying color. */
+    .cell.last-move-from::after,
+    .cell.last-move-to::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: rgba(212, 168, 96, 0.18);
+      box-shadow: inset 0 0 0 2px rgba(212, 168, 96, 0.55);
     }
-
-    .cell.last-move-from.light { background: #D4C098; }
-    .cell.last-move-from.dark { background: #7B5E47; }
-    .cell.last-move-to.light { background: #D4C098; }
-    .cell.last-move-to.dark { background: #7B5E47; }
 
     @keyframes goldenPulse {
-      0%, 100% { box-shadow: inset 0 0 12px #D4A860, 0 0 8px #D4A860; }
-      50% { box-shadow: inset 0 0 20px #D4A860, 0 0 14px #D4A860; }
+      0%, 100% { box-shadow: inset 0 0 12px #D4A860, 0 0 10px #D4A860; }
+      50%      { box-shadow: inset 0 0 22px #F0C880, 0 0 18px #F0C880; }
     }
 
     .move-dot {
       position: absolute;
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      background: rgba(212, 168, 96, 0.45);
+      background: radial-gradient(circle, rgba(240, 200, 120, 0.7) 0%, rgba(212, 168, 96, 0.35) 70%);
+      box-shadow: 0 0 6px rgba(240, 200, 120, 0.45);
       pointer-events: none;
+      z-index: 3;
     }
 
     .move-dot.capture-ring {
       width: 56px;
       height: 56px;
       background: transparent;
-      border: 3px solid rgba(212, 168, 96, 0.45);
+      border: 3px solid rgba(240, 200, 120, 0.6);
+      box-shadow: 0 0 8px rgba(240, 200, 120, 0.4), inset 0 0 8px rgba(240, 200, 120, 0.25);
       border-radius: 50%;
     }
 
-    .piece-white { color: #FFF8E8; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
-    .piece-black { color: #1A1008;
-      text-shadow: -1px 0 1px rgba(255,248,232,0.4), 1px 0 1px rgba(255,248,232,0.4),
-                   0 -1px 1px rgba(255,248,232,0.4), 0 1px 1px rgba(255,248,232,0.4);
+    /* Pieces. Subtle drop-shadow gives lift off the board. White uses a warm
+       ivory; black has a thin ivory rim so it reads on dark squares. */
+    .piece-white {
+      color: #FBF3DC;
+      text-shadow:
+        0 1px 0 rgba(0,0,0,0.5),
+        0 2px 4px rgba(0,0,0,0.55),
+        0 0 1px rgba(120, 80, 40, 0.4);
+    }
+    .piece-black {
+      color: #15110A;
+      text-shadow:
+        -0.6px 0 0.5px rgba(255,248,232,0.55),
+        0.6px 0 0.5px rgba(255,248,232,0.55),
+        0 -0.6px 0.5px rgba(255,248,232,0.55),
+        0 0.6px 0.5px rgba(255,248,232,0.55),
+        0 2px 4px rgba(0,0,0,0.55);
     }
 
     .game-over-overlay {
@@ -296,65 +372,6 @@
           crossorigin="anonymous"></script>
 </head>
 <body>
-<style id="siteNav-css">
-  #siteNav { position: sticky; top: 0; z-index: 99999; background: rgba(16,20,28,0.96); border-bottom: 1px solid #2a3540; font-family: Georgia, "Times New Roman", serif; box-shadow: 0 2px 10px rgba(0,0,0,0.6); color: #d8d0c0; }
-  #siteNav * { box-sizing: border-box; }
-  #siteNav .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; max-width: 1400px; margin: 0 auto; gap: 12px; }
-  #siteNav .nav-home { color: #d8d0c0; text-decoration: none; font-size: 0.82em; letter-spacing: 2px; padding: 5px 12px; border: 1px solid #3a5060; border-radius: 3px; white-space: nowrap; }
-  #siteNav .nav-home:hover { background: #1e2838; color: #f0e0b0; }
-  #siteNav .nav-title { color: #f0d89c; font-size: 0.95em; letter-spacing: 3px; font-weight: bold; text-align: center; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #siteNav .nav-toggle { background: none; border: 1px solid #3a5060; color: #d8d0c0; font-size: 0.85em; letter-spacing: 2px; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-family: inherit; white-space: nowrap; }
-  #siteNav .nav-toggle:hover { background: #1e2838; color: #f0e0b0; }
-  #siteNav .nav-menu { display: none; background: #0f141c; border-top: 1px solid #2a4050; padding: 14px 16px; max-width: 1400px; margin: 0 auto; }
-  #siteNav .nav-menu.open { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  #siteNav .nav-cat { min-width: 0; }
-  #siteNav .nav-cat-label { color: #8098a8; font-size: 0.72em; letter-spacing: 4px; padding: 4px 0 8px 0; border-bottom: 1px solid #2a3540; margin-bottom: 6px; }
-  #siteNav .nav-cat a { display: block; padding: 6px 10px; color: #a8b0c0; text-decoration: none; font-size: 0.88em; border-radius: 3px; }
-  #siteNav .nav-cat a:hover { background: #1e2838; color: #f0e0b0; }
-  #siteNav .nav-cat a.current { color: #f0d89c; font-weight: bold; background: #1e2838; }
-  @media (max-width: 640px) {
-    #siteNav .nav-menu.open { grid-template-columns: 1fr; gap: 14px; }
-    #siteNav .nav-title { font-size: 0.82em; letter-spacing: 2px; }
-    #siteNav .nav-home,
-    #siteNav .nav-toggle { font-size: 0.74em; padding: 4px 8px; }
-  }
-</style>
-<div id="siteNav">
-  <div class="nav-bar">
-    <a href="index.html" class="nav-home">HOME</a>
-    <span class="nav-title">Chess</span>
-    <button class="nav-toggle" onclick="document.querySelector('#siteNav .nav-menu').classList.toggle('open')">GAMES &#9776;</button>
-  </div>
-  <div class="nav-menu">
-    <div class="nav-cat">
-      <div class="nav-cat-label">BOARD GAMES</div>
-      <a href="Agora.html">Agora</a>
-      <a href="Aresia.html">Aresia</a>
-      <a href="Backgammon.html">Backgammon</a>
-      <a href="Bisque.html">Bisque</a>
-      <a href="Chess.html" class="current">Chess</a>
-      <a href="Convergence.html">Convergence</a>
-      <a href="Go.html">Go</a>
-      <a href="Mancala.html">Mancala</a>
-      <a href="Odyssey.html">Odyssey</a>
-      <a href="Othello.html">Othello</a>
-      <a href="PenteGrammai.html">Pente Grammai</a>
-      <a href="Senet.html">Senet</a>
-      <a href="Tidelands.html">Tidelands</a>
-      <a href="Ur.html">Ur</a>
-    </div>
-    <div class="nav-cat">
-      <div class="nav-cat-label">SIMULATIONS</div>
-      <a href="Apoapsis.html">Apoapsis</a>
-      <a href="BiosphereBlue.html">Biosphere Blue</a>
-      <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
-      <a href="Cliffwalkers.html">Cliffwalkers</a>
-      <a href="Doctrine.html">Doctrine</a>
-      <a href="Floodline.html">Floodline</a>
-      <a href="Tower.html">Tower</a>
-    </div>
-  </div>
-</div>
 <h1>CHESS</h1>
 <div class="subtitle">The Royal Game</div>
 
@@ -1418,5 +1435,6 @@
   data-lang="en"
   crossorigin="anonymous"
   async></script>
+<script src="/nav.js" defer></script>
 </body>
 </html>
