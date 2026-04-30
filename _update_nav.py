@@ -28,6 +28,7 @@ SIMS = [
     ("Cliffwalkers.html",             "Cliffwalkers",       "Save the wee folk"),
     ("Doctrine.html",                 "Doctrine",           "Geopolitical sim, 1990–2050"),
     ("Floodline.html",                "Floodline",          "California flood defense"),
+    ("Metropolis2K.html",             "Metropolis 2K",      "Build an isometric city"),
     ("Tower.html",                    "Tower",              "High-rise operations"),
 ]
 
