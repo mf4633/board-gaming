@@ -1,0 +1,47 @@
+# Board Gaming Hub
+
+> A free browser-based collection of original and classic board games and simulations. Single-file HTML5, no installs, no accounts, no ads-on-gameplay. Originals span strategy, simulation, and puzzle; classics include the standard public-domain board game canon.
+
+Every game on Board Gaming Hub is a single HTML file with no server-side dependency — open the page and play. The collection mixes original designs (Bisque, Tidelands, Aresia, Apoapsis, Floodline, Doctrine, Cliffwalkers, Tower / SKYSTACK, Bonneville Spillway Operator) with traditional games (Chess, Go, Backgammon, Mancala, Senet, Ur, Othello, Mahjong, Sudoku, Solitaire, Minesweeper, 2048). Several titles have companion native ports on itch.io and the Google Play Store.
+
+## Core pages
+- [Home / catalog](https://boardgaminghub.com/): All games with thumbnails and short blurbs
+- [Apps / native ports](https://boardgaminghub.com/apps.html): Links to itch.io and Play Store builds
+- [About](https://boardgaminghub.com/about.html)
+- [Privacy](https://boardgaminghub.com/privacy.html)
+
+## Original strategy games
+- [Bisque](https://boardgaminghub.com/Bisque.html): Cooking-themed area control
+- [Tidelands](https://boardgaminghub.com/Tidelands.html): Coastal resource management
+- [Aresia](https://boardgaminghub.com/Aresia.html): Mars-colonization strategy
+- [Doctrine](https://boardgaminghub.com/Doctrine.html): 1990–2050 geopolitical sim, Aerobiz-style, real d3-geo world map
+- [Agora](https://boardgaminghub.com/Agora.html): Greek city-state debate
+- [Convergence](https://boardgaminghub.com/Convergence.html)
+- [Drift](https://boardgaminghub.com/Drift.html)
+- [Odyssey](https://boardgaminghub.com/Odyssey.html)
+- [Pente Grammai](https://boardgaminghub.com/PenteGrammai.html): Ancient Greek racing game
+- [Wordform](https://boardgaminghub.com/Wordform.html): Word puzzle
+
+## Original simulations
+- [Apoapsis](https://boardgaminghub.com/Apoapsis.html): 3D rocket-trajectory sim built on Three.js
+- [Tower / SKYSTACK](https://boardgaminghub.com/Tower.html): High-rise property-management sim with named tenants and choice events
+- [Floodline](https://boardgaminghub.com/Floodline.html): Real California water-physics flood-defense game across six historical scenarios
+- [Bonneville Spillway Operator](https://boardgaminghub.com/BonnevilleSpillwayOperator.html): Dam-operations sim with grid, wind, salmon, total dissolved gas, and lockages
+- [Cliffwalkers](https://boardgaminghub.com/Cliffwalkers.html): Lemmings-style puzzle
+- [Biosphere Blue](https://boardgaminghub.com/BiosphereBlue.html): Planet-ecology sim (renamed from SimEarth)
+- [Metropolis 2K](https://boardgaminghub.com/Metropolis2K.html): City-building sim
+- [Eclipse Predictor](https://boardgaminghub.com/EclipsePredictor.html): Astronomical eclipse prediction tool
+
+## Classic board games
+- [Chess](https://boardgaminghub.com/Chess.html), [Go](https://boardgaminghub.com/Go.html), [Backgammon](https://boardgaminghub.com/Backgammon.html), [Othello](https://boardgaminghub.com/Othello.html)
+- [Mancala](https://boardgaminghub.com/Mancala.html), [Senet](https://boardgaminghub.com/Senet.html), [Ur](https://boardgaminghub.com/Ur.html), [Mahjong](https://boardgaminghub.com/Mahjong.html)
+
+## Puzzles and solo games
+- [Sudoku](https://boardgaminghub.com/Sudoku.html), [Solitaire](https://boardgaminghub.com/Solitaire.html), [Minesweeper](https://boardgaminghub.com/Minesweeper.html), [2048](https://boardgaminghub.com/2048.html)
+- [Abacus](https://boardgaminghub.com/Abacus.html): Playable soroban with calculator pad, Arabic and Roman display
+
+## Audience
+Casual web players looking for free no-install games, board-game hobbyists exploring original designs, students using simulations for learning, and tabletop fans wanting digital takes on ancient and classic games.
+
+## Pricing
+Free. No accounts, no subscriptions, no in-game purchases. Site supported by passive ads on listing pages only — never on gameplay pages. Several games have paid native ports on itch.io and the Google Play Store; the web versions remain free.
