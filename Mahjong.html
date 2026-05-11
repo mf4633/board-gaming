@@ -231,15 +231,9 @@
   }
   function hint() {
     const m = findMove(); if (!m) { $('msg').textContent = 'NO MATCHES'; return; }
-    const els = document.querySelectorAll('.tile');
-    tiles.filter(x => m.includes(x.id)).forEach(t => {
-      const idx = tiles.filter(y => y.alive).sort((a,b) => a.z - b.z || a.row - b.row || a.col - b.col).indexOf(t);
-      // simpler: find DOM by reading z-index — re-render with hint class instead
-    });
-    // Re-render with hint flag on those two
     render();
+    const live = tiles.filter(x=>x.alive).sort((a,b) => a.z - b.z || a.row - b.row || a.col - b.col);
     document.querySelectorAll('.tile').forEach((el, i) => {
-      const live = tiles.filter(x=>x.alive).sort((a,b) => a.z - b.z || a.row - b.row || a.col - b.col);
       const t = live[i]; if (!t) return;
       if (m.includes(t.id)) el.classList.add('hint');
     });
@@ -247,10 +241,12 @@
   function shuffleAlive() {
     const alive = tiles.filter(x => x.alive);
     const faces = alive.map(t => t.face);
-    for (let i=faces.length-1;i>0;i--) { const j = Math.floor(Math.random()*(i+1)); [faces[i],faces[j]]=[faces[j],faces[i]]; }
-    alive.forEach((t,i) => t.face = faces[i]);
-    if (!findMove()) shuffleAlive(); // recurse if unlucky
-    sel = null; $('msg').textContent = ''; render();
+    for (let attempt = 0; attempt < 50; attempt++) {
+      for (let i=faces.length-1;i>0;i--) { const j = Math.floor(Math.random()*(i+1)); [faces[i],faces[j]]=[faces[j],faces[i]]; }
+      alive.forEach((t,i) => t.face = faces[i]);
+      if (findMove()) break;
+    }
+    sel = null; $('msg').textContent = findMove() ? '' : 'NO MOVES POSSIBLE — UNDO'; render();
   }
   $('newgame').onclick = newGame;
   $('undo').onclick = undo;

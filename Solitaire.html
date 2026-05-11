@@ -259,6 +259,7 @@
     }
   }
   function clickStock() {
+    if (!stock.length && !waste.length) return; // nothing to do; avoid spurious snapshot/move
     snapshot();
     if (!stock.length) {
       while (waste.length) { const c = waste.pop(); c.up = false; stock.push(c); }
@@ -281,19 +282,21 @@
   function autoComplete() {
     const allUp = tabl.every(c => c.every(card => card.up)) && stock.length === 0;
     if (!allUp) { $('msg').textContent = 'AUTO ONLY WHEN ALL FACE-UP'; return; }
+    // Take one snapshot so undo reverses the whole auto-complete, not card-by-card.
+    snapshot();
     let any = true;
     while (any) {
       any = false;
       // try waste
       if (waste.length) {
         const c = waste[waste.length-1];
-        for (let f=0;f<4;f++) if (canPlaceFound(c, f)) { snapshot(); waste.pop(); found[f].push(c); moves++; any = true; break; }
+        for (let f=0;f<4;f++) if (canPlaceFound(c, f)) { waste.pop(); found[f].push(c); moves++; any = true; break; }
       }
       // try tableau tops
       for (let i=0;i<7;i++) {
         const t = tabl[i]; if (!t.length) continue;
         const c = t[t.length-1];
-        for (let f=0;f<4;f++) if (canPlaceFound(c, f)) { snapshot(); t.pop(); found[f].push(c); moves++; any = true; break; }
+        for (let f=0;f<4;f++) if (canPlaceFound(c, f)) { t.pop(); found[f].push(c); moves++; any = true; break; }
       }
     }
     afterMove();

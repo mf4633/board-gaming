@@ -516,6 +516,7 @@
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -1323,7 +1324,7 @@
         document.getElementById('coins-' + p).textContent = players[p].coins;
 
         var resStr = '';
-        var rkeys = ['Timber', 'Olives', 'Wine', 'Bronze', 'Ambrosia', 'Stone'];
+        var rkeys = ['Timber', 'Shell', 'Kelp', 'Salt', 'Pearl', 'Rock'];
         for (var r = 0; r < rkeys.length; r++) {
           var amt = players[p].resources[rkeys[r]] || 0;
           if (amt > 0) {
@@ -1358,7 +1359,7 @@
       marker.style.left = (pct - 5) + '%';
       marker.textContent = tideLevel;
       var dirText = tideDirection > 0 ? 'Gathering \u2191' : 'Subsiding \u2193';
-      document.getElementById('tide-label').innerHTML = 'Poseidon's Wrath: ' + tideLevel + ' / 5 &mdash; ' + dirText + ' &mdash; Turn ' + turnNumber;
+      document.getElementById('tide-label').innerHTML = "Poseidon's Wrath: " + tideLevel + ' / 5 &mdash; ' + dirText + ' &mdash; Turn ' + turnNumber;
 
       // Update buttons
       updateButtons();
@@ -1489,7 +1490,7 @@
         for (var i = 0; i < adj.length; i++) {
           if (!hexes[adj[i]].flooded) highlightedHexes.push(adj[i]);
         }
-        setMessage('Click an adjacent hex to move Hermes' Ship. (Costs 1 Pearl)');
+        setMessage("Click an adjacent hex to move Hermes' Ship. (Costs 1 Pearl)");
       }
 
       render();
@@ -1553,7 +1554,7 @@
         players[currentPlayer].resources.Pearl--;
         marketHex = idx;
         actionsLeft--;
-        setMessage('Player ' + (currentPlayer + 1) + ' moved Hermes' Ship! ' + actionsLeft + ' actions left.');
+        setMessage('Player ' + (currentPlayer + 1) + " moved Hermes' Ship! " + actionsLeft + ' actions left.');
         selectedAction = null;
         highlightedHexes = [];
         render();
@@ -1563,7 +1564,7 @@
 
     function openTrade() {
       if (!isConnectedToHermes(currentPlayer)) {
-        setMessage('Not connected to Hermes' Ship!');
+        setMessage("Not connected to Hermes' Ship!");
         selectedAction = null;
         render();
         return;
@@ -1572,7 +1573,7 @@
       var rows = document.getElementById('trade-rows');
       rows.innerHTML = '';
 
-      var rkeys = ['Timber', 'Olives', 'Wine', 'Bronze', 'Ambrosia'];
+      var rkeys = ['Timber', 'Shell', 'Kelp', 'Salt', 'Pearl'];
       for (var i = 0; i < rkeys.length; i++) {
         var rk = rkeys[i];
         var amt = players[currentPlayer].resources[rk] || 0;
@@ -1598,7 +1599,7 @@
       }
 
       panel.classList.add('visible');
-      setMessage('Trading at Hermes' Ship. Sell resources for coins.');
+      setMessage("Trading at Hermes' Ship. Sell resources for coins.");
       highlightedHexes = [];
       render();
     }
@@ -1641,7 +1642,7 @@
         // Both players done, go to preturn
         phase = 'preturn';
         currentPlayer = 0;
-        setMessage('Turn ' + turnNumber + ' complete. Click "Next Turn" to advance Poseidon's wrath.');
+        setMessage('Turn ' + turnNumber + " complete. Click 'Next Turn' to advance Poseidon's wrath.");
         render();
       }
     }
@@ -1680,13 +1681,13 @@
 
       // Priority 1: Trade if connected to market and have valuable resources
       if (!didAction && isConnectedToHermes(1)) {
-        var valuableRes = ['Ambrosia', 'Bronze', 'Wine', 'Olives', 'Timber'];
+        var valuableRes = ['Pearl', 'Salt', 'Kelp', 'Shell', 'Timber'];
         var traded = false;
         for (var v = 0; v < valuableRes.length; v++) {
           var rk = valuableRes[v];
           if ((players[1].resources[rk] || 0) > 0) {
-            // Keep at least 2 driftwood and 1 of others for building
-            var keep = rk === 'Timber' ? 2 : (rk === 'Olives' ? 1 : 0);
+            // Keep building reserves: timber for camp/trireme, shell for camp, kelp for temple
+            var keep = rk === 'Timber' ? 2 : (rk === 'Shell' ? 1 : (rk === 'Kelp' ? 2 : 0));
             if (players[1].resources[rk] > keep) {
               players[1].resources[rk]--;
               players[1].coins += PRICES[rk];
@@ -1697,7 +1698,7 @@
         if (traded) {
           actionsLeft--;
           didAction = true;
-          setMessage('Player 2 traded at Hermes' Ship.');
+          setMessage("Player 2 traded at Hermes' Ship.");
         }
       }
 
@@ -1797,7 +1798,7 @@
           marketHex = bestTarget;
           actionsLeft--;
           didAction = true;
-          setMessage('Player 2 moved Hermes' Ship.');
+          setMessage("Player 2 moved Hermes' Ship.");
         }
       }
 

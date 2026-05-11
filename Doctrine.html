@@ -182,6 +182,7 @@
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html" class="current">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -316,6 +317,11 @@ const CHOKE_LATLON = {
 let WORLD_DATA = null;
 let PROJECTION = null;
 let PATH_GEN = null;
+// Cached path strings and centroids — features are immutable, so this avoids
+// regenerating SVG path data + centroids on every render.
+let FEATURE_PATH_CACHE = null;     // Map: feature -> { d, centroid }
+let GRATICULE_PATH_CACHE = null;   // string
+let CODE_TO_FEATURE_CACHE = null;  // Map: internal code -> feature
 
 // 1990-ish nominal GDP ($B), debt/GDP, interest rate, approval, military strength index
 const POWER_INIT = {
@@ -498,7 +504,6 @@ function canAct(power, action, target) {
     if (S.presence[power][target]?.pact) return [false, 'Already in pact.'];
   }
   if (action === 'carrier') {
-    if (!Object.keys(S.presence[power]).length) {} // ok first one
     const deployed = Object.values(S.presence[power]).filter(x => x.carrier).length;
     if (deployed >= P.carriers) return [false, 'No carriers available.'];
     if (!isCoastal(target)) return [false, 'Country not coastal.'];
@@ -899,8 +904,27 @@ function colorForCountry(c) {
 
 function featureForCode(code) {
   if (!WORLD_DATA) return null;
+  if (CODE_TO_FEATURE_CACHE) return CODE_TO_FEATURE_CACHE.get(code) || null;
   // For powers/middle powers, find first matching feature (EU has many)
   return WORLD_DATA.features.find(f => ISO_TO_CODE[+f.id] === code);
+}
+
+function buildMapCaches() {
+  if (!WORLD_DATA || !PATH_GEN) return;
+  FEATURE_PATH_CACHE = new Map();
+  CODE_TO_FEATURE_CACHE = new Map();
+  for (const f of WORLD_DATA.features) {
+    const d = PATH_GEN(f);
+    const c = PATH_GEN.centroid(f);
+    FEATURE_PATH_CACHE.set(f, { d, centroid: c });
+    const code = ISO_TO_CODE[+f.id];
+    // First match wins (EU has many; matches old find() behavior)
+    if (code && !CODE_TO_FEATURE_CACHE.has(code)) {
+      CODE_TO_FEATURE_CACHE.set(code, f);
+    }
+  }
+  const graticule = d3.geoGraticule().step([20, 20]);
+  GRATICULE_PATH_CACHE = PATH_GEN(graticule());
 }
 
 function renderMap() {
@@ -909,19 +933,20 @@ function renderMap() {
     svg.innerHTML = '<rect width="1000" height="500" fill="#0a1420"/><text x="500" y="250" text-anchor="middle" fill="#7a8898" font-family="Consolas" font-size="12" letter-spacing="3">LOADING WORLD MAP…</text>';
     return;
   }
+  if (!FEATURE_PATH_CACHE) buildMapCaches();
   let html = '';
   // ocean
   html += `<rect width="1000" height="500" fill="#0a1420"/>`;
 
-  // graticule (latitude/longitude grid) for that situation-room feel
-  const graticule = d3.geoGraticule().step([20, 20]);
-  html += `<path d="${PATH_GEN(graticule())}" fill="none" stroke="#1a2838" stroke-width="0.4" stroke-opacity="0.6"/>`;
+  // graticule (latitude/longitude grid) for that situation-room feel — cached
+  html += `<path d="${GRATICULE_PATH_CACHE}" fill="none" stroke="#1a2838" stroke-width="0.4" stroke-opacity="0.6"/>`;
 
   // countries
   for (const f of WORLD_DATA.features) {
     const id = +f.id;
     const code = ISO_TO_CODE[id];
-    const d = PATH_GEN(f);
+    const cached = FEATURE_PATH_CACHE.get(f);
+    const d = cached ? cached.d : null;
     if (!d) continue;
     let fill, stroke, opa, cls = '', interactive = false;
     if (POWERS.includes(code)) {
@@ -959,7 +984,8 @@ function renderMap() {
   for (const k of Object.keys(S.countries)) {
     const f = featureForCode(k);
     if (!f) continue;
-    const c = PATH_GEN.centroid(f);
+    const cached = FEATURE_PATH_CACHE.get(f);
+    const c = cached ? cached.centroid : PATH_GEN.centroid(f);
     if (isNaN(c[0])) continue;
     html += `<text x="${c[0]}" y="${c[1] + 3}" class="country-label" style="font-size:9px;letter-spacing:1.5px">${k}</text>`;
   }
@@ -980,7 +1006,8 @@ function renderMap() {
       const pres = S.presence[p][k];
       const f = featureForCode(k);
       if (!f) continue;
-      const c = PATH_GEN.centroid(f);
+      const cached = FEATURE_PATH_CACHE.get(f);
+      const c = cached ? cached.centroid : PATH_GEN.centroid(f);
       if (isNaN(c[0])) continue;
       const offs = { USA: [-14, -8], CHN: [14, -8], RUS: [-14, 10], EU: [14, 10] }[p];
       const cx = c[0] + offs[0];
@@ -1009,6 +1036,7 @@ async function loadWorld() {
     WORLD_DATA = topojson.feature(topo, topo.objects.countries);
     PROJECTION = d3.geoEqualEarth().fitSize([1000, 500], WORLD_DATA);
     PATH_GEN = d3.geoPath(PROJECTION);
+    buildMapCaches();
     if (S) render();
   } catch (e) {
     console.error('Map load failed', e);
@@ -1064,8 +1092,6 @@ function renderBudget() {
   for (const [k,nm,lo,hi] of sliders) {
     h += `<div class="slider-row"><span>${nm}</span><input type="range" min="${lo}" max="${hi}" step="0.5" value="${B[k]}" oninput="setBudget('${k}', this.value)"><span id="b-${k}">${B[k].toFixed(1)}%</span></div>`;
   }
-  const me = S.powers[S.player];
-  const tax = (S.player === 'CHN' || S.player === 'RUS') ? 0.20 : 0.20;
   const total = B.mil + B.soc + B.infra;
   h += `<div style="margin-top:6px;font-size:11px;color:var(--dim)">Total spend: <b style="color:var(--text)">${total.toFixed(1)}% GDP</b></div>`;
   document.getElementById('budget').innerHTML = h;

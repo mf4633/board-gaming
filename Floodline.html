@@ -223,6 +223,7 @@
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html" class="current">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -487,6 +488,13 @@
 
 'use strict';
 
+// ---------- Demo build flag ----------
+// Public web build at boardgaminghub.com ships only Training + Cedar Rapids
+// 2008. The Tauri/itch full build sets DEMO_BUILD = false at compile time
+// (build script in board-gaming-premium replaces this line).
+const DEMO_BUILD = true;
+const DEMO_STORE_URL = 'https://hydroengineer.itch.io/floodline';
+
 // ---------- Grid (per-scenario sizing) ----------
 let COLS = 180;
 let ROWS = 108;
@@ -495,7 +503,7 @@ let ROWS = 108;
 const T = {
   GRASS: 0, RIVER: 1, TOWN: 2, SANDBAG: 3, LEVEE: 4, CHANNEL: 5,
   PUMP: 6, OUTLET: 7, HOSPITAL: 8, SCHOOL: 9, POND: 10, SPILLWAY: 11,
-  ROAD: 12, EVACUATED: 13, BREACH: 14, SIPHON: 15,
+  ROAD: 12, EVACUATED: 13, BREACH: 14, SIPHON: 15, BROKEN_PUMP: 16,
 };
 
 // ---------- Tool catalog ----------
@@ -787,299 +795,11 @@ const SCENARIOS = [
     peakFlow: 2.2,
     peakRain: 25,
   },
-  {
-    id: 'harvey2017',
-    name: 'Houston (Harvey)',
-    year: '2017',
-    diff: 'hard',
-    blurb: 'Compound flooding. Stalled hurricane dumps 40 inches of rain.',
-    brief: 'August 2017. Hurricane Harvey stalled over SE Texas and dropped 40+ inches in four days. Flat terrain, overwhelmed bayous, reservoirs at capacity. The enemy here is pure rainfall depth, not river peak. Retention ponds and pumps earn their keep.',
-    budget: 6500000,
-    duration: 240,
-    mapScale: 1.3,
-    amc: 0.75,
-    stormProfile: t => ({
-      rain: 35 + 25 * Math.sin(t * 0.08) + 15 * Math.sin(t * 0.03),
-      inflow: 0.3 + 0.8 * Math.max(0, Math.sin(Math.PI * (t - 60) / 180)),
-    }),
-    terrain: generateFlatBasin,
-    townBox: { x: 0.35, y: 0.45, w: 28, h: 16 },
-    hospital: { x: 0.40, y: 0.42 },
-    school: { x: 0.55, y: 0.60 },
-    winDamage: 50,
-    tools: ['sandbag', 'levee', 'channel', 'pump', 'pond', 'evac'],
-    peakAt: 140,
-    peakFlow: 1.1,
-    peakRain: 65,
-  },
-  {
-    id: 'johnstown1889',
-    name: 'Johnstown',
-    year: '1889',
-    diff: 'extreme',
-    blurb: 'Dam failure upstream. Minutes to evacuate. 2,209 died.',
-    brief: 'May 31, 1889. South Fork Dam on Lake Conemaugh failed after heavy rain. A 36-foot wall of water, 20M tons, hit Johnstown in under an hour. 2,209 died — one of the worst disasters in US history. You have limited warning. Evacuations save lives; levees probably will not hold.',
-    budget: 8000000,
-    duration: 120,
-    mapScale: 1.2,
-    stormProfile: t => ({
-      rain: 15 + 5 * Math.sin(t * 0.1),
-      inflow: t < 35 ? 0.8 + t * 0.02 : (t < 50 ? 8 + (t - 35) * 1.5 : 25 * Math.exp(-(t - 50) / 30) + 1),
-    }),
-    terrain: generateNarrowValley,
-    townBox: { x: 0.55, y: 0.60, w: 16, h: 10 },
-    hospital: { x: 0.58, y: 0.56 },
-    school: { x: 0.65, y: 0.65 },
-    winDamage: 55,
-    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'evac', 'breach'],
-    peakAt: 55,
-    peakFlow: 25,
-    peakRain: 20,
-  },
-  {
-    id: 'katrina2005',
-    name: 'New Orleans (Katrina)',
-    year: '2005',
-    diff: 'extreme',
-    blurb: 'Storm surge overtops levees. Below sea level. Pumps or perish.',
-    brief: 'August 29, 2005. Category 3 at landfall. Storm surge overtopped and breached 50+ levees. 80% of the city flooded, much of it below sea level. Pumps are essential but many were knocked out. Strengthen levees, stage pumps, protect the Superdome and hospitals.',
-    budget: 9000000,
-    duration: 180,
-    mapScale: 1.4,
-    stormProfile: t => {
-      const surge = t > 30 && t < 80 ? 6 * Math.sin(Math.PI * (t - 30) / 50) : 0;
-      return {
-        rain: 20 + 30 * Math.max(0, Math.sin(Math.PI * (t - 20) / 80)),
-        inflow: 0.5 + surge,
-      };
-    },
-    terrain: generateSubSeaLevel,
-    townBox: { x: 0.30, y: 0.45, w: 30, h: 20 },
-    hospital: { x: 0.35, y: 0.50 },
-    school: { x: 0.55, y: 0.55 },
-    winDamage: 50,
-    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'spillway', 'evac', 'breach'],
-    peakAt: 55,
-    peakFlow: 6.5,
-    peakRain: 50,
-  },
-  {
-    id: 'mississippi1927',
-    name: 'Great Mississippi Flood',
-    year: '1927',
-    diff: 'hard',
-    blurb: 'Engineering dilemma: breach a levee upstream or let the city flood.',
-    brief: 'Spring 1927. The Mississippi reached 80-foot crests; 27,000 sq miles submerged across 7 states. The Army Corps dynamited the Caernarvon levee to save New Orleans, flooding poorer parishes downstream. Here the river is wide and relentless. Sometimes a controlled breach is the right call — even if it costs you damage.',
-    budget: 7000000,
-    duration: 240,
-    mapScale: 1.3,
-    amc: 0.8,
-    stormProfile: t => ({
-      rain: 20 + 10 * Math.sin(t * 0.04),
-      inflow: 0.6 + 2.8 * Math.max(0, Math.sin(Math.PI * (t - 30) / 180)) + (t > 100 ? Math.min(1.5, (t - 100) * 0.02) : 0),
-    }),
-    terrain: generateWideRiver,
-    townBox: { x: 0.55, y: 0.50, w: 22, h: 14 },
-    hospital: { x: 0.58, y: 0.46 },
-    school: { x: 0.70, y: 0.58 },
-    winDamage: 45,
-    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'spillway', 'evac', 'breach'],
-    peakAt: 150,
-    peakFlow: 4.3,
-    peakRain: 30,
-  },
-  {
-    id: 'oroville2017',
-    name: 'Oroville Spillway',
-    year: '2017',
-    diff: 'extreme',
-    blurb: 'Main spillway fractured. Auxiliary eroding. 188,000 evacuated.',
-    brief: 'February 2017. Oroville Dam — tallest in the US — saw its main spillway disintegrate mid-release. The auxiliary emergency spillway, never used before, began eroding toward the dam foundation. 188,000 people downstream evacuated. The reservoir cannot be allowed to overtop. Manage flow, reinforce the path, buy time.',
-    budget: 10000000,
-    duration: 200,
-    mapScale: 1.3,
-    stormProfile: t => ({
-      rain: 25 + 20 * Math.max(0, Math.sin(Math.PI * t / 140)),
-      inflow: 0.8 + 4 * Math.max(0, Math.sin(Math.PI * (t - 20) / 120)) + (t > 80 && t < 130 ? 3 : 0),
-    }),
-    terrain: generateDamReservoir,
-    townBox: { x: 0.40, y: 0.65, w: 22, h: 8 },
-    hospital: { x: 0.50, y: 0.62 },
-    school: null,
-    winDamage: 40,
-    tools: ['sandbag', 'levee', 'channel', 'pump', 'spillway', 'evac', 'breach'],
-    peakAt: 100,
-    peakFlow: 7,
-    peakRain: 45,
-  },
-  {
-    id: 'edenville2020',
-    name: 'Edenville Dam',
-    year: '2020',
-    diff: 'hard',
-    blurb: 'Cascading failure. Edenville fails, Sanford next. Two towns downstream.',
-    brief: 'May 19, 2020. Midland County, Michigan. After days of rain, Edenville Dam failed — releasing Wixom Lake downstream into Sanford Lake, which then overtopped Sanford Dam. 10,000 evacuated, $250M damage. You have two reservoirs, two dams, and cascading consequences. Protect downstream before upstream fails.',
-    budget: 6500000,
-    duration: 180,
-    mapScale: 1.2,
-    stormProfile: t => ({
-      rain: 18 + 12 * Math.sin(t * 0.05),
-      inflow: 0.5 + 1.8 * Math.max(0, Math.sin(Math.PI * (t - 20) / 140)) + (t > 70 ? 1.2 * Math.exp(-(t - 90) / 30) : 0) * (t > 90 ? 1 : 0),
-    }),
-    terrain: generateCascadeValley,
-    townBox: { x: 0.45, y: 0.70, w: 18, h: 10 },
-    hospital: { x: 0.50, y: 0.68 },
-    school: { x: 0.60, y: 0.75 },
-    winDamage: 45,
-    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'evac', 'breach'],
-    peakAt: 90,
-    peakFlow: 3.5,
-    peakRain: 30,
-  },
-  {
-    id: 'lumberton2016',
-    name: 'Lumberton',
-    year: '2016',
-    diff: 'hard',
-    blurb: 'Hurricane Matthew. Lumber River jumps I-95. West Lumberton flooded.',
-    brief: 'October 8-14, 2016. Hurricane Matthew stalled over eastern NC and dumped 12-14 inches. The Lumber River, normally 13 ft at flood stage, crested at 24.15 ft. West Lumberton flooded for the first time in recorded history because water breached through a CSX railroad underpass — an opening nobody had planned for. Close the gap, or the town drowns.',
-    budget: 5500000,
-    duration: 200,
-    mapScale: 1.1,
-    amc: 0.7,
-    stormProfile: t => ({
-      rain: 20 + 18 * Math.sin(Math.PI * t / 120) + 5 * Math.sin(t * 0.08),
-      inflow: 0.4 + 2.2 * Math.max(0, Math.sin(Math.PI * (t - 40) / 140)),
-    }),
-    terrain: generateValley,
-    townBox: { x: 0.52, y: 0.55, w: 18, h: 11 },
-    hospital: { x: 0.55, y: 0.50 },
-    school: { x: 0.64, y: 0.62 },
-    winDamage: 45,
-    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'evac', 'breach'],
-    peakAt: 110,
-    peakFlow: 2.5,
-    peakRain: 30,
-  },
-  {
-    id: 'asheville2024',
-    name: 'Asheville (Helene)',
-    year: '2024',
-    diff: 'extreme',
-    blurb: 'Orographic flash flood. 30+ inches in the mountains. River confluence breaks.',
-    brief: 'September 26-28, 2024. Hurricane Helene stalled its remnants against the Appalachian escarpment. Orographic lift dumped 20-30 inches on western NC. The French Broad and Swannanoa crested 8+ feet above any prior record at their Asheville confluence. Entire towns — Chimney Rock, Swannanoa, Biltmore Village — were swept away. Over 100 dead in NC alone. You sit in a narrow gorge below the confluence. There is no retreat.',
-    budget: 8000000,
-    duration: 200,
-    mapScale: 1.15,
-    amc: 0.6, // saturated from days of prior rain
-    stormProfile: t => ({
-      // Violent rainfall peak driven by stalled tropical moisture over mountains
-      rain: 25 + 55 * Math.max(0, Math.sin(Math.PI * (t - 30) / 120)) + 20 * Math.max(0, Math.sin(Math.PI * (t - 50) / 60)),
-      // Fast upland response — narrow steep catchment, almost-flashy hydrograph
-      inflow: 0.4 + 3.2 * Math.max(0, Math.sin(Math.PI * (t - 35) / 110)) + (t > 60 && t < 130 ? 2.0 : 0),
-    }),
-    terrain: generateMountainGorge,
-    townBox: { x: 0.45, y: 0.60, w: 16, h: 10 },
-    hospital: { x: 0.48, y: 0.56 },
-    school: { x: 0.55, y: 0.66 },
-    winDamage: 55,
-    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'evac', 'breach'],
-    peakAt: 95,
-    peakFlow: 5.2,
-    peakRain: 95,
-  },
-  {
-    id: 'localstorm',
-    name: 'Local Design Storm',
-    year: 'Your City',
-    diff: 'normal',
-    blurb: 'SCS Type II 24-hr storm using your selected city\'s rainfall depth.',
-    brief: 'A dimensionless SCS Type II rainfall distribution scaled by the 100-year 24-hour precipitation depth for your selected city (set in Settings). River inflow follows an SCS triangular unit hydrograph lagged to represent a small urban watershed. Change your city in the menu to see how different climates stress your design.',
-    budget: 5000000,
-    duration: 240,
-    mapScale: 1.1,
-    stormProfile: t => localStormProfile(t, 240),
-    terrain: generateValley,
-    townBox: { x: 0.50, y: 0.55, w: 16, h: 10 },
-    hospital: { x: 0.53, y: 0.50 },
-    school: { x: 0.62, y: 0.60 },
-    winDamage: 40,
-    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'evac', 'breach'],
-    peakAt: 120,
-    peakFlow: 3.5,
-    peakRain: 80,
-  },
-  {
-    id: 'sandbox',
-    name: 'Sandbox',
-    year: 'Free Play',
-    diff: 'easy',
-    blurb: 'Unlimited budget. Experiment with the physics against a hard storm.',
-    brief: 'Free-play sandbox mode. Unlimited budget, all tools available, no objectives — but the storm is serious so you have something to work against. Watch how channels route flow, how levees fail under sustained load, how soil saturates.',
-    budget: 999999999,
-    duration: 600,
-    mapScale: 1.0,
-    stormProfile: t => ({
-      rain: 35 + 45 * Math.max(0, Math.sin(Math.PI * t / 260)) + 12 * Math.sin(t * 0.07),
-      inflow: 1.0 + 4.0 * Math.max(0, Math.sin(Math.PI * (t - 50) / 240)),
-    }),
-    terrain: generateValley,
-    townBox: { x: 0.50, y: 0.55, w: 14, h: 9 },
-    hospital: null,
-    school: null,
-    winDamage: 100,
-    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'spillway', 'evac', 'breach'],
-    peakAt: 180,
-    peakFlow: 5.0,
-    peakRain: 90,
-    sandbox: true,
-  },
-  {
-    id: 'daily',
-    name: 'Daily Challenge',
-    year: 'Today',
-    diff: 'normal',
-    blurb: 'Seeded scenario, resets every day. Compete for the best score.',
-    brief: 'A procedurally generated scenario with a seed based on today\'s date. Everyone who plays today faces the same storm. Compare your score tomorrow, when the seed rolls over.',
-    budget: 5000000,
-    duration: 180,
-    mapScale: 1.0,
-    stormProfile: t => dailyStormProfile(t),
-    terrain: generateValley,
-    townBox: { x: 0.50, y: 0.55, w: 14, h: 9 },
-    hospital: { x: 0.55, y: 0.50 },
-    school: null,
-    winDamage: 40,
-    tools: ['sandbag', 'levee', 'channel', 'pump', 'pond', 'evac'],
-    peakAt: 90,
-    peakFlow: 2.5,
-    peakRain: 35,
-    daily: true,
-  },
-  {
-    id: 'endless',
-    name: 'Endless Storm',
-    year: '∞',
-    diff: 'extreme',
-    blurb: 'Procedural storms forever. How many rounds can you hold?',
-    brief: 'Survive waves of escalating storms. Each round the rain falls harder, the river rises faster, and your budget is smaller. Run: how long can you hold?',
-    budget: 4000000,
-    duration: 600,
-    mapScale: 1.3,
-    stormProfile: t => ({
-      rain: 15 + 10 * Math.sin(t * 0.05) + (t / 60) * 3,
-      inflow: 0.4 + 0.8 * Math.abs(Math.sin(t * 0.04)) + (t / 120),
-    }),
-    terrain: generateValley,
-    townBox: { x: 0.45, y: 0.50, w: 16, h: 10 },
-    hospital: { x: 0.48, y: 0.47 },
-    school: { x: 0.55, y: 0.55 },
-    winDamage: 80,
-    tools: ['sandbag', 'levee', 'reinforce', 'channel', 'pump', 'siphon', 'pond', 'evac', 'breach'],
-    peakAt: 300,
-    peakFlow: 5,
-    peakRain: 50,
-  },
+  // ---- DEMO BUILD ----
+  // The remaining 12 scenarios (Harvey, Johnstown, Katrina, Mississippi 1927,
+  // Oroville, Edenville, Lumberton, Asheville, Local Design Storm, Sandbox,
+  // Daily Challenge, Endless) are reserved for the full game on itch.io.
+  // The premium scenario tile in the menu links to the storefront.
 ];
 
 // ---------- Global state ----------
@@ -1142,6 +862,14 @@ const state = {
   stats: { peakDamage: 0, breaches: 0, evacuated: 0, pumped: 0, spentBy: {} },
   showPeakExtent: false,
   hydrographHistory: [],
+  rng: Math.random,   // Replaced with a seeded mulberry32 for daily/seeded runs.
+  // Sparse cell indices — keep render and step from scanning the full grid
+  // hunting for handfuls of pumps/buildings/river cells. Rebuilt on demand
+  // via rebuildCellIndices() whenever state.type mutates.
+  pumpCells: [],
+  buildingCells: [],
+  riverCells: [],
+  _indicesDirty: true,
 };
 
 const canvas = document.getElementById('canvas');
@@ -1150,6 +878,30 @@ const hydroCanvas = document.getElementById('hydrograph');
 const hctx = hydroCanvas.getContext('2d');
 
 function idx(x, y) { return y * COLS + x; }
+
+// Rebuild sparse type indices used by render + physics. Cheap (one O(N)
+// scan), runs only when state._indicesDirty is set by a type-mutation site.
+function rebuildCellIndices() {
+  const pumps = [], buildings = [], rivers = [];
+  const ty = state.type;
+  if (!ty) {
+    state.pumpCells = pumps;
+    state.buildingCells = buildings;
+    state.riverCells = rivers;
+    state._indicesDirty = false;
+    return;
+  }
+  for (let i = 0; i < ty.length; i++) {
+    const t = ty[i];
+    if (t === T.PUMP) pumps.push(i);
+    else if (t === T.TOWN || t === T.HOSPITAL || t === T.SCHOOL) buildings.push(i);
+    else if (t === T.RIVER) rivers.push(i);
+  }
+  state.pumpCells = pumps;
+  state.buildingCells = buildings;
+  state.riverCells = rivers;
+  state._indicesDirty = false;
+}
 
 // ---------- Terrain generators ----------
 function generateValley(elev) {
@@ -1357,14 +1109,19 @@ function startScenario(sc) {
   state.countdown = 0;
   state.fireworks = [];
   state.windX = 0;
+  // Reproducibility: Daily Challenge (and any future seeded scenario) routes
+  // ALL gameplay rolls — wind drift, gust noise, event timing, event choice,
+  // event-picked levee/pump — through state.rng. Non-seeded scenarios get
+  // Math.random for true variety.
+  state.rng = sc.daily ? mulberry32(dailySeed() ^ 0xC0FFEE) : Math.random;
   // Seed a random prevailing wind for each scenario — 4-10 m/s base magnitude.
-  const ang = Math.random() * Math.PI * 2;
-  const mag = 4 + Math.random() * 6;
+  const ang = state.rng() * Math.PI * 2;
+  const mag = 4 + state.rng() * 6;
   state.windVxBase = Math.cos(ang) * mag;
   state.windVyBase = Math.sin(ang) * mag;
   state.windVx = state.windVxBase;
   state.windVy = state.windVyBase;
-  state.nextEventAt = 30 + Math.random() * 25;
+  state.nextEventAt = 30 + state.rng() * 25;
   state.eventInflowSpike = 0;
   state.watershedQ = 0;
   state.tailwaterStage = 3.2;
@@ -1409,7 +1166,7 @@ function startScenario(sc) {
   // means less effective infiltration capacity, matching real AMC II/III conditions.
   const amc = sc.amc ?? 0.4;
   for (let i = 0; i < state.soilSat.length; i++) {
-    state.soilSat[i] = Math.min(1, amc * (0.85 + Math.random() * 0.3));
+    state.soilSat[i] = Math.min(1, amc * (0.85 + state.rng() * 0.3));
   }
 
   // Generate soil regions: bands of sand/clay/loam from low-freq noise
@@ -1486,6 +1243,9 @@ function startScenario(sc) {
     }
   }
 
+  state._indicesDirty = true;
+  rebuildCellIndices();
+
   buildObjectives();
   buildToolPanel();
   let campaignLabel = '';
@@ -1534,6 +1294,7 @@ function buildObjectives() {
 // ---------- Physics ----------
 function step(dt) {
   const sc = state.scenario;
+  if (state._indicesDirty) rebuildCellIndices();
 
   // Storm profile
   const profile = sc.stormProfile(state.time);
@@ -1548,7 +1309,7 @@ function step(dt) {
   // Roll for mid-storm events
   if (state.storming && state.time >= state.nextEventAt) {
     triggerRandomEvent();
-    state.nextEventAt = state.time + 25 + Math.random() * 25;
+    state.nextEventAt = state.time + 25 + state.rng() * 25;
   }
 
   // ---- Flux-based shallow water (8-neighbor gradient flux) ----
@@ -1562,6 +1323,9 @@ function step(dt) {
   const W = state.water, WN = state.waterNext, EL = state.elev, SH = state.structH, TY = state.type, FL = state.flow, FX = state.flowX, FY = state.flowY;
   const COLS_ = COLS;
   const DIAG = 0.7071;
+  // Diagonal wind factor: projection of the wind vector onto the diagonal
+  // axis (1/√2) times the cell-distance correction (1/√2). Product is 0.5.
+  const K_DIAG_WIND = 0.5;
   const K_BASE = 0.22, K_CHAN = 0.45, K_SPILL = 0.35;
   // Wind shear flux — small tangential forcing on the water surface. Real
   // surface drift is ~3% of the wind speed; scaled down further so wind
@@ -1642,10 +1406,10 @@ function step(dt) {
         if (hasWestN)        fW  += Math.min(wCap, K_WIND * Math.max(0, -WVx)       * wi);
         if (hasS)            fS  += Math.min(wCap, K_WIND * Math.max(0,  WVy)       * wi);
         if (hasN)            fN  += Math.min(wCap, K_WIND * Math.max(0, -WVy)       * wi);
-        if (hasS && hasE)    fSE += Math.min(wCap, K_WIND * Math.max(0,  WVx + WVy) * wi * DIAG * 0.707);
-        if (hasS && hasWestN)fSW += Math.min(wCap, K_WIND * Math.max(0, -WVx + WVy) * wi * DIAG * 0.707);
-        if (hasN && hasE)    fNE += Math.min(wCap, K_WIND * Math.max(0,  WVx - WVy) * wi * DIAG * 0.707);
-        if (hasN && hasWestN)fNW += Math.min(wCap, K_WIND * Math.max(0, -WVx - WVy) * wi * DIAG * 0.707);
+        if (hasS && hasE)    fSE += Math.min(wCap, K_WIND * Math.max(0,  WVx + WVy) * wi * K_DIAG_WIND);
+        if (hasS && hasWestN)fSW += Math.min(wCap, K_WIND * Math.max(0, -WVx + WVy) * wi * K_DIAG_WIND);
+        if (hasN && hasE)    fNE += Math.min(wCap, K_WIND * Math.max(0,  WVx - WVy) * wi * K_DIAG_WIND);
+        if (hasN && hasWestN)fNW += Math.min(wCap, K_WIND * Math.max(0, -WVx - WVy) * wi * K_DIAG_WIND);
       }
 
       let total = fE + fW + fS + fN + fSE + fSW + fNE + fNW;
@@ -1787,8 +1551,12 @@ function step(dt) {
   }
   const q_avg = outletCount > 0 ? Q_in / outletCount : 0;
   state.outflowQ = state.outflowQ * 0.85 + q_avg * 0.15; // low-pass filter, mean incremental flux
-  // Stage-discharge rating. H_base is the resting discharge elevation; flow
-  // causes a small backwater rise capped at 1.5 m.
+  // Stage-discharge rating curve at the downstream boundary. Derived from a
+  // wide-rectangular Manning solve (n ≈ 0.035 vegetated channel, S₀ ≈ 0.001,
+  // breadth ≈ 30 m) which collapses to the form H = H₀ + a·q^b with b ≈ 0.6.
+  // H_base is the no-flow water-surface elevation; the cap (1.5 m) reflects a
+  // realistic backwater rise before the channel exits frame. Tune coefficient
+  // 6.0 if downstream control geometry changes.
   const H_base = 3.2;
   const H_tw_target = H_base + Math.min(1.5, 6.0 * Math.pow(Math.max(0, state.outflowQ), 0.6));
   state.tailwaterStage = state.tailwaterStage * 0.9 + H_tw_target * 0.1;
@@ -1827,6 +1595,7 @@ function step(dt) {
             const threshold = baseThresh * leveeBreachMult();
             if (state.stress[i] > threshold) {
               state.type[i] = T.BREACH;
+              state._indicesDirty = true;
               state.structH[i] = -0.5;
               state.elev[i] = Math.max(2, state.elev[i] - 0.5);
               state.reinforced[i] = 0;
@@ -1839,11 +1608,13 @@ function step(dt) {
             state.stress[i] = Math.max(0, state.stress[i] - dt * 0.5);
           }
         } else if (state.type[i] === T.SANDBAG) {
-          // Sandbags erode under moderate flow
-          if (state.flow[i] > 0.15 || state.water[i] > 0.5) {
+          // Sandbags erode under flow shear, not hydrostatic head — a static
+          // pool against a sandbag wall doesn't degrade the bag itself.
+          if (state.flow[i] > 0.15) {
             state.structH[i] = Math.max(0, state.structH[i] - dt * 0.08);
             if (state.structH[i] < 0.1) {
               state.type[i] = T.GRASS;
+              state._indicesDirty = true;
               state.structH[i] = 0;
               toast('Sandbags eroded away.', 'danger');
             }
@@ -1854,11 +1625,14 @@ function step(dt) {
   }
 
   // ---- Pump failure when flooded ----
-  // Pumps fail when their own cell is flooded deeper than 0.4m during a storm.
+  // Real lift stations have wet wells and survive shallow inundation; they
+  // fail when water reaches the motor housing (~1.2 m above ground for a
+  // typical municipal pad).
   if (state.storming) {
-    for (let i = 0; i < state.type.length; i++) {
-      if (state.type[i] === T.PUMP && state.water[i] > 0.4) {
-        state.type[i] = T.BREACH;
+    for (const i of state.pumpCells) {
+      if (state.type[i] === T.PUMP && state.water[i] > 1.2) {
+        state.type[i] = T.BROKEN_PUMP;
+        state._indicesDirty = true;
         state.structH[i] = 0;
         toast('Pump station flooded out!', 'danger');
       }
@@ -1901,12 +1675,11 @@ function step(dt) {
   }
 
   // ---- River stage (max water level along river column) ----
+  // Iterates the cached riverCells sparse index; rivers are static after
+  // scenario init so this never needs rebuilding mid-run.
   let maxStage = 0;
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      const i = idx(x, y);
-      if (state.type[i] === T.RIVER) maxStage = Math.max(maxStage, state.water[i]);
-    }
+  for (const i of state.riverCells) {
+    if (state.water[i] > maxStage) maxStage = state.water[i];
   }
   // Low-pass filter — the instantaneous max oscillates sub-centimeter between
   // ticks as water sloshes. Smooth so the HUD readout stays readable.
@@ -1915,8 +1688,8 @@ function step(dt) {
   // ---- Wind (2D, real units: m/s) ----
   // Base drifts on a slow random walk; actual wind adds gust noise scaled by
   // rainfall intensity (heavier rain → gustier). Storming doubles the ceiling.
-  state.windVxBase += (Math.random() - 0.5) * dt * 0.8;
-  state.windVyBase += (Math.random() - 0.5) * dt * 0.8;
+  state.windVxBase += (state.rng() - 0.5) * dt * 0.8;
+  state.windVyBase += (state.rng() - 0.5) * dt * 0.8;
   const baseCap = state.storming ? 22 : 10;
   const mag = Math.hypot(state.windVxBase, state.windVyBase);
   if (mag > baseCap) {
@@ -1924,8 +1697,8 @@ function step(dt) {
     state.windVyBase *= baseCap / mag;
   }
   const gustMag = (state.storming ? 3 : 1) * (1 + state.currentRain / 60);
-  state.windVx = state.windVxBase + (Math.random() - 0.5) * gustMag;
-  state.windVy = state.windVyBase + (Math.random() - 0.5) * gustMag;
+  state.windVx = state.windVxBase + (state.rng() - 0.5) * gustMag;
+  state.windVy = state.windVyBase + (state.rng() - 0.5) * gustMag;
   // Back-compat: derive pixel-space wind for rain/cloud visuals.
   // Tuned so ~10 m/s wind gives ~100 px/s lateral rain drift.
   state.windX = state.windVx * 10;
@@ -2172,6 +1945,9 @@ function getCellColor(i) {
     r = 74; g = 85; b = 104;
   } else if (t === T.PUMP) {
     r = 220; g = 38 + Math.sin(state.time * 6) * 20; b = 38;
+  } else if (t === T.BROKEN_PUMP) {
+    // Powered-down pump pad: muted grey with rust streaks (no blade animation).
+    r = 90; g = 80; b = 78;
   } else if (t === T.SIPHON) {
     r = 6; g = 182; b = 212;
   } else if (t === T.POND) {
@@ -2215,6 +1991,7 @@ function render() {
 
   if (!state.scenario || !state.elev) return;
 
+  if (state._indicesDirty) rebuildCellIndices();
   if (state.view === 'iso') { renderIso(w, h); }
   else { renderTop(w, h); }
 }
@@ -2223,101 +2000,31 @@ function renderTop(w, h) {
   const cw = w / COLS, ch = h / ROWS;
   state.cell = Math.min(cw, ch);
 
-  const skyDarken = state.storming ? Math.min(0.6, state.currentRain / 80) : 0;
-
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      const i = idx(x, y);
-      const e = state.elev[i] + state.structH[i];
-      const wv = state.water[i];
-      const t = state.type[i];
-
-      let r, g, b;
-      // Elevation-thematic palette (mirrored from getCellColor)
-      if (e < 3.0)         { r = 50; g = 90; b = 100; }
-      else if (e < 5.0)    { r = 58; g = 105; b = 52; }
-      else if (e < 7.5)    { r = 95; g = 145; b = 70; }
-      else if (e < 10.5)   { r = 150; g = 160; b = 85; }
-      else if (e < 13.5)   { r = 165; g = 130; b = 80; }
-      else if (e < 16.0)   { r = 160; g = 150; b = 140; }
-      else                  { r = 240; g = 242; b = 250; }
-      const sat = state.soilSat ? state.soilSat[i] : 0;
-      if (sat > 0.3 && e >= 3.0 && e < 13.5) {
-        const darkN = Math.min(0.35, (sat - 0.3) * 0.5);
-        r *= (1 - darkN); g *= (1 - darkN * 0.8); b *= (1 - darkN * 0.4);
-      }
-
-      // Soil type tint on grass tiles
-      if (t === T.GRASS) {
-        const st = state.soilType[i];
-        if (st === 1) { r += 25; g += 10; b -= 5; }        // sand (yellower)
-        else if (st === 2) { r -= 15; g -= 10; b += 10; }  // clay (bluer-gray)
-      }
-      if (t === T.RIVER) { r = 55; g = 120; b = 200; }
-
-      if (t === T.TOWN) {
-        const dmg = state.damage[i];
-        const hash = ((i * 2654435761) >>> 0) % 100;
-        r = 230 - dmg * 120 + (hash - 50) * 0.4;
-        g = 200 - dmg * 170 + (hash - 50) * 0.3;
-        b = 90 + (hash - 50) * 0.2;
-      }
-      else if (t === T.ROAD) {
-        r = 75; g = 75; b = 82;
-      } else if (t === T.HOSPITAL) {
-        const dmg = state.damage[i];
-        r = 240 - dmg * 80; g = 80; b = 80;
-      } else if (t === T.SCHOOL) {
-        const dmg = state.damage[i];
-        r = 168 - dmg * 80; g = 85; b = 247 - dmg * 100;
-      } else if (t === T.SANDBAG) {
-        r = 212; g = 165; b = 106;
-      } else if (t === T.LEVEE) {
-        if (state.reinforced[i]) { r = 120; g = 95; b = 170; }
-        else { r = 139; g = 111; b = 71; }
-        const threshold = state.reinforced[i] ? 10 : 5;
-        const stressN = Math.min(1, state.stress[i] / threshold);
-        r += stressN * 60; g -= stressN * 40;
-        if (stressN > 0.6) {
-          const pulse = 0.5 + 0.5 * Math.sin(state.time * 8);
-          r = r * (1 - pulse * 0.4) + 255 * pulse * 0.4;
-        }
-      } else if (t === T.CHANNEL) {
-        r = 74; g = 85; b = 104;
-      } else if (t === T.PUMP) {
-        r = 220; g = 38 + Math.sin(state.time * 6) * 20; b = 38;
-      } else if (t === T.SIPHON) {
-        r = 6; g = 182; b = 212;
-      } else if (t === T.POND) {
-        r = 30; g = 64; b = 175;
-      } else if (t === T.SPILLWAY) {
-        r = 100; g = 116; b = 139;
-      } else if (t === T.EVACUATED) {
-        r = 40; g = 80; b = 40;
-      } else if (t === T.OUTLET) {
-        r = 15; g = 15; b = 30;
-      } else if (t === T.BREACH) {
-        r = 120; g = 60; b = 30;
-      }
-
-      // Water overlay with shimmer
-      if (wv > 0.005) {
-        const wN = Math.min(1, wv * 2 + 0.3);
-        const shimmer = Math.sin(state.time * 3 + x * 0.5 + y * 0.3) * 0.05;
-        r = r * (1 - wN) + (60 + shimmer * 40) * wN;
-        g = g * (1 - wN) + (140 + shimmer * 30) * wN;
-        b = b * (1 - wN) + (225 + shimmer * 20) * wN;
-      }
-
-      // Storm darkening
-      r *= (1 - skyDarken * 0.3);
-      g *= (1 - skyDarken * 0.3);
-      b *= (1 - skyDarken * 0.2);
-
-      ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
-      ctx.fillRect(x * cw, y * ch, cw + 1, ch + 1);
-    }
+  // ---- Terrain + water layer via ImageData ----
+  // Old path called ctx.fillRect with a string fillStyle 180×108 ≈ 19,400
+  // times per frame. Replaced with a single putImageData into a COLS×ROWS
+  // scratch canvas, then drawImage-scaled to the display canvas. Pixel
+  // colors come from getCellColor (single source of truth shared with iso).
+  if (!state._scratch || state._scratch.width !== COLS || state._scratch.height !== ROWS) {
+    state._scratch = document.createElement('canvas');
+    state._scratch.width = COLS;
+    state._scratch.height = ROWS;
+    state._scratchCtx = state._scratch.getContext('2d');
+    state._scratchImg = state._scratchCtx.createImageData(COLS, ROWS);
   }
+  const data = state._scratchImg.data;
+  const N = COLS * ROWS;
+  for (let i = 0; i < N; i++) {
+    const c = getCellColor(i);
+    const p = i << 2;
+    data[p]     = c.r | 0;
+    data[p + 1] = c.g | 0;
+    data[p + 2] = c.b | 0;
+    data[p + 3] = 255;
+  }
+  state._scratchCtx.putImageData(state._scratchImg, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(state._scratch, 0, 0, w, h);
 
   // Peak flood extent overlay (2D)
   if (state.showPeakExtent && state.peakDepth) {
@@ -2407,57 +2114,52 @@ function renderTop(w, h) {
     }
   }
 
-  // Building sprites: draw little roofs and doors on town/hospital/school tiles
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      const i = idx(x, y);
-      const t = state.type[i];
-      if (t !== T.TOWN && t !== T.HOSPITAL && t !== T.SCHOOL) continue;
-      const dmg = state.damage[i];
-      if (state.water[i] > 0.5) continue; // don't draw submerged buildings
-      const px = x * cw + 1, py = y * ch + 1;
-      const bw = cw - 2, bh = ch - 2;
-      // Roof (triangle)
-      ctx.fillStyle = t === T.HOSPITAL ? '#991b1b' : t === T.SCHOOL ? '#6b21a8' : '#7c2d12';
+  // Building sprites: little roofs and doors on town/hospital/school tiles.
+  // Iterates the cached buildingCells sparse index rather than scanning the
+  // full 19k-cell grid each frame.
+  for (const i of state.buildingCells) {
+    const t = state.type[i];
+    if (t !== T.TOWN && t !== T.HOSPITAL && t !== T.SCHOOL) continue;
+    if (state.water[i] > 0.5) continue;
+    const x = i % COLS, y = (i / COLS) | 0;
+    const dmg = state.damage[i];
+    const px = x * cw + 1, py = y * ch + 1;
+    const bw = cw - 2, bh = ch - 2;
+    ctx.fillStyle = t === T.HOSPITAL ? '#991b1b' : t === T.SCHOOL ? '#6b21a8' : '#7c2d12';
+    ctx.beginPath();
+    ctx.moveTo(px, py + bh * 0.4);
+    ctx.lineTo(px + bw / 2, py);
+    ctx.lineTo(px + bw, py + bh * 0.4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = `rgba(30,20,10,${1 - dmg * 0.6})`;
+    ctx.fillRect(px + bw * 0.4, py + bh * 0.6, bw * 0.2, bh * 0.4);
+    if (dmg > 0.3) {
+      ctx.strokeStyle = `rgba(0,0,0,${Math.min(0.8, dmg)})`;
+      ctx.lineWidth = 0.5;
       ctx.beginPath();
-      ctx.moveTo(px, py + bh * 0.4);
-      ctx.lineTo(px + bw / 2, py);
-      ctx.lineTo(px + bw, py + bh * 0.4);
-      ctx.closePath();
-      ctx.fill();
-      // Door
-      ctx.fillStyle = `rgba(30,20,10,${1 - dmg * 0.6})`;
-      ctx.fillRect(px + bw * 0.4, py + bh * 0.6, bw * 0.2, bh * 0.4);
-      // Damage cracks
-      if (dmg > 0.3) {
-        ctx.strokeStyle = `rgba(0,0,0,${Math.min(0.8, dmg)})`;
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(px, py + bh * 0.5);
-        ctx.lineTo(px + bw * 0.5, py + bh * 0.3);
-        ctx.lineTo(px + bw, py + bh * 0.7);
-        ctx.stroke();
-      }
+      ctx.moveTo(px, py + bh * 0.5);
+      ctx.lineTo(px + bw * 0.5, py + bh * 0.3);
+      ctx.lineTo(px + bw, py + bh * 0.7);
+      ctx.stroke();
     }
   }
 
-  // Pump animation: rotating blade
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      if (state.type[idx(x, y)] === T.PUMP) {
-        const px = x * cw + cw / 2, py = y * ch + ch / 2;
-        ctx.save();
-        ctx.translate(px, py);
-        ctx.rotate(state.time * 6);
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(-cw * 0.35, 0); ctx.lineTo(cw * 0.35, 0);
-        ctx.moveTo(0, -ch * 0.35); ctx.lineTo(0, ch * 0.35);
-        ctx.stroke();
-        ctx.restore();
-      }
-    }
+  // Pump animation: rotating blade (cached pump index, not a full-grid scan).
+  for (const i of state.pumpCells) {
+    if (state.type[i] !== T.PUMP) continue;
+    const x = i % COLS, y = (i / COLS) | 0;
+    const px = x * cw + cw / 2, py = y * ch + ch / 2;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(state.time * 6);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-cw * 0.35, 0); ctx.lineTo(cw * 0.35, 0);
+    ctx.moveTo(0, -ch * 0.35); ctx.lineTo(0, ch * 0.35);
+    ctx.stroke();
+    ctx.restore();
   }
 
   // Breach wave ripples (decay over ~3 seconds)
@@ -2970,25 +2672,27 @@ function drawMinimap(w, h) {
 function triggerRandomEvent() {
   // Skip early events
   if (state.time < 20) return;
-  const roll = Math.random();
+  const roll = state.rng();
   if (roll < 0.25) {
     state.eventInflowSpike = 1.5;
     toast('⚠ Upstream landslide — inflow spike incoming!', 'danger');
     sfx.impact();
   } else if (roll < 0.45) {
     // Wind shift — new prevailing direction, gusty magnitude
-    const ang = Math.random() * Math.PI * 2;
-    const mag = 12 + Math.random() * 18;
+    const ang = state.rng() * Math.PI * 2;
+    const mag = 12 + state.rng() * 18;
     state.windVxBase = Math.cos(ang) * mag;
     state.windVyBase = Math.sin(ang) * mag;
     toast('⚠ Sudden wind shift — surface flow and rain will reroute.', 'info');
   } else if (roll < 0.6) {
-    // Random pump goes offline
+    // Random pump goes offline — broken but not breached; player can remove
+    // and rebuild rather than getting a hole punched in the floodplain.
     const pumps = [];
     for (let i = 0; i < state.type.length; i++) if (state.type[i] === T.PUMP) pumps.push(i);
     if (pumps.length > 0) {
-      const p = pumps[Math.floor(Math.random() * pumps.length)];
-      state.type[p] = T.BREACH;
+      const p = pumps[Math.floor(state.rng() * pumps.length)];
+      state.type[p] = T.BROKEN_PUMP;
+      state._indicesDirty = true;
       toast('⚠ Pump failure — power lost at station.', 'danger');
     }
   } else if (roll < 0.75) {
@@ -3000,7 +2704,7 @@ function triggerRandomEvent() {
     const levees = [];
     for (let i = 0; i < state.type.length; i++) if (state.type[i] === T.LEVEE) levees.push(i);
     if (levees.length > 0) {
-      const l = levees[Math.floor(Math.random() * levees.length)];
+      const l = levees[Math.floor(state.rng() * levees.length)];
       state.stress[l] = Math.min(state.stress[l] + 2, (state.reinforced[l] ? 10 : 5) - 0.5);
       toast('⚠ Piping failure detected in a levee — reinforce quickly!', 'danger');
     }
@@ -3355,6 +3059,10 @@ let pinchStartDist = 0;
 let pinchStartZoom = 1;
 let pinchCenter = { x: 0, y: 0 };
 let removeMode = false;
+// Touch long-press = undo (right-click equivalent on mobile). 500 ms hold
+// with <12 px of drift rolls back the just-placed cell.
+let longPressTimer = 0;
+let longPressStart = null;
 
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -3396,10 +3104,33 @@ canvas.addEventListener('pointerdown', e => {
   }
   const useRemove = (e.button === 2) || removeMode;
   if (useRemove) removeCell(e); else place(e);
+
+  // Touch-only long-press → undo (touch devices lack right-click; this is
+  // the natural "I didn't mean to do that" gesture).
+  if (e.pointerType === 'touch') {
+    longPressStart = { x: e.clientX, y: e.clientY };
+    clearTimeout(longPressTimer);
+    longPressTimer = setTimeout(() => {
+      if (primaryPointerDown && longPressStart) {
+        undo();
+        toast('Undid last placement', 'info');
+        primaryPointerDown = false; // stop the implicit drag-place
+      }
+      longPressStart = null;
+    }, 500);
+  }
 });
 
 canvas.addEventListener('pointermove', e => {
   if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  // Cancel pending long-press if finger drifts — this is a drag, not a hold.
+  if (longPressStart) {
+    const dx = e.clientX - longPressStart.x, dy = e.clientY - longPressStart.y;
+    if (dx * dx + dy * dy > 144) { // 12 px
+      clearTimeout(longPressTimer); longPressTimer = 0; longPressStart = null;
+    }
+  }
 
   // Two-finger pinch zoom + pan
   if (pointers.size === 2 && pinchStartDist > 0) {
@@ -3457,6 +3188,9 @@ function endPointer(e) {
     state.dragZ = null;
     canvas.style.cursor = 'crosshair';
   }
+  // Cancel any pending long-press
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = 0; }
+  longPressStart = null;
 }
 canvas.addEventListener('pointerup', endPointer);
 canvas.addEventListener('pointercancel', endPointer);
@@ -3506,6 +3240,7 @@ function removeCell(e) {
   const removableCosts = {
     [T.SANDBAG]: 50000, [T.LEVEE]: 300000, [T.CHANNEL]: 150000,
     [T.PUMP]: 800000, [T.POND]: 400000, [T.SPILLWAY]: 500000, [T.SIPHON]: 250000,
+    [T.BROKEN_PUMP]: 0, // wreckage — no refund, but clearable to rebuild
   };
   if (!(t in removableCosts)) return;
   snapshotCell(i);
@@ -3513,6 +3248,7 @@ function removeCell(e) {
   state.budget += refund;
   state.spent = Math.max(0, state.spent - refund);
   state.type[i] = T.GRASS;
+  state._indicesDirty = true;
   state.structH[i] = 0;
   state.stress[i] = 0;
   // Restore elevation for dug-out types
@@ -3629,6 +3365,7 @@ function undo() {
   const u = undoStack.pop();
   if (!u) return;
   state.type[u.i] = u.type;
+  state._indicesDirty = true;
   state.elev[u.i] = u.elev;
   state.structH[u.i] = u.structH;
   state.stress[u.i] = u.stress;
@@ -3668,6 +3405,7 @@ function place(e) {
     if (!sb && state.budget < effCost(state.tool)) return;
     snapshotCell(i);
     state.type[i] = T.BREACH;
+    state._indicesDirty = true;
     state.structH[i] = -0.5;
     state.elev[i] = Math.max(2, state.elev[i] - 0.5);
     if (!sb) { const c = effCost(state.tool); state.budget -= c; state.spent += c; }
@@ -3684,6 +3422,7 @@ function place(e) {
     if (!sb && state.budget < effCost(state.tool)) return;
     snapshotCell(i);
     state.type[i] = T.EVACUATED;
+    state._indicesDirty = true;
     state.stats.evacuated++;
     if (!sb) { const c = effCost(state.tool); state.budget -= c; state.spent += c; }
     updateHUD();
@@ -3720,6 +3459,7 @@ function place(e) {
   } else if (state.tool === 'spillway') {
     state.type[i] = T.SPILLWAY; state.structH[i] = 1.5;
   }
+  state._indicesDirty = true;
   if (!sandboxMode) {
     state.budget -= effCostVal;
     state.spent += effCostVal;
@@ -3808,8 +3548,17 @@ function renderScenarioGrid() {
       <div class="best" style="color:${stars === 3 ? '#fbbf24' : stars > 0 ? '#e6edf3' : '#475569'};">${starDisplay} ${best ? best.pct.toFixed(0) + '% dmg' : 'Unplayed'}</div>
       ${lockHtml}
     </div>`;
-  }).join('');
+  }).join('') + (DEMO_BUILD ? `
+    <a class="scenario-card" id="premiumCard" href="${DEMO_STORE_URL}" target="_blank" rel="noopener"
+       style="background:linear-gradient(135deg,#1e3a5f 0%,#1e293b 100%);border:1px solid #fbbf24;text-decoration:none;color:inherit;cursor:pointer;">
+      <div class="yr" style="color:#fbbf24;">FULL GAME</div>
+      <h3 style="color:#fbbf24;">+ 12 More Scenarios</h3>
+      <div class="diff" style="background:#fbbf24;color:#0a0e14;">ITCH.IO</div>
+      <div class="blurb">Harvey, Katrina, Oroville, Edenville, Mississippi 1927, Asheville (Helene), Johnstown, Lumberton, Local Design Storm, Sandbox, Daily Challenge, Endless. Three campaigns, 5 challenge modifiers, achievements.</div>
+      <div class="best" style="color:#fbbf24;">★★★ Support the dev →</div>
+    </a>` : '');
   el.querySelectorAll('.scenario-card').forEach(card => {
+    if (card.id === 'premiumCard') return; // anchor handles its own click
     card.addEventListener('click', () => {
       const id = card.dataset.id;
       if (!isScenarioUnlocked(id)) {
@@ -3829,46 +3578,8 @@ function renderScenarioGrid() {
 // Three curated campaigns scaling from small-watershed training to
 // catastrophic-failure endgame. Storm intensity ramps 4%/mission within a
 // campaign; an overall difficulty multiplier stacks on top.
-const CAMPAIGNS = [
-  {
-    id: 'foothills',
-    name: 'Foothills Training',
-    subtitle: 'Small watersheds · Light to moderate storms · Learn the fundamentals',
-    color: '#22c55e',
-    icon: '🌿',
-    missions: [
-      { scenarioId: 'training',      title: 'Flat Meadow',                brief: 'Light rain, gentle river. Learn the tools.' },
-      { scenarioId: 'localstorm',    title: 'Your City Design Storm',     brief: 'SCS Type II 100-year event over your local rainfall.' },
-      { scenarioId: 'lumberton2016', title: 'Lumberton (Matthew, 2016)',  brief: 'Find the gap before the Lumber River does.' },
-      { scenarioId: 'iowa2008',      title: 'Cedar Rapids 2008',          brief: 'Slow crest. Duration fight — pre-position.' },
-    ],
-  },
-  {
-    id: 'bigrivers',
-    name: 'Big Rivers',
-    subtitle: 'Wide systems · Sustained hurricanes · Engineered infrastructure',
-    color: '#7dd3fc',
-    icon: '🌊',
-    missions: [
-      { scenarioId: 'harvey2017',       title: 'Houston (Harvey, 2017)',       brief: 'Stalled hurricane. 40+ inches of pure rainfall.' },
-      { scenarioId: 'edenville2020',    title: 'Edenville Cascade (2020)',     brief: 'Two dams upstream. Cascading failures.' },
-      { scenarioId: 'mississippi1927',  title: 'Great Mississippi (1927)',     brief: 'Wide river, weeks of flow. Breach upstream?' },
-      { scenarioId: 'oroville2017',     title: 'Oroville Spillway (2017)',     brief: 'Spillway disintegrating. Reservoir cannot overtop.' },
-    ],
-  },
-  {
-    id: 'catastrophe',
-    name: 'Catastrophe',
-    subtitle: 'Failure modes · Flash floods · Urban disasters — no margin',
-    color: '#ef4444',
-    icon: '⚠',
-    missions: [
-      { scenarioId: 'katrina2005',   title: 'Katrina (2005)',                 brief: 'Sub-sea-level city. Surge overtops 50+ levees.' },
-      { scenarioId: 'asheville2024', title: 'Asheville (Helene, 2024)',       brief: '30 inches in the mountains. Confluence breaks.' },
-      { scenarioId: 'johnstown1889', title: 'Johnstown (Final, 1889)',        brief: 'Dam burst. 36-foot wall of water. Evacuate.' },
-    ],
-  },
-];
+// Demo build: campaigns require multi-scenario chains; full versions ship on itch.io.
+const CAMPAIGNS = [];
 const DIFFICULTIES = [
   { id: 'easy',   name: 'Easy',   rainMult: 0.80, budgetMult: 1.30, color: '#22c55e', desc: 'Softer storms, bigger budget' },
   { id: 'normal', name: 'Normal', rainMult: 1.00, budgetMult: 1.00, color: '#7dd3fc', desc: 'Historical intensity, standard budget' },
@@ -3924,6 +3635,12 @@ function startCampaignMission(campaignId, index) {
 let campaignOverlayMode = 'select'; // 'select' | 'missions'
 let selectedCampaignId = null;
 function openCampaignOverlay() {
+  if (DEMO_BUILD) {
+    // Campaigns are full-game content. Send the player to the storefront
+    // instead of opening an empty overlay.
+    window.open(DEMO_STORE_URL, '_blank', 'noopener');
+    return;
+  }
   campaignOverlayMode = 'select';
   selectedCampaignId = null;
   renderCampaignOverlay();
@@ -4100,10 +3817,15 @@ function femaGrantBonus() { return hasUpgrade('taxbase') ? 1000000 : 0; }
 function prepTimeBonus() { return hasUpgrade('warning') ? 20 : 0; }
 
 // ---------- Save / resume mid-scenario ----------
+// Bump SAVE_VERSION whenever the on-disk layout changes (new typed-array,
+// renamed field, scaled units, etc.) so older saves are rejected cleanly
+// instead of bricking the run when a Float32Array length mismatches.
+const SAVE_VERSION = 2;
 function saveGame() {
   if (!state.scenario || state.scenario.sandbox || state.gameOver) return;
   try {
     const save = {
+      v: SAVE_VERSION,
       ts: Date.now(),
       scenarioId: state.scenario.id,
       cols: COLS, rows: ROWS,
@@ -4137,7 +3859,17 @@ function saveGame() {
 function loadGame() {
   try {
     const s = localStorage.getItem('floodline_save');
-    return s ? JSON.parse(s) : null;
+    if (!s) return null;
+    const parsed = JSON.parse(s);
+    // Reject saves from a different schema version. Silently discarding the
+    // stale save is preferable to corrupting the live run with mis-sized
+    // typed arrays or missing fields.
+    if ((parsed.v ?? 1) !== SAVE_VERSION) {
+      console.info(`Discarding save: version ${parsed.v ?? 1} ≠ ${SAVE_VERSION}`);
+      localStorage.removeItem('floodline_save');
+      return null;
+    }
+    return parsed;
   } catch { return null; }
 }
 function clearSave() { localStorage.removeItem('floodline_save'); }
@@ -4179,6 +3911,8 @@ function resumeGame(save) {
   state.peakDepth = new Float32Array(save.peakDepth);
   state.waterNext = new Float32Array(state.water.length);
   state.contourSegs = null;
+  state._indicesDirty = true;
+  rebuildCellIndices();
   document.getElementById('startBtn').disabled = state.storming;
   document.getElementById('startBtn').textContent = state.storming ? 'Storm in progress' : 'Start Storm';
   updateHUD();

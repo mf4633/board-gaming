@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#04060E">
+<title>Eclipse Predictor &mdash; Solar Eclipse Paths on a 3D Globe | Board Gaming Hub</title>
+<meta name="description" content="Step through every solar eclipse from 1900 to 2200. Computed with astronomy-engine (sub-arcsecond accuracy), drawn as paths of totality on a 3D Earth.">
+<link rel="canonical" href="https://boardgaminghub.com/EclipsePredictor.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://boardgaminghub.com/EclipsePredictor.html">
+<meta property="og:title" content="Eclipse Predictor &mdash; Solar Eclipse Paths">
+<meta property="og:description" content="Click through 21st-century solar eclipses and watch the path of totality sweep across a 3D globe.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127773;</text></svg>">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E0; min-height: 100vh; overflow: hidden; user-select: none; }
+
+  /* Canvas covers full viewport; sticky nav sits above with higher z-index. */
+  #globeCanvas { display: block; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; cursor: grab; z-index: 1; }
+  #globeCanvas.dragging { cursor: grabbing; }
+
+  .panel { position: fixed; background: rgba(10,10,26,0.88); border: 1px solid #1A2A40; border-radius: 6px; padding: 10px 12px; z-index: 100; backdrop-filter: blur(4px); }
+  .panel h4 { color: #4080D0; font-size: 0.7em; margin-bottom: 6px; letter-spacing: 1.5px; font-family: Georgia, serif; }
+  .panel .row { display: flex; justify-content: space-between; padding: 1px 0; color: #8098B0; font-size: 0.74em; gap: 14px; }
+  .panel .row b { color: #B0C8E0; font-weight: normal; }
+  .panel .row b.gold { color: #FFD040; }
+  .panel .row b.warm { color: #FF9060; }
+
+  #infoPanel { top: 88px; left: 16px; min-width: 260px; max-width: 320px; }
+  #infoPanel .ecname { color: #FFD040; font-size: 0.95em; font-family: Georgia, serif; letter-spacing: 1px; margin-bottom: 6px; }
+  #infoPanel .ectype { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 0.68em; letter-spacing: 1.5px; margin-bottom: 8px; font-family: Georgia, serif; }
+  #infoPanel .ectype.T { background: #4A1818; border: 1px solid #FF6040; color: #FFC0A0; }
+  #infoPanel .ectype.A { background: #4A3818; border: 1px solid #FFA040; color: #FFD8A0; }
+  #infoPanel .ectype.H { background: #4A2818; border: 1px solid #FF8040; color: #FFC890; }
+  #infoPanel .ectype.P { background: #1A2848; border: 1px solid #4080D0; color: #A0C0E0; }
+  #infoPanel .desc { color: #8098B0; font-size: 0.72em; margin-top: 6px; line-height: 1.4; font-style: italic; }
+  #infoPanel .meta { color: #6080A0; font-size: 0.68em; margin-top: 6px; padding-top: 6px; border-top: 1px solid #1A2A40; line-height: 1.5; }
+
+  #legend { bottom: 16px; left: 16px; min-width: 200px; }
+  #legend .leg-row { font-size: 0.7em; color: #8098B0; padding: 2px 0; display: flex; align-items: center; gap: 8px; }
+  #legend .swatch { display: inline-block; width: 20px; height: 3px; border-radius: 1px; }
+  #legend .swatch.dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  #viewPanel { top: 88px; right: 16px; min-width: 180px; }
+  .view-btn { display: block; width: 100%; padding: 5px 9px; margin: 2px 0; background: #0E1428; border: 1px solid #1A2A40; color: #B0C8E0; cursor: pointer; font-family: 'Courier New', monospace; font-size: 0.74em; text-align: left; border-radius: 3px; }
+  .view-btn:hover { background: #1A2848; border-color: #4080D0; }
+  .view-btn.active { background: #1A2848; border-color: #4080D0; color: #FFD040; }
+
+  #controlBar { bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; padding: 6px 10px; align-items: center; }
+  .nav-btn { padding: 6px 14px; background: #0E1428; border: 1px solid #1A2A40; color: #B0C8E0; cursor: pointer; font-family: 'Courier New', monospace; font-size: 0.9em; border-radius: 3px; min-width: 44px; }
+  .nav-btn:hover:not(:disabled) { background: #1A2848; border-color: #4080D0; }
+  .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .nav-btn.play { color: #80F0A0; border-color: #2A5A38; min-width: 52px; }
+  .nav-btn.play:hover:not(:disabled) { background: #1A3828; border-color: #40D080; }
+  .nav-btn.play.active { background: #1A3828; color: #80F0A0; }
+  #dateDisplay { min-width: 200px; padding: 0 14px; color: #B0C8E0; font-size: 0.84em; text-align: center; border-left: 1px solid #1A2A40; border-right: 1px solid #1A2A40; margin: 0 6px; font-family: Georgia, serif; letter-spacing: 1px; }
+  #dateDisplay b { color: #FFD040; }
+  #ecCounter { font-size: 0.66em; color: #6080A0; padding: 0 8px; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+
+  #titleOverlay { position: fixed; top: 50px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 90; pointer-events: none; }
+  #titleOverlay .t1 { color: #4080D0; font-family: Georgia, serif; font-size: 1.1em; letter-spacing: 6px; text-shadow: 0 0 12px rgba(64,128,208,0.4); }
+  #titleOverlay .t2 { color: #6080A0; font-size: 0.62em; letter-spacing: 3px; margin-top: 2px; }
+
+  #helpBtn { position: fixed; top: 48px; right: 16px; z-index: 90; padding: 4px 10px; background: rgba(10,10,26,0.7); border: 1px solid #1A2A40; color: #6080A0; font-family: Georgia, serif; font-size: 0.85em; cursor: pointer; border-radius: 3px; }
+  #helpBtn:hover { color: #4080D0; border-color: #4080D0; }
+
+  #helpModal { display: none; position: fixed; inset: 0; background: rgba(4,6,14,0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+  #helpModal.open { display: flex; }
+  #helpModal .card { background: #0A0A1A; border: 1px solid #1A2A40; border-radius: 8px; padding: 24px 28px; max-width: 540px; max-height: 80vh; overflow-y: auto; color: #B0C8E0; font-size: 0.85em; line-height: 1.55; }
+  #helpModal h2 { color: #FFD040; font-family: Georgia, serif; font-size: 1.3em; margin-bottom: 12px; letter-spacing: 1px; }
+  #helpModal h3 { color: #4080D0; font-family: Georgia, serif; font-size: 0.95em; margin: 14px 0 4px; letter-spacing: 1px; }
+  #helpModal p, #helpModal li { margin: 4px 0; }
+  #helpModal ul { padding-left: 22px; }
+  #helpModal code { background: #0E1428; padding: 1px 5px; border-radius: 2px; color: #FFD040; font-size: 0.92em; }
+  #helpModal .close { float: right; background: none; border: 1px solid #1A2A40; color: #6080A0; padding: 3px 10px; border-radius: 3px; cursor: pointer; font-family: inherit; }
+  #helpModal .close:hover { color: #FFD040; border-color: #FFD040; }
+
+  #mathModal { display: none; position: fixed; inset: 0; background: rgba(4,6,14,0.88); z-index: 1000; align-items: flex-start; justify-content: center; backdrop-filter: blur(6px); padding: 40px 20px; overflow-y: auto; }
+  #mathModal.open { display: flex; }
+  #mathModal .card { background: #0A0A1A; border: 1px solid #1A2A40; border-radius: 8px; padding: 24px 30px; max-width: 760px; width: 100%; color: #B0C8E0; font-size: 0.85em; line-height: 1.55; }
+  #mathModal h2 { color: #FFD040; font-family: Georgia, serif; font-size: 1.3em; margin-bottom: 4px; letter-spacing: 1px; }
+  #mathModal .subtitle { color: #6080A0; font-size: 0.78em; margin-bottom: 18px; font-style: italic; }
+  #mathModal .section { margin: 18px 0; padding: 14px 16px; background: #0E1428; border: 1px solid #1A2A40; border-radius: 5px; }
+  #mathModal .sec-title { color: #4080D0; font-family: Georgia, serif; font-size: 0.95em; letter-spacing: 1.5px; margin-bottom: 8px; }
+  #mathModal .sec-formula { font-size: 1.0em; color: #D0D8E8; padding: 6px 0; overflow-x: auto; }
+  #mathModal .sec-vals { color: #80B0E0; font-family: 'Courier New', monospace; font-size: 0.86em; padding: 8px 12px; background: #04060E; border-left: 3px solid #4080D0; margin-top: 8px; border-radius: 0 3px 3px 0; }
+  #mathModal .sec-vals .lbl { color: #6080A0; }
+  #mathModal .sec-vals .val { color: #FFD040; }
+  #mathModal .close { float: right; background: none; border: 1px solid #1A2A40; color: #6080A0; padding: 3px 10px; border-radius: 3px; cursor: pointer; font-family: inherit; }
+  #mathModal .close:hover { color: #FFD040; border-color: #FFD040; }
+  #mathModal .katex { color: #E0E8F0; }
+  #mathModal .katex-display { margin: 0.4em 0; }
+
+  #landmarkTip { display: none; position: fixed; pointer-events: none; background: rgba(10,10,26,0.94); border: 1px solid #FFD040; color: #FFD040; padding: 5px 11px; font-family: Georgia, serif; font-size: 0.78em; letter-spacing: 1.5px; border-radius: 3px; z-index: 200; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+
+  #yearInput { width: 70px; padding: 4px 6px; background: #0E1428; border: 1px solid #1A2A40; color: #FFD040; font-family: Georgia, serif; font-size: 0.84em; text-align: center; border-radius: 3px; outline: none; letter-spacing: 1px; }
+  #yearInput:focus { border-color: #FFD040; }
+  #yearInput::-webkit-outer-spin-button, #yearInput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  #yearInput[type=number] { -moz-appearance: textfield; }
+  #yearLabel { font-size: 0.66em; color: #6080A0; padding: 0 6px 0 8px; letter-spacing: 1.5px; font-family: Georgia, serif; }
+
+  @media (max-width: 768px) {
+    #infoPanel { max-width: 240px; min-width: 220px; }
+    #viewPanel { display: none; }
+    #legend { display: none; }
+    #titleOverlay { display: none; }
+  }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="astronomy.browser.min.js"></script>
+</head>
+<body>
+<style id="siteNav-css">
+  #siteNav { position: sticky; top: 0; z-index: 99999; background: rgba(16,20,28,0.96); border-bottom: 1px solid #2a3540; font-family: Georgia, "Times New Roman", serif; box-shadow: 0 2px 10px rgba(0,0,0,0.6); color: #d8d0c0; }
+  #siteNav * { box-sizing: border-box; }
+  #siteNav .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; max-width: 1400px; margin: 0 auto; gap: 12px; }
+  #siteNav .nav-home { color: #d8d0c0; text-decoration: none; font-size: 0.82em; letter-spacing: 2px; padding: 5px 12px; border: 1px solid #3a5060; border-radius: 3px; white-space: nowrap; }
+  #siteNav .nav-home:hover { background: #1e2838; color: #f0e0b0; }
+  #siteNav .nav-title { color: #f0d89c; font-size: 0.95em; letter-spacing: 3px; font-weight: bold; text-align: center; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #siteNav .nav-toggle { background: none; border: 1px solid #3a5060; color: #d8d0c0; font-size: 0.85em; letter-spacing: 2px; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  #siteNav .nav-toggle:hover { background: #1e2838; color: #f0e0b0; }
+  #siteNav .nav-menu { display: none; background: #0f141c; border-top: 1px solid #2a4050; padding: 14px 16px; max-width: 1400px; margin: 0 auto; }
+  #siteNav .nav-menu.open { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  #siteNav .nav-cat { min-width: 0; }
+  #siteNav .nav-cat-label { color: #8098a8; font-size: 0.72em; letter-spacing: 4px; padding: 4px 0 8px 0; border-bottom: 1px solid #2a3540; margin-bottom: 6px; }
+  #siteNav .nav-cat a { display: block; padding: 6px 10px; color: #a8b0c0; text-decoration: none; font-size: 0.88em; border-radius: 3px; }
+  #siteNav .nav-cat a:hover { background: #1e2838; color: #f0e0b0; }
+  #siteNav .nav-cat a.current { color: #f0d89c; font-weight: bold; background: #1e2838; }
+  @media (max-width: 640px) {
+    #siteNav .nav-menu.open { grid-template-columns: 1fr; gap: 14px; }
+    #siteNav .nav-title { font-size: 0.82em; letter-spacing: 2px; }
+    #siteNav .nav-home,
+    #siteNav .nav-toggle { font-size: 0.74em; padding: 4px 8px; }
+  }
+</style>
+<div id="siteNav">
+  <div class="nav-bar">
+    <a href="index.html" class="nav-home">HOME</a>
+    <span class="nav-title">Eclipse Predictor</span>
+    <button class="nav-toggle" onclick="document.querySelector('#siteNav .nav-menu').classList.toggle('open')">GAMES &#9776;</button>
+  </div>
+  <div class="nav-menu">
+    <div class="nav-cat">
+      <div class="nav-cat-label">BOARD GAMES</div>
+      <a href="Agora.html">Agora</a>
+      <a href="Aresia.html">Aresia</a>
+      <a href="Backgammon.html">Backgammon</a>
+      <a href="Bisque.html">Bisque</a>
+      <a href="Chess.html">Chess</a>
+      <a href="Convergence.html">Convergence</a>
+      <a href="Go.html">Go</a>
+      <a href="Mancala.html">Mancala</a>
+      <a href="Odyssey.html">Odyssey</a>
+      <a href="Othello.html">Othello</a>
+      <a href="PenteGrammai.html">Pente Grammai</a>
+      <a href="Senet.html">Senet</a>
+      <a href="Tidelands.html">Tidelands</a>
+      <a href="Ur.html">Ur</a>
+    </div>
+    <div class="nav-cat">
+      <div class="nav-cat-label">SIMULATIONS</div>
+      <a href="Apoapsis.html">Apoapsis</a>
+      <a href="BiosphereBlue.html">Biosphere Blue</a>
+      <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
+      <a href="Cliffwalkers.html">Cliffwalkers</a>
+      <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html" class="current">Eclipse Predictor</a>
+      <a href="Floodline.html">Floodline</a>
+      <a href="Metropolis2K.html">Metropolis 2K</a>
+      <a href="Tower.html">Tower</a>
+    </div>
+  </div>
+</div>
+
+<canvas id="globeCanvas"></canvas>
+
+<div id="titleOverlay">
+  <div class="t1">ECLIPSE PREDICTOR</div>
+  <div class="t2">SOLAR ECLIPSE PATHS &middot; 2001&ndash;2030</div>
+</div>
+
+<button id="helpBtn" onclick="document.getElementById('helpModal').classList.add('open')">?</button>
+
+<div id="helpModal">
+  <div class="card">
+    <button class="close" onclick="document.getElementById('helpModal').classList.remove('open')">CLOSE</button>
+    <h2>Eclipse Predictor</h2>
+    <p>Step through every solar eclipse from 1900 to 2200 &mdash; about 3,700 events. Eclipse identification and Sun/Moon positions come from <a href="https://github.com/cosinekitty/astronomy" style="color:#4080D0" target="_blank" rel="noopener">astronomy-engine</a> (Don Cross's port of Steve Moshier's ephemeris, sub-arcsecond accurate, MIT-licensed). Path of the Moon's shadow is then computed from Besselian elements and traced where the shadow axis pierces Earth's surface.</p>
+
+    <h3>Controls</h3>
+    <ul>
+      <li><b>&larr; / &rarr;</b> &mdash; previous / next eclipse (or arrow keys)</li>
+      <li><b>JUMP TO</b> &mdash; type a year to jump to the nearest cataloged eclipse</li>
+      <li><b>PLAY</b> &mdash; auto-advance every 2 seconds</li>
+      <li><b>Drag</b> the globe to rotate; <b>scroll</b> to zoom</li>
+      <li><b>Hover</b> a 3D landmark to see its name</li>
+    </ul>
+
+    <h3>What you see</h3>
+    <ul>
+      <li><b>Red ribbon</b>: path of totality / annularity (umbra centerline as Earth rotates beneath the Moon's shadow)</li>
+      <li><b>Yellow dot</b>: point of greatest eclipse (where shadow axis comes closest to Earth's center)</li>
+      <li><b>Faint outer band</b>: rough penumbra extent (where partial eclipse is visible)</li>
+    </ul>
+
+    <h3>How it works</h3>
+    <ul>
+      <li>Sun &amp; Moon positions from <b>astronomy-engine</b> (Moshier's port of JPL DE-style theories) &mdash; sub-arcsecond accurate</li>
+      <li>Eclipse search via <code>SearchGlobalSolarEclipse</code>/<code>NextGlobalSolarEclipse</code> from the same library</li>
+      <li><b>Besselian elements</b> (x, y, d, &mu;, &#8467;1, &#8467;2) computed from geocentric Sun &amp; Moon vectors</li>
+      <li>Central path = trace of where the shadow axis pierces Earth's surface, sampled every 30 s for &plusmn;3 hours around greatest eclipse</li>
+    </ul>
+
+    <h3>Accuracy</h3>
+    <p>Eclipse times match NASA's catalog to seconds. Path positions are accurate to roughly &plusmn;1&ndash;2 km on the ground for the entire 1900&ndash;2200 range &mdash; effectively NASA-precision for a single-file browser tool. For mission-critical use, cross-check with <a href="https://eclipse.gsfc.nasa.gov" style="color:#4080D0">eclipse.gsfc.nasa.gov</a>.</p>
+  </div>
+</div>
+
+<div id="infoPanel" class="panel">
+  <div class="ecname" id="ecName">&mdash;</div>
+  <span class="ectype T" id="ecType">TOTAL</span>
+  <div class="row"><span>Date (UTC)</span><b id="ecDate">&mdash;</b></div>
+  <div class="row"><span>Greatest eclipse</span><b id="ecTime">&mdash;</b></div>
+  <div class="row"><span>Magnitude</span><b id="ecMag" class="gold">&mdash;</b></div>
+  <div class="row"><span>Gamma</span><b id="ecGamma">&mdash;</b></div>
+  <div class="row"><span>Central duration</span><b id="ecDur" class="warm">&mdash;</b></div>
+  <div class="row"><span>Max location</span><b id="ecLoc">&mdash;</b></div>
+  <div class="row"><span>Sun altitude</span><b id="ecSunAlt">&mdash;</b></div>
+  <div class="desc" id="ecDesc">&mdash;</div>
+  <div class="meta">Computed live via <b>astronomy-engine</b> (Moshier ephemeris) + Besselian path &middot; sub-km accuracy</div>
+</div>
+
+<div id="viewPanel" class="panel">
+  <h4>VIEW</h4>
+  <button class="view-btn active" id="viewCenter">CENTER ON PATH</button>
+  <button class="view-btn" id="viewSun">SUN-FACING SIDE</button>
+  <button class="view-btn" id="viewFree">FREE ROTATE</button>
+  <h4 style="margin-top:10px">OVERLAYS</h4>
+  <button class="view-btn active" id="togCoasts">COASTLINES</button>
+  <button class="view-btn active" id="togGraticule">GRATICULE</button>
+  <button class="view-btn active" id="togNight">NIGHT SHADING</button>
+  <button class="view-btn active" id="togPenumbra">PENUMBRA BAND</button>
+  <button class="view-btn active" id="togLandmarks">LANDMARKS</button>
+  <h4 style="margin-top:10px">DETAIL</h4>
+  <button class="view-btn" id="openMath">SHOW THE MATH</button>
+</div>
+
+<div id="landmarkTip"></div>
+
+<div id="mathModal">
+  <div class="card">
+    <button class="close" onclick="document.getElementById('mathModal').classList.remove('open')">CLOSE</button>
+    <h2 id="mathTitle">The Math</h2>
+    <div class="subtitle" id="mathSubtitle">&mdash;</div>
+
+    <div class="section">
+      <div class="sec-title">1 &middot; TIME</div>
+      <div class="sec-formula">$$ JD_{\text{TT}} = JD_{\text{UT}} + \frac{\Delta T}{86400}, \qquad \theta_0 = 280.46061837 + 360.98564736629\,(JD - J2000) + \dots $$</div>
+      <div class="sec-vals" id="mathTime">&mdash;</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">2 &middot; SUN POSITION (astronomy-engine, equator-of-date with aberration)</div>
+      <div class="sec-formula">$$ L_0 = 280.46646 + 36000.76983\,T,\quad M = 357.52911 + 35999.05029\,T $$
+        $$ C = (1.9146 - 0.0048\,T)\sin M + 0.020\sin 2M + \dots,\quad \lambda_\odot = L_0 + C $$
+        $$ R = \tfrac{1.0001\,(1-e^2)}{1 + e\cos(M+C)}\;\text{AU} $$</div>
+      <div class="sec-vals" id="mathSun">&mdash;</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">3 &middot; MOON POSITION (astronomy-engine, Moshier ephemeris)</div>
+      <div class="sec-formula">$$ \lambda_\text{☾} = L' + 10^{-6}\!\!\sum_i a_i \sin(d_i D + m_i M + m'_i M' + f_i F) $$
+        $$ \beta_\text{☾} = 10^{-6}\!\!\sum_i b_i \sin(\dots),\qquad r_\text{☾} = 385000.56 + \tfrac{1}{1000}\sum_i c_i \cos(\dots) $$</div>
+      <div class="sec-vals" id="mathMoon">&mdash;</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">4 &middot; BESSELIAN ELEMENTS</div>
+      <div class="sec-formula">$$ \vec{G} = \vec{r}_\text{☾} - \vec{r}_\odot,\quad \hat{a} = \tfrac{\vec G}{|\vec G|}\;\Rightarrow\; (\alpha, d) $$
+        $$ x = \tfrac{-M_x \sin\alpha + M_y\cos\alpha}{R_\oplus},\quad y = \tfrac{-M_x\sin d\cos\alpha - M_y\sin d\sin\alpha + M_z\cos d}{R_\oplus} $$
+        $$ \mu = \theta_0 - \alpha,\quad \tan f_1 = \tfrac{R_\odot + k R_\oplus}{|\vec G|},\quad \tan f_2 = \tfrac{R_\odot - k R_\oplus}{|\vec G|} $$
+        $$ \ell_1 = z\tan f_1 + \tfrac{k}{\cos f_1},\quad \ell_2 = z\tan f_2 - \tfrac{k}{\cos f_2} $$</div>
+      <div class="sec-vals" id="mathBessel">&mdash;</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">5 &middot; MAGNITUDE & GAMMA</div>
+      <div class="sec-formula">$$ \gamma = \sqrt{x^2 + y^2},\qquad \text{mag} = \frac{\theta_\text{☾}}{\theta_\odot} = \frac{k R_\oplus / r_\text{☾}}{R_\odot / r_\odot} $$</div>
+      <div class="sec-vals" id="mathMag">&mdash;</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">6 &middot; CLASSIFICATION</div>
+      <div class="sec-formula">$$ \text{type} = \begin{cases} \mathrm{T} & \gamma < 1 \text{ and } \ell_2 < 0 \;(\text{umbra reaches Earth}) \\ \mathrm{A} & \gamma < 1 \text{ and } \ell_2 > 0 \;(\text{antumbra}) \\ \mathrm{P} & \gamma \ge 1 \;(\text{penumbra only}) \end{cases} $$</div>
+      <div class="sec-vals" id="mathClass">&mdash;</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">7 &middot; CENTRAL PATH ON EARTH</div>
+      <div class="sec-formula">$$ z = \sqrt{1 - x^2 - y^2}\;\text{(spherical Earth, fundamental plane to surface)} $$
+        $$ \begin{aligned} X &= -x\sin(-\mu) - y\sin d\cos(-\mu) + z\cos d\cos(-\mu) \\ Y &=  x\cos(-\mu) - y\sin d\sin(-\mu) + z\cos d\sin(-\mu) \\ Z &=  y\cos d + z\sin d \end{aligned}$$
+        $$ \varphi = \arcsin Z,\qquad \lambda = \operatorname{atan2}(Y, X) $$</div>
+      <div class="sec-vals" id="mathPath">&mdash;</div>
+    </div>
+  </div>
+</div>
+
+<div id="legend" class="panel">
+  <h4>LEGEND</h4>
+  <div class="leg-row"><span class="swatch" style="background:#FF4040"></span> Path of totality</div>
+  <div class="leg-row"><span class="swatch" style="background:#FFA040"></span> Path of annularity</div>
+  <div class="leg-row"><span class="swatch dot" style="background:#FFD040"></span> Greatest eclipse</div>
+  <div class="leg-row"><span class="swatch" style="background:#B07050; opacity:0.55"></span> Partial-eclipse zone</div>
+  <div class="leg-row"><span class="swatch dot" style="background:#FFE0A0"></span> Sub-solar point</div>
+</div>
+
+<div id="controlBar" class="panel">
+  <button class="nav-btn" id="prevBtn">&laquo;</button>
+  <button class="nav-btn" id="prevBtn1">&lsaquo;</button>
+  <span id="dateDisplay"><b>&mdash;</b></span>
+  <button class="nav-btn" id="nextBtn1">&rsaquo;</button>
+  <button class="nav-btn" id="nextBtn">&raquo;</button>
+  <button class="nav-btn play" id="playBtn">PLAY</button>
+  <span id="yearLabel">JUMP&nbsp;TO</span>
+  <input type="number" id="yearInput" placeholder="year" min="1900" max="2100" step="1">
+  <span id="ecCounter">— / —</span>
+</div>
+
+<div id="loadOverlay" style="position:fixed;inset:0;background:rgba(4,6,14,0.94);z-index:500;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;backdrop-filter:blur(4px)">
+  <div style="color:#FFD040;font-family:Georgia,serif;font-size:1.1em;letter-spacing:6px">GENERATING ECLIPSE CATALOG</div>
+  <div style="color:#6080A0;font-size:0.78em;letter-spacing:2px;font-family:'Courier New',monospace">1900 &mdash; 2200</div>
+  <div style="width:280px;height:6px;background:#0E1428;border:1px solid #1A2A40;border-radius:3px;overflow:hidden">
+    <div id="loadBar" style="width:0%;height:100%;background:linear-gradient(90deg,#4080D0,#FFD040);transition:width 0.18s"></div>
+  </div>
+  <div id="loadCount" style="color:#4080D0;font-size:0.72em;font-family:'Courier New',monospace;letter-spacing:1.5px">0 / 0 new moons checked</div>
+</div>
+
+<script>
+//==============================================================
+// ECLIPSE PREDICTOR
+// Single-file Three.js visualization.
+// Catalog = NASA Five Millennium Canon dates+types (source of truth).
+// Path = computed from Meeus (Sun) + Schlyter-truncated ELP (Moon).
+//==============================================================
+
+const DEG = Math.PI / 180;
+const RAD = 180 / Math.PI;
+const R_EARTH = 6378.137;       // km, equatorial
+const R_SUN   = 695700;         // km
+const K_MOON  = 0.2725076;      // Bessel "k" — ratio Moon radius / Earth equatorial radius
+
+//==============================================================
+// 1. ASTRONOMICAL TIME
+//==============================================================
+
+// Convert a UTC Date object to Julian Day (UT)
+function dateToJD(d) {
+  return d.getTime() / 86400000 + 2440587.5;
+}
+function jdToDate(jd) {
+  return new Date((jd - 2440587.5) * 86400000);
+}
+
+// ΔT (TT - UT) in seconds, Espenak/Meeus polynomial for 2005..2050
+function deltaT(year) {
+  if (year >= 2005 && year < 2050) {
+    const t = year - 2000;
+    return 62.92 + 0.32217 * t + 0.005589 * t * t;
+  }
+  if (year >= 1986 && year < 2005) {
+    const t = year - 2000;
+    return 63.86 + 0.3345 * t - 0.060374 * t * t
+         + 0.0017275 * t * t * t + 0.000651814 * t * t * t * t
+         + 0.00002373599 * t * t * t * t * t;
+  }
+  // crude fallback
+  return 67;
+}
+
+// Apparent Greenwich Sidereal Time (degrees) at JD (UT)
+function gst(jd_ut) {
+  const T = (jd_ut - 2451545.0) / 36525;
+  let theta = 280.46061837
+            + 360.98564736629 * (jd_ut - 2451545.0)
+            + 0.000387933 * T * T
+            - T * T * T / 38710000;
+  return ((theta % 360) + 360) % 360;
+}
+
+//==============================================================
+// 2. SUN POSITION (astronomy-engine, Moshier ephemeris, sub-arcsecond)
+// Input: jd_ut (Julian Day, UT). Returns { ra, dec, dist, lon, lat } in
+// radians and km, equator-of-date with aberration applied.
+//==============================================================
+
+function sunPos(jd_ut) {
+  const date = jdToDate(jd_ut);
+  const t = Astronomy.MakeTime(date);
+  // Geocentric J2000 vector (with aberration) → rotate to equator-of-date → spherical.
+  const eqj = Astronomy.GeoVector(Astronomy.Body.Sun, t, /*aberration*/true);
+  const rot = Astronomy.Rotation_EQJ_EQD(t);
+  const eqd = Astronomy.RotateVector(rot, eqj);
+  const equ = Astronomy.EquatorFromVector(eqd);
+  const ra   = equ.ra  * 15 * DEG;             // hours → rad
+  const dec  = equ.dec      * DEG;              // deg   → rad
+  const dist = equ.dist * 149597870.7;          // AU    → km
+  const ecl  = Astronomy.Ecliptic(eqj);         // J2000 ecliptic, for math-panel display
+  return { ra, dec, dist, lon: ecl.elon * DEG, lat: ecl.elat * DEG };
+}
+
+//==============================================================
+// 3. MOON POSITION (astronomy-engine, Moshier ephemeris)
+// Input: jd_ut (Julian Day, UT). Returns { ra, dec, dist, lon, lat }
+// in radians and km, equator-of-date.
+//==============================================================
+
+function moonPos(jd_ut) {
+  const date = jdToDate(jd_ut);
+  const t = Astronomy.MakeTime(date);
+  const eqj = Astronomy.GeoMoon(t);            // J2000 geocentric vector (AU)
+  const rot = Astronomy.Rotation_EQJ_EQD(t);
+  const eqd = Astronomy.RotateVector(rot, eqj);
+  const equ = Astronomy.EquatorFromVector(eqd);
+  const ra   = equ.ra  * 15 * DEG;
+  const dec  = equ.dec      * DEG;
+  const dist = equ.dist * 149597870.7;
+  const ecl  = Astronomy.Ecliptic(eqj);
+  return { ra, dec, dist, lon: ecl.elon * DEG, lat: ecl.elat * DEG };
+}
+
+//==============================================================
+// 4. BESSELIAN ELEMENTS
+// Compute (x, y, d, mu, l1, l2, tan f1, tan f2) at a given JD (UT).
+// Plus their time derivatives via numerical differencing.
+//==============================================================
+
+function geocentricCart(p) {
+  // ra, dec, dist  →  geocentric equatorial Cartesian (km)
+  const cd = Math.cos(p.dec);
+  return {
+    x: p.dist * cd * Math.cos(p.ra),
+    y: p.dist * cd * Math.sin(p.ra),
+    z: p.dist * Math.sin(p.dec),
+  };
+}
+
+function besselElements(jd_ut) {
+  // sunPos / moonPos handle timescale internally via astronomy-engine.
+  const sun  = sunPos(jd_ut);
+  const moon = moonPos(jd_ut);
+  const S = geocentricCart(sun);
+  const M = geocentricCart(moon);
+
+  // Vector from Sun to Moon (defines shadow axis direction)
+  const Gx = M.x - S.x, Gy = M.y - S.y, Gz = M.z - S.z;
+  const G  = Math.sqrt(Gx * Gx + Gy * Gy + Gz * Gz);
+  // Unit shadow axis direction (Sun → Moon → Earth)
+  const ax = Gx / G, ay = Gy / G, az = Gz / G;
+
+  // RA/Dec of shadow axis direction (i.e. of the Moon as seen from Sun)
+  const a = Math.atan2(ay, ax);            // RA of axis
+  const d = Math.asin(az);                 // Dec of axis
+
+  // Moon position projected into the fundamental plane (axis = +z direction)
+  // x_f = -Mx sin a + My cos a
+  // y_f = -Mx sin d cos a - My sin d sin a + Mz cos d
+  // z_f =  Mx cos d cos a + My cos d sin a + Mz sin d
+  const sa = Math.sin(a), ca = Math.cos(a);
+  const sd = Math.sin(d), cd = Math.cos(d);
+  const xf = (-M.x * sa + M.y * ca) / R_EARTH;
+  const yf = (-M.x * sd * ca - M.y * sd * sa + M.z * cd) / R_EARTH;
+  const zf = ( M.x * cd * ca + M.y * cd * sa + M.z * sd) / R_EARTH;
+
+  // Penumbra and umbra cones
+  const sinF1 = (R_SUN + K_MOON * R_EARTH) / G;
+  const sinF2 = (R_SUN - K_MOON * R_EARTH) / G;
+  const tanF1 = sinF1 / Math.sqrt(1 - sinF1 * sinF1);
+  const tanF2 = sinF2 / Math.sqrt(1 - sinF2 * sinF2);
+  // Penumbra / umbra radii at fundamental plane (Earth radii)
+  const l1 = zf * tanF1 + K_MOON / Math.cos(Math.asin(sinF1));
+  const l2 = zf * tanF2 - K_MOON / Math.cos(Math.asin(sinF2));
+
+  // μ — Bessel hour angle of axis: GAST minus axis RA (deg, positive westward)
+  const mu = ((gst(jd_ut) - a * RAD) % 360 + 360) % 360;
+
+  return {
+    jd: jd_ut,
+    x: xf, y: yf, z: zf,
+    d: d * RAD,
+    mu: mu,
+    l1: l1, l2: l2,
+    tanF1: tanF1, tanF2: tanF2,
+  };
+}
+
+//==============================================================
+// 5. CENTRAL PATH — where the shadow axis hits Earth's surface
+// Uses spherical Earth (good to ~20 km for visualization).
+//==============================================================
+
+function shadowToGeo(b) {
+  // b = bessel elements (x, y, z [for axis tip], d, mu in deg)
+  // Returns { lat, lon } in degrees, or null if axis misses Earth.
+  const r2 = b.x * b.x + b.y * b.y;
+  if (r2 >= 1) return null;             // shadow axis misses Earth — partial only
+  const z = Math.sqrt(1 - r2);          // intersection point on +Earth surface (Earth radii)
+
+  // Inverse rotation: fundamental → Earth-fixed equatorial
+  // In Earth-fixed frame, axis RA = -μ, dec = d
+  const muR = -b.mu * DEG;
+  const dR  = b.d  * DEG;
+  const cm = Math.cos(muR), sm = Math.sin(muR);
+  const cd = Math.cos(dR),  sd = Math.sin(dR);
+  const X = -b.x * sm - b.y * sd * cm + z * cd * cm;
+  const Y =  b.x * cm - b.y * sd * sm + z * cd * sm;
+  const Z =             b.y * cd      + z * sd;
+
+  const lat = Math.asin(Z) * RAD;
+  let lon = Math.atan2(Y, X) * RAD;
+  if (lon > 180) lon -= 360;
+  if (lon < -180) lon += 360;
+  return { lat, lon, isCentral: b.l2 < 0 };  // l2 negative ⇒ umbra reaches Earth (total/annular)
+}
+
+// Sub-point of the Sun on Earth (for night-side shading)
+function subSolarPoint(jd_ut) {
+  const sun = sunPos(jd_ut);
+  const lat = sun.dec * RAD;
+  let lon = (sun.ra * RAD - gst(jd_ut)) % 360;
+  if (lon > 180) lon -= 360;
+  if (lon < -180) lon += 360;
+  return { lat, lon };
+}
+
+// Compute path of central eclipse: sample shadow centerline every `stepSec`
+// from -spanH to +spanH hours around T0.
+function computeCentralPath(jd0, spanH = 3, stepSec = 30) {
+  const points = [];
+  const endpoints = { first: null, last: null, greatestIdx: -1, minR: 1e9, };
+  const start = jd0 - spanH / 24;
+  const end   = jd0 + spanH / 24;
+  const step  = stepSec / 86400;
+  for (let jd = start; jd <= end; jd += step) {
+    const b = besselElements(jd);
+    const r = Math.sqrt(b.x * b.x + b.y * b.y);
+    const p = shadowToGeo(b);
+    if (p && p.isCentral) {
+      points.push({ jd, lat: p.lat, lon: p.lon, l2: b.l2 });
+      if (!endpoints.first) endpoints.first = points.length - 1;
+      endpoints.last = points.length - 1;
+      if (r < endpoints.minR) {
+        endpoints.minR = r;
+        endpoints.greatestIdx = points.length - 1;
+      }
+    }
+  }
+  return { points, ...endpoints };
+}
+
+// Compute the *outer* penumbra outline at a single instant (for visualizing partial extent).
+// Returns array of {lat, lon} forming a closed loop on Earth, or null if penumbra entirely off-Earth.
+function penumbraOutline(jd, nPts = 96) {
+  const b = besselElements(jd);
+  const out = [];
+  for (let i = 0; i <= nPts; i++) {
+    const ang = (i / nPts) * 2 * Math.PI;
+    const xc = b.x + b.l1 * Math.cos(ang);
+    const yc = b.y + b.l1 * Math.sin(ang);
+    const r2 = xc * xc + yc * yc;
+    if (r2 >= 1) continue;
+    const z = Math.sqrt(1 - r2);
+    // Reuse inverse rotation from shadowToGeo (inline for one-off point)
+    const muR = -b.mu * DEG, dR = b.d * DEG;
+    const cm = Math.cos(muR), sm = Math.sin(muR);
+    const cd = Math.cos(dR),  sd = Math.sin(dR);
+    const X = -xc * sm - yc * sd * cm + z * cd * cm;
+    const Y =  xc * cm - yc * sd * sm + z * cd * sm;
+    const Z =            yc * cd      + z * sd;
+    const lat = Math.asin(Z) * RAD;
+    let lon = Math.atan2(Y, X) * RAD;
+    if (lon > 180) lon -= 360;
+    out.push({ lat, lon });
+  }
+  return out.length ? out : null;
+}
+
+// Eclipse magnitude from gamma + cone half-angles
+function eclipseMagnitude(b) {
+  const gamma = Math.sqrt(b.x * b.x + b.y * b.y);
+  // For the moment of greatest eclipse: magnitude ≈ (l1 - |gamma|) / (l1 + l2)
+  // But standard def for solar: magnitude = (k * 2 - (gamma - 1)... bleh, use approx:
+  return Math.max(0, (b.l1 - gamma) / (b.l1 + Math.abs(b.l2)) * (1 + Math.abs(b.l2 / b.l1)));
+}
+
+//==============================================================
+// 6. ECLIPSE CATALOG (NASA Five Millennium Canon, 2001-2030)
+// [year, month, day, hour, minute, type, "location description"]
+// Time = approximate UTC of greatest eclipse (rounded to nearest minute).
+// Type: T=total, A=annular, H=hybrid (annular-total)
+//==============================================================
+
+// Famous eclipse name + descriptive location overlays (computed catalog gets these merged in by date key).
+const FAMOUS = {
+  '2024-04-08': 'Great American Eclipse 2.0 — Mexico, USA: TX OK AR MO IL IN OH PA NY VT NH ME, Canada',
+  '2017-08-21': 'Great American Eclipse — USA: OR ID WY NE MO KY TN NC SC',
+  '2009-07-22': 'Longest of the 21st century, 6m39s — India, Nepal, Bhutan, China, Pacific',
+  '2010-01-15': 'Longest annular of the millennium — Africa, Maldives, India, Myanmar, China',
+  '2027-08-02': 'Eclipse of the Century, 6m23s — Spain, Morocco, Algeria, Libya, Egypt, Saudi Arabia',
+  '2026-08-12': 'Greenland, Iceland, northern Spain',
+  '2028-07-22': 'Sydney total — Australia, New Zealand',
+  '1999-08-11': 'European total — Cornwall, France, Germany, Romania, Iran, India',
+  '1991-07-11': 'Hawaii / Mexico City / Brazil — longest of 1980-2030, 6m54s',
+  '2045-08-12': 'Future US coast-to-coast — CA NV UT CO OK AR MS AL GA FL',
+  '1972-07-10': 'Soviet Union / Alaska / Canada',
+  '1973-06-30': 'Africa — 7m4s, longest of the 20th century',
+  '1937-06-08': 'Pacific — 7m4s, longest of the 20th century (tied)',
+  '2168-07-05': 'Future — 7m26s, longest of the 21st-23rd centuries',
+};
+
+// Eclipse catalog (filled in by generateEclipses() on init)
+let ECLIPSES = [];
+
+//==============================================================
+// 6.5 ECLIPSE GENERATOR — find all solar eclipses in a year range
+//==============================================================
+
+// Generate eclipses across a year range using astronomy-engine's
+// SearchGlobalSolarEclipse / NextGlobalSolarEclipse.  Sub-arcsecond
+// ephemeris (Moshier) ⇒ event identification matches NASA's catalog.
+function generateEclipses(startYear, endYear, onProgress, onDone) {
+  const startDate = new Date(Date.UTC(startYear, 0, 1));
+  const endDate   = new Date(Date.UTC(endYear, 11, 31, 23, 59, 59));
+  const out = [];
+  // Estimate total for progress bar (~2.4 solar eclipses per year)
+  const estTotal = Math.round((endYear - startYear + 1) * 2.4);
+
+  let cur;
+  try {
+    cur = Astronomy.SearchGlobalSolarEclipse(startDate);
+  } catch (err) {
+    console.error('astronomy-engine eclipse search failed:', err);
+    onDone([]);
+    return;
+  }
+
+  function step() {
+    const t0 = performance.now();
+    while (cur && cur.peak.date <= endDate && performance.now() - t0 < 24) {
+      const date = cur.peak.date;
+      const dateKey = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+      const TYPE_MAP = { total: 'T', annular: 'A', hybrid: 'H', partial: 'P' };
+      out.push({
+        jd: dateToJD(date),
+        date,
+        year:   date.getUTCFullYear(),
+        month:  date.getUTCMonth() + 1,
+        day:    date.getUTCDate(),
+        hour:   date.getUTCHours(),
+        minute: date.getUTCMinutes(),
+        type:   TYPE_MAP[cur.kind] || 'P',
+        gamma:  cur.distance / R_EARTH,        // astronomy-engine returns km; we want Earth radii
+        peakLat: cur.latitude,                 // greatest-eclipse coordinates from astronomy-engine
+        peakLon: cur.longitude,
+        location: FAMOUS[dateKey] || '',
+      });
+      try {
+        cur = Astronomy.NextGlobalSolarEclipse(cur.peak);
+      } catch (err) {
+        cur = null;
+        break;
+      }
+    }
+    if (onProgress) onProgress(out.length, estTotal);
+    if (cur && cur.peak.date <= endDate) requestAnimationFrame(step);
+    else onDone(out);
+  }
+  step();
+}
+
+//==============================================================
+// 7. THREE.JS GLOBE
+//==============================================================
+
+const canvas = document.getElementById('globeCanvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x04060E, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 100);
+camera.position.set(0, 0, 4);
+
+const globeGroup = new THREE.Group();
+scene.add(globeGroup);
+
+// Earth sphere (ocean)
+const earthGeo = new THREE.SphereGeometry(1, 96, 64);
+const earthMat = new THREE.MeshPhongMaterial({
+  color: 0x0E2848,
+  emissive: 0x040A18,
+  shininess: 22,
+  specular: 0x102840,
+});
+const earthMesh = new THREE.Mesh(earthGeo, earthMat);
+globeGroup.add(earthMesh);
+
+// Atmospheric rim (slightly larger sphere with backside shader-ish trick)
+const atmGeo = new THREE.SphereGeometry(1.02, 64, 32);
+const atmMat = new THREE.MeshBasicMaterial({
+  color: 0x4080D0,
+  transparent: true,
+  opacity: 0.08,
+  side: THREE.BackSide,
+});
+globeGroup.add(new THREE.Mesh(atmGeo, atmMat));
+
+// Sun light
+const sunLight = new THREE.DirectionalLight(0xfff0d0, 1.1);
+sunLight.position.set(5, 0, 5);
+scene.add(sunLight);
+scene.add(new THREE.AmbientLight(0x4060A0, 0.35));
+
+// Stars
+function makeStarfield() {
+  const N = 1500;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    const r = 60 + Math.random() * 20;
+    const th = Math.acos(1 - 2 * Math.random());
+    const ph = 2 * Math.PI * Math.random();
+    pos[i*3]     = r * Math.sin(th) * Math.cos(ph);
+    pos[i*3 + 1] = r * Math.sin(th) * Math.sin(ph);
+    pos[i*3 + 2] = r * Math.cos(th);
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({ color: 0xC0D0E0, size: 0.12, sizeAttenuation: true });
+  return new THREE.Points(geo, mat);
+}
+scene.add(makeStarfield());
+
+// Lat/lon → 3D point on sphere of radius r
+function latLonToVec3(lat, lon, r = 1) {
+  const phi = lat * DEG;
+  const lam = lon * DEG;
+  return new THREE.Vector3(
+    r * Math.cos(phi) * Math.cos(lam),
+    r * Math.sin(phi),
+    -r * Math.cos(phi) * Math.sin(lam),
+  );
+}
+
+// Graticule — lat/lon grid
+function makeGraticule() {
+  const group = new THREE.Group();
+  const mat = new THREE.LineBasicMaterial({ color: 0x2A4868, transparent: true, opacity: 0.45 });
+  const r = 1.001;
+  // Latitude circles every 30°
+  for (let lat = -60; lat <= 60; lat += 30) {
+    const pts = [];
+    for (let lon = 0; lon <= 360; lon += 4) {
+      pts.push(latLonToVec3(lat, lon, r));
+    }
+    group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
+  }
+  // Longitude lines every 30°
+  for (let lon = 0; lon < 360; lon += 30) {
+    const pts = [];
+    for (let lat = -90; lat <= 90; lat += 4) {
+      pts.push(latLonToVec3(lat, lon, r));
+    }
+    group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
+  }
+  // Equator brighter
+  const eqMat = new THREE.LineBasicMaterial({ color: 0x4080C0, transparent: true, opacity: 0.55 });
+  const eqPts = [];
+  for (let lon = 0; lon <= 360; lon += 2) eqPts.push(latLonToVec3(0, lon, r));
+  group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(eqPts), eqMat));
+  return group;
+}
+const graticule = makeGraticule();
+globeGroup.add(graticule);
+
+// Day/night terminator dimming overlay (a half-sphere mesh facing away from Sun)
+let nightMesh = null;
+function makeNightOverlay() {
+  // Use a vertex-color sphere where night-side vertices are dark
+  const g = new THREE.SphereGeometry(1.005, 64, 48);
+  const colors = new Float32Array(g.attributes.position.count * 3);
+  for (let i = 0; i < g.attributes.position.count; i++) {
+    colors[i*3] = colors[i*3+1] = colors[i*3+2] = 0;
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const m = new THREE.MeshBasicMaterial({
+    transparent: true, opacity: 1.0, vertexColors: true,
+    blending: THREE.MultiplyBlending, depthWrite: false,
+  });
+  return new THREE.Mesh(g, m);
+}
+nightMesh = makeNightOverlay();
+globeGroup.add(nightMesh);
+
+function updateNightShading(jd) {
+  const sub = subSolarPoint(jd);
+  const sun3 = latLonToVec3(sub.lat, sub.lon, 1);
+  const positions = nightMesh.geometry.attributes.position;
+  const colors = nightMesh.geometry.attributes.color;
+  for (let i = 0; i < positions.count; i++) {
+    const px = positions.getX(i), py = positions.getY(i), pz = positions.getZ(i);
+    // Dot of (vertex normal) with sun direction. Vertex on sphere of r≈1.005 → dot/1.005.
+    const dot = (px * sun3.x + py * sun3.y + pz * sun3.z) / 1.005;
+    // Smooth twilight: 1.0 on dayside, 0.0 well past terminator.
+    const t = Math.max(0, Math.min(1, (0.2 - dot) / 0.4));
+    const c = 1 - t;
+    colors.setX(i, c); colors.setY(i, c); colors.setZ(i, c);
+  }
+  colors.needsUpdate = true;
+}
+
+// Coastlines — fetched from CDN as TopoJSON, decoded inline
+let coastGroup = new THREE.Group();
+globeGroup.add(coastGroup);
+
+// Minimal TopoJSON arc decoder (handles world-atlas land-110m.json shape)
+function decodeTopoJson(topo) {
+  const tx = topo.transform;
+  const arcs = topo.arcs.map(arc => {
+    let x = 0, y = 0;
+    return arc.map(([dx, dy]) => {
+      x += dx; y += dy;
+      return [x * tx.scale[0] + tx.translate[0], y * tx.scale[1] + tx.translate[1]];
+    });
+  });
+  function arcCoords(idx) {
+    if (idx >= 0) return arcs[idx];
+    return arcs[~idx].slice().reverse();
+  }
+  function ring(arcIdxs) {
+    const out = [];
+    arcIdxs.forEach((idx, i) => {
+      const a = arcCoords(idx);
+      out.push(...(i ? a.slice(1) : a));
+    });
+    return out;
+  }
+  function polygon(arcRings) { return arcRings.map(ring); }
+  // First object — world-atlas land-110m has objects.land = MultiPolygon
+  const obj = Object.values(topo.objects)[0];
+  const polys = [];
+  if (obj.type === 'MultiPolygon') {
+    obj.arcs.forEach(p => polys.push(polygon(p)));
+  } else if (obj.type === 'Polygon') {
+    polys.push(polygon(obj.arcs));
+  } else if (obj.type === 'GeometryCollection') {
+    obj.geometries.forEach(g => {
+      if (g.type === 'MultiPolygon') g.arcs.forEach(p => polys.push(polygon(p)));
+      else if (g.type === 'Polygon') polys.push(polygon(g.arcs));
+    });
+  }
+  return polys;
+}
+
+function buildCoastlines(polys) {
+  const mat = new THREE.LineBasicMaterial({ color: 0x60A0E0, transparent: true, opacity: 0.55 });
+  const matFill = new THREE.MeshBasicMaterial({
+    color: 0x183858, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false,
+  });
+  polys.forEach(poly => {
+    poly.forEach(ring => {
+      const pts = ring.map(([lon, lat]) => latLonToVec3(lat, lon, 1.001));
+      coastGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
+    });
+  });
+}
+
+fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json')
+  .then(r => r.json())
+  .then(topo => {
+    const polys = decodeTopoJson(topo);
+    buildCoastlines(polys);
+  })
+  .catch(err => {
+    console.warn('Coastline load failed:', err);
+  });
+
+//==============================================================
+// 7.5 LANDMARKS — cartoon 3D icons at famous sites
+// Each builder returns a Group sized roughly within ±0.5 units;
+// LM_SCALE then shrinks it to fit the globe (1 unit = 6378 km).
+//==============================================================
+
+const LM_SCALE = 0.020;
+const landmarkGroup = new THREE.Group();
+globeGroup.add(landmarkGroup);
+
+function MAT(hex, opts = {}) {
+  return new THREE.MeshPhongMaterial({ color: hex, shininess: opts.shine || 12, specular: opts.spec || 0x202428, flatShading: opts.flat !== false, emissive: opts.emit || 0x000000 });
+}
+
+function buildEiffel() {
+  const g = new THREE.Group();
+  const steel = MAT(0x6A788A, { shine: 35, spec: 0xA0B0C0 });
+  const dark  = MAT(0x303840);
+  // 4 angled legs
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2 + Math.PI / 4;
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.09, 0.55, 4), steel);
+    leg.position.set(0.20 * Math.cos(a), 0.27, 0.20 * Math.sin(a));
+    leg.rotation.set(-Math.cos(a) * 0.32, 0, -Math.sin(a) * 0.32);
+    g.add(leg);
+  }
+  const plat1 = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.05, 0.30), dark);
+  plat1.position.y = 0.55; g.add(plat1);
+  const mid = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.11, 0.32, 4), steel);
+  mid.position.y = 0.72; mid.rotation.y = Math.PI / 4; g.add(mid);
+  const plat2 = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.04, 0.16), dark);
+  plat2.position.y = 0.92; g.add(plat2);
+  const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.05, 0.2, 4), steel);
+  upper.position.y = 1.04; upper.rotation.y = Math.PI / 4; g.add(upper);
+  const spike = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.32, 6), steel);
+  spike.position.y = 1.30; g.add(spike);
+  return g;
+}
+
+function buildPyramids() {
+  const g = new THREE.Group();
+  const sand = MAT(0xD8B080, { shine: 6 });
+  const sandD = MAT(0xB89060);
+  const p1 = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.65, 4), sand);
+  p1.position.set(0, 0.325, 0); p1.rotation.y = Math.PI / 4; g.add(p1);
+  const p2 = new THREE.Mesh(new THREE.ConeGeometry(0.50, 0.60, 4), sand);
+  p2.position.set(0.7, 0.30, -0.18); p2.rotation.y = Math.PI / 4; g.add(p2);
+  const p3 = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.38, 4), sandD);
+  p3.position.set(1.15, 0.19, -0.36); p3.rotation.y = Math.PI / 4; g.add(p3);
+  return g;
+}
+
+function buildSphinx() {
+  const g = new THREE.Group();
+  const stone = MAT(0xC8A074);
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, 0.40), stone);
+  body.position.y = 0.16; g.add(body);
+  // Front paws (lower extension)
+  const paws = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.18, 0.40), stone);
+  paws.position.set(0.45, 0.09, 0); g.add(paws);
+  // Head
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.42, 0.32), stone);
+  head.position.set(0.32, 0.50, 0); g.add(head);
+  // Nemes headdress
+  const nemes = new THREE.Mesh(new THREE.ConeGeometry(0.20, 0.28, 4), stone);
+  nemes.position.set(0.27, 0.78, 0); g.add(nemes);
+  return g;
+}
+
+function buildOpera() {
+  const g = new THREE.Group();
+  const shell = MAT(0xF0EAD8, { shine: 60, spec: 0xC0C0C0, flat: false });
+  const base  = MAT(0x504838, { shine: 18 });
+  const platform = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.7), base);
+  platform.position.y = 0.03; g.add(platform);
+  // Big sails
+  const positions = [
+    { x: -0.45, z: 0.05, r: 0.22, ry: -1.5 },
+    { x: -0.20, z: -0.08, r: 0.20, ry: -1.6 },
+    { x:  0.05, z: 0.08, r: 0.22, ry: -1.4 },
+    { x:  0.30, z: -0.05, r: 0.18, ry: -1.55 },
+    { x:  0.55, z: 0.06, r: 0.16, ry: -1.5 },
+    { x:  0.78, z: -0.04, r: 0.13, ry: -1.5 },
+  ];
+  positions.forEach(p => {
+    const sailGeo = new THREE.SphereGeometry(p.r, 12, 8, 0, Math.PI, 0, Math.PI / 2);
+    const sail = new THREE.Mesh(sailGeo, shell);
+    sail.position.set(p.x, 0.06, p.z);
+    sail.rotation.y = p.ry;
+    g.add(sail);
+  });
+  return g;
+}
+
+function buildLiberty() {
+  const g = new THREE.Group();
+  const copper = MAT(0x84C098, { shine: 28 });
+  const stone  = MAT(0xA09080, { shine: 5 });
+  const flame  = MAT(0xFFD040, { emit: 0x886020, shine: 50 });
+  // Star fort base
+  const fort = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.10, 11), stone);
+  fort.position.y = 0.05; g.add(fort);
+  const ped = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.42, 0.34), stone);
+  ped.position.y = 0.31; g.add(ped);
+  // Robe (tapering)
+  const robe = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.20, 0.55, 8), copper);
+  robe.position.y = 0.79; g.add(robe);
+  // Head
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 10), copper);
+  head.position.y = 1.10; g.add(head);
+  // Crown spikes
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7 - 0.5) * Math.PI;
+    const sp = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.06, 4), copper);
+    sp.position.set(0.085 * Math.cos(a), 1.18, 0.085 * Math.sin(a));
+    g.add(sp);
+  }
+  // Arm + torch
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.34, 6), copper);
+  arm.position.set(-0.07, 1.20, 0); arm.rotation.z = -0.55; g.add(arm);
+  const torch = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.13, 6), flame);
+  torch.position.set(-0.22, 1.40, 0); g.add(torch);
+  return g;
+}
+
+function buildBigBen() {
+  const g = new THREE.Group();
+  const stone = MAT(0xB89878, { shine: 8 });
+  const dark = MAT(0x504030);
+  const gold = MAT(0xFFD040, { emit: 0x604018 });
+  const tower = new THREE.Mesh(new THREE.BoxGeometry(0.28, 1.05, 0.28), stone);
+  tower.position.y = 0.525; g.add(tower);
+  // 4 clock faces
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2;
+    const clock = new THREE.Mesh(new THREE.CircleGeometry(0.085, 18), gold);
+    clock.position.set(0.141 * Math.cos(a), 0.85, 0.141 * Math.sin(a));
+    clock.lookAt(clock.position.x * 4, 0.85, clock.position.z * 4);
+    g.add(clock);
+  }
+  const top = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.22, 0.20), dark);
+  top.position.y = 1.16; g.add(top);
+  const spire = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.40, 4), dark);
+  spire.position.y = 1.47; spire.rotation.y = Math.PI / 4; g.add(spire);
+  // Tip ornament
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 6), gold);
+  tip.position.y = 1.70; g.add(tip);
+  return g;
+}
+
+function buildTajMahal() {
+  const g = new THREE.Group();
+  const white = MAT(0xF8F4E8, { shine: 50, spec: 0xC0C0C0, flat: false });
+  // Wide platform
+  const base = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.10, 1.1), white);
+  base.position.y = 0.05; g.add(base);
+  const main = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.32, 0.55), white);
+  main.position.y = 0.26; g.add(main);
+  // Onion dome
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(0.24, 14, 12), white);
+  dome.position.y = 0.55; dome.scale.y = 1.25; g.add(dome);
+  const spire = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.18, 6), white);
+  spire.position.y = 0.85; g.add(spire);
+  // 4 corner minarets
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2 + Math.PI / 4;
+    const mx = 0.45 * Math.cos(a), mz = 0.45 * Math.sin(a);
+    const minaret = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.07, 0.55, 8), white);
+    minaret.position.set(mx, 0.375, mz); g.add(minaret);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), white);
+    cap.position.set(mx, 0.68, mz); g.add(cap);
+  }
+  return g;
+}
+
+function buildMtFuji() {
+  const g = new THREE.Group();
+  const earth = MAT(0x60483C);
+  const snow = MAT(0xF0F0F8, { shine: 45 });
+  const mount = new THREE.Mesh(new THREE.ConeGeometry(0.85, 1.05, 18), earth);
+  mount.position.y = 0.525; g.add(mount);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(0.27, 0.34, 18), snow);
+  cap.position.y = 0.88; g.add(cap);
+  return g;
+}
+
+function buildChristRedeemer() {
+  const g = new THREE.Group();
+  const stone = MAT(0xE0D8C8, { shine: 18 });
+  const rock  = MAT(0x685850);
+  const ped = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.38, 6), rock);
+  ped.position.y = 0.19; g.add(ped);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.10, 0.22), stone);
+  base.position.y = 0.43; g.add(base);
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.55, 0.10), stone);
+  body.position.y = 0.76; g.add(body);
+  const arms = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.09, 0.09), stone);
+  arms.position.y = 0.92; g.add(arms);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 8), stone);
+  head.position.y = 1.08; g.add(head);
+  return g;
+}
+
+function buildStonehenge() {
+  const g = new THREE.Group();
+  const stone = MAT(0x807868);
+  const R = 0.50;
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const s = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.34, 0.05), stone);
+    s.position.set(R * Math.cos(a), 0.17, R * Math.sin(a));
+    s.rotation.y = a + Math.PI / 2;
+    g.add(s);
+  }
+  // Lintels (alternating)
+  for (let i = 0; i < 6; i++) {
+    const a0 = (i / 6) * Math.PI * 2;
+    const a1 = ((i + 1) / 6) * Math.PI * 2 - Math.PI / 6;
+    const mx = R * Math.cos((a0 + a1) / 2);
+    const mz = R * Math.sin((a0 + a1) / 2);
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.06, 0.06), stone);
+    lintel.position.set(mx, 0.36, mz);
+    lintel.rotation.y = (a0 + a1) / 2 + Math.PI / 2;
+    g.add(lintel);
+  }
+  return g;
+}
+
+function buildMoai() {
+  const g = new THREE.Group();
+  const stone = MAT(0x7A7268);
+  const hat = MAT(0x60504C);
+  for (let i = 0; i < 3; i++) {
+    const m = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.66, 0.13), stone);
+    body.position.y = 0.33; m.add(body);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.28, 0.18), stone);
+    head.position.y = 0.78; m.add(head);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.08, 8), hat);
+    cap.position.y = 0.96; m.add(cap);
+    m.position.x = (i - 1) * 0.40;
+    g.add(m);
+  }
+  return g;
+}
+
+function buildColosseum() {
+  const g = new THREE.Group();
+  const stone = MAT(0xC09870);
+  const stoneD = MAT(0x806040);
+  const outer = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.40, 32, 1, true), stone);
+  outer.position.y = 0.20; g.add(outer);
+  const inner = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 0.34, 32, 1, true), stoneD);
+  inner.position.y = 0.17; g.add(inner);
+  // Top half (broken — only ~270° remains)
+  const topGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.18, 32, 1, true, 0, Math.PI * 1.5);
+  const top = new THREE.Mesh(topGeo, stone);
+  top.position.y = 0.49; g.add(top);
+  // Floor
+  const floor = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 0.04, 32), stoneD);
+  floor.position.y = 0.02; g.add(floor);
+  return g;
+}
+
+function buildBurj() {
+  const g = new THREE.Group();
+  const glass = MAT(0xC0D0E8, { shine: 80, spec: 0xFFFFFF, flat: false });
+  // Three tapered tiers — emulating the Y-shape twist by overlapping cylinders
+  const t1 = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.20, 0.55, 6), glass);
+  t1.position.y = 0.275; g.add(t1);
+  const t2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.13, 0.55, 6), glass);
+  t2.position.y = 0.83; t2.rotation.y = Math.PI / 6; g.add(t2);
+  const t3 = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.08, 0.45, 6), glass);
+  t3.position.y = 1.34; t3.rotation.y = Math.PI / 3; g.add(t3);
+  const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.025, 0.55, 6), glass);
+  spire.position.y = 1.84; g.add(spire);
+  return g;
+}
+
+function buildPetra() {
+  const g = new THREE.Group();
+  const rose = MAT(0xC07060);
+  const dark = MAT(0x402820);
+  const cliff = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.0, 0.18), rose);
+  cliff.position.y = 0.50; g.add(cliff);
+  // Carved doorway
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.36, 0.06), dark);
+  door.position.set(0, 0.22, 0.09); g.add(door);
+  // 6 columns flanking
+  for (let i = -3; i <= 3; i++) {
+    if (i === 0) continue;
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.46, 8), rose);
+    col.position.set(i * 0.13, 0.32, 0.10); g.add(col);
+  }
+  // Pediment triangle
+  const ped = new THREE.Mesh(new THREE.ConeGeometry(0.30, 0.18, 3), rose);
+  ped.position.set(0, 0.70, 0.11); ped.rotation.y = Math.PI / 6; g.add(ped);
+  // Top circular tholos
+  const tholos = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.18, 12), rose);
+  tholos.position.set(0, 0.85, 0.12); g.add(tholos);
+  const tholosCap = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.10, 12), rose);
+  tholosCap.position.set(0, 0.99, 0.12); g.add(tholosCap);
+  return g;
+}
+
+function buildChichen() {
+  const g = new THREE.Group();
+  const stone = MAT(0x988878);
+  let h = 0;
+  for (let i = 0; i < 6; i++) {
+    const w = 0.85 - i * 0.11;
+    const tier = new THREE.Mesh(new THREE.BoxGeometry(w, 0.13, w), stone);
+    tier.position.y = h + 0.065;
+    g.add(tier);
+    h += 0.13;
+  }
+  // Temple at top
+  const temple = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.20, 0.30), stone);
+  temple.position.y = h + 0.10; g.add(temple);
+  // Doorway on temple
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.13, 0.04), MAT(0x302418));
+  door.position.set(0, h + 0.075, 0.16); g.add(door);
+  return g;
+}
+
+function buildAngkor() {
+  const g = new THREE.Group();
+  const stone = MAT(0x9A9080);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 1.0), stone);
+  base.position.y = 0.04; g.add(base);
+  // Central tall tower (lotus)
+  const towerGeo = new THREE.ConeGeometry(0.13, 0.78, 4);
+  const cTower = new THREE.Mesh(towerGeo, stone);
+  cTower.position.y = 0.47; cTower.rotation.y = Math.PI / 4; g.add(cTower);
+  // Round bulge halfway up
+  const bulge = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), stone);
+  bulge.position.y = 0.55; bulge.scale.y = 0.6; g.add(bulge);
+  // 4 corner towers
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2 + Math.PI / 4;
+    const t = new THREE.Mesh(new THREE.ConeGeometry(0.10, 0.50, 4), stone);
+    t.position.set(0.36 * Math.cos(a), 0.33, 0.36 * Math.sin(a));
+    t.rotation.y = Math.PI / 4;
+    g.add(t);
+  }
+  return g;
+}
+
+function buildKilimanjaro() {
+  const g = new THREE.Group();
+  const earth = MAT(0x705540);
+  const green = MAT(0x506848);
+  const snow = MAT(0xF0F0F8, { shine: 30 });
+  const forest = new THREE.Mesh(new THREE.ConeGeometry(1.0, 0.32, 18), green);
+  forest.position.y = 0.16; g.add(forest);
+  const mid = new THREE.Mesh(new THREE.ConeGeometry(0.65, 0.55, 18), earth);
+  mid.position.y = 0.59; g.add(mid);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.22, 18), snow);
+  cap.position.y = 0.97; g.add(cap);
+  return g;
+}
+
+const LANDMARKS = [
+  { name: 'Eiffel Tower',         lat:  48.858, lon:   2.295, build: buildEiffel },
+  { name: 'Pyramids of Giza',     lat:  29.979, lon:  31.134, build: buildPyramids },
+  { name: 'Great Sphinx',         lat:  29.975, lon:  31.140, build: buildSphinx },
+  { name: 'Sydney Opera House',   lat: -33.857, lon: 151.215, build: buildOpera },
+  { name: 'Statue of Liberty',    lat:  40.689, lon: -74.045, build: buildLiberty },
+  { name: 'Big Ben',              lat:  51.500, lon:  -0.124, build: buildBigBen },
+  { name: 'Taj Mahal',            lat:  27.175, lon:  78.042, build: buildTajMahal },
+  { name: 'Mt. Fuji',             lat:  35.361, lon: 138.728, build: buildMtFuji },
+  { name: 'Christ the Redeemer',  lat: -22.952, lon: -43.211, build: buildChristRedeemer },
+  { name: 'Stonehenge',           lat:  51.179, lon:  -1.826, build: buildStonehenge },
+  { name: 'Easter Island Moai',   lat: -27.123, lon:-109.367, build: buildMoai },
+  { name: 'Colosseum',            lat:  41.890, lon:  12.492, build: buildColosseum },
+  { name: 'Burj Khalifa',         lat:  25.197, lon:  55.274, build: buildBurj },
+  { name: 'Petra Treasury',       lat:  30.328, lon:  35.444, build: buildPetra },
+  { name: 'Chichen Itza',         lat:  20.683, lon: -88.568, build: buildChichen },
+  { name: 'Angkor Wat',           lat:  13.412, lon: 103.866, build: buildAngkor },
+  { name: 'Mt. Kilimanjaro',      lat:  -3.066, lon:  37.355, build: buildKilimanjaro },
+];
+
+function placeLandmark(lm) {
+  const g = lm.build();
+  g.scale.setScalar(LM_SCALE);
+  const pos = latLonToVec3(lm.lat, lm.lon, 1.0);
+  g.position.copy(pos);
+  // Orient: align local +Y with the outward radial direction
+  const upDir = pos.clone().normalize();
+  const q = new THREE.Quaternion();
+  q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), upDir);
+  g.quaternion.copy(q);
+  g.userData.landmark = lm;
+  g.traverse(o => { o.userData.landmark = lm; });
+  return g;
+}
+
+LANDMARKS.forEach(lm => landmarkGroup.add(placeLandmark(lm)));
+
+//==============================================================
+// 7.6 LANDMARK HOVER TOOLTIP
+//==============================================================
+
+const raycaster = new THREE.Raycaster();
+const mouseNDC = new THREE.Vector2();
+const tooltipEl = document.getElementById('landmarkTip');
+
+function updateTooltip(e) {
+  if (!landmarkGroup.visible || dragging) {
+    tooltipEl.style.display = 'none';
+    return;
+  }
+  const rect = canvas.getBoundingClientRect();
+  mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouseNDC, camera);
+  const hits = raycaster.intersectObjects(landmarkGroup.children, true);
+  if (hits.length) {
+    const lm = hits[0].object.userData.landmark;
+    if (lm) {
+      tooltipEl.textContent = lm.name;
+      tooltipEl.style.display = 'block';
+      tooltipEl.style.left = (e.clientX + 14) + 'px';
+      tooltipEl.style.top = (e.clientY - 10) + 'px';
+      return;
+    }
+  }
+  tooltipEl.style.display = 'none';
+}
+
+//==============================================================
+// 8. PATH RENDERING
+//==============================================================
+
+let pathGroup = new THREE.Group();
+globeGroup.add(pathGroup);
+
+function clearGroup(g) {
+  while (g.children.length) {
+    const c = g.children.pop();
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) c.material.dispose();
+  }
+}
+
+// Build a thick ribbon (TubeGeometry) along a series of lat/lon points
+function makePathRibbon(latLonPts, color = 0xFF4040, thicknessKm = 80) {
+  if (latLonPts.length < 2) return null;
+  const v3 = latLonPts.map(p => latLonToVec3(p.lat, p.lon, 1.005));
+  const curve = new THREE.CatmullRomCurve3(v3, false, 'centripetal', 0.4);
+  const radius = (thicknessKm / R_EARTH) * 0.5;
+  const tubeGeo = new THREE.TubeGeometry(curve, Math.min(latLonPts.length * 2, 600), radius, 6, false);
+  const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95 });
+  const mesh = new THREE.Mesh(tubeGeo, mat);
+  // Glow halo
+  const haloMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.25 });
+  const haloGeo = new THREE.TubeGeometry(curve, Math.min(latLonPts.length * 2, 400), radius * 3, 6, false);
+  const halo = new THREE.Mesh(haloGeo, haloMat);
+  const grp = new THREE.Group();
+  grp.add(halo);
+  grp.add(mesh);
+  return grp;
+}
+
+function makePoint(lat, lon, color = 0xFFD040, sizeKm = 200) {
+  const r = (sizeKm / R_EARTH) * 0.5;
+  const geo = new THREE.SphereGeometry(r, 16, 12);
+  const mat = new THREE.MeshBasicMaterial({ color });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.copy(latLonToVec3(lat, lon, 1.01));
+  return mesh;
+}
+
+function makePenumbraOutline(latLonPts, color = 0x806040) {
+  if (!latLonPts || latLonPts.length < 3) return null;
+  const v3 = latLonPts.map(p => latLonToVec3(p.lat, p.lon, 1.003));
+  const geo = new THREE.BufferGeometry().setFromPoints(v3);
+  const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.45 });
+  return new THREE.Line(geo, mat);
+}
+
+//==============================================================
+// 9. UI STATE & HANDLERS
+//==============================================================
+
+const state = {
+  idx: -1,
+  view: 'center',          // 'center' | 'sun' | 'free'
+  showCoasts: true,
+  showGraticule: true,
+  showNight: true,
+  showPenumbra: true,
+  showLandmarks: true,
+  playing: false,
+  playTimer: null,
+};
+
+function loadEclipse(i) {
+  if (i < 0 || i >= ECLIPSES.length) return;
+  state.idx = i;
+  const e = ECLIPSES[i];
+  const jd0 = dateToJD(e.date);
+
+  // Compute path
+  const pathInfo = computeCentralPath(jd0, 3.0, 30);
+  const greatest = pathInfo.greatestIdx >= 0 ? pathInfo.points[pathInfo.greatestIdx] : null;
+
+  clearGroup(pathGroup);
+
+  // Color path by type
+  const pathColor = e.type === 'A' ? 0xFFA040 : e.type === 'H' ? 0xFF8040 : 0xFF4040;
+  if (pathInfo.points.length > 1) {
+    const ribbon = makePathRibbon(pathInfo.points, pathColor, e.type === 'A' ? 100 : 80);
+    if (ribbon) pathGroup.add(ribbon);
+  }
+
+  // Greatest eclipse marker
+  if (greatest) {
+    pathGroup.add(makePoint(greatest.lat, greatest.lon, 0xFFD040, 220));
+  }
+
+  // Partial-eclipse zone — stack penumbra outlines across the eclipse duration
+  // so the band of partial visibility reads as a translucent swath around the central path.
+  if (state.showPenumbra) {
+    const center = greatest ? greatest.jd : jd0;
+    const N_RINGS = 11;                              // odd → one sample sits exactly on greatest
+    const SPAN_HOURS = 2.0;
+    for (let r = 0; r < N_RINGS; r++) {
+      const frac = r / (N_RINGS - 1);                // 0..1
+      const dt   = (frac - 0.5) * 2 * SPAN_HOURS;    // -SPAN..+SPAN hours
+      const pen  = penumbraOutline(center + dt / 24);
+      if (!pen) continue;
+      // Brightest at greatest, fade toward edges
+      const wt = 1 - Math.abs(frac - 0.5) * 2;       // 0..1..0
+      const opacity = 0.10 + 0.18 * wt;
+      const tint = e.type === 'P' ? 0xC0A060 : 0xB07050;   // dimmer for purely-partial events
+      const v3 = pen.map(p => latLonToVec3(p.lat, p.lon, 1.003 + r * 0.0002));
+      const geo = new THREE.BufferGeometry().setFromPoints(v3);
+      const mat = new THREE.LineBasicMaterial({ color: tint, transparent: true, opacity, depthWrite: false });
+      pathGroup.add(new THREE.Line(geo, mat));
+    }
+  }
+
+  // Sub-solar marker
+  const sub = subSolarPoint(jd0);
+  pathGroup.add(makePoint(sub.lat, sub.lon, 0xFFE0A0, 140));
+
+  // Update night-side shading at greatest eclipse instant
+  if (state.showNight) updateNightShading(jd0);
+
+  // Camera: center view on path midpoint or greatest
+  if (state.view === 'center') {
+    const target = greatest || (pathInfo.points.length ? pathInfo.points[Math.floor(pathInfo.points.length / 2)] : null);
+    if (target) {
+      animateCameraTo(target.lat, target.lon, 3.2);
+    } else {
+      animateCameraTo(sub.lat, sub.lon, 3.6);
+    }
+  } else if (state.view === 'sun') {
+    animateCameraTo(sub.lat, sub.lon, 3.4);
+  }
+
+  // Compute Bessel at greatest for magnitude / gamma readout
+  const bGreatest = besselElements(greatest ? greatest.jd : jd0);
+  const gamma = Math.sqrt(bGreatest.x * bGreatest.x + bGreatest.y * bGreatest.y) * Math.sign(bGreatest.y || 1);
+  const magnitude = computeMagnitude(greatest ? greatest.jd : jd0);
+
+  // Central-line duration estimate: count of points × stepSec (only valid where l2<0)
+  let centralDurSec = 0;
+  for (const p of pathInfo.points) if (p.l2 < 0) centralDurSec += 30;
+  // Per-spot max duration (rough): for total/annular, scale by relative shadow speed
+  let maxDurSec = 0;
+  if (greatest && pathInfo.points.length > 2) {
+    // Approximate per-spot duration from umbra radius and shadow ground speed at greatest
+    const idx = pathInfo.greatestIdx;
+    const p0 = pathInfo.points[Math.max(0, idx - 1)];
+    const p2 = pathInfo.points[Math.min(pathInfo.points.length - 1, idx + 1)];
+    const dKm = approxGreatCircleDist(p0.lat, p0.lon, p2.lat, p2.lon);
+    const dt = (p2.jd - p0.jd) * 86400;        // s
+    const speed = dKm / dt;                     // km/s
+    const umbraWidth = Math.abs(bGreatest.l2) * R_EARTH * 2;  // km, very rough
+    if (speed > 0 && e.type !== 'P') {
+      maxDurSec = umbraWidth / speed;
+    }
+  }
+
+  // Sun altitude at greatest eclipse point
+  let sunAlt = '—';
+  if (greatest) {
+    const sunRD = sunPos(greatest.jd);
+    sunAlt = computeAltitude(sunRD.ra, sunRD.dec, greatest.lat, greatest.lon, greatest.jd).toFixed(0) + '°';
+  }
+
+  // Update info panel
+  document.getElementById('ecName').textContent = formatEclipseName(e);
+  const typeEl = document.getElementById('ecType');
+  typeEl.className = 'ectype ' + e.type;
+  typeEl.textContent = ({T:'TOTAL', A:'ANNULAR', H:'HYBRID', P:'PARTIAL'})[e.type] || e.type;
+  document.getElementById('ecDate').textContent = formatDate(e.date);
+  document.getElementById('ecTime').textContent = formatTime(e.date);
+  document.getElementById('ecMag').textContent = magnitude.toFixed(3);
+  document.getElementById('ecGamma').textContent = gamma.toFixed(3);
+  document.getElementById('ecDur').textContent = e.type === 'P' ? '— (partial only)' : (maxDurSec > 0 ? formatDuration(maxDurSec) : '—');
+  document.getElementById('ecLoc').textContent = greatest ? `${formatLatLon(greatest.lat, greatest.lon)}` : '—';
+  document.getElementById('ecSunAlt').textContent = sunAlt;
+  document.getElementById('ecDesc').textContent = e.location;
+
+  // Date display + counter
+  const dateStr = e.date.toUTCString().replace(' GMT', ' UTC').replace(/^[A-Za-z]{3}, /, '');
+  document.getElementById('dateDisplay').innerHTML = `<b>${dateStr.slice(0, 11)}</b> · ${dateStr.slice(12)}`;
+  document.getElementById('ecCounter').textContent = `${i + 1} / ${ECLIPSES.length}`;
+  const yEl = document.getElementById('yearInput');
+  if (document.activeElement !== yEl) yEl.value = e.year;
+
+  // Button state
+  document.getElementById('prevBtn').disabled = (i === 0);
+  document.getElementById('prevBtn1').disabled = (i === 0);
+  document.getElementById('nextBtn').disabled = (i === ECLIPSES.length - 1);
+  document.getElementById('nextBtn1').disabled = (i === ECLIPSES.length - 1);
+}
+
+function computeMagnitude(jd) {
+  // Magnitude at greatest eclipse = ratio of Moon's apparent angular diameter
+  // to Sun's, as seen from Earth's center.
+  const sun  = sunPos(jd);
+  const moon = moonPos(jd);
+  const thSun = R_SUN / sun.dist;
+  const thMoon = K_MOON * R_EARTH / moon.dist;
+  return thMoon / thSun;
+}
+
+function computeAltitude(ra, dec, lat, lon, jd) {
+  // local hour angle (degrees)
+  let lha = (gst(jd) + lon - ra * RAD) % 360;
+  if (lha > 180) lha -= 360;
+  if (lha < -180) lha += 360;
+  const lhaR = lha * DEG, latR = lat * DEG;
+  const alt = Math.asin(Math.sin(latR) * Math.sin(dec)
+                      + Math.cos(latR) * Math.cos(dec) * Math.cos(lhaR));
+  return alt * RAD;
+}
+
+function approxGreatCircleDist(lat1, lon1, lat2, lon2) {
+  const φ1 = lat1 * DEG, φ2 = lat2 * DEG;
+  const Δφ = (lat2 - lat1) * DEG, Δλ = (lon2 - lon1) * DEG;
+  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2)**2;
+  return 2 * R_EARTH * Math.asin(Math.sqrt(a));
+}
+
+function formatDate(d) {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+}
+function formatTime(d) {
+  const h = d.getUTCHours().toString().padStart(2, '0');
+  const m = d.getUTCMinutes().toString().padStart(2, '0');
+  return `${h}:${m} UTC`;
+}
+function formatLatLon(lat, lon) {
+  const NS = lat >= 0 ? 'N' : 'S';
+  const EW = lon >= 0 ? 'E' : 'W';
+  return `${Math.abs(lat).toFixed(1)}°${NS} ${Math.abs(lon).toFixed(1)}°${EW}`;
+}
+function formatDuration(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.round(sec - m * 60);
+  return `${m}m ${s}s`;
+}
+function formatEclipseName(e) {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const typeName = ({T:'Total Solar Eclipse', A:'Annular Solar Eclipse', H:'Hybrid Solar Eclipse', P:'Partial Solar Eclipse'})[e.type];
+  return `${typeName} of ${months[e.month - 1]} ${e.day}, ${e.year}`;
+}
+
+//==============================================================
+// 10. CAMERA — center on a lat/lon, smooth interpolation
+//==============================================================
+
+let camTarget = { lat: 0, lon: 0, dist: 4 };
+let camCurrent = { lat: 0, lon: 0, dist: 4 };
+let userRotated = false;
+
+function animateCameraTo(lat, lon, dist) {
+  if (state.view === 'free' && userRotated) return;
+  camTarget.lat = lat;
+  camTarget.lon = lon;
+  camTarget.dist = dist;
+}
+
+function updateCamera() {
+  // Interpolate
+  const k = 0.08;
+  camCurrent.lat += (camTarget.lat - camCurrent.lat) * k;
+  // Wrap-aware longitude lerp
+  let dl = camTarget.lon - camCurrent.lon;
+  if (dl > 180) dl -= 360;
+  if (dl < -180) dl += 360;
+  camCurrent.lon += dl * k;
+  camCurrent.dist += (camTarget.dist - camCurrent.dist) * k;
+  // Convert spherical lat/lon (camera looks at origin from this point)
+  const v = latLonToVec3(camCurrent.lat, camCurrent.lon, camCurrent.dist);
+  camera.position.copy(v);
+  camera.lookAt(0, 0, 0);
+}
+
+//==============================================================
+// 11. INTERACTION — drag to rotate, scroll to zoom
+//==============================================================
+
+let dragging = false;
+let lastX = 0, lastY = 0;
+
+canvas.addEventListener('mousedown', e => {
+  dragging = true;
+  lastX = e.clientX; lastY = e.clientY;
+  canvas.classList.add('dragging');
+  userRotated = true;
+  state.view = 'free';
+  setActiveBtn('viewFree');
+});
+window.addEventListener('mousemove', e => {
+  if (dragging) {
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    camTarget.lon -= dx * 0.4;
+    camTarget.lat = Math.max(-89, Math.min(89, camTarget.lat + dy * 0.4));
+  } else {
+    updateTooltip(e);
+  }
+});
+window.addEventListener('mouseup', () => { dragging = false; canvas.classList.remove('dragging'); });
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 1.1 : 0.91;
+  camTarget.dist = Math.max(1.4, Math.min(8, camTarget.dist * factor));
+}, { passive: false });
+
+// Touch
+let touchLast = null;
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) {
+    touchLast = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    userRotated = true; state.view = 'free'; setActiveBtn('viewFree');
+  } else if (e.touches.length === 2) {
+    touchLast = {
+      d: Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY)
+    };
+  }
+});
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && touchLast && touchLast.x !== undefined) {
+    const dx = e.touches[0].clientX - touchLast.x;
+    const dy = e.touches[0].clientY - touchLast.y;
+    touchLast = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    camTarget.lon -= dx * 0.4;
+    camTarget.lat = Math.max(-89, Math.min(89, camTarget.lat + dy * 0.4));
+  } else if (e.touches.length === 2 && touchLast && touchLast.d !== undefined) {
+    const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    const factor = touchLast.d / d;
+    camTarget.dist = Math.max(1.4, Math.min(8, camTarget.dist * factor));
+    touchLast = { d };
+  }
+}, { passive: false });
+
+//==============================================================
+// 12. CONTROL HANDLERS
+//==============================================================
+
+function setActiveBtn(id) {
+  ['viewCenter', 'viewSun', 'viewFree'].forEach(b => {
+    document.getElementById(b).classList.toggle('active', b === id);
+  });
+}
+
+document.getElementById('prevBtn1').onclick = () => { userRotated = false; loadEclipse(state.idx - 1); };
+document.getElementById('nextBtn1').onclick = () => { userRotated = false; loadEclipse(state.idx + 1); };
+document.getElementById('prevBtn').onclick  = () => { userRotated = false; loadEclipse(0); };
+document.getElementById('nextBtn').onclick  = () => { userRotated = false; loadEclipse(ECLIPSES.length - 1); };
+
+document.getElementById('playBtn').onclick = () => {
+  state.playing = !state.playing;
+  const btn = document.getElementById('playBtn');
+  btn.classList.toggle('active', state.playing);
+  btn.textContent = state.playing ? 'PAUSE' : 'PLAY';
+  if (state.playing) {
+    state.playTimer = setInterval(() => {
+      userRotated = false;
+      if (state.idx >= ECLIPSES.length - 1) {
+        loadEclipse(0);
+      } else {
+        loadEclipse(state.idx + 1);
+      }
+    }, 2200);
+  } else if (state.playTimer) {
+    clearInterval(state.playTimer);
+    state.playTimer = null;
+  }
+};
+
+document.getElementById('viewCenter').onclick = () => {
+  state.view = 'center'; userRotated = false; setActiveBtn('viewCenter'); loadEclipse(state.idx);
+};
+document.getElementById('viewSun').onclick = () => {
+  state.view = 'sun'; userRotated = false; setActiveBtn('viewSun'); loadEclipse(state.idx);
+};
+document.getElementById('viewFree').onclick = () => {
+  state.view = 'free'; userRotated = true; setActiveBtn('viewFree');
+};
+
+function toggleBtn(id, key, onChange) {
+  const btn = document.getElementById(id);
+  btn.onclick = () => {
+    state[key] = !state[key];
+    btn.classList.toggle('active', state[key]);
+    onChange(state[key]);
+  };
+}
+toggleBtn('togCoasts', 'showCoasts', v => coastGroup.visible = v);
+toggleBtn('togGraticule', 'showGraticule', v => graticule.visible = v);
+toggleBtn('togNight', 'showNight', v => {
+  nightMesh.visible = v;
+  if (v && state.idx >= 0) updateNightShading(dateToJD(ECLIPSES[state.idx].date));
+});
+toggleBtn('togPenumbra', 'showPenumbra', () => loadEclipse(state.idx));
+toggleBtn('togLandmarks', 'showLandmarks', v => {
+  landmarkGroup.visible = v;
+  if (!v) tooltipEl.style.display = 'none';
+});
+
+document.getElementById('openMath').onclick = () => {
+  document.getElementById('mathModal').classList.add('open');
+  populateMath();
+};
+
+function populateMath() {
+  if (state.idx < 0 || state.idx >= ECLIPSES.length) return;
+  const e = ECLIPSES[state.idx];
+  const jd0 = dateToJD(e.date);
+  const dT = deltaT(e.year);
+  const jdTT = jd0 + dT / 86400;
+  const sun = sunPos(jd0);
+  const moon = moonPos(jd0);
+  const b = besselElements(jd0);
+  const gamma = Math.sqrt(b.x * b.x + b.y * b.y);
+  const mag = computeMagnitude(jd0);
+  const sub = subSolarPoint(jd0);
+  const path = computeCentralPath(jd0, 3.0, 60);
+  const greatest = path.greatestIdx >= 0 ? path.points[path.greatestIdx] : null;
+
+  const rows = (pairs) => pairs.map(([k, v]) => `<div><span class="lbl">${k}:</span> <span class="val">${v}</span></div>`).join('');
+
+  document.getElementById('mathTitle').textContent = `The Math — ${formatEclipseName(e)}`;
+  document.getElementById('mathSubtitle').textContent = 'Live values for this eclipse, plugged into the astronomy-engine + Besselian pipeline.';
+
+  document.getElementById('mathTime').innerHTML = rows([
+    ['JD (UT)',   jd0.toFixed(5) + ' days'],
+    ['ΔT',        dT.toFixed(1) + ' s'],
+    ['JD (TT)',   jdTT.toFixed(5)],
+    ['θ₀ (GST)',  gst(jd0).toFixed(3) + '°'],
+  ]);
+
+  document.getElementById('mathSun').innerHTML = rows([
+    ['λ_☉ (ecliptic lon)',  (sun.lon * RAD).toFixed(4) + '°'],
+    ['α_☉ (RA)',            (sun.ra * RAD).toFixed(4) + '°'],
+    ['δ_☉ (Dec)',           (sun.dec * RAD).toFixed(4) + '°'],
+    ['r_☉ (distance)',       (sun.dist / 1e6).toFixed(3) + ' × 10⁶ km  (' + (sun.dist / 1.496e8).toFixed(4) + ' AU)'],
+  ]);
+
+  document.getElementById('mathMoon').innerHTML = rows([
+    ['λ_☾ (ecliptic lon)',  (moon.lon * RAD).toFixed(4) + '°'],
+    ['β_☾ (ecliptic lat)',   (moon.lat * RAD).toFixed(4) + '°'],
+    ['α_☾ (RA)',            (moon.ra * RAD).toFixed(4) + '°'],
+    ['δ_☾ (Dec)',           (moon.dec * RAD).toFixed(4) + '°'],
+    ['r_☾ (distance)',       moon.dist.toFixed(0) + ' km'],
+  ]);
+
+  document.getElementById('mathBessel').innerHTML = rows([
+    ['x',     b.x.toFixed(5) + ' R⊕'],
+    ['y',     b.y.toFixed(5) + ' R⊕'],
+    ['d',     b.d.toFixed(4) + '°'],
+    ['μ',     b.mu.toFixed(4) + '°'],
+    ['ℓ₁ (penumbra radius)', b.l1.toFixed(5) + ' R⊕'],
+    ['ℓ₂ (umbra radius)',     b.l2.toFixed(5) + ' R⊕  ' + (b.l2 < 0 ? '(negative → umbra reaches Earth)' : '(positive → antumbra)')],
+    ['tan f₁',  b.tanF1.toExponential(4)],
+    ['tan f₂',  b.tanF2.toExponential(4)],
+  ]);
+
+  document.getElementById('mathMag').innerHTML = rows([
+    ['γ = √(x² + y²)',       gamma.toFixed(5)],
+    ['θ_☾ / θ_☉ (magnitude)', mag.toFixed(4)],
+  ]);
+
+  let classExplain = '';
+  if (gamma < 1 && b.l2 < 0) classExplain = 'γ < 1 and ℓ₂ < 0 ⇒ TOTAL';
+  else if (gamma < 1 && b.l2 >= 0) classExplain = 'γ < 1 and ℓ₂ > 0 ⇒ ANNULAR';
+  else classExplain = 'γ ≥ 1 ⇒ PARTIAL (penumbra only)';
+  document.getElementById('mathClass').innerHTML = rows([
+    ['Computed type', e.type + ` — ${({T:'TOTAL',A:'ANNULAR',H:'HYBRID',P:'PARTIAL'})[e.type]}`],
+    ['Reason',         classExplain],
+  ]);
+
+  document.getElementById('mathPath').innerHTML = rows([
+    ['Sub-solar point',                `${sub.lat.toFixed(2)}°, ${sub.lon.toFixed(2)}°`],
+    ['Greatest eclipse point',         greatest ? `${greatest.lat.toFixed(3)}°, ${greatest.lon.toFixed(3)}°` : '(no central path)'],
+    ['Path samples',                    path.points.length + ' points across ±3 h'],
+    ['z² check at greatest', greatest ? `1 − x² − y² = ${(1 - b.x*b.x - b.y*b.y).toFixed(5)} ${(1 - b.x*b.x - b.y*b.y) > 0 ? '> 0 ✓' : '≤ 0 ✗'}` : '—'],
+  ]);
+
+  // Render KaTeX
+  if (window.renderMathInElement) {
+    renderMathInElement(document.getElementById('mathModal').querySelector('.card'), {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$',  right: '$',  display: false },
+      ],
+      throwOnError: false,
+    });
+  }
+}
+
+// Year jump — find the cataloged eclipse closest to the typed year
+const yearInput = document.getElementById('yearInput');
+yearInput.addEventListener('change', () => {
+  const y = parseInt(yearInput.value, 10);
+  if (isNaN(y)) return;
+  jumpToYear(y);
+});
+yearInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.target.blur();
+  }
+});
+
+function jumpToYear(targetYear) {
+  if (!ECLIPSES.length) return;
+  // All eclipses matching the target year
+  const matches = [];
+  for (let i = 0; i < ECLIPSES.length; i++) {
+    if (ECLIPSES[i].year === targetYear) matches.push({ e: ECLIPSES[i], i });
+  }
+  if (matches.length) {
+    // Rank by type (T > A > H > P) then by smallest gamma (most central)
+    const PRIO = { T: 0, A: 1, H: 2, P: 3 };
+    matches.sort((a, b) => {
+      const dp = PRIO[a.e.type] - PRIO[b.e.type];
+      return dp !== 0 ? dp : a.e.gamma - b.e.gamma;
+    });
+    // If we're already on a match, advance to the next-ranked one (cycle within year)
+    const cur = matches.findIndex(m => m.i === state.idx);
+    const pick = (cur >= 0 ? matches[(cur + 1) % matches.length] : matches[0]);
+    userRotated = false;
+    loadEclipse(pick.i);
+    return;
+  }
+  // Nothing in target year — snap to closest event and flash red
+  let bestIdx = 0, bestDiff = Infinity;
+  for (let i = 0; i < ECLIPSES.length; i++) {
+    const diff = Math.abs(ECLIPSES[i].year - targetYear);
+    if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+  }
+  yearInput.style.borderColor = '#FF6040';
+  yearInput.title = `No eclipse in ${targetYear}; jumped to nearest.`;
+  setTimeout(() => { yearInput.style.borderColor = ''; }, 1800);
+  userRotated = false;
+  loadEclipse(bestIdx);
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' && state.idx < ECLIPSES.length - 1) {
+    userRotated = false; loadEclipse(state.idx + 1);
+  } else if (e.key === 'ArrowLeft' && state.idx > 0) {
+    userRotated = false; loadEclipse(state.idx - 1);
+  } else if (e.key === ' ') {
+    e.preventDefault(); document.getElementById('playBtn').click();
+  } else if (e.key === 'Escape') {
+    document.getElementById('helpModal').classList.remove('open');
+    document.getElementById('mathModal').classList.remove('open');
+  }
+});
+
+//==============================================================
+// 13. RESIZE + RENDER LOOP
+//==============================================================
+
+function resize() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+function animate() {
+  updateCamera();
+  // Subtle auto-rotation when free + idle (off by default for clarity)
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+
+//==============================================================
+// 14. INIT — start at the most famous eclipse: Apr 8 2024
+//==============================================================
+
+// Start render loop immediately so the globe is visible behind the loading overlay.
+animate();
+
+// Generate the catalog (1900-2200 by default), chunked so the UI stays responsive.
+const CATALOG_RANGE = [1900, 2200];
+const loadBarEl = document.getElementById('loadBar');
+const loadCountEl = document.getElementById('loadCount');
+const loadOverlayEl = document.getElementById('loadOverlay');
+
+if (typeof Astronomy === 'undefined') {
+  loadOverlayEl.innerHTML =
+    '<div style="color:#FF6040;font-family:Georgia,serif;font-size:1.0em;letter-spacing:2px;text-align:center;max-width:380px;line-height:1.5">'
+    + 'astronomy-engine failed to load.<br><br>'
+    + '<span style="color:#8098B0;font-size:0.78em">Check your network or CDN access. Required: cdn.jsdelivr.net/npm/astronomy-engine</span></div>';
+  throw new Error('Astronomy global is undefined — astronomy-engine CDN script failed to load.');
+}
+
+generateEclipses(
+  CATALOG_RANGE[0],
+  CATALOG_RANGE[1],
+  (done, total) => {
+    loadBarEl.style.width = (done / total * 100).toFixed(1) + '%';
+    loadCountEl.textContent = `${done} / ${total} new moons checked`;
+  },
+  (catalog) => {
+    ECLIPSES = catalog;
+    // Wire year-input bounds
+    const yEl = document.getElementById('yearInput');
+    yEl.min = ECLIPSES[0].year;
+    yEl.max = ECLIPSES[ECLIPSES.length - 1].year;
+    // Default to 2024-04-08 if present, else most recent
+    let idx = ECLIPSES.findIndex(e => e.year === 2024 && e.month === 4 && e.day === 8);
+    if (idx < 0) idx = Math.floor(ECLIPSES.length / 2);
+    loadEclipse(idx);
+    // Fade out overlay
+    loadOverlayEl.style.transition = 'opacity 0.5s';
+    loadOverlayEl.style.opacity = '0';
+    setTimeout(() => { loadOverlayEl.style.display = 'none'; }, 600);
+  }
+);
+
+</script>
+</body>
+</html>

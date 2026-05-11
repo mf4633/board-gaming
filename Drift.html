@@ -242,7 +242,7 @@
         cell.textContent = rows[r][c] || '';
         if (isStart || isEnd) cell.classList.add('given');
         else if (rowOk === 'ok' && linkOk === 'ok') cell.classList.add('locked');
-        if (rowOk === 'bad' || (linkOk === 'bad' && r === r)) cell.classList.add('bad');
+        if (rowOk === 'bad' || linkOk === 'bad') cell.classList.add('bad');
         if (!isStart && !isEnd && rows[r-1] && rows[r-1][c] && rows[r][c] && rows[r-1][c] !== rows[r][c]) {
           if (rowOk !== 'bad' && linkOk !== 'bad') cell.classList.add('changed');
         }

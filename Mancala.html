@@ -385,6 +385,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -629,8 +630,8 @@ function scheduleAI() {
   animating = true;
   setMessage('AI is thinking...');
   setTimeout(function() {
-    aiMove();
     animating = false;
+    aiMove();
   }, 500);
 }
 

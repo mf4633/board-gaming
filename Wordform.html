@@ -137,7 +137,16 @@
     if (mode === 'daily') {
       const k = 'wf_daily_' + dailyIndex();
       const s = localStorage.getItem(k);
-      if (s) { try { const o = JSON.parse(s); guesses = o.guesses; done = o.done; current = ''; render(); if (done) finishMsg(); return; } catch(e){} }
+      if (s) {
+        try {
+          const o = JSON.parse(s);
+          // Version guard: if saved target no longer matches today's target (e.g. word list changed), discard stale state.
+          if (!o.target || o.target === target) {
+            guesses = o.guesses || []; done = !!o.done; current = '';
+            render(); if (done) finishMsg(); return;
+          }
+        } catch(e){}
+      }
     }
     guesses = []; current = ''; done = false;
     render();

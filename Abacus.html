@@ -341,31 +341,75 @@
     exprEl.textContent = expr;
   }
 
-  // Bead taps
-  svg.addEventListener("click", function (e) {
-    const t = e.target;
-    if (!t.classList || !t.classList.contains("bead")) return;
+  function toggleBead(t) {
+    if (!t || !t.classList || !t.classList.contains("bead")) return false;
     const i = +t.getAttribute("data-rod");
     const b = t.getAttribute("data-b");
     const heaven = rods[i] >= 5 ? 5 : 0;
     let earth = rods[i] % 5;
+    let next;
     if (b === "h") {
-      rods[i] = (heaven ? 0 : 5) + earth;
+      next = (heaven ? 0 : 5) + earth;
     } else {
       const slot = +t.getAttribute("data-slot");
       // If clicked bead was active, push it (and any below) away from bar.
       // If inactive, push it (and any between it and bar) toward bar.
       const wasActive = slot < earth;
       const newCount = wasActive ? slot : slot + 1;
-      rods[i] = heaven + newCount;
+      next = heaven + newCount;
     }
+    if (next === rods[i]) return false;
+    rods[i] = next;
     if (mode === "calc") {
       // Manual bead manipulation in calc mode acts as user override
       // — sync expression to current value.
       expr = String(getValue());
     }
     render();
+    return true;
+  }
+
+  function beadAtPoint(x, y) {
+    const el = document.elementFromPoint(x, y);
+    if (el && el.classList && el.classList.contains("bead")) return el;
+    return null;
+  }
+
+  // Bead taps (mouse / non-touch)
+  svg.addEventListener("click", function (e) {
+    if (e.target && e.target.classList && e.target.classList.contains("bead")) {
+      toggleBead(e.target);
+    }
   });
+
+  // Touch: tap-to-toggle plus drag along a rod toggles each new bead crossed.
+  let touchActive = false;
+  let touchSeen = null; // last bead element toggled during this touch
+  svg.addEventListener("touchstart", function (e) {
+    const t = e.touches[0];
+    if (!t) return;
+    const bead = beadAtPoint(t.clientX, t.clientY);
+    if (!bead) return;
+    e.preventDefault();
+    touchActive = true;
+    touchSeen = bead;
+    toggleBead(bead);
+  }, { passive: false });
+  svg.addEventListener("touchmove", function (e) {
+    if (!touchActive) return;
+    const t = e.touches[0];
+    if (!t) return;
+    const bead = beadAtPoint(t.clientX, t.clientY);
+    if (!bead || bead === touchSeen) return;
+    // Only toggle if same rod as the start (drag along rod, not across rods)
+    if (touchSeen && bead.getAttribute("data-rod") !== touchSeen.getAttribute("data-rod")) return;
+    e.preventDefault();
+    touchSeen = bead;
+    toggleBead(bead);
+  }, { passive: false });
+  function endTouch() { touchActive = false; touchSeen = null; }
+  svg.addEventListener("touchend", endTouch);
+  svg.addEventListener("touchcancel", endTouch);
 
   // Pad
   function setMode(m) {

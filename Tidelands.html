@@ -667,6 +667,7 @@
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -1301,9 +1302,9 @@
       }
       marketHex = candidates[Math.floor(rng() * candidates.length)];
 
-      // After board generation, return to Math.random for in-game randomness so the same
-      // seed reproduces the starting board only, not in-game events.
-      rng = Math.random;
+      // NOTE: rng stays seeded through placeStartingCamps + roundStartPlayer init in resetGame;
+      // it's reset to Math.random there so in-game events (resource spawns, Hermes drift) are
+      // always nondeterministic even with a fixed map seed.
     }
 
     function initPlayers() {
@@ -1376,11 +1377,12 @@
         used[chosen[i]] = true;
       }
 
-      // Place camps — shuffle player-to-slot mapping so P0 doesn't always get chosen[0]
+      // Place camps — shuffle player-to-slot mapping so P0 doesn't always get chosen[0].
+      // Uses the seeded rng so a fixed map seed reproduces the full starting layout.
       var slotOrder = [];
       for (var i = 0; i < numPlayers; i++) slotOrder.push(i);
       for (var i = slotOrder.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
+        var j = Math.floor(rng() * (i + 1));
         var tmp = slotOrder[i]; slotOrder[i] = slotOrder[j]; slotOrder[j] = tmp;
       }
       for (var i = 0; i < numPlayers; i++) {
@@ -2615,7 +2617,7 @@
         document.getElementById('tofr-text').innerHTML =
           PLAYER_LABELS[proposer] + ' will give: <b>' + giveStr + '</b><br>' +
           PLAYER_LABELS[target] + ' will give: <b>' + getStr + '</b>';
-        document.getElementById('trade-offer-overlay').classList.add('visible');
+        document.getElementById('trade-offer-overlay').classList.add('show');
       } else {
         // AI target evaluates by trade-price value
         var giveValue = computeTradeValue(give);
@@ -2633,7 +2635,7 @@
     }
 
     function respondToTradeOffer(accept) {
-      document.getElementById('trade-offer-overlay').classList.remove('visible');
+      document.getElementById('trade-offer-overlay').classList.remove('show');
       if (!pendingOffer) return;
       if (accept) {
         executeTrade(pendingOffer.proposer, pendingOffer.target, pendingOffer.give, pendingOffer.get);
@@ -3229,8 +3231,6 @@
       tideDirection = 1;
       turnNumber = 0;
       currentPlayer = 0;
-      roundStartPlayer = Math.floor(Math.random() * numPlayers);
-      activePlayer = roundStartPlayer;
       actionsLeft = 0;
       selectedAction = null;
       triremeFirstHex = null;
@@ -3243,7 +3243,7 @@
       document.getElementById('trade-panel').classList.remove('visible');
       document.getElementById('player-trade-panel').classList.remove('visible');
       var tofr = document.getElementById('trade-offer-overlay');
-      if (tofr) tofr.classList.remove('visible');
+      if (tofr) tofr.classList.remove('show');
       ptpState = null;
       pendingOffer = null;
 
@@ -3251,6 +3251,12 @@
       initPlayers();
       updateFloodState();
       placeStartingCamps();
+
+      // Pick the round-starter using the (still seeded if mapSeed set) rng, then drop back
+      // to Math.random so in-game events are nondeterministic.
+      roundStartPlayer = Math.floor(rng() * numPlayers);
+      activePlayer = roundStartPlayer;
+      rng = Math.random;
 
       setMessage('Set sail upon the wine-dark sea! Choose your captains and click "Start Game".');
       render();

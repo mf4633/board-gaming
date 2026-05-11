@@ -418,6 +418,7 @@
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -984,10 +985,11 @@
       setMessage('You need a route connected to the Agora to trade!');
       return;
     }
+    var earned = prices[res];
     p.resources[res]--;
-    p.coins += prices[res];
+    p.coins += earned;
     adjustPrice(res, -1);
-    setMessage(PLAYER_NAMES[playerTurn] + ' sold ' + res + ' for ' + (prices[res] + 1) + ' coins.');
+    setMessage(PLAYER_NAMES[playerTurn] + ' sold ' + res + ' for ' + earned + ' coins.');
     renderMarket();
     render();
     checkWin();
@@ -1001,10 +1003,11 @@
       setMessage('You need a route connected to the Agora to trade!');
       return;
     }
-    p.coins -= prices[res];
+    var paid = prices[res];
+    p.coins -= paid;
     p.resources[res]++;
     adjustPrice(res, 1);
-    setMessage(PLAYER_NAMES[playerTurn] + ' bought ' + res + ' for ' + prices[res] + ' coins.');  // price already adjusted
+    setMessage(PLAYER_NAMES[playerTurn] + ' bought ' + res + ' for ' + paid + ' coins.');
     renderMarket();
     render();
   }

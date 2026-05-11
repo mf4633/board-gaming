@@ -354,6 +354,7 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html" class="current">Tower</a>
@@ -744,6 +745,14 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
 </div>
 
 <script>
+/* ---- Demo build flag ----
+   Public web build at boardgaminghub.com ships only the Sandbox scenario,
+   no Daily Challenge, no Achievements panel. The Tauri/itch full build is
+   identical except DEMO_BUILD = false (set via build script in the private
+   board-gaming-premium repo). */
+var DEMO_BUILD = true;
+var DEMO_STORE_URL = 'https://hydroengineer.itch.io/skystack';
+
 /* Surface JS errors as an on-screen banner. Production Tauri/WebView2 has
    no visible devtools, so silent errors (null dereference, missing DOM, etc.)
    would otherwise look like a crash. Register before anything else. */
@@ -879,7 +888,7 @@ function weatherPick() {
   else if (s === 1) pool = ['clear','clear','clear','cloudy','storm'];         // Summer
   else if (s === 2) pool = ['clear','cloudy','cloudy','rain','fog','fog'];     // Fall
   else pool = ['clear','cloudy','snow','snow','snow','storm'];                 // Winter
-  return pool[Math.floor(Math.random() * pool.length)];
+  return pool[Math.floor(gameRandom() * pool.length)];
 }
 function weatherTraffic() {
   if (weather.kind === 'storm') return 0.5;
@@ -891,7 +900,7 @@ function weatherTraffic() {
 function rollWeather() {
   // Once per day morning: pick a new weather that holds all day
   weather.kind = weatherPick();
-  weather.intensity = weather.kind === 'storm' ? 1.0 : 0.6 + Math.random() * 0.3;
+  weather.intensity = weather.kind === 'storm' ? 1.0 : 0.6 + gameRandom() * 0.3;
   // Seed droplets/flakes lazily on demand in render
   weather.droplets = [];
   weather.flakes = [];
@@ -1139,7 +1148,7 @@ function maybeSendBondOffer() {
   if (state.day < 20 || state.day - (state.lastBondDay || 0) < 25) return;
   if (state.loan.principal > 250000) return;  // already in debt
   if (state.stars < 2) return;
-  if (Math.random() > 0.25) return;
+  if (gameRandom() > 0.25) return;
   state.lastBondDay = state.day;
   var principal = 500000 + state.stars * 200000;
   var days = 30;
@@ -1229,7 +1238,7 @@ function nearestOfType(fromUnit, type) {
 function maybeSpawnTenantRequest() {
   if (!state.tenantRequests) state.tenantRequests = [];
   if (state.tenantRequests.length >= 3) return;
-  if (Math.random() > 0.35) return;
+  if (gameRandom() > 0.35) return;
   // Pick a random residential unit with a tenant
   var candidates = [];
   for (var id in state.units) {
@@ -1237,11 +1246,11 @@ function maybeSpawnTenantRequest() {
     if ((u.type === 'condo' || u.type === 'penthouse' || u.type === 'office') && u.tenantList && u.tenantList.length > 0) candidates.push(u);
   }
   if (candidates.length === 0) return;
-  var u = candidates[Math.floor(Math.random() * candidates.length)];
-  var t = u.tenantList[Math.floor(Math.random() * u.tenantList.length)];
+  var u = candidates[Math.floor(gameRandom() * candidates.length)];
+  var t = u.tenantList[Math.floor(gameRandom() * u.tenantList.length)];
   // Pick a request
   var pool = REQUEST_TEMPLATES.filter(function(r) { return (r.minStars || 1) <= state.stars; });
-  var r = pool[Math.floor(Math.random() * pool.length)];
+  var r = pool[Math.floor(gameRandom() * pool.length)];
   if (!r) return;
   // Skip if already fulfilled
   if (r.test(u)) return;
@@ -1322,6 +1331,14 @@ function todayKey() {
   return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
 }
 
+// gameRandom(): use daily-challenge seeded RNG when active so daily runs are
+// reproducible. Cosmetic rolls (particles, music, decorative agents) should
+// keep Math.random() directly — only call gameRandom() for gameplay rolls.
+var _gameRng = null;
+function gameRandom() {
+  return _gameRng ? _gameRng() : Math.random();
+}
+
 /* ===== DAILY CHALLENGE ===== */
 function dailyChallengeConfig() {
   var rng = makeRng(dailySeed());
@@ -1354,6 +1371,10 @@ function startDailyChallenge() {
     };
     state.scenarioId = 'daily_' + dc.id + '_' + today;
     state.dailyChallenge = { id: dc.id, seed: dc.seed, day: today };
+    // Route gameRandom() through a fresh seeded stream so today's daily plays
+    // the same way for every player. Re-seeded here (not reused from dc.rng,
+    // which was consumed picking the variant) so rolls start from a known point.
+    _gameRng = makeRng(dc.seed ^ 0xC0FFEE);
     dc.init();
     updatePopulation();
     updateStars();
@@ -1479,99 +1500,12 @@ var SCENARIOS = {
     desc: 'Free play. No time limit, no restrictions. Build as you please.',
     difficulty: 'Relaxed',
     init: function() {}, goalText: null
-  },
-  sprint: {
-    name: 'Sprint',
-    desc: 'Starting cash $10M. Race to 5★. Your best time is saved.',
-    difficulty: 'Medium',
-    init: function() { state.cash = 10000000; state.scenarioId = 'sprint'; },
-    goalText: 'Reach 5★ (best time tracked)',
-    goalTest: function() { return state.stars >= 5; }
-  },
-  turnaround: {
-    name: 'The Turnaround',
-    desc: 'Inherit a half-ruined tower with $0 cash and $800k in debt. Rebuild.',
-    difficulty: 'Hard',
-    init: function() {
-      state.cash = 0;
-      state.loan.principal = 800000;
-      preplaceTurnaround();
-      state.scenarioId = 'turnaround';
-    },
-    goalText: 'Reach 3★ with $1M+ cash',
-    goalTest: function() { return state.stars >= 3 && state.cash >= 1000000; }
-  },
-  tiny: {
-    name: 'Tiny Lot',
-    desc: 'Grid limited to 14 columns wide. Zoning committee is watching.',
-    difficulty: 'Medium',
-    init: function() { state.scenarioGridW = 14; state.scenarioId = 'tiny'; },
-    goalText: 'Reach 2★ within 60 days',
-    goalTest: function() { return state.stars >= 2; },
-    goalFail: function() { return state.day > 60; }
-  },
-  underground: {
-    name: 'Underground',
-    desc: 'No floors above ground. Build downward — metro, parking, bunkers.',
-    difficulty: 'Hard',
-    init: function() { state.scenarioNoAbove = true; state.scenarioId = 'underground'; },
-    goalText: 'Reach 300 population below ground',
-    goalTest: function() { return state.population >= 300; }
-  },
-  monopoly: {
-    name: 'Corporate Monopoly',
-    desc: 'Only lobby, offices, stairs, elevators. No retail, no residents.',
-    difficulty: 'Medium',
-    init: function() { state.scenarioOnlyTypes = ['lobby','office','stairs','elevator']; state.scenarioId = 'monopoly'; },
-    goalText: 'Reach $5M cash with 80%+ office occupancy',
-    goalTest: function() {
-      if (state.cash < 5000000) return false;
-      var n = 0, full = 0;
-      for (var id in state.units) { var u = state.units[id]; if (u.type === 'office') { n++; if (u.tenants / UNITS.office.capacity >= 0.8) full++; } }
-      return n >= 5 && full / n >= 0.8;
-    }
-  },
-  marathon: {
-    name: 'Marathon',
-    desc: '100 days to build the tallest viable tower. No fires, no insolvency.',
-    difficulty: 'Hard',
-    init: function() { state.cash = 5000000; state.scenarioNoFires = true; state.scenarioId = 'marathon'; },
-    goalText: 'Survive 100 days + 50-floor tower',
-    goalTest: function() { return state.day >= 100 && highestOccupiedFloor() >= 49; }
-  },
-  vipmania: {
-    name: 'VIP Mania',
-    desc: 'Hot-shot market. Build a helipad and cater to the richest. VIP tips doubled.',
-    difficulty: 'Medium',
-    init: function() { state.cash = 3000000; state.scenarioVipBonus = 2.0; state.scenarioId = 'vipmania'; },
-    goalText: 'Earn $2M total from VIP tips',
-    goalTest: function() { return (state.scenarioVipEarnings || 0) >= 2000000; }
-  },
-  rescue: {
-    name: 'Disaster Week',
-    desc: '7 events hit in the first 10 days. Can you stabilize?',
-    difficulty: 'Hard',
-    init: function() { state.cash = 2000000; state.scenarioDisasterMode = true; state.scenarioDisasterTimer = 0; state.scenarioId = 'rescue'; },
-    goalText: 'Reach 2★ and $500k cash within 30 days',
-    goalTest: function() { return state.stars >= 2 && state.cash >= 500000; },
-    goalFail: function() { return state.day > 30; }
-  },
-  purist: {
-    name: 'Residential Purist',
-    desc: 'No offices or commercial. Live-work-play all residential-amenity.',
-    difficulty: 'Medium',
-    init: function() { state.scenarioOnlyTypes = ['lobby','condo','penthouse','stairs','elevator','skylobby','garden','gym','clinic','spa','shop','parking','security','atm','restaurant']; state.scenarioId = 'purist'; },
-    goalText: 'Reach 800 population with all residents happy (≥80% avg sat)',
-    goalTest: function() {
-      if (state.population < 800) return false;
-      var tot = 0, ct = 0;
-      for (var id in state.units) {
-        var u = state.units[id];
-        if ((u.type === 'condo' || u.type === 'penthouse') && u.tenants > 0) { tot += unitSatisfaction(u); ct++; }
-      }
-      return ct > 0 && (tot / ct) >= 80;
-    }
   }
+  // ---- DEMO BUILD ----
+  // The remaining 9 scenarios (Sprint, Turnaround, Tiny Lot, Underground,
+  // Monopoly, Marathon, VIP Mania, Disaster Week, Residential Purist) plus
+  // Daily Challenge and the Achievements panel are reserved for the full
+  // game on itch.io / Steam.
 };
 
 function preplaceTurnaround() {
@@ -2023,8 +1957,14 @@ function captureThumbnail() {
   } catch (ex) { return null; }
 }
 
+// Bump SAVE_VERSION whenever the snapshot schema changes in a way that needs
+// migration. applySaveSnapshot() must accept any older version by backfilling
+// missing fields (it already defaults most of them). Increment when you add
+// or rename a field that affects gameplay.
+var SAVE_VERSION = 2;
 function captureSaveSnapshot() {
   return {
+    version: SAVE_VERSION,
     cash: state.cash, day: state.day, minute: state.minute, stars: state.stars, population: state.population,
     units: state.units, grid: state.grid, nextUnitId: state.nextUnitId,
     elevators: state.elevators.map(function(e) {
@@ -2045,12 +1985,17 @@ function captureSaveSnapshot() {
     towerName: state.towerName,
     mail: state.mail,
     nextMailId: state.nextMailId,
+    dailyChallenge: state.dailyChallenge || null,
+    scenarioId: state.scenarioId || null,
     thumbnail: captureThumbnail(),
     savedAt: Date.now()
   };
 }
 
 function applySaveSnapshot(snap) {
+  // Older saves (no version field, or version < SAVE_VERSION) are accepted —
+  // any field added since they were saved gets a sensible default below.
+  var v = snap.version || 1;
   state.cash = snap.cash;
   state.day = snap.day;
   state.minute = snap.minute;
@@ -2075,10 +2020,20 @@ function applySaveSnapshot(snap) {
   state.towerName = snap.towerName || null;
   state.mail = snap.mail || [];
   state.nextMailId = snap.nextMailId || 1;
+  // v2: daily-challenge metadata persisted so a saved daily run resumes its
+  // seeded RNG stream.
+  state.dailyChallenge = snap.dailyChallenge || null;
+  state.scenarioId = snap.scenarioId || null;
+  if (state.dailyChallenge && state.dailyChallenge.seed != null) {
+    _gameRng = makeRng((state.dailyChallenge.seed ^ 0xC0FFEE) >>> 0);
+  } else {
+    _gameRng = null;
+  }
   state.agents = [];
   state.nextAgentId = 1;
   if (state.stars >= 2) costMultiplier.elevator = 0.8;
   if (state.stars >= 3) state.insurance = true;
+  if (v < SAVE_VERSION) logEvent('Save migrated from v' + v + ' to v' + SAVE_VERSION, 'info');
 }
 
 /* Override legacy save/load to use slot 0 by default */
@@ -2319,6 +2274,8 @@ function resetGameState() {
   state.cityPopulation = 800;
   state.negDays = 0;
   state._marketDirty = true;
+  state.dailyChallenge = null;
+  _gameRng = null;
   costMultiplier.elevator = 1.0;
   // Keep achievements (persistent across runs)
 }
@@ -2749,6 +2706,25 @@ function cycleBuild(dir) {
 
 /* ===== INIT ===== */
 function init() {
+  // Demo build: hide premium menu buttons (Daily Challenge, Achievements)
+  // and drop a "Get Full Game" CTA into the title menu pointing at itch.
+  if (DEMO_BUILD) {
+    var hides = document.querySelectorAll(
+      'button[onclick*="dailyModal"], button[onclick*="achievementsModal"]'
+    );
+    for (var i = 0; i < hides.length; i++) hides[i].style.display = 'none';
+    // Add the storefront link to the title menu only (not pause menu).
+    var titleMenu = document.querySelector('.title-content .menu');
+    if (titleMenu) {
+      var cta = document.createElement('a');
+      cta.href = DEMO_STORE_URL;
+      cta.target = '_blank';
+      cta.rel = 'noopener';
+      cta.textContent = 'GET FULL GAME →';
+      cta.style.cssText = 'display:block;margin-top:10px;padding:10px 16px;background:#FFD060;color:#0a0e14;text-decoration:none;font-weight:bold;text-align:center;letter-spacing:2px;border:2px solid #FFD060;font-family:inherit;';
+      titleMenu.appendChild(cta);
+    }
+  }
   canvas = document.getElementById('towerCanvas');
   ctx = canvas.getContext('2d');
   resize();
@@ -4526,7 +4502,7 @@ function endOfDay() {
         if (daysFull >= 3) {
           // Sale probability scales with market — hot market sells fast, glut is slow
           var saleProb = Math.max(0.04, Math.min(0.80, (mMult.condo - 0.5) * 0.55));
-          if (Math.random() < saleProb) {
+          if (gameRandom() < saleProb) {
             var saleMkt = Math.max(0.30, Math.min(1.50, 0.40 + marketRatio('condo') * 0.55));
             var salePrice = Math.round(def.salePrice * saleMkt);
             income += salePrice;
@@ -4550,7 +4526,7 @@ function endOfDay() {
       var churn = Math.max(0.01, 0.09 - satPct * 0.08);
       var left = 0;
       for (var ti = u.tenants - 1; ti >= 0; ti--) {
-        if (Math.random() < churn) left++;
+        if (gameRandom() < churn) left++;
       }
       if (left > 0) {
         u.tenants = Math.max(0, u.tenants - left);
@@ -4688,7 +4664,7 @@ function endOfDay() {
   checkTenantRequests();
   maybeSpawnTenantRequest();
   // Occasionally offer a choice event (less frequent than random events)
-  if (Math.random() < 0.15) maybeOfferChoiceEvent();
+  if (gameRandom() < 0.15) maybeOfferChoiceEvent();
   updateStars();
   checkQuestProgress();
   rollNewQuest();
@@ -4742,10 +4718,10 @@ var CHOICE_EVENTS = [
 
 function maybeOfferChoiceEvent() {
   if (state.pendingChoice) return; // one at a time
-  if (Math.random() > 0.22) return;
+  if (gameRandom() > 0.22) return;
   var pool = CHOICE_EVENTS.filter(function(e) { return e.when(); });
   if (pool.length === 0) return;
-  var ev = pool[Math.floor(Math.random() * pool.length)];
+  var ev = pool[Math.floor(gameRandom() * pool.length)];
   state.pendingChoice = ev;
   showChoiceModal(ev);
 }
@@ -4788,20 +4764,20 @@ function maybeScheduleEvent() {
   var disasterForcing = false;
   if (state.scenarioDisasterMode && state.day <= 10) {
     var hits = state.scenarioDisasterTimer || 0;
-    if (hits < 7 && Math.random() < 0.85) { disasterForcing = true; state.scenarioDisasterTimer = hits + 1; }
+    if (hits < 7 && gameRandom() < 0.85) { disasterForcing = true; state.scenarioDisasterTimer = hits + 1; }
   }
   var baseChance = 0.18 + Math.min(0.25, Object.keys(state.units).length / 300);
-  if (!disasterForcing && Math.random() > baseChance) return;
+  if (!disasterForcing && gameRandom() > baseChance) return;
   var kinds = ['fire', 'outage', 'boom', 'bust'];
   if (state.scenarioNoFires) kinds = kinds.filter(function(k) { return k !== 'fire'; });
   if (state.stars >= 3) kinds.push('inspection');
   if (state.stars >= 3) kinds.push('pipeburst', 'strike', 'bombthreat');
   if (state.stars >= 4) kinds.push('earthquake');
-  var kind = kinds[Math.floor(Math.random() * kinds.length)];
+  var kind = kinds[Math.floor(gameRandom() * kinds.length)];
   // Fire stations reduce fire chance and can skip it entirely
   if (kind === 'fire') {
     var stations = countUnits('firestation');
-    if (stations > 0 && Math.random() < Math.min(0.9, stations * 0.4)) {
+    if (stations > 0 && gameRandom() < Math.min(0.9, stations * 0.4)) {
       logEvent('Fire alarm — fire station responded, no damage', 'good');
       if (state.stats) state.stats.firesHandled++;
       return;
@@ -4821,7 +4797,7 @@ function triggerEvent(kind) {
       if (t !== 'lobby' && t !== 'stairs' && t !== 'elevator' && !state.units[id].damaged) candidates.push(id);
     }
     if (candidates.length === 0) return;
-    var pick = candidates[Math.floor(Math.random() * candidates.length)];
+    var pick = candidates[Math.floor(gameRandom() * candidates.length)];
     var pickU = state.units[pick];
     pickU.damaged = true;
     // Evict tenants visibly — spawn fleeing agents from the fire
@@ -4844,7 +4820,7 @@ function triggerEvent(kind) {
     state.shake = 1.0;
     sfx('warn');
   } else if (kind === 'outage') {
-    var duration = 180 + Math.floor(Math.random() * 180);
+    var duration = 180 + Math.floor(gameRandom() * 180);
     state.events.push({ kind: 'outage', remaining: duration });
     logEvent('Power outage — elevators halted for ~' + Math.round(duration / 60 * 10) / 10 + 'h', 'warn');
   } else if (kind === 'boom') {
@@ -4866,8 +4842,8 @@ function triggerEvent(kind) {
     // Pipe burst: random floor's units all lose satisfaction + small repair cost
     var ids = Object.keys(state.units);
     if (ids.length === 0) return;
-    var victim = state.units[ids[Math.floor(Math.random() * ids.length)]];
-    var cost = 15000 + Math.floor(Math.random() * 25000);
+    var victim = state.units[ids[Math.floor(gameRandom() * ids.length)]];
+    var cost = 15000 + Math.floor(gameRandom() * 25000);
     state.cash -= cost;
     logEvent('Burst pipe on floor ' + floorLabel(victim.y) + ' — repair $' + formatMoney(cost), 'bad');
     // Knock satisfaction on all units on that floor
@@ -4890,12 +4866,12 @@ function triggerEvent(kind) {
   } else if (kind === 'bombthreat') {
     // Security teams can defuse without disruption
     var sec = countUnits('security');
-    if (sec > 0 && Math.random() < Math.min(0.7, sec * 0.35)) {
+    if (sec > 0 && gameRandom() < Math.min(0.7, sec * 0.35)) {
       logEvent('Bomb threat called in — security swept the tower, all clear', 'good');
       sfx('bell');
       return;
     }
-    var dur = 90 + Math.floor(Math.random() * 90);
+    var dur = 90 + Math.floor(gameRandom() * 90);
     state.events.push({ kind: 'bombthreat', remaining: dur });
     var evacuated = 0;
     for (var bid in state.units) {
@@ -4928,7 +4904,7 @@ function triggerEvent(kind) {
     for (var eid in state.units) { var u = state.units[eid]; if (u.type !== 'lobby' && u.type !== 'stairs' && u.type !== 'elevator' && !u.damaged) list.push(eid); }
     var nHit = Math.min(list.length, 2 + Math.floor(list.length * 0.12));
     for (var eh = 0; eh < nHit; eh++) {
-      var eidx = Math.floor(Math.random() * list.length);
+      var eidx = Math.floor(gameRandom() * list.length);
       var victU = state.units[list[eidx]];
       victU.damaged = true;
       victU.tenants = 0;
@@ -4993,7 +4969,7 @@ function rollFireSpread() {
   if (burning.length === 0) return;
   for (var b = 0; b < burning.length; b++) {
     var u = burning[b];
-    if (Math.random() >= spreadProb) continue;
+    if (gameRandom() >= spreadProb) continue;
     // Try to spread to an adjacent (not-already-damaged) unit on floor y or y±1
     var candidates = [];
     for (var id2 in state.units) {
@@ -5004,7 +4980,7 @@ function rollFireSpread() {
       if (dy <= 1 && dx <= u.w / 2 + n.w / 2 + 1) candidates.push(n);
     }
     if (candidates.length === 0) continue;
-    var victim = candidates[Math.floor(Math.random() * candidates.length)];
+    var victim = candidates[Math.floor(gameRandom() * candidates.length)];
     if (UNITS[victim.type].fireProtect) continue;
     // Evacuate the victim's tenants too
     for (var vi = 0; vi < victim.tenants; vi++) {
@@ -5040,7 +5016,7 @@ function rollCrime() {
     if (def.capacity <= 0 || u.tenants <= 0) continue;
     if (def.rent || def.salePrice || def.nightly) {
       var covered = unitHasSecurityCoverage(u);
-      if (!covered && Math.random() < 0.22) {
+      if (!covered && gameRandom() < 0.22) {
         u.satFall = (u.satFall || 0) + 20;
         logEvent('Petty crime reported at ' + def.name + ' (floor ' + floorLabel(u.y) + ')', 'warn');
       }
@@ -5105,7 +5081,7 @@ function rollNewQuest() {
       pool.push(q);
     }
     if (pool.length === 0) break;
-    var pick = pool[Math.floor(Math.random() * pool.length)];
+    var pick = pool[Math.floor(gameRandom() * pool.length)];
     state.quests.push({ id: pick.id, text: pick.text, reward: pick.reward, addedDay: state.day });
   }
   renderQuests();
@@ -5242,12 +5218,12 @@ function renderCampaignModal() {
 // Random weeklong discount on a specific unit type
 function maybeStartPromo() {
   if (state.promoUntil && state.day <= state.promoUntil) return;
-  if (Math.random() < 0.08) {
+  if (gameRandom() < 0.08) {
     var pool = ['elevator','stairs','condo','office','shop','hotel','gym','spa','garden','sprinkler','security'];
-    var pick = pool[Math.floor(Math.random() * pool.length)];
+    var pick = pool[Math.floor(gameRandom() * pool.length)];
     if (!UNITS[pick] || (UNITS[pick].minStars || 1) > state.stars) return;
     state.promoUnit = pick;
-    state.promoUntil = state.day + 5 + Math.floor(Math.random() * 3);
+    state.promoUntil = state.day + 5 + Math.floor(gameRandom() * 3);
     state.promoDiscount = 0.3;
     postMail({
       from: 'Supplier Network',

@@ -215,6 +215,7 @@ svg .port-label { font-family: Georgia, serif; font-size: 8px; fill: #C8A888; te
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -1461,9 +1462,7 @@ function aiMainPhase() {
         }
         if (score > bestScore) { bestScore = score; best = verts[i]; }
       }
-      payCost(cp, COST_HABITAT); // Pay before placing since placeHabitat checks for non-setup
-      players[cp].resources.Iron += COST_HABITAT.Iron; players[cp].resources.Solar += COST_HABITAT.Solar;
-      players[cp].resources.Biomass += COST_HABITAT.Biomass; players[cp].resources.Water += COST_HABITAT.Water;
+      // placeHabitat pays cost for non-setup phases; no pre-pay needed.
       placeHabitat(best);
       if (gameOver) return;
       scheduleAI(aiMainPhase, aiDelay(300));
@@ -1475,8 +1474,7 @@ function aiMainPhase() {
   if (canAfford(cp, COST_PIPELINE)) {
     var edgeList = validPipelineEdges(cp, false);
     if (edgeList.length > 0) {
-      payCost(cp, COST_PIPELINE);
-      players[cp].resources.Iron += COST_PIPELINE.Iron; players[cp].resources.Solar += COST_PIPELINE.Solar;
+      // placePipeline pays cost for non-setup phases; no pre-pay needed.
       placePipeline(edgeList[Math.floor(Math.random() * edgeList.length)]);
       if (gameOver) return;
       scheduleAI(aiMainPhase, aiDelay(300));
@@ -1568,8 +1566,6 @@ function aiSurge(p) {
     players[p].pipelines++;
   }
   updateLongestRoad();
-  if (phase === 'moveDust') return;
-  phase = 'main';
   pendingAction = null;
   render();
 }

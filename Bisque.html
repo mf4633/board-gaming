@@ -481,6 +481,7 @@ body {
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -791,6 +792,13 @@ var TERRITORIES = [
   { id: 'blockIslandSound', name: 'Block Is. Snd',    group: 'outerWaters', x: 678, y: 295, water: true },
   { id: 'fishersIsland',    name: 'Fishers Is.',      group: 'outerWaters', x: 660, y: 50,  water: false }
 ];
+
+/* Fast O(1) lookup map — TERRITORIES array is static, build once. */
+var TERRITORY_BY_ID = (function() {
+  var m = {};
+  for (var i = 0; i < TERRITORIES.length; i++) m[TERRITORIES[i].id] = TERRITORIES[i];
+  return m;
+})();
 
 var GROUPS = {
   northfork:   { name: 'North Fork',       bonus: 4, color: '#C8B088', border: '#B89858' },
@@ -1689,6 +1697,7 @@ function toggleBisqueStrategy() {
 /* ===== AI ===== */
 function scheduleAi() {
   if (state.gameOver) return;
+  if (aiTimer) { clearTimeout(aiTimer); }
   aiTimer = setTimeout(aiTurn, 600);
 }
 
@@ -1793,6 +1802,7 @@ function aiAttack(player) {
   if (bestAtk) {
     attackSource = bestAtk.from;
     render();
+    if (aiTimer) { clearTimeout(aiTimer); }
     aiTimer = setTimeout(function() {
       resolveCombat(bestAtk.from, bestAtk.to);
       attackSource = null;
@@ -1853,6 +1863,7 @@ function aiFortify(player) {
     render();
   }
 
+  if (aiTimer) { clearTimeout(aiTimer); }
   aiTimer = setTimeout(function() {
     nextTurn();
   }, 400);
@@ -1868,10 +1879,7 @@ function getOwnedTerritories(player) {
 
 /* ===== UTILITIES ===== */
 function getTerritoryData(id) {
-  for (var i = 0; i < TERRITORIES.length; i++) {
-    if (TERRITORIES[i].id === id) return TERRITORIES[i];
-  }
-  return null;
+  return TERRITORY_BY_ID[id] || null;
 }
 
 function shuffle(arr) {

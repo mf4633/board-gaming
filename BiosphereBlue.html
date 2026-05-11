@@ -294,6 +294,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -814,6 +815,10 @@ var WORLD_RNG = Math.random;
 function setWorldSeed(seed) {
   WORLD_SEED = seed || '';
   WORLD_RNG = seed ? mulberry32(strToSeed(seed)) : Math.random;
+  // Mirror onto SIM.rng so the sim runtime (events, mutations, fires, etc.)
+  // uses the same seeded stream as world generation. Without this, two runs
+  // with the same seed get identical starting topology but diverge instantly.
+  if (typeof SIM !== 'undefined' && SIM) SIM.rng = WORLD_RNG;
 }
 
 function generateInitialWorld(tiles) {
@@ -929,7 +934,10 @@ function resetSim() {
     history: [],
     clades: [],            // parallel evolutionary lineages
     cladeNextId: 0,        // monotonic clade id
-    cladeLog: []           // recent clade events ('born', 'extinct', 'speciated', 'sapient')
+    cladeLog: [],          // recent clade events ('born', 'extinct', 'speciated', 'sapient')
+    _riverTimer: 0,        // years since last computeRivers; fires every 500 Ky regardless of SIM_DT_YEARS
+    _historyTimer: 0,      // years since last recordHistory; fires every 10 My
+    rng: WORLD_RNG         // seedable mulberry32 for daily/seeded runs, else Math.random
   };
 }
 resetSim();
@@ -1013,22 +1021,23 @@ function generateCladeName(rng) {
 // Spawn a new clade. parentId optional. Initial trait set is biased by body plan.
 function makeClade(bodyPlanId, opts) {
   opts = opts || {};
+  var rng = (SIM && SIM.rng) || Math.random;
   var bp = bodyPlan(bodyPlanId);
   var stage = opts.stage != null ? opts.stage : (bp ? bp.minStage : 1);
   var traits = (opts.traits || []).slice();
   // Body-plan-flavored starting traits
-  if (bodyPlanId === 'microbe' && traits.indexOf('photo') < 0 && Math.random() < 0.5) traits.push('photo');
+  if (bodyPlanId === 'microbe' && traits.indexOf('photo') < 0 && rng() < 0.5) traits.push('photo');
   if (bodyPlanId === 'plant'   && traits.indexOf('photo') < 0) traits.push('photo');
   if (bodyPlanId === 'algal'   && traits.indexOf('photo') < 0) traits.push('photo');
   if (bodyPlanId === 'avian'   && traits.indexOf('flight')< 0) traits.push('flight');
   if (bodyPlanId === 'aquatic' && traits.indexOf('aquatic')<0) traits.push('aquatic');
-  if (bodyPlanId === 'insect'  && traits.indexOf('hard') < 0 && Math.random() < 0.7) traits.push('hard');
-  if (bodyPlanId === 'reptile' && Math.random() < 0.5) traits.push('cold');
-  if (bodyPlanId === 'mammal'  && traits.indexOf('social') < 0 && Math.random() < 0.6) traits.push('social');
+  if (bodyPlanId === 'insect'  && traits.indexOf('hard') < 0 && rng() < 0.7) traits.push('hard');
+  if (bodyPlanId === 'reptile' && rng() < 0.5) traits.push('cold');
+  if (bodyPlanId === 'mammal'  && traits.indexOf('social') < 0 && rng() < 0.6) traits.push('social');
   // Per-clade encephalization roll (0..1). Mammals & avians lean higher;
   // microbes never get a useful roll. Used to stagger sapience emergence
   // so multiple clades don't all hit stage 6 on the same step.
-  var encBase = 0.4 + Math.random() * 0.4;
+  var encBase = 0.4 + rng() * 0.4;
   if (bodyPlanId === 'mammal') encBase += 0.25;
   else if (bodyPlanId === 'avian') encBase += 0.15;
   else if (bodyPlanId === 'reptile') encBase += 0.05;
@@ -1128,11 +1137,12 @@ function stepTectonics(W, dtY) {
     d.bedrock[i] = clamp(d.bedrock[i], -0.75, 1.5);
   }
   // Hotspot event: local uplift paired with a compensating dome of subsidence outside so globe mass is conserved
-  if (Math.random() < 2e-4 * dtY / 100000) {
-    var ct = (Math.random()*n)|0;
+  var rng = SIM.rng;
+  if (rng() < 2e-4 * dtY / 100000) {
+    var ct = (rng()*n)|0;
     var hc = tiles[ct].center;
-    var r = 0.10 + Math.random()*0.08;
-    var amp = 0.08 + Math.random()*0.10;
+    var r = 0.10 + rng()*0.08;
+    var amp = 0.08 + rng()*0.10;
     var sumUp = 0;
     var w = new Float32Array(n);
     for (var i = 0; i < n; i++) {
@@ -1338,8 +1348,14 @@ function stepHydrology(W, dtY) {
   var diceVol = iceVolNew - iceVolOld;
   SIM.seaLevel = clamp(SIM.seaLevel - diceVol * 0.008, -0.10, 0.10);
 
-  // Precipitation drives rivers — recompute accumulation every ~5 sim steps.
-  if ((SIM.year % 500000 | 0) === 0) computeRivers(W);
+  // Precipitation drives rivers — recompute accumulation every 500 Ky of sim
+  // time. Accumulator (not a year-modulus) so retuning SIM_DT_YEARS doesn't
+  // silently disable river updates when the new step doesn't divide 500000.
+  SIM._riverTimer = (SIM._riverTimer || 0) + dtY;
+  if (SIM._riverTimer >= 500000) {
+    computeRivers(W);
+    SIM._riverTimer = 0;
+  }
 }
 
 function computeRivers(W) {
@@ -1456,8 +1472,7 @@ function stepWildfires(W, dtY) {
   else if (SIM.o2 < 0.17) o2Mult = (SIM.o2 - 0.13) / 0.04; // smolder regime
   var SEA = SIM.seaLevel;
   var fires = 0, burnedVeg = 0;
-  var n50 = Math.min(n, 12000);  // cap to keep rng cheap at high speed
-  for (var i = 0; i < n50; i++) {
+  for (var i = 0; i < n; i++) {
     if (d.bedrock[i] <= SEA) continue;
     var veg = d.vegetation[i];
     if (veg < 0.2) continue;
@@ -1465,7 +1480,7 @@ function stepWildfires(W, dtY) {
     if (T < 6) continue;
     var dry = clamp(1 - d.moisture[i], 0, 1);
     var p = 0.0016 * veg * clamp((T - 6) / 28, 0, 1) * dry * o2Mult * step;
-    if (Math.random() < p) {
+    if (SIM.rng() < p) {
       burnedVeg += veg;
       d.vegetation[i] = 0;
       if (d.biome[i] >= 5 && d.biome[i] <= 7) d.biome[i] = 4;
@@ -1493,15 +1508,15 @@ var EVENTS = [
     effect: function() {
       var d = WORLD.data;
       SIM.co2 = clamp(SIM.co2 + 200, 60, 25000);
-      var hits = 6 + ((Math.random()*8)|0);
+      var hits = 6 + ((SIM.rng()*8)|0);
       for (var k = 0; k < hits; k++) {
-        var ti = (Math.random()*d.bedrock.length)|0;
+        var ti = (SIM.rng()*d.bedrock.length)|0;
         d.bedrock[ti] -= 0.05;
         d.temperature[ti] -= 6;
         d.vegetation[ti] = Math.max(0, d.vegetation[ti] - 0.4);
       }
-      var avgT = 0; for (var i = 0; i < d.temperature.length; i++) avgT += (d.temperature[i] -= 0.6);
-      SIM.globalTemp = avgT / d.temperature.length;
+      // Global cooling — let stepClimate re-derive globalTemp from the new tile field.
+      for (var i = 0; i < d.temperature.length; i++) d.temperature[i] -= 0.6;
       applyHazard('asteroid', 0.04);
     }
   },
@@ -1520,7 +1535,7 @@ var EVENTS = [
       // Aerosol cooling — initial dimming
       for (var i = 0; i < d.temperature.length; i++) d.temperature[i] -= 4;
       // Local uplift at one tile
-      var ti = (Math.random()*d.bedrock.length)|0;
+      var ti = (SIM.rng()*d.bedrock.length)|0;
       d.bedrock[ti] += 0.18;
       applyHazard('volcano', 0.025);
     }
@@ -1538,7 +1553,7 @@ var EVENTS = [
       // Gift: surviving clades gain a free mutation
       for (var k = 0; k < SIM.clades.length; k++) {
         var c = SIM.clades[k];
-        if (!c.extinct && Math.random() < 0.6) tryMutate(c);
+        if (!c.extinct && SIM.rng() < 0.6) tryMutate(c);
       }
     }
   },
@@ -1580,7 +1595,7 @@ function stepEvents(dtY) {
   if (!WORLD || SIM.year < 200000) return;
   if (stepEventsCooldown > 0) { stepEventsCooldown--; return; }
   // ~0.6% chance per step of an event firing; cooldown then prevents back-to-back
-  if (Math.random() > 0.006) return;
+  if (SIM.rng() > 0.006) return;
   var elig = [];
   for (var i = 0; i < EVENTS.length; i++) {
     var e = EVENTS[i];
@@ -1589,7 +1604,7 @@ function stepEvents(dtY) {
   if (!elig.length) return;
   var totalW = 0;
   for (var i = 0; i < elig.length; i++) totalW += elig[i].weight;
-  var roll = Math.random() * totalW;
+  var roll = SIM.rng() * totalW;
   var picked = elig[0], acc = 0;
   for (var i = 0; i < elig.length; i++) {
     acc += elig[i].weight;
@@ -1712,10 +1727,10 @@ function trySpeciate(parent) {
     candidates.push(b);
   }
   if (!candidates.length) return null;
-  var pick = candidates[(Math.random() * candidates.length) | 0];
+  var pick = candidates[(SIM.rng() * candidates.length) | 0];
   // Inherit one parent trait, gain one new
   var startTraits = [];
-  if (parent.traits.length) startTraits.push(parent.traits[(Math.random() * parent.traits.length) | 0]);
+  if (parent.traits.length) startTraits.push(parent.traits[(SIM.rng() * parent.traits.length) | 0]);
   var child = makeClade(pick.id, {
     parentId: parent.id,
     stage: Math.max(pick.minStage, parent.stage - 1),
@@ -1731,7 +1746,7 @@ function trySpeciate(parent) {
 // Maybe gain a random trait via mutation
 function tryMutate(c) {
   if (c.traits.length >= 5) return;
-  if (Math.random() > 0.005) return;  // ~0.5% per step (~ one new trait per 20 My)
+  if (SIM.rng() > 0.005) return;  // ~0.5% per step (~ one new trait per 20 My)
   // Pick a trait not already present, weighted toward useful ones for the body plan
   var bp = bodyPlan(c.bodyPlan);
   var pool = [];
@@ -1744,7 +1759,7 @@ function tryMutate(c) {
     pool.push(t.id);
   }
   if (!pool.length) return;
-  var pick = pool[(Math.random() * pool.length) | 0];
+  var pick = pool[(SIM.rng() * pool.length) | 0];
   c.traits.push(pick);
   SIM.cladeLog.push({ year: SIM.year, kind: 'mutate', name: c.name, trait: pick });
 }
@@ -1772,11 +1787,11 @@ function tryAdvanceClade(c) {
     var pSap = 0.0008 * (c.enceph || 0.5);
     if (c.traits.indexOf('social') >= 0) pSap *= 1.5;
     if (c.traits.indexOf('tools')  >= 0) pSap *= 1.5;
-    ok = Math.random() < pSap;
+    ok = SIM.rng() < pSap;
   }
   else if (c.stage === 6 && age > 4.5 && c.biomass > 0.012 && c.traits.indexOf('tools') >= 0) {
     var pCiv = 0.004 * (c.enceph || 0.5);
-    ok = Math.random() < pCiv;
+    ok = SIM.rng() < pCiv;
   }
   if (!ok) return;
   c.stage = nextStage;
@@ -1900,12 +1915,12 @@ function stepLife(W, dtY) {
     if (c.biomass > 0.04 && c.stage >= 2) {
       var atCeiling = c.stage >= bp.maxStage;
       var pSpec = atCeiling ? 0.0015 : 0.0004;
-      if (Math.random() < pSpec) trySpeciate(c);
+      if (SIM.rng() < pSpec) trySpeciate(c);
     }
   }
 
   // Stress extinction on extreme global conditions (legacy behavior)
-  if ((SIM.globalTemp > 55 || SIM.globalTemp < -25) && Math.random() < 0.002) {
+  if ((SIM.globalTemp > 55 || SIM.globalTemp < -25) && SIM.rng() < 0.002) {
     applyHazard(SIM.globalTemp > 55 ? 'greenhouse' : 'snowball', 0.04);
     notifyEvent('Mass extinction event!', 'warn');
   }
@@ -1930,7 +1945,17 @@ function simStep() {
   stepEvents(dtY);
   checkAchievements();
   checkBanners();
-  if ((SIM.year % 10000000) === 0) recordHistory();
+  // Render-dirty flags so the animate() pass knows there's something new
+  // to redraw. Brushes / view-mode toggles set these directly as well so
+  // user actions outside a sim tick still flush to screen.
+  SIM._meshDirty = true;
+  SIM._colorsDirty = true;
+  // History sample every 10 My of sim time (accumulator, not year-modulus).
+  SIM._historyTimer = (SIM._historyTimer || 0) + dtY;
+  if (SIM._historyTimer >= 10000000) {
+    recordHistory();
+    SIM._historyTimer = 0;
+  }
 }
 
 // Full-screen banner for dramatic state transitions. Each banner fires once per session/world.
@@ -2349,6 +2374,7 @@ function applyScenario(name) {
   recolorAll();
   geometry.attributes.position.needsUpdate = true;
   geometry.attributes.color.needsUpdate = true;
+  if (SIM) { SIM._meshDirty = false; SIM._colorsDirty = false; }
   refreshAllUI();
   notifyEvent('Scenario loaded: ' + name, 'good');
 }
@@ -2374,7 +2400,7 @@ function synthesizeCladesForStage(targetStage, scenarioName) {
   if (targetStage >= 5) add('insect',  Math.min(targetStage, 6), ['hard','fast'], 0.04);
   if (targetStage >= 5) add('reptile', Math.min(targetStage, 6), ['cold'], 0.03);
   if (targetStage >= 6) add('mammal',  targetStage, ['social','tools'], 0.05, { sapient: targetStage >= 6, civ: targetStage >= 7 });
-  if (targetStage >= 6 && Math.random() < 0.5) add('avian', Math.min(targetStage, 6), ['flight'], 0.02);
+  if (targetStage >= 6 && (SIM.rng || Math.random)() < 0.5) add('avian', Math.min(targetStage, 6), ['flight'], 0.02);
   // Carboniferous flavor: extra-large arthropods
   if (scenarioName === 'carbon') add('insect', 5, ['large','hard'], 0.04);
   // Snowball flavor: surviving microbes are cold-tolerant
@@ -2669,6 +2695,7 @@ function buildAndAttachWorld() {
   computeRivers(WORLD);
   updateMeshPositions();
   recolorAll();
+  if (SIM) { SIM._meshDirty = false; SIM._colorsDirty = false; }
 
   if (threeMesh) { planetGroup.remove(threeMesh); geometry.dispose(); }
   geometry = new THREE.BufferGeometry();
@@ -3003,6 +3030,11 @@ function onResize() {
 var camYaw = 0, camPitch = 0.35, camDist = 3.4;
 var dragging = false, lastX = 0, lastY = 0, dragDX = 0, dragDY = 0;
 
+// Reused across hover + click. Allocating a fresh Raycaster on every mousemove
+// (12 Hz) and click was burning GC time at 184K triangles.
+var _rc = new THREE.Raycaster();
+var _ndc = new THREE.Vector2();
+
 function setupInput(canvas) {
   canvas.addEventListener('mousedown', function(e) {
     dragging = true; lastX = e.clientX; lastY = e.clientY;
@@ -3027,13 +3059,12 @@ function setupInput(canvas) {
     if (!WORLD || threeMesh == null) return;
     if (dragDX > 4 || dragDY > 4) return;
     var rect = canvas.getBoundingClientRect();
-    var ndc = new THREE.Vector2(
+    _ndc.set(
       ((e.clientX - rect.left) / rect.width) * 2 - 1,
       -((e.clientY - rect.top) / rect.height) * 2 + 1
     );
-    var rc = new THREE.Raycaster();
-    rc.setFromCamera(ndc, camera);
-    var hits = rc.intersectObject(threeMesh);
+    _rc.setFromCamera(_ndc, camera);
+    var hits = _rc.intersectObject(threeMesh);
     if (!hits.length) return;
     var ti = WORLD.mesh.tileOfTri[hits[0].faceIndex];
     if (currentTool === 'info') {
@@ -3047,6 +3078,9 @@ function setupInput(canvas) {
       recolorAll();
       geometry.attributes.position.needsUpdate = true;
       geometry.attributes.color.needsUpdate = true;
+      // Just flushed both passes; clear flags so animate() doesn't redo them
+      // on the next frame just because a prior simStep flagged dirty.
+      if (SIM) { SIM._meshDirty = false; SIM._colorsDirty = false; }
       refreshAllUI();
     }
   });
@@ -3060,13 +3094,12 @@ function setupInput(canvas) {
     if (now - lastHover < 85) return;
     lastHover = now;
     var rect = canvas.getBoundingClientRect();
-    var ndc = new THREE.Vector2(
+    _ndc.set(
       ((e.clientX - rect.left) / rect.width) * 2 - 1,
       -((e.clientY - rect.top) / rect.height) * 2 + 1
     );
-    var rc = new THREE.Raycaster();
-    rc.setFromCamera(ndc, camera);
-    var hits = rc.intersectObject(threeMesh);
+    _rc.setFromCamera(_ndc, camera);
+    var hits = _rc.intersectObject(threeMesh);
     if (hits.length) {
       var ti = WORLD.mesh.tileOfTri[hits[0].faceIndex];
       if (ti !== hoverTile) {
@@ -3088,12 +3121,34 @@ function setupInput(canvas) {
     camDist = clamp(camDist, 1.25, 8);
     updateCamera();
   }, { passive: false });
-  // touch
+  // touch — single-finger rotates camera, two-finger pinch scales camDist.
   var tp = null;
+  var pinchDist0 = 0;
+  var pinchCamDist0 = 0;
+  function _touchDist(e) {
+    var a = e.touches[0], b = e.touches[1];
+    return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+  }
   canvas.addEventListener('touchstart', function(e) {
-    if (e.touches.length === 1) { tp = { x: e.touches[0].clientX, y: e.touches[0].clientY }; dragDX = 0; dragDY = 0; }
+    if (e.touches.length === 1) {
+      tp = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      dragDX = 0; dragDY = 0;
+    } else if (e.touches.length === 2) {
+      pinchDist0 = _touchDist(e) || 1;
+      pinchCamDist0 = camDist;
+      tp = null;
+    }
   });
   canvas.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 2 && pinchDist0 > 0) {
+      var d = _touchDist(e);
+      // Pinch in (fingers closer) zooms out (increases camDist) — same as
+      // wheel scrolling down. Inverse ratio so spreading fingers zooms in.
+      camDist = clamp(pinchCamDist0 * (pinchDist0 / Math.max(1, d)), 1.25, 8);
+      updateCamera();
+      e.preventDefault();
+      return;
+    }
     if (e.touches.length === 1 && tp) {
       var dx = e.touches[0].clientX - tp.x, dy = e.touches[0].clientY - tp.y;
       dragDX += Math.abs(dx); dragDY += Math.abs(dy);
@@ -3104,7 +3159,10 @@ function setupInput(canvas) {
       e.preventDefault();
     }
   }, { passive: false });
-  canvas.addEventListener('touchend', function() { tp = null; });
+  canvas.addEventListener('touchend', function(e) {
+    if (e.touches.length < 2) pinchDist0 = 0;
+    if (e.touches.length === 0) tp = null;
+  });
   updateCamera();
 }
 
@@ -3776,7 +3834,7 @@ function setViewMode(mode) {
   document.querySelectorAll('.view-btn').forEach(function(b) {
     b.classList.toggle('active', b.dataset.view === mode);
   });
-  if (WORLD) { recolorAll(); geometry.attributes.color.needsUpdate = true; }
+  if (WORLD) { recolorAll(); geometry.attributes.color.needsUpdate = true; if (SIM) SIM._colorsDirty = false; }
   if (plateArrows) plateArrows.visible = (currentMode === 'plate');
   buildLegend();
 }
@@ -4055,19 +4113,23 @@ function animate() {
   var steps = STEPS_PER_FRAME[SIM.speed] || 0;
   for (var s = 0; s < steps; s++) simStep();
 
-  if (steps > 0 && WORLD) {
-    // Heavy updates only a few times per second
-    if (frameCount % 4 === 0) {
+  if (WORLD && SIM) {
+    // Heavy updates only a few times per second AND only when dirty —
+    // recolorAll/updateMeshPositions are ~100k+ float writes each. When the
+    // sim is paused and no action just landed, skip both entirely.
+    if (frameCount % 4 === 0 && SIM._meshDirty) {
       updateMeshPositions();
       geometry.attributes.position.needsUpdate = true;
       updateMonolithPositions();
       if (selectedTile >= 0) drawSelectedOutline();
+      SIM._meshDirty = false;
     }
-    if (frameCount % 2 === 0) {
+    if (frameCount % 2 === 0 && SIM._colorsDirty) {
       recolorAll();
       geometry.attributes.color.needsUpdate = true;
+      SIM._colorsDirty = false;
     }
-    if (frameCount % 6 === 0) refreshAllUI();
+    if (steps > 0 && frameCount % 6 === 0) refreshAllUI();
   }
   if (PHASE.open && (frameCount % 3 === 0)) phaseRender();
 
@@ -4075,10 +4137,9 @@ function animate() {
   if (SIM && SIM.showSeasons) {
     SIM.seasonPhase = (SIM.seasonPhase || 0) + 0.012;
     if (SIM.seasonPhase > Math.PI * 2) SIM.seasonPhase -= Math.PI * 2;
-    if (WORLD && currentMode === 'temperature' && (frameCount % 3) === 0) {
-      recolorAll();
-      geometry.attributes.color.needsUpdate = true;
-    }
+    // Seasonal display modulates the temperature-view color per phase; flag
+    // dirty so the next throttled recolor picks it up. Only matters in temp view.
+    if (WORLD && currentMode === 'temperature') SIM._colorsDirty = true;
   }
 
   if (autoSpin) { camYaw -= 0.0013; updateCamera(); }
@@ -4161,12 +4222,16 @@ function b64ToArr(b64, Type) {
   return new Type(bytes.buffer);
 }
 
+// SAVE_SCHEMA = 2 added 2026-05-11: clades, _riverTimer/_historyTimer, ch4/h2o
+// state, axialTilt/seasonPhase/geothermal sliders. v1 saves are still
+// accepted on load via missing-field backfill.
+var SAVE_SCHEMA = 2;
 function saveWorld(slot) {
   if (!WORLD) return;
   var key = (slot != null) ? slotKey(slot) : SAVE_KEY;
   var d = WORLD.data;
   var payload = {
-    version: 1,
+    version: SAVE_SCHEMA,
     _ts: Date.now(),
     seed: WORLD_SEED,
     tileCount: d.bedrock.length,
@@ -4207,8 +4272,14 @@ function loadWorld(slot) {
   if (!WORLD) { notifyEvent('Load failed: world not built yet.', 'warn'); return; }
   try {
     var p = JSON.parse(raw);
-    if (p.version !== 1) throw new Error('incompatible save version');
+    // Accept v1 (pre-clade) and v2; reject anything newer than what we know
+    // how to migrate. Clade fields backfill below if the save predates them.
+    if (p.version !== 1 && p.version !== SAVE_SCHEMA) throw new Error('incompatible save version ' + p.version);
     if (p.tileCount !== WORLD.data.bedrock.length) throw new Error('tile count mismatch');
+    // Restore seeded RNG so post-load gameplay matches what would have run if
+    // the session never paused. Without this, a seeded run loaded later uses
+    // Math.random for events.
+    if (p.seed) setWorldSeed(p.seed);
     var d = WORLD.data;
     d.bedrock     = b64ToArr(p.bedrock,     Float32Array);
     d.iceDepth    = b64ToArr(p.iceDepth,    Float32Array);
@@ -4222,6 +4293,11 @@ function loadWorld(slot) {
     d.plateCount  = p.plateCount;
     for (var k in p.sim) SIM[k] = p.sim[k];
     SIM.lastEventYear = {};
+    // Re-attach the rng function — JSON drops it as an empty object, so
+    // setWorldSeed (which assigns SIM.rng = WORLD_RNG) needs to run AFTER the
+    // spread to win. p.seed already triggered setWorldSeed above but the
+    // sim-field spread can clobber it; fix here.
+    SIM.rng = WORLD_RNG;
     // Backfill clade fields for old saves predating the clade system
     if (!SIM.clades) {
       SIM.clades = [];
@@ -4236,12 +4312,16 @@ function loadWorld(slot) {
       }
       if (!SIM.cladeLog) SIM.cladeLog = [];
     }
+    // Backfill v1 → v2 timer state (default to 0 — first tick recomputes anyway).
+    if (typeof SIM._riverTimer !== 'number') SIM._riverTimer = 0;
+    if (typeof SIM._historyTimer !== 'number') SIM._historyTimer = 0;
     setSpeed(SIM.speed);
     stepBiomes(WORLD);
     updateMeshPositions();
     recolorAll();
     geometry.attributes.position.needsUpdate = true;
     geometry.attributes.color.needsUpdate = true;
+    if (SIM) { SIM._meshDirty = false; SIM._colorsDirty = false; }
     buildPlateArrows();
     buildMonolithGroup();
     refreshAllUI();

@@ -155,6 +155,7 @@
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html" class="current">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -505,8 +506,8 @@ const SCENARIOS = [
       g.money = 10000; g.year = 1910;
       // Sprinkle some rubble across the map
       for (let i = 0; i < 40; i++) {
-        const x = Math.floor(Math.random() * N);
-        const y = Math.floor(Math.random() * N);
+        const x = Math.floor(rng() * N);
+        const y = Math.floor(rng() * N);
         if (!world[x][y].water && world[x][y].kind === K.EMPTY) {
           world[x][y].kind = K.RUBBLE;
         }
@@ -562,7 +563,7 @@ const PETITIONS = [
     onYes: () => { game.wageSubsidy = true; pushNews('Wage subsidy enacted. The factories quiet down.'); },
     onNo:  () => {
       pushNews('Strike turns ugly — riots in the industrial district!');
-      if (Math.random() < 0.6) startRiot();
+      if (rng() < 0.6) startRiot();
     }
   },
   {
@@ -716,6 +717,10 @@ let pollution, crime, landValue, education;
 let avgPollution = 0, avgCrime = 0, avgLandValue = 0;
 let viewMode = 'normal';
 let yearStartMoney = 0, yearIncome = 0, yearExpense = 0;
+// Sparse cache of road tiles with precomputed nearby-zone load — refreshed
+// once per tick (see rebuildTrafficCache) so drawTraffic doesn't rescan NxN
+// every frame.
+let trafficCache = [];
 
 function blankGame() {
   return {
@@ -838,12 +843,19 @@ function mulberry32(seed) {
 }
 let mapSeed = 0;
 let mapRand = Math.random;
+// Gameplay rolls go through gameRng so a given seed reproduces the same run
+// (events, zone growth, weather, petitions, etc.). Initialized when a seed is
+// established (newGame/load); falls back to Math.random before that.
+let gameRng = Math.random;
+function rng() { return gameRng(); }
 
 // =============== WORLD GEN ===============
 function generateWorld(seed) {
   if (seed === undefined || seed === null) seed = Math.floor(Math.random() * 0xFFFFFFFF);
   mapSeed = seed >>> 0;
   mapRand = mulberry32(mapSeed);
+  // Reseed gameplay RNG with a derived seed so worldgen rolls don't drain it
+  gameRng = mulberry32((mapSeed ^ 0x9E3779B1) >>> 0);
   if (game) game.mapSeed = mapSeed;
   world = [];
   for (let x = 0; x < N; x++) {
@@ -1140,30 +1152,25 @@ function draw() {
 function drawTraffic() {
   const z = cam.zoom;
   if (z < 0.55) return;
+  if (!trafficCache.length) return;
   const period = 1500;
   const t = (Date.now() % period) / period;
-  for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
+  const day = isDaytime();
+  const colorA = day ? '#ffd96a' : '#ffe080';
+  const colorB = day ? '#e6edf3' : '#ffe080';
+  for (let k = 0; k < trafficCache.length; k++) {
+    const entry = trafficCache[k];
+    const x = entry[0], y = entry[1], dotCount = entry[2];
     const tile = world[x][y];
-    if (tile.kind !== K.ROAD) continue;
-    // Approximate load: nearby zone level sum
-    let load = 0;
-    for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) {
-      const nx = x + dx, ny = y + dy;
-      if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
-      const n = world[nx][ny];
-      if (n.kind === K.ZONE_R || n.kind === K.ZONE_C || n.kind === K.ZONE_I) load += n.level;
-    }
-    if (load < 1) continue;
-    const dotCount = Math.min(3, Math.ceil(load / 4));
+    if (!tile || tile.kind !== K.ROAD) continue; // stale entry — refreshed next tick
     const [cx, cy] = iso(x, y, tile.h);
     const seed = tileRand(x, y, 17);
+    const seedSign = seed > 0.5 ? 1 : -1;
     for (let i = 0; i < dotCount; i++) {
       const phase = (t + i / dotCount + seed) % 1;
       const dx = (phase - 0.5) * TW * z;
-      const dy = (phase - 0.5) * TH * z * (seed > 0.5 ? 1 : -1);
-      ctx.fillStyle = isDaytime()
-        ? (i % 2 === 0 ? '#ffd96a' : '#e6edf3')
-        : '#ffe080';
+      const dy = (phase - 0.5) * TH * z * seedSign;
+      ctx.fillStyle = (i & 1) === 0 ? colorA : colorB;
       ctx.beginPath();
       ctx.arc(cx + dx, cy + dy, 1.4 * z, 0, Math.PI * 2);
       ctx.fill();
@@ -3209,8 +3216,8 @@ function maxLevelFor(x, y, kind) {
 
 function tickZones() {
   // Random shuffle for fairness — use a simple per-tick offset
-  const startX = Math.floor(Math.random() * N);
-  const startY = Math.floor(Math.random() * N);
+  const startX = Math.floor(rng() * N);
+  const startY = Math.floor(rng() * N);
   for (let xi = 0; xi < N; xi++) {
     for (let yi = 0; yi < N; yi++) {
       const x = (xi + startX) % N;
@@ -3222,7 +3229,7 @@ function tickZones() {
       // Growth
       if (t.level < max && dKind > 0) {
         const p = 0.04 + (dKind / 200);
-        if (Math.random() < p) {
+        if (rng() < p) {
           t.level++;
           // On first growth, pick industry tier from district specialization or organic factors
           if (t.kind === K.ZONE_I && t.level === 1) {
@@ -3244,9 +3251,9 @@ function tickZones() {
           }
         }
       } else if (t.level > max) {
-        if (Math.random() < 0.1) t.level--;
+        if (rng() < 0.1) t.level--;
       } else if (t.level > 0 && dKind < -50) {
-        if (Math.random() < 0.03) t.level--;
+        if (rng() < 0.03) t.level--;
       }
     }
   }
@@ -3329,11 +3336,11 @@ function tick() {
 
   // Disasters
   const fireChance = (game.ordinances.smoke ? 0.5 : 1) * (0.008 + avgPollution * 0.00012);
-  if (game.monthsElapsed > 12 && Math.random() < fireChance) startFire();
+  if (game.monthsElapsed > 12 && rng() < fireChance) startFire();
   tickFires();
   // Random disaster every 5+ years, low chance
   if (game.monthsElapsed > 60) {
-    const r = Math.random();
+    const r = rng();
     if (r < 0.0008) startTornado();
     else if (r < 0.0014) startEarthquake();
     else if (r < 0.0018 && avgCrime > 50 && popR > 200) startRiot();
@@ -3342,7 +3349,7 @@ function tick() {
       for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
         const t = world[x][y];
         if (t.kind === K.NUCLEAR && t.owner && t.owner[0] === x && t.owner[1] === y) {
-          if (Math.random() < 0.05) startMeltdown(x, y);
+          if (rng() < 0.05) startMeltdown(x, y);
         }
       }
     }
@@ -3360,7 +3367,6 @@ function tick() {
   const incomeC = (sub.cl * game.tax.cl + sub.cd * game.tax.cd) / 100 * 5 * taxMult;
   const incomeI = (sub.id * game.tax.id + sub.im * game.tax.im + sub.iht * game.tax.iht) / 100 * 6 * taxMult;
   let expense = 0;
-  let polluteSavings = game.ordinances.cleanair ? 0 : 1;  // unused — just here for clarity
   for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
     const t = world[x][y];
     if (t.owner && (t.owner[0] !== x || t.owner[1] !== y)) continue;
@@ -3490,10 +3496,10 @@ function tick() {
   }
 
   // Petitions — random Yes/No popup every 18-36 months
-  if (game.monthsElapsed > 18 && game.monthsElapsed - (game._lastPetition || 0) > 18 + Math.random() * 18) {
+  if (game.monthsElapsed > 18 && game.monthsElapsed - (game._lastPetition || 0) > 18 + rng() * 18) {
     const eligible = PETITIONS.filter(p => !p.requires || p.requires());
     if (eligible.length) {
-      const p = eligible[Math.floor(Math.random() * eligible.length)];
+      const p = eligible[Math.floor(rng() * eligible.length)];
       game._lastPetition = game.monthsElapsed;
       showPetition(p);
     }
@@ -3589,6 +3595,25 @@ function tick() {
   tryUnlockLandmarks();
   rebalanceAgents();
   dispatchServices();
+  // Cache road tiles with precomputed load for per-frame drawTraffic
+  rebuildTrafficCache();
+}
+
+// Refresh sparse traffic cache (declared near other state, above).
+function rebuildTrafficCache() {
+  const list = [];
+  for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
+    if (world[x][y].kind !== K.ROAD) continue;
+    let load = 0;
+    for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) {
+      const nx = x + dx, ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
+      const n = world[nx][ny];
+      if (n.kind === K.ZONE_R || n.kind === K.ZONE_C || n.kind === K.ZONE_I) load += n.level;
+    }
+    if (load >= 1) list.push([x, y, Math.min(3, Math.ceil(load / 4))]);
+  }
+  trafficCache = list;
 }
 
 function checkMilestones() {
@@ -3644,9 +3669,9 @@ function startFire() {
     if ([K.ZONE_R, K.ZONE_C, K.ZONE_I].includes(t.kind) && t.level > 0) candidates.push([x, y]);
   }
   if (!candidates.length) return;
-  const [x, y] = candidates[Math.floor(Math.random() * candidates.length)];
+  const [x, y] = candidates[Math.floor(rng() * candidates.length)];
   // If there's a fire station nearby, lower chance
-  if (nearbyHas(x, y, K.FIRE, FIRE_RADIUS)) { if (Math.random() < 0.6) return; }
+  if (nearbyHas(x, y, K.FIRE, FIRE_RADIUS)) { if (rng() < 0.6) return; }
   world[x][y].kind = K.BURNING;
   world[x][y].burnTime = 3;
   game._disasters = game._disasters || new Set();
@@ -3668,11 +3693,11 @@ function tickFires() {
     const hospitalNear = nearbyHas(x, y, K.HOSPITAL, HOSPITAL_RADIUS);
     if (nearbyHas(x, y, K.FIRE, FIRE_RADIUS) || hospitalNear) {
       const extinguishProb = hospitalNear ? 0.75 : 0.5;
-      if (t.burnTime <= 0 || Math.random() < extinguishProb) { t.kind = K.RUBBLE; t.level = 0; }
+      if (t.burnTime <= 0 || rng() < extinguishProb) { t.kind = K.RUBBLE; t.level = 0; }
     } else {
-      if (Math.random() < 0.25) {
+      if (rng() < 0.25) {
         const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-        const [dx, dy] = dirs[Math.floor(Math.random() * 4)];
+        const [dx, dy] = dirs[Math.floor(rng() * 4)];
         const nx = x + dx, ny = y + dy;
         if (nx >= 0 && ny >= 0 && nx < N && ny < N) {
           const n = world[nx][ny];
@@ -3689,9 +3714,9 @@ function tickFires() {
 // =============== TORNADO / EARTHQUAKE / RIOT / MELTDOWN ===============
 function startTornado() {
   // Random path 8-15 tiles long, leaves rubble in its wake
-  const x0 = Math.floor(Math.random() * N), y0 = Math.floor(Math.random() * N);
-  const len = 8 + Math.floor(Math.random() * 8);
-  const dir = Math.floor(Math.random() * 4);
+  const x0 = Math.floor(rng() * N), y0 = Math.floor(rng() * N);
+  const len = 8 + Math.floor(rng() * 8);
+  const dir = Math.floor(rng() * 4);
   const dx = [1, -1, 0, 0][dir], dy = [0, 0, 1, -1][dir];
   let destroyed = 0;
   for (let i = 0; i < len; i++) {
@@ -3701,7 +3726,7 @@ function startTornado() {
     if (t.water || t.kind === K.EMPTY) continue;
     if ([K.ZONE_R, K.ZONE_C, K.ZONE_I].includes(t.kind) && t.level > 0) {
       t.kind = K.RUBBLE; t.level = 0; destroyed++;
-    } else if (Math.random() < 0.4) {
+    } else if (rng() < 0.4) {
       t.kind = K.RUBBLE; t.level = 0; destroyed++;
     }
   }
@@ -3714,8 +3739,8 @@ function startTornado() {
 
 function startEarthquake() {
   // Damage radius 6-10 tiles, random epicenter
-  const cx = Math.floor(Math.random() * N), cy = Math.floor(Math.random() * N);
-  const r = 6 + Math.random() * 4;
+  const cx = Math.floor(rng() * N), cy = Math.floor(rng() * N);
+  const r = 6 + rng() * 4;
   let destroyed = 0;
   for (let dx = -r; dx <= r; dx++) {
     for (let dy = -r; dy <= r; dy++) {
@@ -3724,7 +3749,7 @@ function startEarthquake() {
       const d = Math.hypot(dx, dy);
       if (d > r) continue;
       const damageProb = (1 - d / r) * 0.4;
-      if (Math.random() < damageProb) {
+      if (rng() < damageProb) {
         const t = world[x][y];
         if (t.kind !== K.EMPTY && !t.water) {
           if ([K.ZONE_R, K.ZONE_C, K.ZONE_I].includes(t.kind)) {
@@ -3754,8 +3779,8 @@ function startRiot() {
   }
   if (!candidates.length) return;
   for (let i = 0; i < 4; i++) {
-    const [x, y] = candidates[Math.floor(Math.random() * candidates.length)];
-    if (Math.random() < 0.5) world[x][y].kind = K.BURNING;
+    const [x, y] = candidates[Math.floor(rng() * candidates.length)];
+    if (rng() < 0.5) world[x][y].kind = K.BURNING;
     else { world[x][y].kind = K.RUBBLE; world[x][y].level = 0; }
     world[x][y].burnTime = 3;
   }
@@ -3877,26 +3902,26 @@ function initRegion() {
   game.neighbors = [];
   for (let i = 0; i < 6; i++) {
     let name;
-    do { name = NEIGHBOR_NAMES[Math.floor(Math.random() * NEIGHBOR_NAMES.length)]; } while (used.has(name));
+    do { name = NEIGHBOR_NAMES[Math.floor(rng() * NEIGHBOR_NAMES.length)]; } while (used.has(name));
     used.add(name);
-    const popN = Math.floor(500 + Math.random() * 8000);
-    const powerSurplus = Math.floor((Math.random() - 0.4) * 80);   // -32..+48
-    const waterSurplus = Math.floor((Math.random() - 0.3) * 50);   // -15..+35
+    const popN = Math.floor(500 + rng() * 8000);
+    const powerSurplus = Math.floor((rng() - 0.4) * 80);   // -32..+48
+    const waterSurplus = Math.floor((rng() - 0.3) * 50);   // -15..+35
     game.neighbors.push({
       name, pop: popN,
       powerSurplus,
       waterSurplus,
       // Power: ask = they sell to us, bid = they buy from us
-      powerAsk:  +(1.4 + Math.random() * 0.5).toFixed(2),
-      powerBid:  +(1.0 + Math.random() * 0.3).toFixed(2),
+      powerAsk:  +(1.4 + rng() * 0.5).toFixed(2),
+      powerBid:  +(1.0 + rng() * 0.3).toFixed(2),
       // Water:
-      waterAsk:  +(0.8 + Math.random() * 0.4).toFixed(2),
-      waterBid:  +(0.5 + Math.random() * 0.3).toFixed(2),
+      waterAsk:  +(0.8 + rng() * 0.4).toFixed(2),
+      waterBid:  +(0.5 + rng() * 0.3).toFixed(2),
       // Garbage: ask = they will dump on us (we get paid); bid = they take ours (we pay)
       // We always set positive deal = export OUR garbage to them => we PAY garbageBid
-      garbageBid: +(0.20 + Math.random() * 0.30).toFixed(2),  // they charge us per unit
-      garbageAsk: +(0.10 + Math.random() * 0.10).toFixed(2),  // they pay us per unit if we accept theirs
-      garbageCapacity: 50 + Math.floor(Math.random() * 100),
+      garbageBid: +(0.20 + rng() * 0.30).toFixed(2),  // they charge us per unit
+      garbageAsk: +(0.10 + rng() * 0.10).toFixed(2),  // they pay us per unit if we accept theirs
+      garbageCapacity: 50 + Math.floor(rng() * 100),
     });
   }
   game.dealsByN = {};
@@ -3906,15 +3931,15 @@ function driftNeighbors() {
   if (!game.neighbors) return;
   for (let i = 0; i < game.neighbors.length; i++) {
     const n = game.neighbors[i];
-    n.pop = Math.max(100, Math.round(n.pop * (0.97 + Math.random() * 0.08)));
-    n.powerSurplus = Math.round(n.powerSurplus + (Math.random() - 0.5) * 12);
-    n.waterSurplus = Math.round(n.waterSurplus + (Math.random() - 0.5) * 8);
-    n.powerAsk = Math.max(0.8, Math.min(2.5, +(n.powerAsk + (Math.random() - 0.5) * 0.1).toFixed(2)));
-    n.powerBid = Math.max(0.6, Math.min(2.0, +(n.powerBid + (Math.random() - 0.5) * 0.08).toFixed(2)));
-    n.waterAsk = Math.max(0.4, Math.min(1.8, +(n.waterAsk + (Math.random() - 0.5) * 0.08).toFixed(2)));
-    n.waterBid = Math.max(0.3, Math.min(1.5, +(n.waterBid + (Math.random() - 0.5) * 0.06).toFixed(2)));
-    n.garbageBid = Math.max(0.10, Math.min(0.80, +(n.garbageBid + (Math.random() - 0.5) * 0.05).toFixed(2)));
-    n.garbageAsk = Math.max(0.05, Math.min(0.40, +(n.garbageAsk + (Math.random() - 0.5) * 0.03).toFixed(2)));
+    n.pop = Math.max(100, Math.round(n.pop * (0.97 + rng() * 0.08)));
+    n.powerSurplus = Math.round(n.powerSurplus + (rng() - 0.5) * 12);
+    n.waterSurplus = Math.round(n.waterSurplus + (rng() - 0.5) * 8);
+    n.powerAsk = Math.max(0.8, Math.min(2.5, +(n.powerAsk + (rng() - 0.5) * 0.1).toFixed(2)));
+    n.powerBid = Math.max(0.6, Math.min(2.0, +(n.powerBid + (rng() - 0.5) * 0.08).toFixed(2)));
+    n.waterAsk = Math.max(0.4, Math.min(1.8, +(n.waterAsk + (rng() - 0.5) * 0.08).toFixed(2)));
+    n.waterBid = Math.max(0.3, Math.min(1.5, +(n.waterBid + (rng() - 0.5) * 0.06).toFixed(2)));
+    n.garbageBid = Math.max(0.10, Math.min(0.80, +(n.garbageBid + (rng() - 0.5) * 0.05).toFixed(2)));
+    n.garbageAsk = Math.max(0.05, Math.min(0.40, +(n.garbageAsk + (rng() - 0.5) * 0.03).toFixed(2)));
     const d = game.dealsByN[i];
     if (d) {
       const pmin = -Math.max(0, n.powerSurplus);
@@ -4414,7 +4439,7 @@ function startMeltdown(rx, ry) {
       const t = world[x][y];
       if (t.water) continue;
       if (d < 2) { t.kind = K.RUBBLE; t.level = 0; t.owner = null; }
-      else if (Math.random() < 0.6) { t.kind = K.RUBBLE; t.level = 0; t.owner = null; }
+      else if (rng() < 0.6) { t.kind = K.RUBBLE; t.level = 0; t.owner = null; }
     }
   }
   game._meltdownSurvived = true;
@@ -4716,12 +4741,14 @@ function getSaveIndex() {
 }
 function setSaveIndex(idx) { localStorage.setItem(SAVE_INDEX_KEY, JSON.stringify(idx)); }
 
+const SAVE_VERSION = 3;
 function buildSavePayload() {
   const slim = world.map(col => col.map(t => ({
     h: t.h, w: t.water ? 1 : 0, k: t.kind, l: t.level, o: t.owner,
-    d: t.density, ti: t.iTier, f: t.fill || 0
+    d: t.density, ti: t.iTier, f: t.fill || 0,
+    di: (t.district != null ? t.district : -1)
   })));
-  return { w: slim, g: game, ver: 2 };
+  return { w: slim, g: game, ver: SAVE_VERSION };
 }
 
 function applyLoadedPayload(p) {
@@ -4739,6 +4766,7 @@ function applyLoadedPayload(p) {
   if (!game.dealsByN) game.dealsByN = {};
   if (!game.achievements) game.achievements = {};
   if (!game.ordinances)  game.ordinances = {};
+  if (!Array.isArray(game.districts)) game.districts = [];
   for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
     const s = p.w[x][y];
     const t = world[x][y];
@@ -4746,9 +4774,19 @@ function applyLoadedPayload(p) {
     if (s.d !== undefined) t.density = s.d;
     if (s.ti !== undefined) t.iTier = s.ti;
     if (s.f !== undefined) t.fill = s.f;
+    // ver >= 3: district persistence; older saves backfill to -1
+    t.district = (s.di !== undefined) ? s.di : -1;
   }
   if (!game.neighbors) initRegion();
-  if (game.mapSeed != null) { mapSeed = game.mapSeed; mapRand = mulberry32(mapSeed); }
+  if (game.mapSeed != null) {
+    mapSeed = game.mapSeed;
+    mapRand = mulberry32(mapSeed);
+    // Re-derive gameplay RNG, then advance it by monthsElapsed so loading
+    // mid-run doesn't repeat the same sequence from t=0.
+    gameRng = mulberry32((mapSeed ^ 0x9E3779B1) >>> 0);
+    const advance = (game.monthsElapsed || 0) * 32;
+    for (let i = 0; i < advance; i++) gameRng();
+  }
   // Reset live-only state that isn't persisted
   noise = makeArr(0); waterPol = makeArr(0); trafficLoad = makeArr(0);
   snowCover = makeArr(0);
@@ -5201,13 +5239,13 @@ function dispatchServices() {
   // Police: random patrol from each police station
   for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
     if (world[x][y].kind !== K.POLICE) continue;
-    if (Math.random() < 0.10 && serviceVehicles.length < SERVICE_VEHICLE_CAP - 6) {
+    if (rng() < 0.10 && serviceVehicles.length < SERVICE_VEHICLE_CAP - 6) {
       // Pick a random high-crime nearby tile
       let bestX = x, bestY = y, bestC = 0;
       for (let dx = -POLICE_RADIUS; dx <= POLICE_RADIUS; dx++) for (let dy = -POLICE_RADIUS; dy <= POLICE_RADIUS; dy++) {
         const nx = x + dx, ny = y + dy;
         if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
-        const c = (crime?.[nx]?.[ny] || 0) + Math.random() * 5;
+        const c = (crime?.[nx]?.[ny] || 0) + rng() * 5;
         if (c > bestC) { bestC = c; bestX = nx; bestY = ny; }
       }
       spawnServiceVehicle([x, y], [bestX, bestY], 'police');
@@ -5216,11 +5254,11 @@ function dispatchServices() {
   // Garbage truck: each landfill dispatches periodically along populated zones
   for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
     if (world[x][y].kind !== K.LANDFILL) continue;
-    if (Math.random() < 0.06 && serviceVehicles.length < SERVICE_VEHICLE_CAP - 4) {
+    if (rng() < 0.06 && serviceVehicles.length < SERVICE_VEHICLE_CAP - 4) {
       // Pick a populated zone tile far from us
       let bestX = x, bestY = y, bestD = 0;
       for (let i = 0; i < 12; i++) {
-        const xx = (Math.random() * N) | 0, yy = (Math.random() * N) | 0;
+        const xx = (rng() * N) | 0, yy = (rng() * N) | 0;
         const t = world[xx][yy];
         if (t.level === 0) continue;
         if (![K.ZONE_R, K.ZONE_C, K.ZONE_I].includes(t.kind)) continue;
@@ -5233,14 +5271,14 @@ function dispatchServices() {
   // Hearse: each cemetery dispatches periodically
   for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
     if (world[x][y].kind !== K.CEMETERY) continue;
-    if (Math.random() < 0.04 && serviceVehicles.length < SERVICE_VEHICLE_CAP - 2) {
+    if (rng() < 0.04 && serviceVehicles.length < SERVICE_VEHICLE_CAP - 2) {
       // Pick a random populated R tile
       const homes = [];
       for (let xx = 0; xx < N; xx++) for (let yy = 0; yy < N; yy++) {
         if (world[xx][yy].kind === K.ZONE_R && world[xx][yy].level > 0) homes.push([xx, yy]);
       }
       if (homes.length) {
-        const h = homes[(Math.random() * homes.length) | 0];
+        const h = homes[(rng() * homes.length) | 0];
         spawnServiceVehicle([x, y], h, 'hearse');
       }
     }
@@ -5423,18 +5461,18 @@ function tickWeather() {
   if (weatherTimer > 0) weatherTimer--;
   if (weatherTimer <= 0) {
     const s = currentSeason();
-    const r = Math.random();
+    const r = rng();
     if (s === 'Winter') {
-      if (r < 0.35)      { weather = 'snow';  weatherTimer = 1 + ((Math.random() * 3) | 0); }
-      else if (r < 0.5)  { weather = 'rain';  weatherTimer = 1 + ((Math.random() * 2) | 0); }
+      if (r < 0.35)      { weather = 'snow';  weatherTimer = 1 + ((rng() * 3) | 0); }
+      else if (r < 0.5)  { weather = 'rain';  weatherTimer = 1 + ((rng() * 2) | 0); }
       else                { weather = 'clear'; weatherTimer = 2; }
     } else if (s === 'Spring' || s === 'Fall') {
-      if (r < 0.40)       { weather = 'rain';  weatherTimer = 1 + ((Math.random() * 2) | 0); }
+      if (r < 0.40)       { weather = 'rain';  weatherTimer = 1 + ((rng() * 2) | 0); }
       else if (r < 0.55)  { weather = 'fog';   weatherTimer = 1; }
       else                 { weather = 'clear'; weatherTimer = 2; }
     } else {
       if (r < 0.20)       { weather = 'rain';  weatherTimer = 1; }
-      else                 { weather = 'clear'; weatherTimer = 2 + ((Math.random() * 2) | 0); }
+      else                 { weather = 'clear'; weatherTimer = 2 + ((rng() * 2) | 0); }
     }
   }
   // Snow accumulates while snowing; melts otherwise. Plows clear nearby tiles.

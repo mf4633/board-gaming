@@ -195,6 +195,7 @@
       <a href="BonnevilleSpillwayOperator.html" class="current">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -774,18 +775,13 @@ const PLANT_STATE = {
 // a visual 71-78 range for all dams so the renderer works unchanged; real
 // head / scale is represented via PLANT.headMultiplier and nameplateMW.
 // =========================================================================
+// Demo build flag — public web build at boardgaminghub.com ships with
+// DEMO_BUILD = true and only the Bonneville preset. Full Tauri build flips
+// this to false to unlock Mill Creek, Grand Coulee, Hoover, and Three Gorges.
+const DEMO_BUILD = true;
+const DEMO_STORE_URL = 'https://hydroengineer.itch.io/bonneville-spillway-operator';
+
 const DAM_PRESETS = {
-  small: {
-    id: 'small', name: 'Mill Creek Dam', river: 'Mill Creek',
-    blurb: 'Small run-of-river plant. Low head, mild fish pressure, small local grid. Learn the ropes.',
-    difficulty: 1, campaignLength: 6, region: 'rural',
-    startCash: 80_000,
-    plant: { elevMin: 71.5, elevMax: 77.5, elevLow: 72, elevHigh: 77, tailwaterBase: 14, headLossPerKcfs: 0.03, headMultiplier: 0.55, nameplateMW: 60, energyPriceBase: 55, nominalHz: 60 },
-    state: { turbines: 1, kcfsPerTurbine: 20, turbineEff: 0.84, spillGates: 1, kcfsPerGate: 20, reservoirBase: 400 },
-    theme: { concrete: '#a89270', concreteDark: '#6d5d44', concreteHi: '#c4b090',
-             water: '#3a7a8a', waterDeep: '#1f4652',
-             sky: '#1a2a22', bg: '#0c1a16', accent: '#8fb971' },
-  },
   bonneville: {
     id: 'bonneville', name: 'Bonneville Dam', river: 'Columbia River',
     blurb: 'Salmon, barges, and Pacific Northwest wind. Juggle fish passage, TDG, and navigation lockages.',
@@ -796,39 +792,6 @@ const DAM_PRESETS = {
     theme: { concrete: '#4a5560', concreteDark: '#2f3842', concreteHi: '#6a7684',
              water: '#2e6a8a', waterDeep: '#153244',
              sky: '#0e1418', bg: '#0a0f13', accent: '#26a69a' },
-  },
-  coulee: {
-    id: 'coulee', name: 'Grand Coulee Dam', river: 'Upper Columbia',
-    blurb: 'Colossal head, Lake Roosevelt behind you. Columbia Basin Project irrigation, Colville tribal ties.',
-    difficulty: 4, campaignLength: 10, region: 'columbia',
-    startCash: 700_000,
-    plant: { elevMin: 71.5, elevMax: 77.5, elevLow: 72, elevHigh: 77, tailwaterBase: 8, headLossPerKcfs: 0.012, headMultiplier: 4.5, nameplateMW: 6809, energyPriceBase: 45, nominalHz: 60 },
-    state: { turbines: 2, kcfsPerTurbine: 80, turbineEff: 0.89, spillGates: 3, kcfsPerGate: 55, reservoirBase: 12000 },
-    theme: { concrete: '#b8b09c', concreteDark: '#7c7564', concreteHi: '#d4ccb4',
-             water: '#3fa5c2', waterDeep: '#1b5a73',
-             sky: '#2d3b2e', bg: '#1b2620', accent: '#e8d890' },
-  },
-  hoover: {
-    id: 'hoover', name: 'Hoover Dam', river: 'Colorado River',
-    blurb: 'Desert dam, Vegas summer peaks, Lake Mead drought pressure. Colorado Compact releases, no salmon here.',
-    difficulty: 4, campaignLength: 10, region: 'desert',
-    startCash: 850_000,
-    plant: { elevMin: 71.5, elevMax: 77.5, elevLow: 72, elevHigh: 77, tailwaterBase: 6, headLossPerKcfs: 0.013, headMultiplier: 7.2, nameplateMW: 2080, energyPriceBase: 62, nominalHz: 60 },
-    state: { turbines: 2, kcfsPerTurbine: 60, turbineEff: 0.88, spillGates: 2, kcfsPerGate: 45, reservoirBase: 9000 },
-    theme: { concrete: '#d4a080', concreteDark: '#8a5a40', concreteHi: '#e8c4a0',
-             water: '#3ea8b5', waterDeep: '#1a5560',
-             sky: '#32251c', bg: '#1c130b', accent: '#ff9830' },
-  },
-  threegorges: {
-    id: 'threegorges', name: 'Three Gorges Dam', river: 'Yangtze River',
-    blurb: 'World\'s largest hydro plant. 50 Hz grid. Flood control, ship lifts, typhoon-season inflows, Chinese sturgeon.',
-    difficulty: 5, campaignLength: 14, region: 'yangtze',
-    startCash: 1_500_000,
-    plant: { elevMin: 71.5, elevMax: 77.5, elevLow: 72, elevHigh: 77, tailwaterBase: 4, headLossPerKcfs: 0.010, headMultiplier: 4.7, nameplateMW: 22500, energyPriceBase: 38, nominalHz: 50 },
-    state: { turbines: 3, kcfsPerTurbine: 110, turbineEff: 0.92, spillGates: 4, kcfsPerGate: 75, reservoirBase: 25000 },
-    theme: { concrete: '#a0b4b8', concreteDark: '#5d6e73', concreteHi: '#bccbd0',
-             water: '#4b9e7d', waterDeep: '#1c4a3a',
-             sky: '#1a2830', bg: '#0e1520', accent: '#d94a4a' },
   },
 };
 
@@ -1306,8 +1269,16 @@ function step(dt) {
   if (!lockActive && S._lockageWarned) S._lockageWarned = false;
 
   // Tailwater rises with total downstream outflow (rating curve, linearized + capped).
+  // Rating-curve slope scales with plant size so big dams don't saturate tailwater
+  // at the 24-ft cap before their nameplate can run — `/40` was tuned for Bonneville
+  // (~400 kcfs total cap), which broke head for Coulee / Three Gorges. Use total
+  // outflow capacity as the reference so tailwater rises ~12 ft at full discharge
+  // for every preset, capped at 18 ft above base (Q→tailwater is nonlinear in
+  // reality but a linear rise is plenty for gameplay tradeoffs).
   const totalOutflow = effTurbQ + S.spillQ + S.ladQ;
-  const tailwater = Math.min(24, PLANT.tailwaterBase + totalOutflow / 40);
+  const totalCapKcfs = Math.max(40, PLANT_STATE.maxTurbineKcfs + PLANT_STATE.maxSpillKcfs);
+  const tailwaterRise = Math.min(18, totalOutflow * (12 / totalCapKcfs));
+  const tailwater = PLANT.tailwaterBase + tailwaterRise;
   const head = Math.max(0, S.elev - tailwater);
   const effHead = Math.max(0, head - PLANT.headLossPerKcfs * effTurbQ);
   S._tailwater = tailwater;
@@ -1582,9 +1553,10 @@ function drawPlan() {
   poolGrad.addColorStop(1, '#163043');
   ctx.fillStyle = poolGrad;
   ctx.fillRect(0, riverTop, damX, riverBot - riverTop);
-  // Flood tint if pool is elevated
-  if (S.elev > PLANT.elevHigh + 0.3) {
-    ctx.fillStyle = `rgba(239,83,80,${Math.min(0.35, (S.elev - PLANT.elevHigh) * 0.2)})`;
+  // Flood tint if pool is elevated. Uses PLANT_STATE.poolHigh so the dam-raise
+  // upgrade actually shifts the visual warning threshold up with the new band.
+  if (S.elev > PLANT_STATE.poolHigh + 0.3) {
+    ctx.fillStyle = `rgba(239,83,80,${Math.min(0.35, (S.elev - PLANT_STATE.poolHigh) * 0.2)})`;
     ctx.fillRect(0, riverTop, damX, riverBot - riverTop);
   }
 
@@ -1774,7 +1746,7 @@ function drawPlan() {
   ctx.fillText(`TAIL ${(S._tailwater ?? PLANT.tailwaterBase).toFixed(1)} ft`, W - 120, riverTop + 14);
 
   // Flood warning band on tailrace bank if pool is over target
-  if (S.elev > PLANT.elevHigh + 0.3) {
+  if (S.elev > PLANT_STATE.poolHigh + 0.3) {
     ctx.fillStyle = 'rgba(239,83,80,0.75)';
     ctx.font = 'bold 11px Consolas'; ctx.textAlign = 'center';
     ctx.fillText('⚠ POOL ABOVE BAND — FLOOD RISK', damX / 2, (riverTop + riverBot) / 2);
@@ -2131,7 +2103,7 @@ function render() {
     }
   }
   // Flood warning band on town shore if pool too high
-  if (S.elev > PLANT.elevHigh + 0.3) {
+  if (S.elev > PLANT_STATE.poolHigh + 0.3) {
     const t0 = iso(140, -80, tw), t1 = iso(140, 100, tw);
     CTX.strokeStyle = 'rgba(239,83,80,0.55)'; CTX.lineWidth = 3;
     CTX.beginPath(); CTX.moveTo(t0.sx, t0.sy); CTX.lineTo(t1.sx, t1.sy); CTX.stroke();
@@ -3056,6 +3028,21 @@ function buildCampaignCards() {
     <div class="meta"><span>CUSTOM</span><span class="nameplate">YOUR DAM</span><span class="diff">◆◆◆</span></div>`;
   sb.addEventListener('click', () => document.getElementById('sandbox-modal').classList.add('show'));
   wrap.appendChild(sb);
+  // Demo build: pitch the four locked presets as a single CTA card.
+  if (DEMO_BUILD) {
+    const premium = document.createElement('a');
+    premium.className = 'camp-card';
+    premium.href = DEMO_STORE_URL;
+    premium.target = '_blank';
+    premium.rel = 'noopener';
+    premium.style.cssText = 'text-decoration:none;color:inherit;border:1px solid #FFD060;background:linear-gradient(135deg,#1e3a5f 0%,#1e293b 100%);';
+    premium.innerHTML = `
+      <div class="name" style="color:#FFD060;">+ 4 MORE DAMS</div>
+      <div class="river" style="color:#FFD060;">FULL GAME ON ITCH</div>
+      <div class="blurb">Mill Creek (run-of-river, low head). Grand Coulee (6.8 GW, Lake Roosevelt). Hoover (desert, Lake Mead drought). Three Gorges (22.5 GW, 50 Hz, typhoon season). Each preset is a full 6-14 shift campaign.</div>
+      <div class="meta"><span>4 DAMS</span><span class="nameplate" style="color:#FFD060;">SUPPORT THE DEV</span><span class="diff">→</span></div>`;
+    wrap.appendChild(premium);
+  }
 }
 function startCampaign(presetId, overrides = {}) {
   applyDamPreset(presetId, overrides);

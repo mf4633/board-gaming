@@ -187,6 +187,7 @@
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html" class="current">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -871,11 +872,11 @@ class Lemming {
     // Step
     this.x = nx;
     this.y -= stepUp;
-    // Now descend if no ground
-    let drop = 0;
-    while (drop <= STEP_DOWN_MAX && !t.isSolid(this.x, this.y + 1) && this.y < t.h - 1) {
+    // Now descend if no ground (up to STEP_DOWN_MAX steps, otherwise FALLER).
+    let dropped = 0;
+    while (dropped <= STEP_DOWN_MAX && !t.isSolid(this.x, this.y + 1) && this.y < t.h - 1) {
       this.y++;
-      drop++;
+      dropped++;
     }
     if (!t.isSolid(this.x, this.y + 1) && this.y < t.h - 1) {
       this.state = ST.FALLER;
@@ -1031,14 +1032,13 @@ class Lemming {
       this.actionFrame = 0;
       // Dig a column ahead: 1 px wide, height of lemming, in dir direction
       // Bash 4 columns ahead
-      let anyDirt = false;
       let hitSteel = false;
       for (let col = 0; col < 4; col++) {
         const bx = this.x + (col + 1) * this.dir;
         for (let dy = 0; dy < L_HEIGHT; dy++) {
           const by = this.y - dy;
           if (t.isSteel(bx, by)) { hitSteel = true; continue; }
-          if (t.destroyPx(bx, by)) anyDirt = true;
+          t.destroyPx(bx, by);
         }
       }
       // Move forward 1 px
@@ -1109,12 +1109,11 @@ class Lemming {
       this.actionFrame = 0;
       // Dig 9 px wide row below feet
       let hitSteel = false;
-      let anyDirt = false;
       for (let dx = -4; dx <= 4; dx++) {
         const bx = this.x + dx;
         const by = this.y + 1;
         if (t.isSteel(bx, by)) { hitSteel = true; continue; }
-        if (t.destroyPx(bx, by)) anyDirt = true;
+        t.destroyPx(bx, by);
       }
       if (hitSteel) {
         // Stay put; sit on steel as walker
@@ -1410,17 +1409,49 @@ class Game {
     this.unlocked = this.loadProgress();
     this.scrollEdgeSpeed = 6;
     this.toastEl = null;
+    // Cache DOM nodes touched every tick by updateUI() to avoid getElementById
+    // and querySelectorAll allocations on the hot path.
+    this.ui = {
+      lvlNum: document.getElementById('lvlNum'),
+      lvlName: document.getElementById('lvlName'),
+      timeRemaining: document.getElementById('timeRemaining'),
+      savedCount: document.getElementById('savedCount'),
+      aliveCount: document.getElementById('aliveCount'),
+      targetTxt: document.getElementById('targetTxt'),
+      rrTxt: document.getElementById('rrTxt'),
+      skills: Array.from(document.querySelectorAll('.skill')).map(el => ({
+        el, skill: el.dataset.skill,
+        countEl: el.querySelector('.count'),
+      })),
+      speedBtns: Array.from(document.querySelectorAll('#speedBtns button')),
+    };
+    // Last-shown UI values so we can skip DOM writes when nothing changed.
+    this._uiCache = {
+      lvlIdx: -1, name: '', time: -1, saved: -1, alive: -1,
+      target: '', rr: -1, skills: {}, activeSkill: '_none', speed: -1,
+    };
   }
 
   loadProgress() {
+    const DEFAULT = { v: 1, unlocked: 1, best: {} };
     try {
       const raw = localStorage.getItem('cliffwalkers_progress');
-      if (!raw) return { unlocked: 1, best: {} };
-      return JSON.parse(raw);
-    } catch (e) { return { unlocked: 1, best: {} }; }
+      if (!raw) return DEFAULT;
+      const parsed = JSON.parse(raw);
+      // Defensive — if a future build writes a newer schema, fall back to
+      // defaults instead of crashing on missing fields. Also patch up legacy
+      // saves that pre-date the `v` field.
+      if (!parsed || typeof parsed !== 'object') return DEFAULT;
+      if (typeof parsed.unlocked !== 'number') parsed.unlocked = 1;
+      if (!parsed.best || typeof parsed.best !== 'object') parsed.best = {};
+      if (parsed.v && parsed.v > 1) return DEFAULT; // unknown future schema
+      parsed.v = 1;
+      return parsed;
+    } catch (e) { return DEFAULT; }
   }
   saveProgress() {
     try {
+      this.unlocked.v = 1;
       localStorage.setItem('cliffwalkers_progress', JSON.stringify(this.unlocked));
     } catch (e) {}
   }
@@ -1452,6 +1483,12 @@ class Game {
     this.tickCount = 0;
     this.gameState = 'playing';
     this.speed = 1;
+    // Invalidate UI cache so every field repaints on the first tick of a new
+    // level (skill counts change, name changes, timer resets, etc).
+    this._uiCache = {
+      lvlIdx: -1, name: '', time: -1, saved: -1, alive: -1,
+      target: '', rr: -1, skills: {}, activeSkill: '_none', speed: -1,
+    };
     this.updateUI();
   }
 
@@ -1504,8 +1541,6 @@ class Game {
     this.particles = this.particles.filter(p => p.update());
 
     // Win/lose check
-    const alive = this.lemmings.filter(l => l.alive && l.state !== ST.EXITER && l.state !== ST.SPLATTER && l.state !== ST.DROWNER && l.state !== ST.OHNO).length +
-                  this.lemmings.filter(l => l.alive && (l.state === ST.EXITER || l.state === ST.OHNO)).length;
     const allSpawned = this.spawnedCount >= this.level.count;
     const noneAlive = !this.lemmings.some(l => l.alive);
     if (this.timeRemaining <= 0 || (allSpawned && noneAlive)) {
@@ -1667,31 +1702,66 @@ class Game {
   }
 
   // --- UI updates ---
+  // Called every tick — uses a small cache so we only write to the DOM when a
+  // value actually changed. Previously this ran ~7 getElementById + 2
+  // querySelectorAll allocations every tick.
   updateUI() {
-    document.getElementById('lvlNum').textContent = (this.levelIdx + 1).toString().padStart(2, '0');
-    document.getElementById('lvlName').textContent = this.level ? this.level.name : '—';
-    const mins = Math.floor(this.timeRemaining / TICK_HZ / 60);
-    const secs = Math.floor(this.timeRemaining / TICK_HZ) % 60;
-    document.getElementById('timeRemaining').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-    document.getElementById('savedCount').textContent = `${this.savedCount}/${this.level ? this.level.count : 0}`;
-    document.getElementById('aliveCount').textContent = this.lemmings.filter(l => l.alive).length;
-    document.getElementById('targetTxt').textContent = this.level ? `${this.level.target} (${Math.round(this.level.target / this.level.count * 100)}%)` : '—';
-    document.getElementById('rrTxt').textContent = this.releaseRate;
+    const ui = this.ui, c = this._uiCache;
+    if (c.lvlIdx !== this.levelIdx) {
+      c.lvlIdx = this.levelIdx;
+      ui.lvlNum.textContent = (this.levelIdx + 1).toString().padStart(2, '0');
+    }
+    const name = this.level ? this.level.name : '—';
+    if (c.name !== name) { c.name = name; ui.lvlName.textContent = name; }
+
+    const secsTotal = Math.floor(this.timeRemaining / TICK_HZ);
+    if (c.time !== secsTotal) {
+      c.time = secsTotal;
+      const mins = Math.floor(secsTotal / 60);
+      const secs = secsTotal % 60;
+      ui.timeRemaining.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    if (c.saved !== this.savedCount) {
+      c.saved = this.savedCount;
+      ui.savedCount.textContent = `${this.savedCount}/${this.level ? this.level.count : 0}`;
+    }
+
+    // Avoid an O(n) filter every tick — count via the sparse loop.
+    let aliveN = 0;
+    const lems = this.lemmings;
+    for (let i = 0; i < lems.length; i++) if (lems[i].alive) aliveN++;
+    if (c.alive !== aliveN) { c.alive = aliveN; ui.aliveCount.textContent = aliveN; }
+
+    const target = this.level
+      ? `${this.level.target} (${Math.round(this.level.target / this.level.count * 100)}%)`
+      : '—';
+    if (c.target !== target) { c.target = target; ui.targetTxt.textContent = target; }
+
+    if (c.rr !== this.releaseRate) { c.rr = this.releaseRate; ui.rrTxt.textContent = this.releaseRate; }
 
     // Skills
-    document.querySelectorAll('.skill').forEach(el => {
-      const skill = el.dataset.skill;
-      const count = this.skillsRemaining[skill] || 0;
-      el.querySelector('.count').textContent = count;
-      el.classList.toggle('locked', count <= 0);
-      el.classList.toggle('active', this.activeSkill === skill);
-      el.classList.toggle('danger', skill === 'bomber' && count > 0);
-    });
+    const activeChanged = c.activeSkill !== this.activeSkill;
+    for (let i = 0; i < ui.skills.length; i++) {
+      const s = ui.skills[i];
+      const count = this.skillsRemaining[s.skill] || 0;
+      if (c.skills[s.skill] !== count) {
+        c.skills[s.skill] = count;
+        s.countEl.textContent = count;
+        s.el.classList.toggle('locked', count <= 0);
+        s.el.classList.toggle('danger', s.skill === 'bomber' && count > 0);
+      }
+      if (activeChanged) s.el.classList.toggle('active', this.activeSkill === s.skill);
+    }
+    if (activeChanged) c.activeSkill = this.activeSkill;
 
-    // Speed buttons
-    document.querySelectorAll('#speedBtns button').forEach(b => {
-      b.classList.toggle('active', parseInt(b.dataset.speed) === this.speed);
-    });
+    if (c.speed !== this.speed) {
+      c.speed = this.speed;
+      for (let i = 0; i < ui.speedBtns.length; i++) {
+        const b = ui.speedBtns[i];
+        b.classList.toggle('active', parseInt(b.dataset.speed) === this.speed);
+      }
+    }
   }
 
   toast(msg) {
@@ -1917,24 +1987,73 @@ canvas.addEventListener('mousedown', e => {
 });
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-// Touch
+// Touch — single-finger tap selects a lemming, drag pans the camera. Without
+// drag-to-pan there is no way to scroll the level on Android (mouse-edge-pan
+// only runs when mouseActive is set by a real mousemove).
+let touchPanState = null; // { startX, startY, lastX, startCamera, dragged }
+const TAP_SLOP_PX = 6;    // movement under this counts as a tap
+
 canvas.addEventListener('touchstart', e => {
   if (!e.touches[0]) return;
   e.preventDefault();
   const rect = canvas.getBoundingClientRect();
-  const mx = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
-  const my = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
-  game.mouseX = mx; game.mouseY = my;
-  game.handleClick(mx + game.cameraX, my);
+  const sx = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+  const sy = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
+  touchPanState = {
+    startX: sx, startY: sy,
+    lastX: e.touches[0].clientX,
+    startCamera: game.cameraX,
+    dragged: false,
+  };
+  game.mouseX = sx; game.mouseY = sy;
 }, { passive: false });
 
-// Minimap click to scroll
+canvas.addEventListener('touchmove', e => {
+  if (!touchPanState || !e.touches[0]) return;
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const cx = e.touches[0].clientX;
+  const cy = e.touches[0].clientY;
+  const px = (cx - rect.left) * (canvas.width / rect.width);
+  const py = (cy - rect.top) * (canvas.height / rect.height);
+  const dx = px - touchPanState.startX;
+  const dy = py - touchPanState.startY;
+  if (!touchPanState.dragged && Math.hypot(dx, dy) > TAP_SLOP_PX) {
+    touchPanState.dragged = true;
+  }
+  if (touchPanState.dragged) {
+    // Drag in screen px → world px (canvas internal coords already scale-matched).
+    game.cameraX = Math.max(0, Math.min(LVL_W - canvas.width,
+      touchPanState.startCamera - dx));
+  }
+  game.mouseX = px; game.mouseY = py;
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  if (!touchPanState) return;
+  e.preventDefault();
+  if (!touchPanState.dragged) {
+    // Treat as a tap = lemming select.
+    game.handleClick(touchPanState.startX + game.cameraX, touchPanState.startY);
+  }
+  touchPanState = null;
+}, { passive: false });
+
+canvas.addEventListener('touchcancel', () => { touchPanState = null; });
+
+// Minimap click / tap to scroll
 const mini = document.getElementById('minimap');
-mini.addEventListener('mousedown', e => {
+function jumpCameraFromMinimap(clientX) {
   const rect = mini.getBoundingClientRect();
-  const fx = (e.clientX - rect.left) / rect.width;
+  const fx = (clientX - rect.left) / rect.width;
   game.cameraX = Math.max(0, Math.min(LVL_W - canvas.width, fx * LVL_W - canvas.width / 2));
-});
+}
+mini.addEventListener('mousedown', e => jumpCameraFromMinimap(e.clientX));
+mini.addEventListener('touchstart', e => {
+  if (!e.touches[0]) return;
+  e.preventDefault();
+  jumpCameraFromMinimap(e.touches[0].clientX);
+}, { passive: false });
 
 // Skill bar
 document.querySelectorAll('.skill').forEach(el => {

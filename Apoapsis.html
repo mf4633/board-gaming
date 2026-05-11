@@ -227,6 +227,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
       <a href="BonnevilleSpillwayOperator.html">Bonneville Spillway</a>
       <a href="Cliffwalkers.html">Cliffwalkers</a>
       <a href="Doctrine.html">Doctrine</a>
+      <a href="EclipsePredictor.html">Eclipse Predictor</a>
       <a href="Floodline.html">Floodline</a>
       <a href="Metropolis2K.html">Metropolis 2K</a>
       <a href="Tower.html">Tower</a>
@@ -1009,19 +1010,33 @@ function checkSOIChange(s) {
 }
 
 /* ===== 3D PHYSICS ===== */
+// Hot-path scratch vectors hoisted to module scope to avoid per-tick allocation.
+var _phyGravDir = new THREE.Vector3();
+var _phyForward = new THREE.Vector3();
+var _phyThrustAcc = new THREE.Vector3();
+var _phyDragAcc = new THREE.Vector3();
+var _phyAccel = new THREE.Vector3();
+var _phyDelta = new THREE.Vector3();
+var _phyTargetQ = new THREE.Quaternion();
+var _phyRotQ = new THREE.Quaternion();
+var _phyUpY = new THREE.Vector3(0, 1, 0);
+var _phyLocalRight = new THREE.Vector3();
+var _phyLocalUp = new THREE.Vector3();
+var _phyRadial = new THREE.Vector3();
 function physicsTick3D(s) {
   var parent = BODIES[s.parent];
   var r = s.pos.length();
   var alt = r - parent.radius;
   s.altitude = alt;
   var gMag = parent.mu / (r * r);
-  var gravDir = s.pos.clone().normalize().negate();
+  // gravDir = -pos_hat
+  _phyGravDir.copy(s.pos).multiplyScalar(-1 / r);
   var mass = totalMass(s.parts);
   if (mass <= 0) mass = 1;
   var t = computeThrust(s.parts, s.currentStage, s.throttle);
   s.thrustN = t.thrust;
-  var forward = new THREE.Vector3(0, 1, 0).applyQuaternion(s.orientation);
-  var thrustAcc = forward.clone().multiplyScalar(t.thrust / mass);
+  _phyForward.set(0, 1, 0).applyQuaternion(s.orientation);
+  _phyThrustAcc.copy(_phyForward).multiplyScalar(t.thrust / mass);
   var speed = s.vel.length();
   var rho = parent.atm ? atmDensity(alt) : 0;
   var q = 0.5 * rho * speed * speed;
@@ -1036,12 +1051,12 @@ function physicsTick3D(s) {
     showToast('<span style="color:#D04040;">Parachute ripped!</span>');
   }
   var dm = rho > 0 ? (0.5 * rho * speed * speed * (0.3 * crossSection(s.parts) + chuteAreaCd)) : 0;
-  var dragAcc = new THREE.Vector3();
-  if (speed > 0.1) dragAcc = s.vel.clone().normalize().negate().multiplyScalar(dm / mass);
-  var gravAcc = gravDir.multiplyScalar(gMag);
-  var accel = new THREE.Vector3().add(thrustAcc).add(dragAcc).add(gravAcc);
-  s.vel.add(accel.clone().multiplyScalar(PHYSICS_DT));
-  s.pos.add(s.vel.clone().multiplyScalar(PHYSICS_DT));
+  _phyDragAcc.set(0, 0, 0);
+  if (speed > 0.1) _phyDragAcc.copy(s.vel).multiplyScalar(-dm / (mass * speed));
+  // gravAcc = gravDir * gMag (gravDir is unit -radial)
+  _phyAccel.copy(_phyThrustAcc).add(_phyDragAcc).addScaledVector(_phyGravDir, gMag);
+  s.vel.addScaledVector(_phyAccel, PHYSICS_DT);
+  s.pos.addScaledVector(s.vel, PHYSICS_DT);
   s.t += PHYSICS_DT;
   if (t.mdot > 0) consumeFuel(s.parts, s.currentStage, t.mdot * PHYSICS_DT);
 
@@ -1053,24 +1068,27 @@ function physicsTick3D(s) {
     sasTarget = sasTargetDir(s);
   }
   if (sasTarget) {
-    var targetQ = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), sasTarget);
-    s.orientation.slerp(targetQ, 0.08);
+    _phyTargetQ.setFromUnitVectors(_phyUpY, sasTarget);
+    s.orientation.slerp(_phyTargetQ, 0.08);
   } else {
-    var localRight = new THREE.Vector3(1, 0, 0).applyQuaternion(s.orientation);
-    var localUp = new THREE.Vector3(0, 0, 1).applyQuaternion(s.orientation);
     if (s.pitchRate !== 0) {
-      var pq = new THREE.Quaternion().setFromAxisAngle(localRight, s.pitchRate * PHYSICS_DT);
-      s.orientation.premultiply(pq);
+      _phyLocalRight.set(1, 0, 0).applyQuaternion(s.orientation);
+      _phyRotQ.setFromAxisAngle(_phyLocalRight, s.pitchRate * PHYSICS_DT);
+      s.orientation.premultiply(_phyRotQ);
     }
     if (s.yawRate !== 0) {
-      var yq = new THREE.Quaternion().setFromAxisAngle(localUp, s.yawRate * PHYSICS_DT);
-      s.orientation.premultiply(yq);
+      _phyLocalUp.set(0, 0, 1).applyQuaternion(s.orientation);
+      _phyRotQ.setFromAxisAngle(_phyLocalUp, s.yawRate * PHYSICS_DT);
+      s.orientation.premultiply(_phyRotQ);
     }
   }
   s.orientation.normalize();
 
   // Reentry heating: high Q AND descending AND in atmosphere
-  var descending = s.vel.dot(s.pos.clone().normalize()) < 0;
+  // (s.pos has been updated above; recompute radial from current pos)
+  var rNow = s.pos.length();
+  _phyRadial.copy(s.pos).multiplyScalar(rNow > 0 ? 1 / rNow : 0);
+  var descending = s.vel.dot(_phyRadial) < 0;
   if (parent.atm && alt < ENV.KARMAN && descending && q > 4000) {
     s.heat = Math.min(1, (q - 4000) / 35000);
   } else {
@@ -1079,7 +1097,7 @@ function physicsTick3D(s) {
 
   s.mass = mass;
   s.grav = gMag;
-  s.accel = thrustAcc.length() + dm / mass;
+  s.accel = _phyThrustAcc.length() + dm / mass;
   s.speed = speed;
   if (alt > s.maxAlt) s.maxAlt = alt;
   if (speed > s.maxVel) s.maxVel = speed;
@@ -1698,7 +1716,10 @@ function gameLoop(timestamp) {
     physicsTick3D(sim);
     checkAutoStage(sim);
     accumulator -= PHYSICS_DT;
-    if (sim.t % 1 < PHYSICS_DT && sim.thrustN > 0) sim.trail.push(inertialPosOf(sim));
+    if (sim.thrustN > 0 && sim.t - (sim._lastTrailT || 0) >= 1) {
+      sim.trail.push(inertialPosOf(sim));
+      sim._lastTrailT = sim.t;
+    }
     if (sim.trail.length > 500) sim.trail.shift();
     if (checkWinLose()) return;
   }
@@ -2501,7 +2522,7 @@ function runAutopilot(s) {
     case 'coast': {
       s.throttle = 0;
       var tAp = timeToApoapsis(s);
-      if (tAp < 8 || s.altitude >= target - 2000) {
+      if (tAp < 8 || s.altitude >= targetAltitude - 2000) {
         autopilot.mode = 'circularize';
         showToast('Autopilot: circularizing');
       }
