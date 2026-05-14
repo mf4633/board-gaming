@@ -662,14 +662,14 @@ const PLOW_RADIUS        = 12;    // snow-cleared zone
 
 // Tourism landmarks: name, kind, popThreshold, tourBonus, valueBonus
 const LANDMARKS = [
-  { kind: K.OBSERVATORY, name: 'Observation Tower', popThreshold: 8000,  tour: 4500, valueRadius: 14, size: 1 },
+  { kind: K.OBSERVATORY, name: 'Observation Tower', popThreshold: 7000,  tour: 4500, valueRadius: 14, size: 1 },
   { kind: K.CONVENTION,  name: 'Convention Center', popThreshold: 20000, tour: 8000, valueRadius: 12, size: 2 },
   { kind: K.AQUARIUM,    name: 'Aquarium',          popThreshold: 35000, tour: 9000, valueRadius: 10, size: 2, requiresCoast: true },
-  { kind: K.WORLDS_FAIR, name: "World's Fair",       popThreshold: 60000, tour: 18000,valueRadius: 18, size: 2 },
+  { kind: K.WORLDS_FAIR, name: "World's Fair",       popThreshold: 50000, tour: 18000,valueRadius: 18, size: 2 },
 ];
 
 // Agent simulation tuning
-const AGENT_VISIBLE_CAP = 240;     // max moving sprites we render
+const AGENT_VISIBLE_CAP = 300;     // max moving sprites we render
 const AGENT_SPEED       = 4.5;     // tiles/sec on roads
 const AGENT_BIKE_SPEED  = 2.2;     // tiles/sec on paths/bike lanes
 const TRAFFIC_DECAY     = 0.85;    // exponential decay each tick
@@ -3527,7 +3527,7 @@ function tick() {
   game._cemCapacity = cemCap;
   if (popR > 500 && cemCap === 0) {
     // No deathcare → demand penalty + slow morale erosion
-    demand.r -= 8;
+    demand.r -= 10;
   } else if (dem.seniors > cemCap && cemCap > 0) {
     const overflow = dem.seniors - cemCap;
     demand.r -= Math.min(40, overflow / Math.max(1, popR) * 200);
@@ -5175,7 +5175,7 @@ function rebalanceAgents() {
     return h && w && h.level > 0 && w.level > 0;
   });
   // Cap spawns per tick to avoid frame hitches when first reaching capacity
-  let toSpawn = Math.min(25, target - agents.length);
+  let toSpawn = Math.min(20, target - agents.length);
   while (toSpawn-- > 0) {
     const a = spawnAgent();
     if (a) agents.push(a); else break;
@@ -5239,7 +5239,7 @@ function dispatchServices() {
   // Police: random patrol from each police station
   for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
     if (world[x][y].kind !== K.POLICE) continue;
-    if (rng() < 0.10 && serviceVehicles.length < SERVICE_VEHICLE_CAP - 6) {
+    if (rng() < 0.12 && serviceVehicles.length < SERVICE_VEHICLE_CAP - 6) {
       // Pick a random high-crime nearby tile
       let bestX = x, bestY = y, bestC = 0;
       for (let dx = -POLICE_RADIUS; dx <= POLICE_RADIUS; dx++) for (let dy = -POLICE_RADIUS; dy <= POLICE_RADIUS; dy++) {
@@ -5254,7 +5254,7 @@ function dispatchServices() {
   // Garbage truck: each landfill dispatches periodically along populated zones
   for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
     if (world[x][y].kind !== K.LANDFILL) continue;
-    if (rng() < 0.06 && serviceVehicles.length < SERVICE_VEHICLE_CAP - 4) {
+    if (rng() < 0.07 && serviceVehicles.length < SERVICE_VEHICLE_CAP - 4) {
       // Pick a populated zone tile far from us
       let bestX = x, bestY = y, bestD = 0;
       for (let i = 0; i < 12; i++) {
@@ -5271,7 +5271,7 @@ function dispatchServices() {
   // Hearse: each cemetery dispatches periodically
   for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
     if (world[x][y].kind !== K.CEMETERY) continue;
-    if (rng() < 0.04 && serviceVehicles.length < SERVICE_VEHICLE_CAP - 2) {
+    if (rng() < 0.05 && serviceVehicles.length < SERVICE_VEHICLE_CAP - 2) {
       // Pick a random populated R tile
       const homes = [];
       for (let xx = 0; xx < N; xx++) for (let yy = 0; yy < N; yy++) {
@@ -5515,7 +5515,7 @@ function avgSnowCover() {
 // Heating demand bonus during cold months
 function heatingMultiplier() {
   const s = currentSeason();
-  if (s === 'Winter') return 1.45;
+  if (s === 'Winter') return 1.35;
   if (s === 'Fall' || s === 'Spring') return 1.10;
   return 1.0;
 }
@@ -5785,7 +5785,7 @@ function tickCargo() {
   cargoUsed = Math.round(jobsI * 0.35);
   // Bonus to industrial demand if we have spare capacity, penalty if oversubscribed
   if (cap > 0 && cargoUsed < cap) demand.i += 25;
-  if (cargoUsed > cap * 1.2) demand.i -= 20;
+  if (cargoUsed > cap * 1.2) demand.i -= 25;
 }
 
 // =============== MAIN LOOP ===============
