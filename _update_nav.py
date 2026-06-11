@@ -1,39 +1,31 @@
-"""One-off: stamp a categorized site nav on every game + write index.html."""
+"""Data-driven nav stamping + index gen (from games.json per 2026-06-10 review).
+Makes _update_nav.py the single source (no more hardcoded lists).
+Run as part of build/export step: python _update_nav.py
+(Also see board-gaming/scripts/generate-sitemap.js which already consumes games.json.)
+"""
 import os
 import re
+import json
 
 GAMES_DIR = os.path.dirname(os.path.abspath(__file__))
 
-BOARD_GAMES = [
-    ("Agora.html",         "Agora",          "The Mediterranean Trade"),
-    ("Aresia.html",        "Aresia",         "Colonize the Red Frontier"),
-    ("Backgammon.html",    "Backgammon",     "Classic dice & race"),
-    ("Bisque.html",        "Bisque",         "Battle for the Bay"),
-    ("Chess.html",         "Chess",          "The royal game"),
-    ("Convergence.html",   "Convergence",    "Rival Civilizations, Shared Economy"),
-    ("Go.html",            "Go",             "Territory & influence, 19x19"),
-    ("Mancala.html",       "Mancala",        "Ancient count-and-capture"),
-    ("Odyssey.html",       "Odyssey",        "Upon the Wine-Dark Sea"),
-    ("Othello.html",       "Othello",        "Flip to claim the board"),
-    ("PenteGrammai.html",  "Pente Grammai",  "The Ancient Greek Game of Five Lines"),
-    ("Senet.html",         "Senet",          "The ancient Egyptian racing game"),
-    ("Tidelands.html",     "Tidelands",      "Bronze-age maritime trade"),
-    ("Ur.html",            "Ur",             "The Royal Game of Ur"),
-]
+# Data-driven from games.json (manifest + sourceHtml + title). Includes more than old lists (e.g. Abacus etc).
+# Add "hasNav": false or filter in json for future; for now stamp all with source .html that exist.
+with open(os.path.join(GAMES_DIR, 'games.json'), 'r', encoding='utf-8') as f:
+    _gj = json.load(f)
 
-SIMS = [
-    ("Apoapsis.html",                 "Apoapsis",           "3D rocket flight sim"),
-    ("BiosphereBlue.html",            "Biosphere Blue",     "Planet-scale geosim"),
-    ("BonnevilleSpillwayOperator.html","Bonneville Spillway","Columbia River dam operator"),
-    ("Cliffwalkers.html",             "Cliffwalkers",       "Save the wee folk"),
-    ("Doctrine.html",                 "Doctrine",           "Geopolitical sim, 1990–2050"),
-    ("EclipsePredictor.html",         "Eclipse Predictor",  "Step through 21st-c solar eclipse paths"),
-    ("Floodline.html",                "Floodline",          "California flood defense"),
-    ("Metropolis2K.html",             "Metropolis 2K",      "Build an isometric city"),
-    ("Tower.html",                    "Tower",              "High-rise operations"),
-]
+ALL = []
+for g in _gj.get('games', []):
+    src = g.get('sourceHtml') or ''
+    if src.endswith('.html'):
+        title = g.get('title') or g.get('slug', '')
+        sub = g.get('description') or ''
+        ALL.append((src, title, sub))
 
-ALL = BOARD_GAMES + SIMS
+# For backward card sections (simple split: first ~14 "board", rest "sims" or all under games now)
+# To keep output close, derive:
+BOARD_GAMES = ALL[:14] if len(ALL) > 14 else ALL
+SIMS = ALL[14:] if len(ALL) > 14 else []
 
 
 def nav_snippet(current_file):

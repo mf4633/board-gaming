@@ -1,2 +1,9 @@
-# Local Netlify folder
+# board-gaming
+node_modules/
+dist/
 .netlify
+*.tmp
+*.log
+
+# Generated
+index.html   # if you prefer to generate it in CI only (currently committed)
