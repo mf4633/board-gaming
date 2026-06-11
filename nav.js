@@ -39,6 +39,7 @@
     { slug:'Cliffwalkers',              name:'Cliffwalkers',        cat:'sims',    desc:'Save the wee folk',                     keys:['lemmings','puzzle','arcade'] },
     { slug:'Doctrine',                  name:'Doctrine',            cat:'sims',    desc:'Geopolitical sim 1990–2050',            keys:['geopolitical','history','simulation','war','strategy'] },
     { slug:'Floodline',                 name:'Floodline',           cat:'sims',    desc:'California flood defense',              keys:['flood','defense','engineering','simulation','water'] },
+    { slug:'EclipsePredictor',          name:'Eclipse Predictor',   cat:'sims',    desc:'3D solar eclipse paths on globe (1900-2200)', keys:['eclipse','solar','astronomy','3d','globe','predictor'] },
     { slug:'Tower',                     name:'Tower',               cat:'sims',    desc:'High-rise operations',                  keys:['tower','building','simulation','tycoon','skyscraper'] }
   ];
 
