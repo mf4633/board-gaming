@@ -180,8 +180,6 @@ def write_index():
 
   <footer>
     <a href="https://github.com/mf4633/board-gaming">github.com/mf4633/board-gaming</a>
-    <br>
-    <!-- Phase 3 open-core (data-driven from games.json; nav stamping now buildable step): core free, pro on top (FieldHydro/HydroComplete). 0.2 consumption (hglStep0_2 ~0.500 etc from hydro-tools/rational.py + mirrors). Links: 0.1-QUICKSTART, engine-feedback, real-dispatch-package (EXECUTION_READY for pilots e.g. Mark dam "exactly like what we need" + Priya). Never gate fundamentals. -->
   </footer>
 </div>
 </body>
