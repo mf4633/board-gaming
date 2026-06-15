@@ -8,8 +8,11 @@
 # Deliberate exception (rare): git commit --no-verify
 set -u
 
-# Added lines in the staged diff (exclude +++ headers and this hook file itself).
-added=$(git diff --cached --no-color -U0 --diff-filter=ACM -- . ':(exclude)scripts/pre-commit' \
+# Added lines in the staged diff, excluding +++ headers and the guard's own
+# definition files (which by design contain the marker strings).
+added=$(git diff --cached --no-color -U0 --diff-filter=ACM -- . \
+          ':(exclude)scripts/pre-commit' \
+          ':(exclude).github/workflows/pollution-guard.yml' \
         | grep -E '^\+' | grep -vE '^\+\+\+')
 [ -z "$added" ] && exit 0
 
