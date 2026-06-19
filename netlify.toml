@@ -3,3 +3,180 @@
   from = "/favicon.ico"
   to = "/favicon.svg"
   status = 200
+
+# Clean URLs → PascalCase HTML files (sitemap uses slug form)
+[[redirects]]
+  from = "/play"
+  to = "/play.html"
+  status = 200
+
+[[redirects]]
+  from = "/about"
+  to = "/about.html"
+  status = 200
+
+[[redirects]]
+  from = "/apps"
+  to = "/apps.html"
+  status = 200
+
+[[redirects]]
+  from = "/privacy"
+  to = "/privacy.html"
+  status = 200
+
+# Game slugs (lowercase from games.json)
+[[redirects]]
+  from = "/solitaire"
+  to = "/Solitaire.html"
+  status = 200
+
+[[redirects]]
+  from = "/wordform"
+  to = "/Wordform.html"
+  status = 200
+
+[[redirects]]
+  from = "/drift"
+  to = "/Drift.html"
+  status = 200
+
+[[redirects]]
+  from = "/sudoku"
+  to = "/Sudoku.html"
+  status = 200
+
+[[redirects]]
+  from = "/mahjong"
+  to = "/Mahjong.html"
+  status = 200
+
+[[redirects]]
+  from = "/chess"
+  to = "/Chess.html"
+  status = 200
+
+[[redirects]]
+  from = "/2048"
+  to = "/2048.html"
+  status = 200
+
+[[redirects]]
+  from = "/minesweeper"
+  to = "/Minesweeper.html"
+  status = 200
+
+[[redirects]]
+  from = "/abacus"
+  to = "/Abacus.html"
+  status = 200
+
+[[redirects]]
+  from = "/agora"
+  to = "/Agora.html"
+  status = 200
+
+[[redirects]]
+  from = "/aresia"
+  to = "/Aresia.html"
+  status = 200
+
+[[redirects]]
+  from = "/backgammon"
+  to = "/Backgammon.html"
+  status = 200
+
+[[redirects]]
+  from = "/bisque"
+  to = "/Bisque.html"
+  status = 200
+
+[[redirects]]
+  from = "/convergence"
+  to = "/Convergence.html"
+  status = 200
+
+[[redirects]]
+  from = "/go"
+  to = "/Go.html"
+  status = 200
+
+[[redirects]]
+  from = "/mancala"
+  to = "/Mancala.html"
+  status = 200
+
+[[redirects]]
+  from = "/odyssey"
+  to = "/Odyssey.html"
+  status = 200
+
+[[redirects]]
+  from = "/othello"
+  to = "/Othello.html"
+  status = 200
+
+[[redirects]]
+  from = "/pentegrammai"
+  to = "/PenteGrammai.html"
+  status = 200
+
+[[redirects]]
+  from = "/senet"
+  to = "/Senet.html"
+  status = 200
+
+[[redirects]]
+  from = "/tidelands"
+  to = "/Tidelands.html"
+  status = 200
+
+[[redirects]]
+  from = "/ur"
+  to = "/Ur.html"
+  status = 200
+
+[[redirects]]
+  from = "/apoapsis"
+  to = "/Apoapsis.html"
+  status = 200
+
+[[redirects]]
+  from = "/biosphereblue"
+  to = "/BiosphereBlue.html"
+  status = 200
+
+[[redirects]]
+  from = "/bonnevillespillwayoperator"
+  to = "/BonnevilleSpillwayOperator.html"
+  status = 200
+
+[[redirects]]
+  from = "/cliffwalkers"
+  to = "/Cliffwalkers.html"
+  status = 200
+
+[[redirects]]
+  from = "/doctrine"
+  to = "/Doctrine.html"
+  status = 200
+
+[[redirects]]
+  from = "/eclipsepredictor"
+  to = "/EclipsePredictor.html"
+  status = 200
+
+[[redirects]]
+  from = "/floodline"
+  to = "/Floodline.html"
+  status = 200
+
+[[redirects]]
+  from = "/metropolis2k"
+  to = "/Metropolis2K.html"
+  status = 200
+
+[[redirects]]
+  from = "/tower"
+  to = "/Tower.html"
+  status = 200

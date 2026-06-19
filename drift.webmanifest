@@ -1,0 +1,12 @@
+{
+  "name": "Drift — Daily Word Ladder",
+  "short_name": "Drift",
+  "description": "Daily word ladder puzzle. Change one letter at a time.",
+  "start_url": "/Drift.html",
+  "display": "standalone",
+  "background_color": "#0c1016",
+  "theme_color": "#0c1016",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

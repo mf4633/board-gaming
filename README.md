@@ -1,56 +1,45 @@
 # board-gaming
 
-Browser games — single HTML file each, no build step. Open [`index.html`](./index.html) to pick one.
+Browser games — single HTML file each, no build step.
 
-Live: **<https://mf4633.github.io/board-gaming/>** (if GitHub Pages is enabled)
+**Live:** [boardgaminghub.com](https://boardgaminghub.com) (Netlify) · [play.html](https://boardgaminghub.com/play.html) (ad-supported catalog)
 
-## Board Games
+## Catalog
 
-Turn-based strategy — ancient games, classics, and original designs.
+`games.json` is the single source of truth (title, category, SEO priority, descriptions, demo/store links).
 
-| Game | Notes |
+After editing `games.json`:
+
+```bash
+node scripts/generate-catalog.js   # → index.html, play.html, sitemap.xml, nav.js
+node scripts/strip-sitenav.js      # remove legacy inline nav from game pages
+```
+
+Or: `python _update_nav.py` (runs both scripts).
+
+## Categories
+
+| Category | Examples |
 |---|---|
-| [Agora](./Agora.html) | The Mediterranean Trade |
-| [Aresia](./Aresia.html) | Colonize the Red Frontier |
-| [Backgammon](./Backgammon.html) | Classic dice & race |
-| [Bisque](./Bisque.html) | Battle for the Bay |
-| [Chess](./Chess.html) | The royal game |
-| [Convergence](./Convergence.html) | Rival Civilizations, Shared Economy |
-| [Go](./Go.html) | Territory & influence, 19×19 |
-| [Mancala](./Mancala.html) | Ancient count-and-capture |
-| [Odyssey](./Odyssey.html) | Upon the Wine-Dark Sea |
-| [Othello](./Othello.html) | Flip to claim the board |
-| [Pente Grammai](./PenteGrammai.html) | The Ancient Greek Game of Five Lines |
-| [Senet](./Senet.html) | The ancient Egyptian racing game |
-| [Tidelands](./Tidelands.html) | Bronze-age maritime trade |
-| [Ur](./Ur.html) | The Royal Game of Ur |
+| **Puzzles** | Solitaire, Wordform, Drift, Sudoku, Chess, 2048, Abacus |
+| **Board** | Go, Chess, Agora, Tidelands, Senet, Ur, … |
+| **Simulations** | Floodline, Tower, Bonneville Spillway, Apoapsis, Metropolis 2K, Eclipse Predictor |
 
-## Simulations
+## Premium demos
 
-Real-time physics, engineering, and management sims.
+Full versions of Floodline, Tower (SKYSTACK), and Bonneville Spillway Operator live in the private [board-gaming-premium](https://github.com/mf4633/board-gaming-premium) repo. Public copies set `DEMO_BUILD = true`.
 
-| Sim | Notes |
-|---|---|
-| [Apoapsis](./Apoapsis.html) | 3D rocket flight sim (Three.js) |
-| [Bonneville Spillway Operator](./BonnevilleSpillwayOperator.html) | Columbia River dam — turbines, spillway, fish passage, grid frequency |
-| [Floodline](./Floodline.html) | California flood defense, historical scenarios |
-| [Biosphere Blue](./BiosphereBlue.html) | Planet-scale geosim — tectonics, climate, biomes |
-| [Tower](./Tower.html) | SKYSTACK — high-rise tenant operations |
+## SEO / deploy
 
-## Navigation
-
-Every page shares a sticky top bar with **HOME** and a **GAMES ☰** dropdown that splits the two categories.
-
-## SEO / Backlinks
-
-- sitemap.xml generated from games.json (run `node scripts/generate-sitemap.js > sitemap.xml` after updates; committed starter).
-- Add to robots.txt or Netlify config for full indexing. Lightweight for backlinks.
+- `sitemap.xml` — generated with clean URLs (`/chess` → `Chess.html` via `netlify.toml`)
+- `robots.txt`, `llms.txt`, Google Search Console verified
+- AdSense on `play.html` and `apps.html` only (not gameplay pages)
+- `git push origin main` auto-deploys via Netlify
 
 ## Adding a new game
 
-1. Drop `NewGame.html` (PascalCase) into the repo root (board-gaming/).
-2. Add an entry to `games.json` (the single source of truth for title, sourceHtml, appId, platforms, admob, hasSteam, description).
-3. Run `node scripts/generate-sitemap.js > sitemap.xml` (updates SEO for the hub + Android/Tauri wrappers).
-4. For web hub nav: run `python _update_nav.py` (stamps dropdowns across the HTML files).
-5. For Android wrapper: `cd <slug>-android && npm run copy-assets` (or from root, the prepare script driven by games.json). See scripts/portfolio/prepare-android-assets.js.
-6. For Tauri wrappers: `node scripts/portfolio/prepare-tauri-assets.js --game <slug> --target <tauri-dir>`.
+1. Drop `NewGame.html` (PascalCase) into repo root.
+2. Add entry to `games.json` with `category`, `description`, `searchKeys`, `priority`.
+3. Run `node scripts/generate-catalog.js`.
+4. Add a `[[redirects]]` line in `netlify.toml` for the slug.
+5. For Android: update wrapper `copy-assets` driven by `games.json`.

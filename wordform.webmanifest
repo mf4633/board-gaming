@@ -1,0 +1,12 @@
+{
+  "name": "Wordform — Daily Word Puzzle",
+  "short_name": "Wordform",
+  "description": "Daily 5-letter word puzzle. Six guesses, color-coded feedback.",
+  "start_url": "/Wordform.html",
+  "display": "standalone",
+  "background_color": "#0a0604",
+  "theme_color": "#0c1016",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

@@ -7,40 +7,39 @@
   'use strict';
 
   const GAMES = [
-    // Puzzles & Classics
-    { slug:'Solitaire',                 name:'Solitaire',           cat:'puzzles', desc:'Klondike — the classic card game',     keys:['cards','klondike','patience','solitaire','classic'] },
-    { slug:'Wordform',                  name:'Wordform',            cat:'puzzles', desc:'Daily 5-letter word puzzle',            keys:['word','wordle','letter','daily','vocabulary'] },
-    { slug:'Drift',                     name:'Drift',               cat:'puzzles', desc:'Daily word ladder',                     keys:['word','ladder','daily','vocabulary','original'] },
-    { slug:'Sudoku',                    name:'Sudoku',              cat:'puzzles', desc:'Place 1–9, easy to expert',             keys:['logic','number','grid','classic'] },
-    { slug:'Mahjong',                   name:'Mahjong',             cat:'puzzles', desc:'Solitaire tile matching',               keys:['tile','matching','asian','solitaire'] },
-    { slug:'Chess',                     name:'Chess',               cat:'puzzles', desc:'The royal game',                        keys:['chess','board','strategy','classic','royal'] },
-    { slug:'2048',                      name:'2048',                cat:'puzzles', desc:'Slide & merge tiles',                   keys:['merge','tile','number','slide','arcade'] },
-    { slug:'Minesweeper',               name:'Minesweeper',         cat:'puzzles', desc:'Find the mines, beginner to expert',    keys:['mines','grid','flag','classic'] },
-
-    // Board Games
-    { slug:'Agora',                     name:'Agora',               cat:'board',   desc:'Mediterranean trade',                   keys:['ancient','greek','trade','strategy','original'] },
-    { slug:'Aresia',                    name:'Aresia',              cat:'board',   desc:'Colonize the Red Frontier',             keys:['mars','colony','strategy','original'] },
-    { slug:'Backgammon',                name:'Backgammon',          cat:'board',   desc:'Classic dice & race',                   keys:['dice','race','classic'] },
-    { slug:'Bisque',                    name:'Bisque',              cat:'board',   desc:'Battle for the Bay',                    keys:['naval','strategy','original','war'] },
-    { slug:'Convergence',               name:'Convergence',         cat:'board',   desc:'Rival civilizations, shared economy',   keys:['civilization','strategy','original','economy'] },
-    { slug:'Go',                        name:'Go',                  cat:'board',   desc:'Territory & influence, 19×19',          keys:['go','asian','classic','territory','baduk'] },
-    { slug:'Mancala',                   name:'Mancala',             cat:'board',   desc:'Ancient count-and-capture',             keys:['ancient','african','count','classic'] },
-    { slug:'Odyssey',                   name:'Odyssey',             cat:'board',   desc:'Upon the wine-dark sea',                keys:['ancient','greek','sea','original','homer'] },
-    { slug:'Othello',                   name:'Othello',             cat:'board',   desc:'Flip to claim the board',               keys:['othello','reversi','classic','flip'] },
-    { slug:'PenteGrammai',              name:'Pente Grammai',       cat:'board',   desc:'Ancient Greek five-lines game',         keys:['ancient','greek','classic','five lines'] },
-    { slug:'Senet',                     name:'Senet',               cat:'board',   desc:'Ancient Egyptian racing',               keys:['egyptian','ancient','classic','race'] },
-    { slug:'Tidelands',                 name:'Tidelands',           cat:'board',   desc:'Bronze-age maritime trade',             keys:['ancient','bronze','sea','original','trade'] },
-    { slug:'Ur',                        name:'Ur',                  cat:'board',   desc:'The Royal Game of Ur',                  keys:['mesopotamian','royal','ancient','race','classic'] },
-
-    // Simulations
-    { slug:'Apoapsis',                  name:'Apoapsis',            cat:'sims',    desc:'3D rocket flight sim',                  keys:['rocket','space','3d','simulation','orbital'] },
-    { slug:'BiosphereBlue',             name:'Biosphere Blue',      cat:'sims',    desc:'Planet-scale geosim',                   keys:['planet','climate','geosim','simulation','earth'] },
-    { slug:'BonnevilleSpillwayOperator',name:'Bonneville Spillway', cat:'sims',    desc:'Columbia River dam operator',           keys:['dam','spillway','river','engineering','simulation','hydraulic'] },
-    { slug:'Cliffwalkers',              name:'Cliffwalkers',        cat:'sims',    desc:'Save the wee folk',                     keys:['lemmings','puzzle','arcade'] },
-    { slug:'Doctrine',                  name:'Doctrine',            cat:'sims',    desc:'Geopolitical sim 1990–2050',            keys:['geopolitical','history','simulation','war','strategy'] },
-    { slug:'Floodline',                 name:'Floodline',           cat:'sims',    desc:'California flood defense',              keys:['flood','defense','engineering','simulation','water'] },
-    { slug:'EclipsePredictor',          name:'Eclipse Predictor',   cat:'sims',    desc:'3D solar eclipse paths on globe (1900-2200)', keys:['eclipse','solar','astronomy','3d','globe','predictor'] },
-    { slug:'Tower',                     name:'Tower',               cat:'sims',    desc:'High-rise operations',                  keys:['tower','building','simulation','tycoon','skyscraper'] }
+  // BEGIN GAMES — generated by scripts/generate-catalog.js
+    { slug:'Solitaire', name:'Solitaire', cat:'puzzles', desc:'Klondike — the classic card game', keys:['cards','klondike','patience','solitaire','classic'] },
+    { slug:'Wordform', name:'Wordform', cat:'puzzles', desc:'Daily 5-letter word puzzle', keys:['word','wordle','letter','daily','vocabulary'] },
+    { slug:'Drift', name:'Drift', cat:'puzzles', desc:'Daily word ladder — original', keys:['word','ladder','daily','vocabulary','original'] },
+    { slug:'Sudoku', name:'Sudoku', cat:'puzzles', desc:'Place 1–9, easy to expert', keys:['logic','number','grid','classic'] },
+    { slug:'Mahjong', name:'Mahjong', cat:'puzzles', desc:'Solitaire tile matching', keys:['tile','matching','asian','solitaire'] },
+    { slug:'Chess', name:'Chess', cat:'puzzles', desc:'The royal game', keys:['chess','board','strategy','classic','royal'] },
+    { slug:'2048', name:'2048', cat:'puzzles', desc:'Slide & merge tiles', keys:['merge','tile','number','slide','arcade'] },
+    { slug:'Minesweeper', name:'Minesweeper', cat:'puzzles', desc:'Find the mines', keys:['mines','grid','flag','classic'] },
+    { slug:'Abacus', name:'Abacus', cat:'puzzles', desc:'Soroban calculator with Arabic & Roman numerals', keys:['abacus','soroban','calculator','math','roman'] },
+    { slug:'Agora', name:'Agora', cat:'board', desc:'The Mediterranean Trade', keys:['ancient','greek','trade','strategy','original'] },
+    { slug:'Aresia', name:'Aresia', cat:'board', desc:'Colonize the Red Frontier', keys:['mars','colony','strategy','original'] },
+    { slug:'Backgammon', name:'Backgammon', cat:'board', desc:'Classic dice & race', keys:['dice','race','classic'] },
+    { slug:'Bisque', name:'Bisque', cat:'board', desc:'Battle for the Bay', keys:['naval','strategy','original','war'] },
+    { slug:'Convergence', name:'Convergence', cat:'board', desc:'Rival Civilizations, Shared Economy', keys:['civilization','strategy','original','economy'] },
+    { slug:'Go', name:'Go', cat:'board', desc:'Territory & influence, 19×19', keys:['go','asian','classic','territory','baduk'] },
+    { slug:'Mancala', name:'Mancala', cat:'board', desc:'Ancient count-and-capture', keys:['ancient','african','count','classic'] },
+    { slug:'Odyssey', name:'Odyssey', cat:'board', desc:'Upon the Wine-Dark Sea', keys:['ancient','greek','sea','original','homer'] },
+    { slug:'Othello', name:'Othello', cat:'board', desc:'Flip to claim the board', keys:['othello','reversi','classic','flip'] },
+    { slug:'PenteGrammai', name:'Pente Grammai', cat:'board', desc:'Ancient Greek Game of Five Lines', keys:['ancient','greek','classic','five lines'] },
+    { slug:'Senet', name:'Senet', cat:'board', desc:'Ancient Egyptian racing game', keys:['egyptian','ancient','classic','race'] },
+    { slug:'Tidelands', name:'Tidelands', cat:'board', desc:'Bronze-age maritime trade', keys:['ancient','bronze','sea','original','trade'] },
+    { slug:'Ur', name:'Ur', cat:'board', desc:'The Royal Game of Ur', keys:['mesopotamian','royal','ancient','race','classic'] },
+    { slug:'Apoapsis', name:'Apoapsis', cat:'sims', desc:'3D rocket flight sim', keys:['rocket','space','3d','simulation','orbital'] },
+    { slug:'BiosphereBlue', name:'Biosphere Blue', cat:'sims', desc:'Planet-scale geosim', keys:['planet','climate','geosim','simulation','earth'] },
+    { slug:'BonnevilleSpillwayOperator', name:'Bonneville Spillway', cat:'sims', desc:'Columbia River dam operator', keys:['dam','spillway','river','engineering','simulation','hydraulic'] },
+    { slug:'Cliffwalkers', name:'Cliffwalkers', cat:'sims', desc:'Save the wee folk', keys:['lemmings','puzzle','arcade'] },
+    { slug:'Doctrine', name:'Doctrine', cat:'sims', desc:'Geopolitical sim, 1990–2050', keys:['geopolitical','history','simulation','war','strategy'] },
+    { slug:'EclipsePredictor', name:'Eclipse Predictor', cat:'sims', desc:'3D solar eclipse paths on globe (1900–2200)', keys:['eclipse','solar','astronomy','3d','globe','predictor'] },
+    { slug:'Floodline', name:'Floodline', cat:'sims', desc:'California flood defense', keys:['flood','defense','engineering','simulation','water'] },
+    { slug:'Metropolis2K', name:'Metropolis 2K', cat:'sims', desc:'City-building sim with districts & bonds', keys:['city','building','simulation','tycoon','urban'] },
+    { slug:'Tower', name:'Tower', cat:'sims', desc:'High-rise operations (SKYSTACK)', keys:['tower','building','simulation','tycoon','skyscraper'] },
+    // END GAMES
   ];
 
   const CATS = [
