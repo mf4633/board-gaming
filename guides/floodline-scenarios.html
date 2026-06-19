@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="theme-color" content="#0c1016">
+<title>Floodline Scenarios Explained | Board Gaming Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The real California and United States flood events behind Floodline's simulation scenarios.">
+<link rel="canonical" href="https://boardgaminghub.com/guides/floodline-scenarios">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Board Gaming Hub">
+<meta property="og:url" content="https://boardgaminghub.com/guides/floodline-scenarios">
+<meta property="og:title" content="Floodline Scenarios Explained">
+<meta property="og:description" content="The real California and United States flood events behind Floodline's simulation scenarios.">
+<meta name="twitter:card" content="summary">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; line-height: 1.75; }
+  #wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+  .crumb { font-size: 0.82em; letter-spacing: 2px; color: #5a6874; margin-bottom: 28px; }
+  .crumb a { color: #8098a8; text-decoration: none; }
+  .crumb a:hover { color: #f0d89c; }
+  header h1 { font-size: 1.75em; letter-spacing: 4px; color: #f0d89c; margin: 0 0 10px; line-height: 1.3; }
+  header .deck { color: #8098a8; font-size: 0.95em; letter-spacing: 1px; margin-bottom: 8px; }
+  header .updated { color: #5a6874; font-size: 0.78em; font-style: italic; }
+  article { margin-top: 32px; }
+  article p { color: #c0c8d0; font-size: 1.02em; margin: 0 0 18px; }
+  article h2 { color: #f0d89c; font-size: 1.05em; letter-spacing: 4px; text-transform: uppercase; margin: 36px 0 14px; border-bottom: 1px solid #2a3540; padding-bottom: 8px; }
+  article h3 { color: #d8d0c0; font-size: 1.0em; letter-spacing: 2px; margin: 28px 0 10px; }
+  article ul, article ol { color: #c0c8d0; padding-left: 24px; margin: 0 0 18px; }
+  article li { margin-bottom: 8px; }
+  article a { color: #94c3e8; }
+  article a:hover { color: #f0d89c; }
+  .callout { background: #141c28; border: 1px solid #3a5060; border-radius: 4px; padding: 18px 22px; margin: 28px 0; }
+  .callout b { color: #f0d89c; letter-spacing: 1px; }
+  .scenario-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.92em; }
+  .scenario-table th, .scenario-table td { border: 1px solid #2a3540; padding: 10px 12px; text-align: left; vertical-align: top; }
+  .scenario-table th { color: #f0d89c; background: #141c28; letter-spacing: 1px; }
+  .scenario-table td { color: #c0c8d0; }
+  .play-cta { display: inline-block; margin-top: 8px; padding: 10px 18px; background: #1a2434; border: 1px solid #3a5060; border-radius: 4px; color: #f0d89c; text-decoration: none; letter-spacing: 2px; font-size: 0.88em; }
+  .play-cta:hover { background: #243044; border-color: #5a7090; color: #f0d89c; }
+  .related { margin-top: 48px; padding-top: 24px; border-top: 1px solid #2a3540; }
+  .related h2 { font-size: 0.9em; letter-spacing: 4px; color: #8098a8; text-transform: uppercase; margin-bottom: 14px; }
+  .related a { display: block; color: #94c3e8; text-decoration: none; margin-bottom: 8px; font-size: 0.95em; }
+  .related a:hover { color: #f0d89c; }
+  footer { margin-top: 56px; text-align: center; color: #5a6874; font-size: 0.78em; letter-spacing: 2px; }
+  footer a { color: #8098a8; text-decoration: none; }
+  footer a:hover { color: #d8d0c0; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div class="crumb"><a href="/">Board Gaming Hub</a> · <a href="/guides/">Guides</a></div>
+  <header>
+    <h1>Floodline Scenarios Explained</h1>
+    <div class="deck">The real California and United States flood events behind Floodline's simulation scenarios.</div>
+    <div class="updated">Updated June 2026</div>
+  </header>
+  <article>
+
+    <p><a href="/Floodline.html">Floodline</a> is a flood-defense simulation built by a licensed water-resources engineer. You place levees, channels, pumps, and sandbags to keep town damage below a scenario threshold while storms raise river stages and saturate soils. The browser demo includes a training sandbox and Cedar Rapids 2008; the full release on <a href="https://hydroengineer.itch.io/floodline">itch.io</a> adds the complete historical campaign described below.</p>
+
+    <h2>Why scenarios matter</h2>
+    <p>Each scenario ships with a storm hydrograph, terrain derived from real valley geometry, budget constraints, and win conditions tied to damage percentage. Parameters are simplified for play but grounded in post-event reports from agencies such as California DWR, USACE, and USGS multi-hazard studies.</p>
+
+    <table class="scenario-table">
+      <thead><tr><th>Scenario</th><th>Event basis</th><th>What you manage</th></tr></thead>
+      <tbody>
+        <tr><td><b>Training Ground</b></td><td>Synthetic tutorial basin</td><td>Learn levee stress, pumps, and channel routing without time pressure.</td></tr>
+        <tr><td><b>1986 Yuba</b></td><td>Yuba County levee failures</td><td>Fast-rising Sacramento Valley flows; sandbag windows are short.</td></tr>
+        <tr><td><b>1997 New Year's</b></td><td>California statewide flood</td><td>Multi-day rain on saturated soils; duration stress on levees.</td></tr>
+        <tr><td><b>2006 Sacramento</b></td><td>Sacramento River high flows</td><td>Urban ring levees and pump capacity under prolonged stage.</td></tr>
+        <tr><td><b>2017 Oroville</b></td><td>Oroville Dam spillway crisis</td><td>Spillway erosion, auxiliary spillway risk, evacuation timing — widely considered the hardest scenario.</td></tr>
+        <tr><td><b>ARkStorm West / East</b></td><td>USGS synthetic atmospheric river</td><td>Hypothetical megastorm footprints used in California resilience planning.</td></tr>
+        <tr><td><b>Cedar Rapids 2008</b></td><td>Midwest slow crest</td><td>Gradual rise over days — a endurance scenario for pumps and pre-positioning.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Core mechanics across all scenarios</h2>
+    <ul>
+      <li><b>Levee stress</b> accumulates when water sits high against a segment; breached levees redirect flow unpredictably.</li>
+      <li><b>Pumps</b> buy time but cannot defeat physics if inflow exceeds system capacity.</li>
+      <li><b>Wallet money</b> carries between scenarios in campaign mode — spend on upgrades or save for harder storms.</li>
+      <li><b>Evacuation tools</b> appear in urban scenarios where population risk is part of the score.</li>
+    </ul>
+
+    <h2>Is it an engineering tool?</h2>
+    <p>No. Floodline uses first-order hydrology appropriate for gameplay: routing, storage, and simplified gate curves. It is faithful in shape to real events, not a replacement for HEC-RAS or dam safety modeling. Treat it as an interactive way to understand why flood managers obsess over freeboard, spillway capacity, and forecast lead time.</p>
+
+    <p><a class="play-cta" href="/Floodline.html">Play Floodline demo</a> &nbsp; <a class="play-cta" href="https://hydroengineer.itch.io/floodline">Full game on itch.io</a></p>
+
+  </article>
+<div class="related"><h2>More guides</h2><a href="/guides/wordform-tips.html">Wordform tips & daily strategy</a><a href="/guides/eclipse-2026.html">2026 & 2027 solar eclipse guide</a><a href="/guides/free-browser-chess.html">Free browser chess guide</a></div>
+  <footer>
+    <a href="/">Home</a> ·
+    <a href="/play.html">Play</a> ·
+    <a href="/about.html">About</a> ·
+    <a href="/guides/">All guides</a>
+  </footer>
+</div>
+<script src="/analytics.js"></script>
+<script src="/nav.js" defer></script>
+</body>
+</html>

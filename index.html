@@ -46,6 +46,16 @@
   footer a { color: #8098a8; text-decoration: none; }
   footer a:hover { color: #d8d0c0; }
   
+  .editorial { background: #141c28; border: 1px solid #2a3540; border-radius: 4px; padding: 28px 30px; margin: 0 0 32px; line-height: 1.75; }
+  .editorial h2 { font-size: 1.0em; letter-spacing: 5px; color: #f0d89c; text-transform: uppercase; margin: 0 0 16px; border: none; padding: 0; }
+  .editorial p { color: #b8c0c8; font-size: 0.96em; margin: 0 0 16px; }
+  .editorial p:last-child { margin-bottom: 0; }
+  .guides-strip { margin: 0 0 32px; padding: 20px 22px; background: #111820; border: 1px solid #2a3540; border-radius: 4px; }
+  .guides-strip h2 { font-size: 0.82em; letter-spacing: 4px; color: #8098a8; text-transform: uppercase; margin: 0 0 14px; }
+  .guides-strip .guide-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .guides-strip a { display: block; color: #94c3e8; text-decoration: none; font-size: 0.92em; padding: 8px 10px; border: 1px solid #2a3540; border-radius: 3px; background: #141c28; }
+  .guides-strip a:hover { color: #f0d89c; border-color: #3a5060; background: #1a2434; }
+  section .essay { color: #9aa8b8; font-size: 0.9em; line-height: 1.7; margin: -8px 0 22px; max-width: 900px; }
   #wrap { padding: 40px 24px 80px 24px; }
   header { margin-bottom: 40px; }
   header h1 { font-size: 2.2em; }
@@ -63,8 +73,26 @@
 
   <nav class="hub">
     <a href="play.html">Ad-supported catalog</a>
+    <a href="guides/">Guides</a>
     <a href="apps.html">Android apps</a>
     <a href="about.html">About</a>
+  </nav>
+
+  <article class="editorial">
+    <h2>What is Board Gaming Hub?</h2>
+    <p>Board Gaming Hub is a free collection of 31 browser games maintained by Michael Flynn, PE — a dam-safety and hydrology engineer who builds simulations with real formulas behind them. Every game is a single HTML file: open the page and play. No accounts, no installers, no tracking on gameplay screens.</p>
+    <p>The catalog mixes beloved classics (Chess, Go, Sudoku, Solitaire, Mahjong) with original strategy designs (Agora, Bisque, Aresia, Convergence) and engineering-grade simulations (Floodline, Bonneville Spillway Operator, Eclipse Predictor, Tower). Ads appear only on this catalog page — never during play — so sessions stay uninterrupted.</p>
+    <p>New here? Start with <a href="Wordform.html" style="color:#94c3e8">Wordform</a> or <a href="Drift.html" style="color:#94c3e8">Drift</a> for a two-minute daily puzzle, explore the <a href="guides/" style="color:#94c3e8">guides</a> for strategy and science write-ups, or jump straight into <a href="Floodline.html" style="color:#94c3e8">Floodline</a> if you want to see what engineer-built physics feels like in a game.</p>
+  </article>
+  <nav class="guides-strip" aria-label="Guides">
+    <h2>Guides &amp; articles</h2>
+    <div class="guide-links">
+      <a href="guides/wordform-tips.html">Wordform Tips &amp; Daily Strategy</a>
+      <a href="guides/eclipse-2026.html">2026 &amp; 2027 Solar Eclipse Guide</a>
+      <a href="guides/floodline-scenarios.html">Floodline Scenarios Explained</a>
+      <a href="guides/free-browser-chess.html">Play Chess Free in Your Browser</a>
+      <a href="guides/">All guides →</a>
+    </div>
   </nav>
 
   <div class="daily-strip">
@@ -76,6 +104,7 @@
   <section>
     <h2>Classic Puzzles</h2>
     <div class="blurb">The most-played puzzle games on the web — free, no signup, mobile-friendly.</div>
+    <p class="essay">This section collects the puzzles people actually return to: Klondike solitaire, Sudoku grids from easy through expert, Mahjong tile matching, Minesweeper, and 2048. Wordform and Drift are original daily word games — one hidden five-letter word per day on Wordform, one word-ladder chain on Drift — both designed for sharing results without spoilers. Every title runs in a single HTML file with no account, no install, and no ads on the gameplay screen itself.</p>
     <div class="grid">
     <a class="gcard" href="Solitaire.html">
       <div class="gname">Solitaire</div>
@@ -119,6 +148,7 @@
   <section>
     <h2>Board Games</h2>
     <div class="blurb">Turn-based strategy: ancient games, classic perfects, and original designs.</div>
+    <p class="essay">Alongside Chess, Go, Backgammon, Othello, and Mancala sit original strategy designs: Agora (Mediterranean trade), Aresia (Mars colonization), Bisque (naval area control), Convergence (rival civilizations), Odyssey (wine-dark sea voyages), and more. Ancient games Senet, Ur, and Pente Grammai are included because their rules are short but their decision trees are not. Each page includes how-to-play notes and strategy FAQs so you can learn the game without leaving the site.</p>
     <div class="grid">
     <a class="gcard" href="Agora.html">
       <div class="gname">Agora</div>
@@ -178,6 +208,7 @@
   <section>
     <h2>Simulations</h2>
     <div class="blurb">Real-time physics, engineering, and management sims.</div>
+    <p class="essay">The simulation catalog is what sets this hub apart from a generic game directory. Floodline models California flood defense with levees, pumps, and real storm hydrographs. Bonneville Spillway Operator balances grid demand, salmon passage, and total dissolved gas at a real dam. Eclipse Predictor renders solar eclipse paths on a 3D globe with sub-arcsecond ephemeris accuracy. Tower (SkyStack), Metropolis 2K, Apoapsis, Biosphere Blue, and Doctrine round out management, city-building, orbital mechanics, and geopolitical sims — all built by a practicing engineer who documents the real formulas behind each model.</p>
     <div class="grid">
     <a class="gcard" href="Apoapsis.html">
       <div class="gname">Apoapsis</div>

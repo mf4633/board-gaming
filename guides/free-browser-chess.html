@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="theme-color" content="#0c1016">
+<title>Play Chess Free in Your Browser | Board Gaming Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Rules refresher, special moves, and practical tips for the Board Gaming Hub chess board.">
+<link rel="canonical" href="https://boardgaminghub.com/guides/free-browser-chess">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Board Gaming Hub">
+<meta property="og:url" content="https://boardgaminghub.com/guides/free-browser-chess">
+<meta property="og:title" content="Play Chess Free in Your Browser">
+<meta property="og:description" content="Rules refresher, special moves, and practical tips for the Board Gaming Hub chess board.">
+<meta name="twitter:card" content="summary">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; line-height: 1.75; }
+  #wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+  .crumb { font-size: 0.82em; letter-spacing: 2px; color: #5a6874; margin-bottom: 28px; }
+  .crumb a { color: #8098a8; text-decoration: none; }
+  .crumb a:hover { color: #f0d89c; }
+  header h1 { font-size: 1.75em; letter-spacing: 4px; color: #f0d89c; margin: 0 0 10px; line-height: 1.3; }
+  header .deck { color: #8098a8; font-size: 0.95em; letter-spacing: 1px; margin-bottom: 8px; }
+  header .updated { color: #5a6874; font-size: 0.78em; font-style: italic; }
+  article { margin-top: 32px; }
+  article p { color: #c0c8d0; font-size: 1.02em; margin: 0 0 18px; }
+  article h2 { color: #f0d89c; font-size: 1.05em; letter-spacing: 4px; text-transform: uppercase; margin: 36px 0 14px; border-bottom: 1px solid #2a3540; padding-bottom: 8px; }
+  article h3 { color: #d8d0c0; font-size: 1.0em; letter-spacing: 2px; margin: 28px 0 10px; }
+  article ul, article ol { color: #c0c8d0; padding-left: 24px; margin: 0 0 18px; }
+  article li { margin-bottom: 8px; }
+  article a { color: #94c3e8; }
+  article a:hover { color: #f0d89c; }
+  .callout { background: #141c28; border: 1px solid #3a5060; border-radius: 4px; padding: 18px 22px; margin: 28px 0; }
+  .callout b { color: #f0d89c; letter-spacing: 1px; }
+  .scenario-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.92em; }
+  .scenario-table th, .scenario-table td { border: 1px solid #2a3540; padding: 10px 12px; text-align: left; vertical-align: top; }
+  .scenario-table th { color: #f0d89c; background: #141c28; letter-spacing: 1px; }
+  .scenario-table td { color: #c0c8d0; }
+  .play-cta { display: inline-block; margin-top: 8px; padding: 10px 18px; background: #1a2434; border: 1px solid #3a5060; border-radius: 4px; color: #f0d89c; text-decoration: none; letter-spacing: 2px; font-size: 0.88em; }
+  .play-cta:hover { background: #243044; border-color: #5a7090; color: #f0d89c; }
+  .related { margin-top: 48px; padding-top: 24px; border-top: 1px solid #2a3540; }
+  .related h2 { font-size: 0.9em; letter-spacing: 4px; color: #8098a8; text-transform: uppercase; margin-bottom: 14px; }
+  .related a { display: block; color: #94c3e8; text-decoration: none; margin-bottom: 8px; font-size: 0.95em; }
+  .related a:hover { color: #f0d89c; }
+  footer { margin-top: 56px; text-align: center; color: #5a6874; font-size: 0.78em; letter-spacing: 2px; }
+  footer a { color: #8098a8; text-decoration: none; }
+  footer a:hover { color: #d8d0c0; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div class="crumb"><a href="/">Board Gaming Hub</a> · <a href="/guides/">Guides</a></div>
+  <header>
+    <h1>Play Chess Free in Your Browser</h1>
+    <div class="deck">Rules refresher, special moves, and practical tips for the Board Gaming Hub chess board.</div>
+    <div class="updated">Updated June 2026</div>
+  </header>
+  <article>
+
+    <p>Board Gaming Hub hosts a full-featured <a href="/Chess.html">chess board</a> in a single HTML page — no download, no account, no ads on the board itself. Play against a friend on the same device or practice openings solo. This guide is a compact rules refresher plus practical tips for browser play.</p>
+
+    <h2>How each piece moves</h2>
+    <ul>
+      <li><b>King</b> — one square in any direction; participates in castling.</li>
+      <li><b>Queen</b> — any number of squares along rank, file, or diagonal.</li>
+      <li><b>Rook</b> — any number of squares along rank or file.</li>
+      <li><b>Bishop</b> — any number of squares along diagonals.</li>
+      <li><b>Knight</b> — L-shape (two plus one); jumps over pieces.</li>
+      <li><b>Pawn</b> — forward one square (two from starting rank); captures diagonally; promotes on the eighth rank.</li>
+    </ul>
+
+    <h2>Special moves people forget</h2>
+    <h3>Castling</h3>
+    <p>Move king two squares toward a rook; rook jumps to the other side. Requirements: neither piece has moved, no pieces between, king not in check, king does not pass through or land on an attacked square.</p>
+    <h3>En passant</h3>
+    <p>If a pawn advances two squares and lands beside an opposing pawn, that opposing pawn may capture it as though it moved only one square — but only on the immediately following turn.</p>
+    <h3>Promotion</h3>
+    <p>A pawn reaching the far rank becomes queen, rook, bishop, or knight (almost always queen).</p>
+
+    <h2>Opening principles for casual games</h2>
+    <ol>
+      <li>Control the center with pawns and pieces (e4/d4 or c4/Nf3 systems).</li>
+      <li>Develop knights before bishops; castle before launching a flank attack.</li>
+      <li>Do not move the same piece twice in the opening unless recapturing or avoiding material loss.</li>
+      <li>Connect rooks after castling; rooks belong on open or half-open files.</li>
+    </ol>
+
+    <h2>Browser-specific tips</h2>
+    <p>On mobile, use the built-in move list to review the game — small screens make blindfold calculation harder. If you undo by mistake, use the move list to step back mentally and replay from a stable position. For serious practice, set a timer externally; the hub board does not enforce clocks so casual play stays frictionless.</p>
+
+    <div class="callout">
+      <b>Also try:</b> <a href="/Go.html">Go</a> for territorial strategy, <a href="/Backgammon.html">Backgammon</a> for dice-driven racing, and <a href="/Wordform.html">Wordform</a> for a daily puzzle warm-up before a chess session.
+    </div>
+
+    <p><a class="play-cta" href="/Chess.html">Play chess now</a></p>
+
+  </article>
+<div class="related"><h2>More guides</h2><a href="/guides/wordform-tips.html">Wordform tips & daily strategy</a><a href="/guides/eclipse-2026.html">2026 & 2027 solar eclipse guide</a><a href="/guides/floodline-scenarios.html">Floodline scenarios explained</a></div>
+  <footer>
+    <a href="/">Home</a> ·
+    <a href="/play.html">Play</a> ·
+    <a href="/about.html">About</a> ·
+    <a href="/guides/">All guides</a>
+  </footer>
+</div>
+<script src="/analytics.js"></script>
+<script src="/nav.js" defer></script>
+</body>
+</html>

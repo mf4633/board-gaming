@@ -5,9 +5,30 @@
     "adSlot": ""
   },
   "categories": [
-    { "id": "puzzles", "label": "Classic Puzzles", "blurb": "The most-played puzzle games on the web — free, no signup, mobile-friendly." },
-    { "id": "board", "label": "Board Games", "blurb": "Turn-based strategy: ancient games, classic perfects, and original designs." },
-    { "id": "sims", "label": "Simulations", "blurb": "Real-time physics, engineering, and management sims." }
+    {
+      "id": "puzzles",
+      "label": "Classic Puzzles",
+      "blurb": "The most-played puzzle games on the web — free, no signup, mobile-friendly.",
+      "essay": "This section collects the puzzles people actually return to: Klondike solitaire, Sudoku grids from easy through expert, Mahjong tile matching, Minesweeper, and 2048. Wordform and Drift are original daily word games — one hidden five-letter word per day on Wordform, one word-ladder chain on Drift — both designed for sharing results without spoilers. Every title runs in a single HTML file with no account, no install, and no ads on the gameplay screen itself."
+    },
+    {
+      "id": "board",
+      "label": "Board Games",
+      "blurb": "Turn-based strategy: ancient games, classic perfects, and original designs.",
+      "essay": "Alongside Chess, Go, Backgammon, Othello, and Mancala sit original strategy designs: Agora (Mediterranean trade), Aresia (Mars colonization), Bisque (naval area control), Convergence (rival civilizations), Odyssey (wine-dark sea voyages), and more. Ancient games Senet, Ur, and Pente Grammai are included because their rules are short but their decision trees are not. Each page includes how-to-play notes and strategy FAQs so you can learn the game without leaving the site."
+    },
+    {
+      "id": "sims",
+      "label": "Simulations",
+      "blurb": "Real-time physics, engineering, and management sims.",
+      "essay": "The simulation catalog is what sets this hub apart from a generic game directory. Floodline models California flood defense with levees, pumps, and real storm hydrographs. Bonneville Spillway Operator balances grid demand, salmon passage, and total dissolved gas at a real dam. Eclipse Predictor renders solar eclipse paths on a 3D globe with sub-arcsecond ephemeris accuracy. Tower (SkyStack), Metropolis 2K, Apoapsis, Biosphere Blue, and Doctrine round out management, city-building, orbital mechanics, and geopolitical sims — all built by a practicing engineer who documents the real formulas behind each model."
+    }
+  ],
+  "guides": [
+    { "slug": "wordform-tips", "file": "guides/wordform-tips.html", "title": "Wordform Tips & Daily Strategy", "description": "Opening words, color feedback, daily vs random mode, and how to share your grid." },
+    { "slug": "eclipse-2026", "file": "guides/eclipse-2026.html", "title": "2026 & 2027 Solar Eclipse Guide", "description": "Paths of totality, timing, and how to use the free 3D eclipse predictor." },
+    { "slug": "floodline-scenarios", "file": "guides/floodline-scenarios.html", "title": "Floodline Scenarios Explained", "description": "Real California and US flood events behind the simulation scenarios." },
+    { "slug": "free-browser-chess", "file": "guides/free-browser-chess.html", "title": "Play Chess Free in Your Browser", "description": "Rules refresher, special moves, and tips for the Board Gaming Hub chess board." }
   ],
   "games": [
     { "slug": "solitaire", "title": "Solitaire", "sourceHtml": "Solitaire.html", "category": "puzzles", "featured": true, "daily": false, "priority": 0.95, "ogImage": "/og/solitaire.svg", "description": "Klondike — the classic card game", "searchKeys": ["cards", "klondike", "patience", "solitaire", "classic"], "appId": "com.hydroengineer.solitaire", "platforms": ["android", "web"], "hasSteam": false, "admob": true },

@@ -8,7 +8,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'games.json'), 'utf8'));
-const { site, categories, games } = data;
+const { site, categories, games, guides = [] } = data;
 const BASE = site.baseUrl.replace(/\/$/, '');
 const PUB = site.publisherId;
 const AD_SLOT = String(site.adSlot || '').trim();
@@ -39,12 +39,26 @@ function section(catId, opts = {}) {
   const list = games.filter(g => g.category === catId);
   if (!list.length) return '';
   const sectionClass = opts.highlightPuzzles && catId === 'puzzles' ? 'featured' : '';
+  const essay = cat.essay ? `\n    <p class="essay">${esc(cat.essay)}</p>` : '';
   return `
   <section${sectionClass ? ` class="${sectionClass}"` : ''}>
     <h2>${esc(cat.label)}</h2>
-    <div class="blurb">${esc(cat.blurb)}</div>
+    <div class="blurb">${esc(cat.blurb)}</div>${essay}
     <div class="grid">
 ${list.map(g => card(g, { featured: g.featured && opts.highlightPuzzles })).join('\n')}
+    </div>
+  </section>`;
+}
+
+function indexSection(cat) {
+  const list = games.filter(g => g.category === cat.id);
+  const essay = cat.essay ? `\n    <p class="essay">${esc(cat.essay)}</p>` : '';
+  return `
+  <section>
+    <h2>${esc(cat.label)}</h2>
+    <div class="blurb">${esc(cat.blurb)}</div>${essay}
+    <div class="grid">
+${list.map(g => card(g)).join('\n')}
     </div>
   </section>`;
 }
@@ -82,7 +96,17 @@ const sharedCss = `  * { box-sizing: border-box; }
   footer { margin-top: 60px; text-align: center; color: #5a6874; font-size: 0.78em; letter-spacing: 2px; line-height: 1.8; }
   footer a { color: #8098a8; text-decoration: none; }
   footer a:hover { color: #d8d0c0; }
-  .disclosure { color: #5a6874; font-size: 0.72em; max-width: 700px; margin: 30px auto 0; line-height: 1.6; letter-spacing: 0.5px; font-style: italic; }`;
+  .disclosure { color: #5a6874; font-size: 0.72em; max-width: 700px; margin: 30px auto 0; line-height: 1.6; letter-spacing: 0.5px; font-style: italic; }
+  .editorial { background: #141c28; border: 1px solid #2a3540; border-radius: 4px; padding: 28px 30px; margin: 0 0 32px; line-height: 1.75; }
+  .editorial h2 { font-size: 1.0em; letter-spacing: 5px; color: #f0d89c; text-transform: uppercase; margin: 0 0 16px; border: none; padding: 0; }
+  .editorial p { color: #b8c0c8; font-size: 0.96em; margin: 0 0 16px; }
+  .editorial p:last-child { margin-bottom: 0; }
+  .guides-strip { margin: 0 0 32px; padding: 20px 22px; background: #111820; border: 1px solid #2a3540; border-radius: 4px; }
+  .guides-strip h2 { font-size: 0.82em; letter-spacing: 4px; color: #8098a8; text-transform: uppercase; margin: 0 0 14px; }
+  .guides-strip .guide-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .guides-strip a { display: block; color: #94c3e8; text-decoration: none; font-size: 0.92em; padding: 8px 10px; border: 1px solid #2a3540; border-radius: 3px; background: #141c28; }
+  .guides-strip a:hover { color: #f0d89c; border-color: #3a5060; background: #1a2434; }
+  section .essay { color: #9aa8b8; font-size: 0.9em; line-height: 1.7; margin: -8px 0 22px; max-width: 900px; }`;
 
 function adUnit(style) {
   if (!ADS_ENABLED) {
@@ -117,6 +141,23 @@ const adInitScript = ADS_ENABLED ? `<script>
   }
 })();
 </script>` : '';
+
+const hubEditorial = `  <article class="editorial">
+    <h2>What is Board Gaming Hub?</h2>
+    <p>Board Gaming Hub is a free collection of ${count} browser games maintained by Michael Flynn, PE — a dam-safety and hydrology engineer who builds simulations with real formulas behind them. Every game is a single HTML file: open the page and play. No accounts, no installers, no tracking on gameplay screens.</p>
+    <p>The catalog mixes beloved classics (Chess, Go, Sudoku, Solitaire, Mahjong) with original strategy designs (Agora, Bisque, Aresia, Convergence) and engineering-grade simulations (Floodline, Bonneville Spillway Operator, Eclipse Predictor, Tower). Ads appear only on this catalog page — never during play — so sessions stay uninterrupted.</p>
+    <p>New here? Start with <a href="Wordform.html" style="color:#94c3e8">Wordform</a> or <a href="Drift.html" style="color:#94c3e8">Drift</a> for a two-minute daily puzzle, explore the <a href="guides/" style="color:#94c3e8">guides</a> for strategy and science write-ups, or jump straight into <a href="Floodline.html" style="color:#94c3e8">Floodline</a> if you want to see what engineer-built physics feels like in a game.</p>
+  </article>`;
+
+const guidesStrip = guides.length
+  ? `  <nav class="guides-strip" aria-label="Guides">
+    <h2>Guides &amp; articles</h2>
+    <div class="guide-links">
+${guides.map(g => `      <a href="${g.file}">${esc(g.title)}</a>`).join('\n')}
+      <a href="guides/">All guides →</a>
+    </div>
+  </nav>`
+  : '';
 
 const dailyGames = games.filter(g => g.daily);
 const dailyStrip = dailyGames.length
@@ -158,10 +199,14 @@ ${sharedCss}
 
   <nav class="hub">
     <a href="index.html">Clean version</a>
+    <a href="guides/">Guides</a>
     <a href="apps.html">Android apps</a>
     <a href="about.html">About</a>
     <a href="privacy.html">Privacy</a>
   </nav>
+
+${hubEditorial}
+${guidesStrip}
 
 ${adUnit()}
 
@@ -228,22 +273,16 @@ ${sharedCss.replace(/header \.free-tag[^}]+\}/g, '').replace(/\.ad-slot[^}]+\}/g
 
   <nav class="hub">
     <a href="play.html">Ad-supported catalog</a>
+    <a href="guides/">Guides</a>
     <a href="apps.html">Android apps</a>
     <a href="about.html">About</a>
   </nav>
 
+${hubEditorial}
+${guidesStrip}
+
 ${dailyStrip}
-${categories.map(c => {
-  const list = games.filter(g => g.category === c.id);
-  return `
-  <section>
-    <h2>${esc(c.label)}</h2>
-    <div class="blurb">${esc(c.blurb)}</div>
-    <div class="grid">
-${list.map(g => card(g)).join('\n')}
-    </div>
-  </section>`;
-}).join('\n')}
+${categories.map(c => indexSection(c)).join('\n')}
 
   <footer>
     <a href="play.html">Ad-supported catalog</a> ·
@@ -265,8 +304,10 @@ function sitemapEntry(loc, priority, changefreq = 'monthly') {
 const sitemapUrls = [
   sitemapEntry(`${BASE}/`, 1.0, 'weekly'),
   sitemapEntry(`${BASE}/play`, 0.95, 'weekly'),
+  sitemapEntry(`${BASE}/guides/`, 0.85, 'weekly'),
+  ...guides.map(g => sitemapEntry(`${BASE}/guides/${g.slug}`, 0.8, 'monthly')),
   ...games.map(g => sitemapEntry(`${BASE}/${g.slug}`, g.priority || 0.8)),
-  sitemapEntry(`${BASE}/about`, 0.5, 'yearly'),
+  sitemapEntry(`${BASE}/about`, 0.6, 'yearly'),
   sitemapEntry(`${BASE}/apps`, 0.7, 'monthly'),
   sitemapEntry(`${BASE}/privacy`, 0.3, 'yearly'),
 ];
@@ -303,5 +344,7 @@ fs.writeFileSync(path.join(ROOT, 'index.html'), indexHtml);
 fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sitemapXml);
 fs.writeFileSync(navPath, navSrc);
 
+require('./generate-guides.js');
+
 console.log(`Generated catalog for ${count} games:`);
-console.log('  play.html, index.html, sitemap.xml, nav.js');
+console.log('  play.html, index.html, sitemap.xml, nav.js, guides/');

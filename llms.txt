@@ -5,10 +5,11 @@
 Every game on Board Gaming Hub is a single HTML file with no server-side dependency — open the page and play. The collection mixes original designs (Bisque, Tidelands, Aresia, Apoapsis, Floodline, Doctrine, Cliffwalkers, Tower / SKYSTACK, Bonneville Spillway Operator) with traditional games (Chess, Go, Backgammon, Mancala, Senet, Ur, Othello, Mahjong, Sudoku, Solitaire, Minesweeper, 2048). Several titles have companion native ports on itch.io and the Google Play Store.
 
 ## Core pages
-- [Home / catalog](https://boardgaminghub.com/): All 31 games with thumbnails and short blurbs
+- [Home / catalog](https://boardgaminghub.com/): All 31 games with editorial intro, category essays, and guide links
 - [Play / ad-supported catalog](https://boardgaminghub.com/play.html): Primary discovery page with daily puzzles strip
+- [Guides](https://boardgaminghub.com/guides/): Strategy and science articles (Wordform, eclipses, Floodline, chess)
 - [Apps / native ports](https://boardgaminghub.com/apps.html): Links to itch.io and Play Store builds
-- [About](https://boardgaminghub.com/about.html)
+- [About](https://boardgaminghub.com/about.html): Gaming hub mission and author background
 - [Privacy](https://boardgaminghub.com/privacy.html)
 
 ## Original strategy games

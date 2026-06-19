@@ -25,6 +25,31 @@
   to = "/privacy.html"
   status = 200
 
+[[redirects]]
+  from = "/guides"
+  to = "/guides/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/guides/wordform-tips"
+  to = "/guides/wordform-tips.html"
+  status = 200
+
+[[redirects]]
+  from = "/guides/eclipse-2026"
+  to = "/guides/eclipse-2026.html"
+  status = 200
+
+[[redirects]]
+  from = "/guides/floodline-scenarios"
+  to = "/guides/floodline-scenarios.html"
+  status = 200
+
+[[redirects]]
+  from = "/guides/free-browser-chess"
+  to = "/guides/free-browser-chess.html"
+  status = 200
+
 # Game slugs (lowercase from games.json)
 [[redirects]]
   from = "/solitaire"
