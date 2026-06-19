@@ -1,7 +1,8 @@
 {
   "site": {
     "baseUrl": "https://boardgaminghub.com",
-    "publisherId": "ca-pub-2835365593874464"
+    "publisherId": "ca-pub-2835365593874464",
+    "adSlot": ""
   },
   "categories": [
     { "id": "puzzles", "label": "Classic Puzzles", "blurb": "The most-played puzzle games on the web — free, no signup, mobile-friendly." },

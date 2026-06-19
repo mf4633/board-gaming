@@ -11,6 +11,8 @@ const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'games.json'), 'utf8'));
 const { site, categories, games } = data;
 const BASE = site.baseUrl.replace(/\/$/, '');
 const PUB = site.publisherId;
+const AD_SLOT = String(site.adSlot || '').trim();
+const ADS_ENABLED = /^\d{10}$/.test(AD_SLOT) && AD_SLOT !== '0000000000';
 const count = games.length;
 
 function esc(s) {
@@ -82,18 +84,25 @@ const sharedCss = `  * { box-sizing: border-box; }
   footer a:hover { color: #d8d0c0; }
   .disclosure { color: #5a6874; font-size: 0.72em; max-width: 700px; margin: 30px auto 0; line-height: 1.6; letter-spacing: 0.5px; font-style: italic; }`;
 
-function adUnit(slot, style) {
+function adUnit(style) {
+  if (!ADS_ENABLED) {
+    return `  <div class="ad-slot ad-slot--pending"${style ? ` style="${style}"` : ''} aria-hidden="true"></div>`;
+  }
   return `  <div class="ad-slot"${style ? ` style="${style}"` : ''}>
     <ins class="adsbygoogle"
          style="display:block"
          data-ad-client="${PUB}"
-         data-ad-slot="${slot}"
+         data-ad-slot="${AD_SLOT}"
          data-ad-format="auto"
          data-full-width-responsive="true"></ins>
   </div>`;
 }
 
-const adInitScript = `<script>
+const adsenseHeadScript = ADS_ENABLED
+  ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${PUB}" crossorigin="anonymous"></script>`
+  : '';
+
+const adInitScript = ADS_ENABLED ? `<script>
 (function () {
   function fillAds() {
     var slots = document.querySelectorAll('ins.adsbygoogle');
@@ -107,7 +116,7 @@ const adInitScript = `<script>
     requestAnimationFrame(fillAds);
   }
 })();
-</script>`;
+</script>` : '';
 
 const dailyGames = games.filter(g => g.daily);
 const dailyStrip = dailyGames.length
@@ -134,7 +143,7 @@ const playHtml = `<!DOCTYPE html>
 <meta property="og:title" content="Play ${count} free in-browser puzzle &amp; strategy games">
 <meta property="og:description" content="Solitaire, Sudoku, Mahjong, Wordform, 2048, Chess, Go, plus original designs and physics sims. Free, ad-supported, no signup.">
 <meta name="twitter:card" content="summary">
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${PUB}" crossorigin="anonymous"></script>
+${adsenseHeadScript}
 <style>
 ${sharedCss}
 </style>
@@ -154,15 +163,15 @@ ${sharedCss}
     <a href="privacy.html">Privacy</a>
   </nav>
 
-${adUnit('0000000000')}
+${adUnit()}
 
 ${dailyStrip}
 ${section('puzzles', { highlightPuzzles: true })}
-${adUnit('0000000000', 'margin:32px 0')}
+${adUnit('margin:32px 0')}
 ${section('board')}
 ${section('sims')}
 
-${adUnit('0000000000', 'margin:32px 0')}
+${adUnit('margin:32px 0')}
 
   <p class="disclosure">
     This page is supported by Google AdSense advertisements. Ads help keep the games free.
