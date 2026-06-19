@@ -202,6 +202,7 @@ ${sharedCss}
     <a href="guides/">Guides</a>
     <a href="apps.html">Android apps</a>
     <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
     <a href="privacy.html">Privacy</a>
   </nav>
 
@@ -230,6 +231,7 @@ ${adUnit('margin:32px 0')}
     <a href="index.html">Clean version</a> ·
     <a href="apps.html">Android apps</a> ·
     <a href="about.html">About</a> ·
+    <a href="contact.html">Contact</a> ·
     <a href="privacy.html">Privacy</a> ·
     <a href="https://github.com/mf4633/board-gaming">github.com/mf4633/board-gaming</a>
   </footer>
@@ -276,6 +278,7 @@ ${sharedCss.replace(/header \.free-tag[^}]+\}/g, '').replace(/\.ad-slot[^}]+\}/g
     <a href="guides/">Guides</a>
     <a href="apps.html">Android apps</a>
     <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
   </nav>
 
 ${hubEditorial}
@@ -308,6 +311,7 @@ const sitemapUrls = [
   ...guides.map(g => sitemapEntry(`${BASE}/guides/${g.slug}`, 0.8, 'monthly')),
   ...games.map(g => sitemapEntry(`${BASE}/${g.slug}`, g.priority || 0.8)),
   sitemapEntry(`${BASE}/about`, 0.6, 'yearly'),
+  sitemapEntry(`${BASE}/contact`, 0.5, 'yearly'),
   sitemapEntry(`${BASE}/apps`, 0.7, 'monthly'),
   sitemapEntry(`${BASE}/privacy`, 0.3, 'yearly'),
 ];
