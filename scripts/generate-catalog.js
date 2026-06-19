@@ -74,25 +74,40 @@ const sharedCss = `  * { box-sizing: border-box; }
   .demo-badge { display: inline-block; margin-top: 6px; font-size: 0.78em; color: #a0c8a8; letter-spacing: 1px; }
   .demo-badge a { color: #94c3e8; }
   .daily-badge { display: inline-block; margin-left: 8px; font-size: 0.65em; color: #a0d0a8; letter-spacing: 2px; vertical-align: middle; font-weight: normal; }
-  .ad-slot { position: relative; margin: 24px 0; min-height: 90px; display: flex; align-items: center; justify-content: center; background: #11161e; border: 1px dashed #2a3540; border-radius: 4px; padding: 6px; }
+  .ad-slot { position: relative; width: 100%; margin: 24px 0; min-height: 90px; display: block; background: #11161e; border: 1px dashed #2a3540; border-radius: 4px; padding: 6px; overflow: hidden; }
   .ad-slot::before { content: 'Advertisement'; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); color: #5a6874; font-size: 0.65em; letter-spacing: 3px; pointer-events: none; }
-  .ad-slot ins { display: block !important; }
+  .ad-slot ins.adsbygoogle { display: block !important; width: 100% !important; min-height: 90px; }
   footer { margin-top: 60px; text-align: center; color: #5a6874; font-size: 0.78em; letter-spacing: 2px; line-height: 1.8; }
   footer a { color: #8098a8; text-decoration: none; }
   footer a:hover { color: #d8d0c0; }
   .disclosure { color: #5a6874; font-size: 0.72em; max-width: 700px; margin: 30px auto 0; line-height: 1.6; letter-spacing: 0.5px; font-style: italic; }`;
 
-function adUnit(slot, format, style) {
+function adUnit(slot, style) {
   return `  <div class="ad-slot"${style ? ` style="${style}"` : ''}>
     <ins class="adsbygoogle"
-         style="display:block${format === 'horizontal' ? '' : ';text-align:center'}"
+         style="display:block"
          data-ad-client="${PUB}"
          data-ad-slot="${slot}"
-         data-ad-format="${format}"
+         data-ad-format="auto"
          data-full-width-responsive="true"></ins>
-  </div>
-  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>`;
+  </div>`;
 }
+
+const adInitScript = `<script>
+(function () {
+  function fillAds() {
+    var slots = document.querySelectorAll('ins.adsbygoogle');
+    for (var i = 0; i < slots.length; i++) {
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { requestAnimationFrame(fillAds); });
+  } else {
+    requestAnimationFrame(fillAds);
+  }
+})();
+</script>`;
 
 const dailyGames = games.filter(g => g.daily);
 const dailyStrip = dailyGames.length
@@ -139,15 +154,15 @@ ${sharedCss}
     <a href="privacy.html">Privacy</a>
   </nav>
 
-${adUnit('0000000000', 'horizontal')}
+${adUnit('0000000000')}
 
 ${dailyStrip}
 ${section('puzzles', { highlightPuzzles: true })}
-${adUnit('0000000000', 'auto', 'margin:32px 0')}
+${adUnit('0000000000', 'margin:32px 0')}
 ${section('board')}
 ${section('sims')}
 
-${adUnit('0000000000', 'auto', 'margin:32px 0')}
+${adUnit('0000000000', 'margin:32px 0')}
 
   <p class="disclosure">
     This page is supported by Google AdSense advertisements. Ads help keep the games free.
@@ -165,6 +180,7 @@ ${adUnit('0000000000', 'auto', 'margin:32px 0')}
     <a href="https://github.com/mf4633/board-gaming">github.com/mf4633/board-gaming</a>
   </footer>
 </div>
+${adInitScript}
 <script src="/analytics.js"></script>
 <script src="/nav.js" defer></script>
 </body>
