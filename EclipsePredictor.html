@@ -4,13 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#04060E">
-<title>Eclipse Predictor &mdash; Solar Eclipse Paths on a 3D Globe | Board Gaming Hub</title>
-<meta name="description" content="Step through every solar eclipse from 1900 to 2200. Computed with astronomy-engine (sub-arcsecond accuracy), drawn as paths of totality on a 3D Earth.">
+<title>2026 &amp; 2027 Solar Eclipse Path Map — 3D Globe | Board Gaming Hub</title>
+<meta name="description" content="Free 3D solar eclipse path map for 2026 (Aug 12 total — Spain, Iceland) and 2027 (Aug 2 — Spain to Egypt, 6+ min totality). Every eclipse 1900–2200, sub-arcsecond astronomy-engine accuracy.">
+<meta name="keywords" content="2026 solar eclipse path, 2027 solar eclipse, eclipse map, path of totality, solar eclipse predictor, August 2026 eclipse, August 2027 eclipse">
 <link rel="canonical" href="https://boardgaminghub.com/EclipsePredictor.html">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://boardgaminghub.com/EclipsePredictor.html">
-<meta property="og:title" content="Eclipse Predictor &mdash; Solar Eclipse Paths">
-<meta property="og:description" content="Click through 21st-century solar eclipses and watch the path of totality sweep across a 3D globe.">
+<meta property="og:title" content="2026 &amp; 2027 Solar Eclipse Paths on a 3D Globe">
+<meta property="og:description" content="Step through the Aug 12 2026 and Aug 2 2027 total eclipses — paths of totality on a rotatable Earth. Free, no signup.">
+<meta property="og:image" content="https://boardgaminghub.com/og/eclipse.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://boardgaminghub.com/og/eclipse.svg">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"When is the next total solar eclipse?","acceptedAnswer":{"@type":"Answer","text":"The next total solar eclipse is August 12, 2026, visible from Greenland, Iceland, and northern Spain. The following major total eclipse is August 2, 2027 across Spain, North Africa, and the Middle East — up to 6m23s of totality."}},
+  {"@type":"Question","name":"Where can I see the 2026 solar eclipse?","acceptedAnswer":{"@type":"Answer","text":"The August 12, 2026 total eclipse crosses Greenland, Iceland, and northern Spain. Use Eclipse Predictor to view the exact path of totality on a 3D globe."}},
+  {"@type":"Question","name":"Where is the 2027 eclipse of the century?","acceptedAnswer":{"@type":"Answer","text":"The August 2, 2027 total eclipse — one of the longest of the century at over 6 minutes — crosses Spain, Morocco, Algeria, Libya, Egypt, and Saudi Arabia."}}
+]}
+</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127773;</text></svg>">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1867,6 +1880,18 @@ generateEclipses(
     // Default to 2024-04-08 if present, else most recent
     let idx = ECLIPSES.findIndex(e => e.year === 2024 && e.month === 4 && e.day === 8);
     if (idx < 0) idx = Math.floor(ECLIPSES.length / 2);
+    const qs = new URLSearchParams(location.search);
+    const dateKey = qs.get('date') || qs.get('eclipse');
+    if (dateKey) {
+      const di = ECLIPSES.findIndex(e => `${e.year}-${String(e.month).padStart(2,'0')}-${String(e.day).padStart(2,'0')}` === dateKey);
+      if (di >= 0) idx = di;
+    } else if (qs.get('year') === '2026') {
+      const di = ECLIPSES.findIndex(e => e.year === 2026 && e.month === 8 && e.day === 12);
+      if (di >= 0) idx = di;
+    } else if (qs.get('year') === '2027') {
+      const di = ECLIPSES.findIndex(e => e.year === 2027 && e.month === 8 && e.day === 2);
+      if (di >= 0) idx = di;
+    }
     loadEclipse(idx);
     // Fade out overlay
     loadOverlayEl.style.transition = 'opacity 0.5s';
@@ -1878,11 +1903,17 @@ generateEclipses(
 </script>
 
 <section class="seo-content" style="position:relative;z-index:50;background:#0c1016;margin-top:0;padding-bottom:40px;">
-  <h2>About Eclipse Predictor</h2>
-  <p>Step through every solar eclipse from 1900 to 2200. Paths of totality, annularity, and hybrid eclipses are computed with <strong>astronomy-engine</strong> (sub-arcsecond ephemeris) and drawn on a rotatable 3D Earth.</p>
+  <h2>2026 &amp; 2027 Solar Eclipse Paths</h2>
+  <p>Step through every solar eclipse from 1900 to 2200. Paths of totality are computed with <strong>astronomy-engine</strong> (sub-arcsecond ephemeris) and drawn on a rotatable 3D Earth.</p>
+  <h3>Upcoming total eclipses</h3>
+  <ul>
+    <li><a href="?date=2026-08-12"><strong>Aug 12, 2026</strong></a> — total: Greenland, Iceland, northern Spain</li>
+    <li><a href="?date=2027-08-02"><strong>Aug 2, 2027</strong></a> — total: Spain through Egypt (&ldquo;Eclipse of the Century,&rdquo; 6m+ totality)</li>
+    <li><a href="?date=2024-04-08">Apr 8, 2024</a> — Great American Eclipse (replay)</li>
+  </ul>
   <h3>What you can explore</h3>
   <ul>
-    <li>Click through the catalog or jump by year — e.g. 2024-04-08 North America, 2026-08-12 Europe, 2027-08-02 Africa.</li>
+    <li>Deep links: <code>?date=2026-08-12</code> or <code>?year=2027</code> jump straight to the eclipse.</li>
     <li>Toggle coastlines, night shading, penumbra band, and landmark cities along the path.</li>
     <li>Open <strong>Show the Math</strong> for Besselian elements and contact times.</li>
   </ul>
