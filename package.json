@@ -1,0 +1,12 @@
+{
+  "name": "board-gaming",
+  "private": true,
+  "scripts": {
+    "generate": "node scripts/generate-catalog.js",
+    "og": "node scripts/generate-og-images.js",
+    "stamp-og": "node scripts/stamp-og-meta.js"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.5"
+  }
+}

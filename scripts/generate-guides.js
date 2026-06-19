@@ -96,12 +96,11 @@ ${relatedHtml}
 const guidesDir = path.join(ROOT, 'guides');
 fs.mkdirSync(guidesDir, { recursive: true });
 
-const allGuides = [
-  { slug: 'wordform-tips', href: '/guides/wordform-tips.html', label: 'Wordform tips & daily strategy' },
-  { slug: 'eclipse-2026', href: '/guides/eclipse-2026.html', label: '2026 & 2027 solar eclipse guide' },
-  { slug: 'floodline-scenarios', href: '/guides/floodline-scenarios.html', label: 'Floodline scenarios explained' },
-  { slug: 'free-browser-chess', href: '/guides/free-browser-chess.html', label: 'Free browser chess guide' },
-];
+const allGuides = (data.guides || []).map(g => ({
+  slug: g.slug,
+  href: `/${g.file}`,
+  label: g.title,
+}));
 
 function relatedFor(slug) {
   return allGuides.filter(g => g.slug !== slug);
@@ -143,6 +142,84 @@ const pages = [
     <p>If three guesses leave you with only one green vowel, switch to a structural word: try common endings (<em>-IGHT</em>, <em>-OUND</em>, <em>-ATCH</em>) or consonant-heavy frames like <em>TH</em> and <em>CH</em>. On guess five, prioritize ruling out remaining consonants over clever vocabulary — elimination wins more dailies than rare words.</p>
 
     <p><a class="play-cta" href="/Wordform.html">Play Wordform now</a></p>
+`,
+  },
+  {
+    slug: 'drift-word-ladder',
+    file: 'drift-word-ladder.html',
+    title: 'Drift Word Ladder Guide',
+    description: 'How word ladders work, daily puzzle tips, and shortest-path strategy for Drift.',
+    body: `
+    <p><a href="/Drift.html">Drift</a> is a daily word-ladder puzzle: transform a four-letter start word into a four-letter target word by changing one letter per step, with every intermediate string required to be valid English. The format was invented by Lewis Carroll in 1877 (he called them &ldquo;doublets&rdquo;). Drift adds a daily shared puzzle, optional hints, and a theme that often reveals how start and target words relate.</p>
+
+    <h2>Rules in one minute</h2>
+    <ul>
+      <li>Word length stays fixed — no adding or removing letters.</li>
+      <li>Each step changes exactly one letter.</li>
+      <li>Every row must be a real dictionary word.</li>
+      <li>Reach the target in as few steps as possible; shorter ladders score better.</li>
+    </ul>
+
+    <h2>Example chain</h2>
+    <p>COLD → CORD → CARD → WARD → WARM is a classic five-step ladder. Drift puzzles are curated so at least one reasonably short path exists; many pairs admit multiple routes of different lengths.</p>
+
+    <h2>Strategy for shorter ladders</h2>
+    <ol>
+      <li><b>Work from both ends.</b> Sketch one step from the start and one step backward from the target; look for words that could meet in the middle.</li>
+      <li><b>Change high-impact letters first.</b> Vowels and rare consonants (J, Q, X, Z) are bottlenecks — bridge them early.</li>
+      <li><b>Use the theme.</b> Daily themes hint at semantic links (weather, colors, opposites). If the theme says &ldquo;heat,&rdquo; consider words related to temperature even when the letters look unrelated.</li>
+      <li><b>Insert steps freely.</b> Tap <b>+ ADD STEP</b> to branch exploration; delete dead ends rather than forcing a single chain.</li>
+    </ol>
+
+    <h2>Daily vs random</h2>
+    <p><b>Daily</b> serves one ladder worldwide until local midnight — ideal for comparing step counts with friends. <b>Random</b> pulls from the full pair library for practice. Solve Daily first if you care about streaks and shared difficulty.</p>
+
+    <h2>When to use a hint</h2>
+    <p>Hints reveal one letter along a known short solution path. They are best for breaking symmetry when two plausible branches tie — not for opening moves. A clean solve with zero hints beats a one-hint solve for bragging rights.</p>
+
+    <div class="callout">
+      <b>Pair with Wordform:</b> Both dailies reset at local midnight. Many players run Wordform first (five letters, elimination logic) then Drift (pathfinding logic) as a ten-minute morning routine.
+    </div>
+
+    <p><a class="play-cta" href="/Drift.html">Play Drift now</a></p>
+`,
+  },
+  {
+    slug: 'sudoku-tips',
+    file: 'sudoku-tips.html',
+    title: 'Sudoku Tips for Beginners',
+    description: 'Scanning, pencil marks, X-Wing, and how difficulty levels work on the free browser grid.',
+    body: `
+    <p><a href="/Sudoku.html">Sudoku</a> on Board Gaming Hub is a full 9×9 grid with four difficulty presets — Easy, Medium, Hard, and Expert — plus pencil marks and undo. No account, no timer pressure unless you bring your own. This guide covers the techniques that take you from first fill to confident Expert grids.</p>
+
+    <h2>The one rule</h2>
+    <p>Each row, column, and 3×3 box must contain digits 1–9 exactly once. Every technique is just a consequence of that constraint plus the givens already on the board.</p>
+
+    <h2>Level 1 — scanning</h2>
+    <ul>
+      <li><b>Single candidate:</b> If a cell can only be one digit, fill it immediately.</li>
+      <li><b>Hidden singles:</b> If a digit can only go in one cell within a row, column, or box, place it even when the cell has other pencil marks.</li>
+      <li><b>Eliminate from givens:</b> Before pencil marks, cross out digits already present in the cell&rsquo;s row, column, and box.</li>
+    </ul>
+
+    <h2>Level 2 — pencil marks</h2>
+    <p>Toggle pencil mode and note every possible digit per cell. Update marks after each placement — stale marks cause errors on Hard and Expert boards. On Easy and Medium, many puzzles solve with singles only if marks stay current.</p>
+
+    <h2>Level 3 — pairs and triples</h2>
+    <p>If two cells in a unit share the same two candidates and only those two, eliminate those digits from other cells in the unit (naked pair). The same logic extends to triples. This is the bridge technique between Medium and Hard.</p>
+
+    <h2>Level 4 — X-Wing and beyond</h2>
+    <p>An <b>X-Wing</b> appears when a digit&rsquo;s candidates in two rows align in the same two columns (or vice versa), letting you remove that digit from other cells in those columns. Expert puzzles on the hub may require X-Wing, swordfish, or simple coloring — if stuck, step back and re-check for hidden singles after a fresh mark pass.</p>
+
+    <h2>Choosing a difficulty</h2>
+    <ul>
+      <li><b>Easy</b> — singles only; good first week of play.</li>
+      <li><b>Medium</b> — occasional pairs; still relaxing.</li>
+      <li><b>Hard</b> — consistent mark discipline required.</li>
+      <li><b>Expert</b> — advanced eliminations; expect 30–45 minutes.</li>
+    </ul>
+
+    <p><a class="play-cta" href="/Sudoku.html">Play Sudoku now</a></p>
 `,
   },
   {
@@ -218,6 +295,50 @@ const pages = [
 `,
   },
   {
+    slug: 'bonneville-dam-guide',
+    file: 'bonneville-dam-guide.html',
+    title: 'Bonneville Dam Operator Guide',
+    description: 'TDG limits, salmon passage, spillway vs turbines, and career mode strategy.',
+    body: `
+    <p><a href="/BonnevilleSpillwayOperator.html">Bonneville Spillway Operator</a> puts you in charge of a Columbia River dam stylized after the real Bonneville complex. Balance electrical generation, spillway releases, fish ladder operations, navigation lockages, and total dissolved gas (TDG) limits — all while inflow swings with season and weather. The browser build is a demo; the full career campaign is on <a href="https://hydroengineer.itch.io/bonneville-spillway-operator">itch.io</a>.</p>
+
+    <h2>What you are optimizing</h2>
+    <ul>
+      <li><b>Grid demand</b> — keep turbines generating when the Pacific Northwest load calls for power.</li>
+      <li><b>Reservoir stage</b> — too high risks overtopping; too low kills head and revenue.</li>
+      <li><b>TDG (% saturation)</b> — spillway air entrainment supersaturates water; aim below 115% to protect salmon.</li>
+      <li><b>Salmon passage</b> — ladder throughput and juvenile bypass affect both score and regulatory standing.</li>
+      <li><b>Lockages</b> — river commerce earns income but competes with spill and generation schedules.</li>
+    </ul>
+
+    <h2>Spillway vs turbines</h2>
+    <p>Turbines pass water profitably with lower TDG impact. Spillways dump excess fast but spike TDG proportional to flow (roughly √Q until deflector upgrades). Spring snowmelt forces ugly tradeoffs: you must spill to protect the dam, but fish managers cap how much high-TDG water the tailrace can carry.</p>
+
+    <h2>Key upgrades (career mode)</h2>
+    <table class="scenario-table">
+      <thead><tr><th>Upgrade</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr><td><b>Flip-lip deflectors</b></td><td>Lowers TDG per unit spill — often the first fish-friendly purchase.</td></tr>
+        <tr><td><b>Fish ladder</b></td><td>Unlocks salmon income and reduces regulatory penalties.</td></tr>
+        <tr><td><b>Juvenile bypass</b></td><td>Routes smolts around the spillway; dramatically cuts TDG harm.</td></tr>
+        <tr><td><b>Extra turbine</b></td><td>More generation capacity to avoid spill during moderate peaks.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Controls cheat sheet</h2>
+    <p><b>Q/A</b> adjust turbines · <b>W/S</b> spillway gates · <b>E/D</b> fish ladder · <b>Space</b> pause. Drag panel titles to rearrange the dashboard on ultrawide screens.</p>
+
+    <h2>Hardest season</h2>
+    <p>Spring snowmelt with high salmon-run requirements is the canonical pain point: inflow climbs, spill becomes mandatory, and the regulatory floor for fish passage limits how aggressively you can open gates. Anticipate inflow from forecast panels rather than chasing stage after it rises — career gold medals reward planning.</p>
+
+    <div class="callout">
+      <b>Real-world note:</b> Capacities and tradeoffs follow public USACE data for Bonneville, simplified for play. This is a game, not a license to operate a federal dam.
+    </div>
+
+    <p><a class="play-cta" href="/BonnevilleSpillwayOperator.html">Play demo</a> &nbsp; <a class="play-cta" href="https://hydroengineer.itch.io/bonneville-spillway-operator">Full game</a></p>
+`,
+  },
+  {
     slug: 'free-browser-chess',
     file: 'free-browser-chess.html',
     title: 'Play Chess Free in Your Browser',
@@ -274,7 +395,7 @@ for (const g of pages) {
   fs.writeFileSync(path.join(guidesDir, g.file), html);
 }
 
-const indexRelated = allGuides.map(g => `<a class="guide-card" href="${g.href}"><span class="gtitle">${g.label.replace(/^\w/, c => c.toUpperCase())}</span><span class="gsub">Read guide →</span></a>`).join('\n    ');
+const indexRelated = allGuides.map(g => `<a class="guide-card" href="${g.href}"><span class="gtitle">${g.label}</span><span class="gsub">${(data.guides.find(x => x.slug === g.slug) || {}).description || 'Read guide →'}</span></a>`).join('\n    ');
 
 const guidesIndex = `<!DOCTYPE html>
 <html lang="en">

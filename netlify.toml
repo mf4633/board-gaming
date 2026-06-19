@@ -55,6 +55,21 @@
   to = "/guides/free-browser-chess.html"
   status = 200
 
+[[redirects]]
+  from = "/guides/drift-word-ladder"
+  to = "/guides/drift-word-ladder.html"
+  status = 200
+
+[[redirects]]
+  from = "/guides/sudoku-tips"
+  to = "/guides/sudoku-tips.html"
+  status = 200
+
+[[redirects]]
+  from = "/guides/bonneville-dam-guide"
+  to = "/guides/bonneville-dam-guide.html"
+  status = 200
+
 # Game slugs (lowercase from games.json)
 [[redirects]]
   from = "/solitaire"

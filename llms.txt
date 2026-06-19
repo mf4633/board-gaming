@@ -7,7 +7,7 @@ Every game on Board Gaming Hub is a single HTML file with no server-side depende
 ## Core pages
 - [Home / catalog](https://boardgaminghub.com/): All 31 games with editorial intro, category essays, and guide links
 - [Play / ad-supported catalog](https://boardgaminghub.com/play.html): Primary discovery page with daily puzzles strip
-- [Guides](https://boardgaminghub.com/guides/): Strategy and science articles (Wordform, eclipses, Floodline, chess)
+- [Guides](https://boardgaminghub.com/guides/): Seven strategy/science articles (Wordform, Drift, Sudoku, eclipses, Floodline, Bonneville dam, chess)
 - [Apps / native ports](https://boardgaminghub.com/apps.html): Links to itch.io and Play Store builds
 - [About](https://boardgaminghub.com/about.html): Gaming hub mission and author background
 - [Privacy](https://boardgaminghub.com/privacy.html)
