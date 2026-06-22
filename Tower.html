@@ -2852,6 +2852,11 @@ function renderPalette() {
 /* ===== DRAGGABLE HUD ===== */
 // Any element passed through here can be dragged by its non-interactive surface and
 // remembers its position in localStorage.
+var _hudZ = 30;
+function hudBringToFront(el) {
+  el.style.zIndex = ++_hudZ;
+}
+
 function makeDraggable(el, key) {
   if (!el || el._draggable) return;
   el._draggable = true;
@@ -2871,6 +2876,7 @@ function makeDraggable(el, key) {
     }
   } catch (ex) {}
   el.addEventListener('mousedown', function(e) {
+    hudBringToFront(el);
     // Don't drag when user is interacting with controls inside the panel
     var tag = e.target.tagName;
     if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'A') return;
@@ -3403,7 +3409,7 @@ function spawnWorkers() {
 function releaseWorkers() {
   for (var i = 0; i < state.agents.length; i++) {
     var a = state.agents[i];
-    if (a.type === 'worker') a.phase = 'toHome';
+    if (a.type === 'worker') a.phase = 'leaving';
   }
 }
 
@@ -6964,6 +6970,9 @@ function renovateAt(gx, gy) {
   u.damaged = false;
   u.satFall = 0;
   u.quality = 1.0;
+  if (state.events) {
+    state.events = state.events.filter(function(ev) { return !(ev.kind === 'fire' && ev.unitId == uid); });
+  }
   showToast('Renovated ' + UNITS[u.type].name);
   logEvent('Renovated ' + UNITS[u.type].name + ' @ floor ' + floorLabel(u.y) + ' (-$40,000)', 'good');
 }
