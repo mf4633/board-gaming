@@ -611,8 +611,8 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why do tides matter?","acceptedAnswer":{"@type":"Answer","text":"River-mouth ports — often the most lucrative — are only accessible during high tide. Tide rotates predictably, so timing route completion to the tide is the core puzzle."}},{"@type":"Question","name":"Is wind direction random?","acceptedAnswer":{"@type":"Answer","text":"Pseudo-random with seasonal bias. Spring favors westerly routes, autumn easterly. Adjust your route plan to the season at the start of each round."}},{"@type":"Question","name":"How many players is best?","acceptedAnswer":{"@type":"Answer","text":"3 — enough trader competition to make blocking matter, not so many that the map gets crowded. 4-player is fun but slower."}},{"@type":"Question","name":"Is Tidelands historically grounded?","acceptedAnswer":{"@type":"Answer","text":"Loosely — Bronze-Age trade in the eastern Mediterranean inspired the design. Ship types, commodity list, and route geometry are stylized, not historical."}}]}</script>
 </head>
 <body>
-<h1>ODYSSEY</h1>
-  <div class="subtitle">Upon the Wine-Dark Sea</div>
+<h1>TIDELANDS</h1>
+  <div class="subtitle">Bronze-Age Maritime Trade</div>
 
   <div class="player-count-selector" id="player-count-selector">
     <span style="font-size:0.75em;color:#4A8888;margin-right:6px;">Players:</span>
@@ -1696,16 +1696,26 @@
         var adjacent = false;
         var neighbors = hexNeighbors[i];
         for (var n = 0; n < neighbors.length; n++) {
-          if (hexes[neighbors[n]].structure && hexes[neighbors[n]].structure.owner === playerIdx) {
+          var nb = neighbors[n];
+          // Direct structure adjacency
+          if (hexes[nb].structure && hexes[nb].structure.owner === playerIdx) {
             adjacent = true;
             break;
           }
+          // Trireme FROM candidate hex (i) TO this neighbor which has a player structure
           for (var b = 0; b < hexes[i].triremes.length; b++) {
-            if (hexes[i].triremes[b].owner === playerIdx) { adjacent = true; break; }
+            if (hexes[i].triremes[b].to === nb && hexes[i].triremes[b].owner === playerIdx &&
+                hexes[nb].structure && hexes[nb].structure.owner === playerIdx) {
+              adjacent = true; break;
+            }
           }
           if (adjacent) break;
-          for (var b = 0; b < hexes[neighbors[n]].triremes.length; b++) {
-            if (hexes[neighbors[n]].triremes[b].to === i && hexes[neighbors[n]].triremes[b].owner === playerIdx) { adjacent = true; break; }
+          // Trireme FROM this neighbor TO candidate hex (i), where neighbor has a player structure
+          for (var b = 0; b < hexes[nb].triremes.length; b++) {
+            if (hexes[nb].triremes[b].to === i && hexes[nb].triremes[b].owner === playerIdx &&
+                hexes[nb].structure && hexes[nb].structure.owner === playerIdx) {
+              adjacent = true; break;
+            }
           }
           if (adjacent) break;
         }

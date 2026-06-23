@@ -3313,7 +3313,7 @@ function tick() {
     if (k === K.CITY_HALL) cityHall = true;
     if (k === K.CAPITOL) capitol = true;
   }
-  const taxMult = (game.ordinances.business ? 0.85 : 1.0) * (cityHall ? 1.05 : 1.0);
+  const taxMult = (cityHall ? 1.05 : 1.0);
   const incomeR = (sub.rl * game.tax.rl + sub.rd * game.tax.rd) / 100 * 4 * taxMult;
   const incomeC = (sub.cl * game.tax.cl + sub.cd * game.tax.cd) / 100 * 5 * taxMult;
   const incomeI = (sub.id * game.tax.id + sub.im * game.tax.im + sub.iht * game.tax.iht) / 100 * 6 * taxMult;
@@ -3361,7 +3361,11 @@ function tick() {
   if (game.emissionsRules)   expense += 40;
   if (game.bikeLanes)        expense += 25;
   // Pension debt: 10% income haircut for the period
-  if (game.pensionDebt && game.pensionDebt > 0) game.pensionDebt--;
+  if (game.pensionDebt && game.pensionDebt > 0) {
+    game.pensionDebt--;
+    // Apply the income haircut promised to citizens
+    game.money -= (incomeR + incomeC + incomeI) * 0.10;
+  }
   // City Hall: -5% expenses
   if (cityHall) expense *= 0.95;
   // Bond interest
@@ -3627,7 +3631,7 @@ function startFire() {
   world[x][y].burnTime = 3;
   game._disasters = game._disasters || new Set();
   game._disasters.add('fire');
-  game._disastersSurvived = game._disasters.size;
+  game._disastersSurvived = Math.max(game._disastersSurvived || 0, game._disasters.size);
   pushNews('FIRE at (' + x + ',' + y + ')!');
   needsRedraw = true;
 }
@@ -3683,7 +3687,7 @@ function startTornado() {
   }
   game._disasters = game._disasters || new Set();
   game._disasters.add('tornado');
-  game._disastersSurvived = game._disasters.size;
+  game._disastersSurvived = Math.max(game._disastersSurvived || 0, game._disasters.size);
   pushNews('TORNADO tore through ' + destroyed + ' blocks!');
   needsRedraw = true;
 }
@@ -3715,7 +3719,7 @@ function startEarthquake() {
   }
   game._disasters = game._disasters || new Set();
   game._disasters.add('earthquake');
-  game._disastersSurvived = game._disasters.size;
+  game._disastersSurvived = Math.max(game._disastersSurvived || 0, game._disasters.size);
   pushNews('EARTHQUAKE shook the city! ' + destroyed + ' lots damaged.');
   needsRedraw = true;
 }
@@ -3731,13 +3735,17 @@ function startRiot() {
   if (!candidates.length) return;
   for (let i = 0; i < 4; i++) {
     const [x, y] = candidates[Math.floor(rng() * candidates.length)];
-    if (rng() < 0.5) world[x][y].kind = K.BURNING;
-    else { world[x][y].kind = K.RUBBLE; world[x][y].level = 0; }
-    world[x][y].burnTime = 3;
+    if (rng() < 0.5) {
+      world[x][y].kind = K.BURNING;
+      world[x][y].burnTime = 3;
+    } else {
+      world[x][y].kind = K.RUBBLE;
+      world[x][y].level = 0;
+    }
   }
   game._disasters = game._disasters || new Set();
   game._disasters.add('riot');
-  game._disastersSurvived = game._disasters.size;
+  game._disastersSurvived = Math.max(game._disastersSurvived || 0, game._disasters.size);
   pushNews('RIOTS broke out in the slums! Multiple blocks ablaze.');
   needsRedraw = true;
 }
@@ -4738,6 +4746,10 @@ function applyLoadedPayload(p) {
     const advance = (game.monthsElapsed || 0) * 32;
     for (let i = 0; i < advance; i++) gameRng();
   }
+  // _disasters is a Set but JSON.stringify serialises it as {}.
+  // Re-initialise it as an empty Set after load; _disastersSurvived (a number) is
+  // persisted correctly and is the authoritative count for the achievement check.
+  game._disasters = new Set();
   // Reset live-only state that isn't persisted
   noise = makeArr(0); waterPol = makeArr(0); trafficLoad = makeArr(0);
   snowCover = makeArr(0);

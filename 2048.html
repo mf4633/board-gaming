@@ -127,7 +127,7 @@
 <script>
 (() => {
   const N = 4;
-  let grid, score, best, history;
+  let grid, score, best, history, won;
   const $ = id => document.getElementById(id);
 
   function load() {
@@ -135,18 +135,18 @@
     $('best').textContent = best;
     const saved = localStorage.getItem('g2048_state');
     if (saved) {
-      try { const s = JSON.parse(saved); grid = s.grid; score = s.score; history = s.history || []; render(); return; }
+      try { const s = JSON.parse(saved); grid = s.grid; score = s.score; history = s.history || []; won = s.won || false; render(); return; }
       catch(e){}
     }
     newGame();
   }
   function save() {
-    localStorage.setItem('g2048_state', JSON.stringify({grid, score, history: history.slice(-20)}));
+    localStorage.setItem('g2048_state', JSON.stringify({grid, score, history: history.slice(-20), won}));
     if (score > best) { best = score; localStorage.setItem('g2048_best', best); $('best').textContent = best; }
   }
   function newGame() {
     grid = Array.from({length: N}, () => Array(N).fill(0));
-    score = 0; history = [];
+    score = 0; history = []; won = false;
     addRandom(); addRandom();
     render(); save();
     $('msg').textContent = '';
@@ -206,7 +206,7 @@
     score += gained;
     addRandom();
     render(); save();
-    if (gridHas(2048)) $('msg').textContent = 'YOU REACHED 2048 — KEEP GOING';
+    if (!won && gridHas(2048)) { won = true; $('msg').textContent = 'YOU REACHED 2048 — KEEP GOING'; }
     if (!canMove()) $('msg').textContent = 'GAME OVER — NEW GAME?';
     return true;
   }

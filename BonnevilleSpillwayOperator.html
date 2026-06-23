@@ -2887,6 +2887,7 @@ function wireDragPanels() {
     if (!el) continue;
     const handle = el.querySelector('h2');
     if (!handle) continue;
+    el.addEventListener('mousedown', () => { el.style.zIndex = (++z); });
     handle.addEventListener('mousedown', e => {
       if (e.button !== 0) return;
       e.preventDefault();
@@ -2895,7 +2896,7 @@ function wireDragPanels() {
       const offX = e.clientX - panelRect.left;
       const offY = e.clientY - panelRect.top;
       el.classList.add('dragging');
-      el.style.zIndex = (++z);
+      el.style.zIndex = z;  // already bumped by the el mousedown above
       const onMove = ev => {
         const nx = ev.clientX - wsRect.left + workspace.scrollLeft - offX;
         const ny = ev.clientY - wsRect.top  + workspace.scrollTop  - offY;

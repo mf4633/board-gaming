@@ -4595,6 +4595,7 @@ function wireMainMenu() {
     dismiss();
     maybeShowFirstRun();
   });
+  var cont = document.getElementById('mmContinue');
   if (cont) cont.addEventListener('click', function() {
     dismiss();
     setTimeout(function() { openSlotPicker('load'); }, 400);

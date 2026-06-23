@@ -586,7 +586,7 @@ function aiMove() {
     var score = board[13] - board[6];
     if (result.extraTurn) score += 3;
     if (result.captured) score += 2;
-    if (sideEmpty(0)) {
+    if (sideEmpty(0) || sideEmpty(1)) {
       // Game would end — sum remaining for each side
       var p1sum = 0, p2sum = 0;
       for (var j = 0; j < 6; j++) p1sum += board[j];

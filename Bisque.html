@@ -910,10 +910,6 @@ function resetGame() {
   /* Assign to each player */
   for (var pi = 1; pi <= playerCount; pi++) {
     var count = perPlayer;
-    /* For 4 players, distribute remainder: first (totalTerritories % playerCount) players get an extra */
-    if (playerCount === 4 && pi <= (totalTerritories % playerCount)) {
-      count = perPlayer + 1;
-    }
     for (var c = 0; c < count; c++) {
       state.territories[ids[idx]] = {
         owner: pi,

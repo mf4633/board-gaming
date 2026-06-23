@@ -985,16 +985,11 @@
 
     function calcNetworkBonus(playerIdx) {
       // Largest connected network among all players
-      var best = -1;
-      var bestPlayer = -1;
-      for (var p = 0; p < 2; p++) {
-        var net = largestNetwork(p);
-        if (net > best) {
-          best = net;
-          bestPlayer = p;
-        }
-      }
-      if (bestPlayer === playerIdx && best >= 2) return 3;
+      // Only award the bonus if this player is strictly ahead of the other
+      var nets = [largestNetwork(0), largestNetwork(1)];
+      if (nets[0] === nets[1]) return 0; // tie — nobody gets the bonus
+      var bestPlayer = nets[0] > nets[1] ? 0 : 1;
+      if (bestPlayer === playerIdx && nets[playerIdx] >= 2) return 3;
       return 0;
     }
 
@@ -1051,6 +1046,7 @@
       for (var i = 0; i < TOTAL_HEXES; i++) {
         if (hexes[i].temple) continue;
         if (hexes[i].elevation === 5) continue; // doesn't need temple
+        if (hexes[i].flooded) continue; // can't build temple on submerged hex
         if (hexes[i].structure && hexes[i].structure.owner !== playerIdx) continue;
         // Must be adjacent to player's structure
         var adjacent = false;

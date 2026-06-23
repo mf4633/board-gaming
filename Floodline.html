@@ -1217,7 +1217,7 @@ function buildObjectives() {
   const sc = state.scenario;
   state.objectives = [
     { id: 'damage', label: `Keep town damage below ${sc.winDamage}%`, check: () => getDamagePct() < sc.winDamage },
-    { id: 'survive', label: `Survive ${formatTime(sc.duration)}`, check: () => state.time >= sc.duration },
+    { id: 'survive', label: `Survive ${formatTime(sc._effectiveDuration ?? sc.duration)}`, check: () => state.time >= (sc._effectiveDuration ?? sc.duration) },
   ];
   if (sc.hospital) state.objectives.push({
     id: 'hospital', label: 'Protect the hospital',
@@ -3297,6 +3297,7 @@ function snapshotCell(i) {
     type: state.type[i], elev: state.elev[i], structH: state.structH[i],
     stress: state.stress[i], budget: state.budget, spent: state.spent,
     evacuated: state.stats.evacuated,
+    reinforced: state.reinforced[i],
   });
   if (undoStack.length > 50) undoStack.shift();
 }
@@ -3308,6 +3309,7 @@ function undo() {
   state.elev[u.i] = u.elev;
   state.structH[u.i] = u.structH;
   state.stress[u.i] = u.stress;
+  state.reinforced[u.i] = u.reinforced ?? 0;
   state.budget = u.budget;
   state.spent = u.spent;
   state.stats.evacuated = u.evacuated;

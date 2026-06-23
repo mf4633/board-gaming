@@ -351,8 +351,8 @@ function newGame(playerPower) {
     tempo: {},             // power -> remaining tempo this turn
     selected: null,
     budget: {},            // power -> {mil, soc, infra}  (% of GDP)
-    lowApprovalStreak: 0,
-    holdStreak: 0,
+    lowApprovalStreak: 0,  // reset each newGame — was leaking between games
+    holdStreak: 0,         // reset each newGame — was leaking between games
     score: { USA: 0, CHN: 0, RUS: 0, EU: 0 },
     over: false,
     lastEventYear: 0,
@@ -772,10 +772,10 @@ function endYear() {
   annualEconomy();
   // Scoring
   for (const p of POWERS) S.score[p] = computeScore(p);
+  // Advance year first so checkEnd sees the correct year
+  S.year += 1;
   // Win/lose
   checkEnd();
-  // Advance
-  S.year += 1;
   for (const p of POWERS) S.tempo[p] = S.powers[p].tempoMax;
   render();
 }

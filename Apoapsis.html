@@ -1322,7 +1322,7 @@ function buildRocketMeshes(parts) {
 function addPart(key) {
   var def = PARTS[key];
   var p = { id: partIdCounter++, key: key, stage: maxStage() };
-  if (def.type === 'tank' || def.type === 'srb') p.fuel = def.fuel;
+  if (def.fuel !== undefined) p.fuel = def.fuel;
   rocket.parts.push(p);
   renderBuilder();
 }
@@ -1335,7 +1335,7 @@ function loadPreset(name) {
   for (var i = 0; i < preset.length; i++) {
     var def = PARTS[preset[i].key];
     var p = { id: partIdCounter++, key: preset[i].key, stage: preset[i].stage };
-    if (def.type === 'tank' || def.type === 'srb') p.fuel = def.fuel;
+    if (def.fuel !== undefined) p.fuel = def.fuel;
     rocket.parts.push(p);
   }
   selectedPart = -1;

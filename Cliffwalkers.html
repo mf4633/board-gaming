@@ -839,6 +839,7 @@ class Lemming {
       this.fallDist++;
       if (this.canFloat && this.fallDist > 16) {
         this.state = ST.FLOATER;
+        this.fallDist = 0; // reset so a later re-fall doesn't carry stale distance
         return;
       }
       if (this.y >= t.h) return; // drown handled in update()
@@ -850,7 +851,7 @@ class Lemming {
     const t = game.terrain;
     if (t.isSolid(this.x, this.y + 1)) {
       this.state = ST.WALKER;
-      this.fallDist = 0;
+      this.fallDist = 0;  // reset so a subsequent fall starts fresh
       return;
     }
     this.y += FLOAT_SPEED;

@@ -644,13 +644,17 @@
       var nxt;
 
       if (cur >= 28) {
+        // End-game squares: must roll exactly the right number to bear off
         var needed = 31 - cur;
         if (roll !== needed) continue;
         nxt = BEAR_OFF;
       } else {
         nxt = cur + roll;
+        // Pieces before the House of Beauty must stop there
         if (cur < BEAUTY && nxt > BEAUTY) nxt = BEAUTY;
-        if (nxt > 30) nxt = BEAR_OFF;
+        // Pieces that would overshoot beyond sq 30 cannot bear off directly —
+        // they must land on one of squares 28-30 first (requiring exact rolls).
+        if (nxt > 30) continue;
       }
 
       var key = cur + '>' + nxt;

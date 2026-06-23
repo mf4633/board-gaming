@@ -542,7 +542,9 @@
 
     if (moves.length === 0) {
       setMessage('No valid moves \u2014 turn passes.');
-      setTimeout(function() { switchTurn(); render(); }, 1200);
+      phase = 'wait'; // prevent re-roll during the delay
+      render(); // update button state immediately
+      setTimeout(function() { phase = 'roll'; switchTurn(); render(); }, 1200);
     } else {
       phase = 'move';
       setMessage(isAiTurn() ? '' : 'Select a piece to move.');

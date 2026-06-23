@@ -152,7 +152,7 @@
         try {
           const o = JSON.parse(s);
           // Version guard: if saved target no longer matches today's target (e.g. word list changed), discard stale state.
-          if (!o.target || o.target === target) {
+          if (o.target === target) {
             guesses = o.guesses || []; done = !!o.done; current = '';
             render(); if (done) finishMsg(); return;
           }
@@ -225,8 +225,8 @@
     guesses.push({ word: current, scores: sc });
     const win = sc.every(s => s === 'hit');
     current = ''; renderBoard(); renderKB();
-    if (win) { done = true; recordWin(true); finishMsg(); save(); return; }
-    if (guesses.length >= ROWS) { done = true; recordWin(false); finishMsg(); save(); return; }
+    if (win) { done = true; if (mode === 'daily') recordWin(true); finishMsg(); save(); return; }
+    if (guesses.length >= ROWS) { done = true; if (mode === 'daily') recordWin(false); finishMsg(); save(); return; }
     save();
   }
   function recordWin(won) {
