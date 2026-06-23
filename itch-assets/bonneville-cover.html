@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Bonneville Spillway Operator Cover Art — 630×500</title>
+<style>
+  body { margin: 0; background: #111; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  canvas { display: block; box-shadow: 0 0 40px rgba(0,0,0,0.8); }
+</style>
+</head>
+<body>
+<canvas id="c" width="630" height="500"></canvas>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+const W = 630, H = 500;
+
+const BG      = '#0e1418';
+const PANEL   = '#161e24';
+const PANEL2  = '#1e2830';
+const INK     = '#cfd8dc';
+const DIM     = '#78909c';
+const ACCENT  = '#26a69a';
+const WARN    = '#ffb300';
+const BAD     = '#ef5350';
+const GOOD    = '#66bb6a';
+const WATER   = '#1a3d55';
+const WATERFG = '#2e6a8a';
+const WATERHI = '#4aa3c7';
+const CONCRETE= '#445560';
+const CONCRETE2='#566878';
+const STEEL   = '#3a4a56';
+
+function rect(x,y,w,h,fill){ ctx.fillStyle=fill; ctx.fillRect(x,y,w,h); }
+function roundRect(x,y,w,h,r,fill){ ctx.fillStyle=fill; ctx.beginPath(); ctx.roundRect(x,y,w,h,r); ctx.fill(); }
+
+// ── background sky ──
+const sky = ctx.createLinearGradient(0,0,0,H);
+sky.addColorStop(0,'#060c10');
+sky.addColorStop(0.4,'#0e1a24');
+sky.addColorStop(1,'#0a1218');
+rect(0,0,W,H,'#000');
+ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
+
+// Stars (subtle)
+ctx.save(); ctx.globalAlpha=0.4; ctx.fillStyle='#fff';
+for(let i=0;i<60;i++){
+  const sx=Math.random()*W, sy=Math.random()*160;
+  ctx.fillRect(sx,sy,Math.random()<0.3?1.5:0.8,Math.random()<0.3?1.5:0.8);
+}
+ctx.restore();
+
+// ── mountains (silhouette) ──
+ctx.save(); ctx.globalAlpha=0.6; ctx.fillStyle='#0a1218';
+ctx.beginPath();
+ctx.moveTo(0,200);
+ctx.lineTo(80,130); ctx.lineTo(150,170); ctx.lineTo(220,100);
+ctx.lineTo(300,145); ctx.lineTo(380,90); ctx.lineTo(450,140);
+ctx.lineTo(520,110); ctx.lineTo(600,155); ctx.lineTo(630,165);
+ctx.lineTo(630,260); ctx.lineTo(0,260); ctx.closePath();
+ctx.fill();
+ctx.globalAlpha=0.45; ctx.fillStyle='#0b1520';
+ctx.beginPath();
+ctx.moveTo(0,220);
+ctx.lineTo(60,170); ctx.lineTo(130,200); ctx.lineTo(200,155);
+ctx.lineTo(280,180); ctx.lineTo(360,145); ctx.lineTo(440,175);
+ctx.lineTo(510,160); ctx.lineTo(580,185); ctx.lineTo(630,195);
+ctx.lineTo(630,270); ctx.lineTo(0,270); ctx.closePath();
+ctx.fill();
+ctx.restore();
+
+// ── river upstream ──
+const riverY = 230;
+const riverH = 60;
+const riverGrad = ctx.createLinearGradient(0,riverY,0,riverY+riverH);
+riverGrad.addColorStop(0,WATER);
+riverGrad.addColorStop(0.5,WATERFG);
+riverGrad.addColorStop(1,WATER);
+rect(0,riverY,W,riverH,WATER);
+ctx.fillStyle=riverGrad; ctx.fillRect(0,riverY,W,riverH);
+
+// River shimmer
+ctx.save(); ctx.globalAlpha=0.18; ctx.strokeStyle=WATERHI; ctx.lineWidth=1.5;
+for(let i=0;i<8;i++){
+  const wy=riverY+10+i*6;
+  ctx.beginPath(); ctx.moveTo(0,wy); ctx.bezierCurveTo(150,wy-4,350,wy+4,630,wy-2); ctx.stroke();
+}
+ctx.restore();
+
+// ── DAM STRUCTURE ──
+const damX = 160, damTop = 200, damW = 300, damH = 180;
+
+// Upstream face (concrete slope)
+ctx.save();
+ctx.fillStyle=CONCRETE;
+ctx.beginPath();
+ctx.moveTo(damX, damTop);
+ctx.lineTo(damX + 30, damTop + damH);
+ctx.lineTo(damX + damW - 30, damTop + damH);
+ctx.lineTo(damX + damW, damTop);
+ctx.closePath();
+ctx.fill();
+ctx.restore();
+
+// Concrete texture rows
+ctx.save(); ctx.globalAlpha=0.15; ctx.strokeStyle='#000'; ctx.lineWidth=1;
+for(let i=0;i<8;i++){
+  const ry=damTop+20+i*20;
+  ctx.beginPath(); ctx.moveTo(damX+5,ry); ctx.lineTo(damX+damW-5,ry); ctx.stroke();
+}
+ctx.restore();
+
+// Dam face highlight
+const dg=ctx.createLinearGradient(damX,0,damX+damW,0);
+dg.addColorStop(0,CONCRETE2); dg.addColorStop(0.5,'#5a6a78'); dg.addColorStop(1,CONCRETE);
+ctx.save(); ctx.globalAlpha=0.5;
+ctx.fillStyle=dg;
+ctx.fillRect(damX,damTop,damW,damH);
+ctx.restore();
+
+// Dam crest road
+rect(damX-10, damTop-8, damW+20, 12, '#3a4a56');
+ctx.save(); ctx.globalAlpha=0.5; ctx.strokeStyle=WARN; ctx.lineWidth=1.5; ctx.setLineDash([12,8]);
+ctx.beginPath(); ctx.moveTo(damX,damTop-2); ctx.lineTo(damX+damW,damTop-2); ctx.stroke();
+ctx.setLineDash([]); ctx.restore();
+
+// ── TURBINE HOUSINGS ──
+const turbines = [190, 240, 290, 340, 390];
+turbines.forEach(tx=>{
+  roundRect(tx, damTop+damH-45, 36, 45, 3, STEEL);
+  roundRect(tx+4, damTop+damH-38, 28, 30, 2, '#2a3840');
+  // Turbine circle
+  ctx.save();
+  ctx.strokeStyle=ACCENT; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(tx+18,damTop+damH-22,10,0,Math.PI*2); ctx.stroke();
+  ctx.strokeStyle='rgba(38,166,154,0.3)'; ctx.lineWidth=1;
+  for(let a=0;a<4;a++){
+    const angle=a*Math.PI/2;
+    ctx.beginPath();
+    ctx.moveTo(tx+18+Math.cos(angle)*3,damTop+damH-22+Math.sin(angle)*3);
+    ctx.lineTo(tx+18+Math.cos(angle)*9,damTop+damH-22+Math.sin(angle)*9);
+    ctx.stroke();
+  }
+  ctx.restore();
+});
+
+// ── SPILLWAY GATES ──
+const gateY = damTop + 20;
+const gates = [200, 260, 320, 380];
+gates.forEach(gx=>{
+  // Gate frame
+  roundRect(gx, gateY, 24, 50, 2, '#1a2830');
+  ctx.save();
+  ctx.strokeStyle='rgba(38,166,154,0.6)'; ctx.lineWidth=1.5;
+  ctx.strokeRect(gx+2,gateY+2,20,46);
+  // Open gate — water flow
+  ctx.globalAlpha=0.6;
+  const wflow=ctx.createLinearGradient(gx,gateY+35,gx,gateY+50);
+  wflow.addColorStop(0,WATERHI); wflow.addColorStop(1,WATERFG);
+  ctx.fillStyle=wflow; ctx.fillRect(gx+3,gateY+35,18,14);
+  ctx.restore();
+});
+
+// Downstream tailrace
+rect(damX-10, damTop+damH, damW+20, 50, WATER);
+const tailgrad=ctx.createLinearGradient(0,damTop+damH,0,damTop+damH+50);
+tailgrad.addColorStop(0,WATERFG); tailgrad.addColorStop(1,WATER);
+ctx.fillStyle=tailgrad; ctx.fillRect(damX-10,damTop+damH,damW+20,50);
+
+// ── HUD panels (right column) ──
+const hudX=510, hudGap=6, hudW=110;
+const panels=[
+  {label:'GRID LOAD', val:'847 MW',  color:GOOD,  pct:0.72},
+  {label:'SPILL FLOW',val:'24 kcfs', color:ACCENT, pct:0.40},
+  {label:'TDG',       val:'118%',    color:WARN,  pct:0.78},
+  {label:'SALMON',    val:'6,240',   color:'#4db6ac', pct:0.55},
+];
+panels.forEach((p,i)=>{
+  const py=12+i*58;
+  roundRect(hudX,py,hudW,52,4,'rgba(22,30,36,0.95)');
+  ctx.font='8px monospace'; ctx.fillStyle=DIM; ctx.textAlign='left';
+  ctx.fillText(p.label, hudX+8, py+14);
+  ctx.font='bold 16px monospace'; ctx.fillStyle=p.color;
+  ctx.fillText(p.val, hudX+8, py+34);
+  // bar
+  rect(hudX+6, py+40, hudW-12, 5, '#0a1014');
+  const bw=Math.round((hudW-12)*p.pct);
+  const bg2=ctx.createLinearGradient(hudX+6,0,hudX+6+bw,0);
+  bg2.addColorStop(0,p.color+'88'); bg2.addColorStop(1,p.color);
+  ctx.fillStyle=bg2; ctx.fillRect(hudX+6,py+40,bw,5);
+});
+
+// Salmon icon area
+roundRect(hudX, 12+4*58, hudW, 30, 4,'rgba(22,30,36,0.95)');
+ctx.font='18px serif'; ctx.textAlign='center';
+ctx.fillText('🐟 🐟 🐟', hudX+hudW/2, 12+4*58+22);
+
+// ── left info strip ──
+roundRect(14, 12, 140, 55, 4,'rgba(22,30,36,0.92)');
+ctx.font='8px monospace'; ctx.fillStyle=DIM; ctx.textAlign='left';
+ctx.fillText('SCENARIO', 24, 26);
+ctx.font='bold 11px monospace'; ctx.fillStyle=ACCENT;
+ctx.fillText('SPRING SMOLT RUN', 24, 40);
+ctx.font='8px monospace'; ctx.fillStyle=DIM;
+ctx.fillText('SHIFT 3/10  ●●●○○○○○○○', 24, 54);
+
+// Alarm bar
+roundRect(14, 73, 140, 22, 3,'rgba(239,83,80,0.18)');
+ctx.save();
+ctx.strokeStyle=BAD; ctx.lineWidth=1;
+ctx.strokeRect(14.5,73.5,139,21);
+ctx.font='bold 9px monospace'; ctx.fillStyle=BAD; ctx.textAlign='left';
+ctx.fillText('⚠ TDG LIMIT BREACH', 22, 88);
+ctx.restore();
+
+// ── bottom overlay band ──
+const ovg=ctx.createLinearGradient(0,330,0,H);
+ovg.addColorStop(0,'rgba(6,10,14,0)');
+ovg.addColorStop(0.35,'rgba(6,10,14,0.9)');
+ovg.addColorStop(1,'rgba(6,10,14,1)');
+ctx.fillStyle=ovg; ctx.fillRect(0,330,W,H-330);
+
+// ── title ──
+ctx.save();
+ctx.shadowColor=ACCENT; ctx.shadowBlur=25;
+ctx.font='bold 38px "Consolas","Courier New",monospace';
+ctx.fillStyle='#ffffff'; ctx.textAlign='left';
+ctx.fillText('BONNEVILLE', 24, 420);
+ctx.font='bold 27px "Consolas","Courier New",monospace';
+ctx.fillStyle=ACCENT;
+ctx.fillText('SPILLWAY OPERATOR', 24, 452);
+ctx.shadowBlur=0;
+ctx.restore();
+
+// Accent underline
+const ul=ctx.createLinearGradient(24,0,440,0);
+ul.addColorStop(0,ACCENT); ul.addColorStop(1,'transparent');
+ctx.fillStyle=ul; ctx.fillRect(24,458,420,2);
+
+// ── subtitle ──
+ctx.font='13px "Consolas",monospace'; ctx.fillStyle=DIM; ctx.textAlign='left';
+ctx.fillText('Balance grid • Protect salmon • Navigate the Columbia', 26, 480);
+
+// ── price badge ──
+roundRect(W-90,12,74,28,14,ACCENT);
+ctx.font='bold 13px monospace'; ctx.fillStyle='#0a0f13'; ctx.textAlign='center';
+ctx.fillText('$1 – $2', W-53,30);
+
+// ── vignette ──
+const vig=ctx.createRadialGradient(W/2,H/2,H*0.25,W/2,H/2,H*0.82);
+vig.addColorStop(0,'rgba(0,0,0,0)');
+vig.addColorStop(1,'rgba(0,0,0,0.5)');
+ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
+
+</script>
+<p style="color:#555;font-family:monospace;text-align:center;margin-top:12px;">
+  Open in browser · Screenshot or Save As PNG · Upload to itch.io as cover (630×500)
+</p>
+</body>
+</html>
