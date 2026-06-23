@@ -1011,18 +1011,23 @@ function clickEdge(ei) {
 
 /* ====== LONGEST ROAD ====== */
 function updateLongestRoad() {
-  var best = [-1, 0];
-  for (var p = 0; p < 2; p++) {
-    var len = calcLongestRoad(p);
-    if (len > best[1]) { best = [p, len]; }
-  }
-  if (best[1] >= 5) {
-    longestRoadOwner = best[0];
-    longestRoadLen = best[1];
-  } else {
+  var lens = [calcLongestRoad(0), calcLongestRoad(1)];
+  var maxLen = Math.max(lens[0], lens[1]);
+  if (maxLen < 5) {
     longestRoadOwner = -1;
     longestRoadLen = 0;
+    return;
   }
+  // On a tie, the current holder keeps the card (Catan rule).
+  // Only transfer if the other player strictly exceeds the holder's length.
+  if (longestRoadOwner >= 0 && lens[longestRoadOwner] === maxLen) {
+    longestRoadLen = maxLen; // holder's length may have grown
+    return;
+  }
+  // No current holder, or current holder no longer has the max — award to leader.
+  var leader = lens[0] >= lens[1] ? 0 : 1;
+  longestRoadOwner = leader;
+  longestRoadLen = lens[leader];
 }
 
 function calcLongestRoad(player) {
@@ -1038,7 +1043,7 @@ function calcLongestRoad(player) {
     visited[playerEdges[i]] = true;
     var len1 = dfsRoad(player, edges[playerEdges[i]].v1, visited, playerEdges[i]);
     var len2 = dfsRoad(player, edges[playerEdges[i]].v2, visited, playerEdges[i]);
-    maxLen = Math.max(maxLen, 1 + Math.max(len1, len2));
+    maxLen = Math.max(maxLen, 1 + len1 + len2);
   }
   return maxLen;
 }

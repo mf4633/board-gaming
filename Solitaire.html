@@ -314,7 +314,7 @@
   }
   function render() {
     // Stock
-    const sk = $('stock'); sk.innerHTML = '';
+    const sk = $('stock'); sk.innerHTML = ''; sk.style.background = '';
     if (stock.length) sk.appendChild(cardEl(stock[stock.length-1]));
     else { sk.style.background = '#143828'; }
     sk.onclick = clickStock;

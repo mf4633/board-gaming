@@ -291,6 +291,7 @@ var turn = BLACK;  // whose turn
 var mode = 1;      // 1 = vs AI, 2 = two player
 var gameOver = false;
 var aiThinking = false;
+var aiTimer = null;
 var lastMove = null;
 
 /* ===== CORE GAME LOGIC ===== */
@@ -584,6 +585,7 @@ function aiChooseMove(b, player) {
 
 /* ===== GAME FLOW ===== */
 function newGame() {
+  if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; }
   initBoard();
   turn = BLACK;
   gameOver = false;
@@ -651,7 +653,8 @@ function advanceTurn() {
 function scheduleAI() {
   aiThinking = true;
   setMessage('AI is thinking...');
-  setTimeout(function() {
+  aiTimer = setTimeout(function() {
+    aiTimer = null;
     var move = aiChooseMove(board, WHITE);
     aiThinking = false;
     if (move) {

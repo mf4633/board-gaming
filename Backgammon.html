@@ -901,8 +901,11 @@
 
   /* Get the maximal legal move sequences (must use as many dice as possible,
      and if only one can be used, must use the higher) */
-  function getAllLegalMoves(player, remainingDice, pts, br) {
-    var seqs = getAllLegalMoveSequences(player, remainingDice, pts, bar, borneOff);
+  function getAllLegalMoves(player, remainingDice, pts, br, bo) {
+    /* Fall back to live globals when callers omit the optional state args */
+    if (br === undefined) br = bar;
+    if (bo === undefined) bo = borneOff;
+    var seqs = getAllLegalMoveSequences(player, remainingDice, pts, br, bo);
 
     if (seqs.length === 0) return [];
 

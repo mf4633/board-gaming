@@ -1029,11 +1029,13 @@
     return score;
   }
 
-  function aiMakeMove(b, fromR, fromC, toR, toC, special, color, cRights) {
+  function aiMakeMove(b, fromR, fromC, toR, toC, special, color, cRights, castledState) {
     var nb = copyBoard(b);
     var newCR = { wK: cRights.wK, wQ: cRights.wQ, bK: cRights.bK, bQ: cRights.bQ };
     var piece = nb[fromR][fromC];
-    var newCastled = { w: hasCastled.w, b: hasCastled.b };
+    /* Use castledState from search tree if provided, fall back to live game state */
+    var src = castledState || hasCastled;
+    var newCastled = { w: src.w, b: src.b };
 
     /* En passant */
     if (special === 'enpassant') {
@@ -1123,7 +1125,7 @@
     if (isMaximizing) {
       val = -Infinity;
       for (i = 0; i < moves.length; i++) {
-        result = aiMakeMove(b, moves[i].fromR, moves[i].fromC, moves[i].toR, moves[i].toC, moves[i].special, color, cRights);
+        result = aiMakeMove(b, moves[i].fromR, moves[i].fromC, moves[i].toR, moves[i].toC, moves[i].special, color, cRights, castledState);
         val = Math.max(val, minimax(result.board, depth - 1, alpha, beta, false, result.castleRights, result.enPassant, result.castled));
         alpha = Math.max(alpha, val);
         if (beta <= alpha) break;
@@ -1132,7 +1134,7 @@
     } else {
       val = Infinity;
       for (i = 0; i < moves.length; i++) {
-        result = aiMakeMove(b, moves[i].fromR, moves[i].fromC, moves[i].toR, moves[i].toC, moves[i].special, color, cRights);
+        result = aiMakeMove(b, moves[i].fromR, moves[i].fromC, moves[i].toR, moves[i].toC, moves[i].special, color, cRights, castledState);
         val = Math.min(val, minimax(result.board, depth - 1, alpha, beta, true, result.castleRights, result.enPassant, result.castled));
         beta = Math.min(beta, val);
         if (beta <= alpha) break;
@@ -1147,12 +1149,12 @@
 
     var bestScore = Infinity;
     var bestMove = null;
-    var result, score;
+    var result, score, i, j, temp;
 
     /* Shuffle moves to add variety when scores are equal */
-    for (var i = moves.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var temp = moves[i];
+    for (i = moves.length - 1; i > 0; i--) {
+      j = Math.floor(Math.random() * (i + 1));
+      temp = moves[i];
       moves[i] = moves[j];
       moves[j] = temp;
     }
@@ -1165,7 +1167,7 @@
       return bScore - aScore;
     });
 
-    for (var i = 0; i < moves.length; i++) {
+    for (i = 0; i < moves.length; i++) {
       result = aiMakeMove(board, moves[i].fromR, moves[i].fromC, moves[i].toR, moves[i].toC, moves[i].special, B, castleRights);
       score = minimax(result.board, 2, -Infinity, Infinity, true, result.castleRights, result.enPassant, result.castled);
       /* depth 2 + the root move = depth 3 total */

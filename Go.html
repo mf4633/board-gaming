@@ -1030,11 +1030,12 @@
     for (var i = 0; i < legalMoves.length; i++) {
       var m = legalMoves[i];
       var score = evaluateMove(m.r, m.c, WHITE);
-      if (score > -9000) { // Filter out terrible moves
+      if (score !== -10000) { // -10000 means tryMove returned null (shouldn't happen for legal moves)
         scored.push({ r: m.r, c: m.c, score: score });
       }
     }
 
+    /* If truly no legal moves exist (shouldn't happen after isLegalMove filter), pass */
     if (scored.length === 0) return null; // pass
 
     // Sort by score descending

@@ -978,6 +978,7 @@
     setMessage(PLAYER_NAMES[p] + ' built a trade post at ' + cities[cityId].name + '!');
     render();
     renderMarket();
+    checkWin();
   }
 
   function buildRoute(edgeId) {
@@ -1018,6 +1019,7 @@
     setMessage(PLAYER_NAMES[p] + ' built a trade route!');
     render();
     renderMarket();
+    checkWin();
   }
 
   // =============================================

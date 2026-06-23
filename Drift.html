@@ -354,7 +354,7 @@
   }
   async function share() {
     if (!solved) { $('msg').textContent = 'SOLVE FIRST'; return; }
-    const head = 'Drift #' + dailyIndex() + ' — ' + (rows.length - 1) + ' steps' + (hintsUsed ? ' (+' + hintsUsed + ' hints)' : '');
+    const head = (mode === 'daily' ? 'Drift #' + dailyIndex() : 'Drift RANDOM') + ' — ' + (rows.length - 1) + ' steps' + (hintsUsed ? ' (+' + hintsUsed + ' hints)' : '');
     const grid = rows.map((r,i) => {
       if (i === 0 || i === rows.length-1) return '⬜⬜⬜⬜';
       const above = rows[i-1];

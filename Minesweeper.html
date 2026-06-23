@@ -192,7 +192,7 @@
         else if (grid[r][c] > 0) { d.textContent = grid[r][c]; d.classList.add('n'+grid[r][c]); }
       }
       d.addEventListener('mousedown', e => handle(e, r, c));
-      d.addEventListener('contextmenu', e => { e.preventDefault(); flag(r, c); });
+      d.addEventListener('contextmenu', e => { e.preventDefault(); if (e.buttons !== 3) flag(r, c); });
       let lpt, tsx, tsy;
       d.addEventListener('touchstart', e => {
         const tt = e.touches[0]; tsx = tt.clientX; tsy = tt.clientY;

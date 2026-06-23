@@ -188,7 +188,7 @@
     const today = new Date().toISOString().slice(0,10);
     let h = 0; for (const ch of today) h = (h*31 + ch.charCodeAt(0)) >>> 0;
     let s = h || 1;
-    const origRandom = Math.__orig || Math.random;
+    const origRandom = Math.random; // always capture the real Math.random, not a stale saved copy
     Math.random = () => { s = (s * 1103515245 + 12345) >>> 0; return s / 4294967296; };
     try { generate(34); } finally { Math.random = origRandom; }
   }
@@ -280,7 +280,7 @@
     newGame();
   });
   $('newgame').onclick = () => newGame();
-  $('daily').onclick = () => { Math.__orig = Math.random; dailyGenerate(); given = puzzle.map(r => r.map(v=>v!==0));
+  $('daily').onclick = () => { dailyGenerate(); given = puzzle.map(r => r.map(v=>v!==0));
     user = puzzle.map(r=>r.slice()); notes = Array.from({length:9}, () => Array.from({length:9}, () => new Set()));
     sel = null; errs = 0; history = []; if (timer) clearInterval(timer); t0 = Date.now();
     timer = setInterval(updateTime, 1000); $('errs').textContent = '0';

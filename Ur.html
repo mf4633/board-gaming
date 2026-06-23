@@ -576,11 +576,15 @@
     var moves = getValidMoves(playerTurn, diceValue);
 
     if (diceValue === 0) {
+      phase = 'move'; // prevent re-roll during the 1200 ms pause
       setMessage('Rolled 0 \u2014 turn passes.');
-      setTimeout(function() { switchTurn(); render(); }, 1200);
+      rollBtn.disabled = true;
+      setTimeout(function() { phase = 'roll'; switchTurn(); render(); }, 1200);
     } else if (moves.length === 0) {
+      phase = 'move'; // prevent re-roll during the 1200 ms pause
       setMessage('No valid moves \u2014 turn passes.');
-      setTimeout(function() { switchTurn(); render(); }, 1200);
+      rollBtn.disabled = true;
+      setTimeout(function() { phase = 'roll'; switchTurn(); render(); }, 1200);
     } else {
       phase = 'move';
       setMessage(isAiTurn() ? '' : 'Select a piece to move.');
