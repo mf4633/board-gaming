@@ -18,7 +18,7 @@
   })();
   </script>
   <meta name="theme-color" content="#0c1016">
-  <title>Tidelands — Bronze-Age Maritime Trading Game | Board Gaming Hub</title>
+  <title>Tidelands � Bronze-Age Maritime Trading Game | Board Gaming Hub</title>
   <meta name="description" content="Hex-based maritime trade and tide game. Build temples, gather resources, master the tides. Free turn-based strategy, single HTML file.">
   <link rel="canonical" href="https://boardgaminghub.com/Tidelands.html">
   <meta property="og:type" content="website">
@@ -244,6 +244,39 @@
       color: #5090A0;
       margin-top: 2px;
     }
+
+    .omen-panel {
+      display: none;
+      width: 420px;
+      max-width: 95vw;
+      background: #121E28;
+      border: 1px solid #4A6878;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      font-size: 0.74em;
+      text-align: left;
+    }
+
+    .omen-panel.visible { display: block; }
+
+    .omen-panel .omen-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .omen-panel .omen-icon { font-size: 1.4em; line-height: 1; }
+
+    .omen-panel .omen-name {
+      color: #D4A860;
+      font-weight: bold;
+      font-size: 1.05em;
+    }
+
+    .omen-panel .omen-line { color: #8AB0B0; margin: 2px 0; }
+    .omen-panel .omen-hermes { color: #80C8C0; }
 
     /* Player panels */
     .panels {
@@ -493,6 +526,23 @@
     .trade-sell-btn:hover:not(:disabled) { background: #2A4040; }
     .trade-sell-btn:disabled { opacity: 0.3; cursor: default; }
 
+    .trade-buy-btn {
+      padding: 2px 10px;
+      font-size: 0.8em;
+      font-family: 'Georgia', serif;
+      cursor: pointer;
+      border: 1px solid #60A0A0;
+      border-radius: 4px;
+      background: #1A3030;
+      color: #80C8C0;
+      margin-left: 4px;
+    }
+
+    .trade-buy-btn:hover:not(:disabled) { background: #2A4040; }
+    .trade-buy-btn:disabled { opacity: 0.3; cursor: default; }
+
+    .trade-btn-group { display: flex; gap: 4px; }
+
     .ptp-res-row {
       display: flex; align-items: center; gap: 4px;
       font-size: 0.78em; padding: 2px 0;
@@ -609,6 +659,8 @@
   </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Board Games","item":"https://boardgaminghub.com/#board"},{"@type":"ListItem","position":3,"name":"Tidelands","item":"https://boardgaminghub.com/Tidelands.html"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why do tides matter?","acceptedAnswer":{"@type":"Answer","text":"River-mouth ports — often the most lucrative — are only accessible during high tide. Tide rotates predictably, so timing route completion to the tide is the core puzzle."}},{"@type":"Question","name":"Is wind direction random?","acceptedAnswer":{"@type":"Answer","text":"Pseudo-random with seasonal bias. Spring favors westerly routes, autumn easterly. Adjust your route plan to the season at the start of each round."}},{"@type":"Question","name":"How many players is best?","acceptedAnswer":{"@type":"Answer","text":"3 — enough trader competition to make blocking matter, not so many that the map gets crowded. 4-player is fun but slower."}},{"@type":"Question","name":"Is Tidelands historically grounded?","acceptedAnswer":{"@type":"Answer","text":"Loosely — Bronze-Age trade in the eastern Mediterranean inspired the design. Ship types, commodity list, and route geometry are stylized, not historical."}}]}</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464"
+          crossorigin="anonymous"></script>
 </head>
 <body>
 <h1>TIDELANDS</h1>
@@ -636,6 +688,8 @@
     </select>
     <label class="map-toggle"><input type="checkbox" id="terrain-bias-cb" onchange="setTerrainBias(this.checked)"> Terrain Bias</label>
     <label class="map-toggle"><input type="checkbox" id="deep-water-cb" onchange="setDeepWater(this.checked)"> Deep Water</label>
+    <label class="map-toggle"><input type="checkbox" id="poseidons-council-cb" checked onchange="setPoseidonsCouncil(this.checked)"> Poseidon&rsquo;s Council</label>
+    <label class="map-toggle"><input type="checkbox" id="omen-cards-cb" checked onchange="setOmenCards(this.checked)"> Omen Cards</label>
     <span class="map-label" style="margin-left:8px;">Seed:</span>
     <input type="text" id="map-seed-input" placeholder="random" oninput="setMapSeed(this.value)" />
     <button class="map-reroll" onclick="rerollMap()" title="New random map">&#x21bb;</button>
@@ -647,6 +701,15 @@
       <div class="tide-fill" id="tide-fill" style="width:20%"></div>
       <div class="tide-marker" id="tide-marker" style="left:10%">1</div>
     </div>
+  </div>
+
+  <div class="omen-panel" id="omen-panel">
+    <div class="omen-head">
+      <span class="omen-icon" id="omen-icon"></span>
+      <span class="omen-name" id="omen-name"></span>
+    </div>
+    <div class="omen-line" id="omen-global"></div>
+    <div class="omen-line omen-hermes" id="omen-hermes"></div>
   </div>
 
   <div class="panels" id="panels-container"></div>
@@ -668,7 +731,8 @@
   </div>
 
   <div class="trade-panel" id="trade-panel">
-    <div style="font-weight:bold; color:#D4A860; margin-bottom:6px;">Hermes' Ship</div>
+    <div style="font-weight:bold; color:#D4A860; margin-bottom:2px;">Hermes' Ship</div>
+    <div style="font-size:0.72em; color:#8AB0B0; margin-bottom:6px;">He buys cheap, sells dear &mdash; sell at listed price, buy at double.</div>
     <div id="trade-rows"></div>
     <button class="act-btn" style="margin-top:8px;" onclick="closeTrade()">Done Trading</button>
   </div>
@@ -700,6 +764,15 @@
     </div>
   </div>
 
+  <div class="overlay" id="council-overlay">
+    <div class="overlay-box">
+      <h2 id="council-title">Poseidon&rsquo;s Council</h2>
+      <p id="council-text"></p>
+      <button id="council-roll-btn" onclick="councilRoll()">Pay 2 coins &amp; roll</button>
+      <button onclick="councilPass()">Pass</button>
+    </div>
+  </div>
+
   <div class="board-container" id="board-container"></div>
 
   <button class="rules-toggle" onclick="toggleRules()">Rules</button>
@@ -712,7 +785,10 @@
     Hexagonal islands form an archipelago. Each hex has an elevation from 1 (shoreline) to 5 (highland). The board scales with player count: 37 hexes for 2&ndash;3 players, 61 for 4, 91 for 5&ndash;6.
 
     <h4>Poseidon's Wrath (the Tide)</h4>
-    The tide level cycles each round: 1&rarr;2&rarr;3&rarr;4&rarr;5&rarr;4&rarr;3&rarr;2&rarr;1&rarr;2... A hex is <b>flooded</b> when the tide rises strictly above its elevation (elevation &lt; tide level). So at tide 1 nothing floods; at tide 5 only highland (elevation 5) hexes remain dry. Flooded hexes:
+    The tide level cycles each round: 1&rarr;2&rarr;3&rarr;4&rarr;5&rarr;4&rarr;3&rarr;2&rarr;1&rarr;2... A hex is <b>flooded</b> when the tide rises strictly above its elevation (elevation &lt; tide level). So at tide 1 nothing floods; at tide 5 only highland (elevation 5) hexes remain dry.<br><br>
+    <b>Poseidon&rsquo;s Council</b> (optional, on by default): At the start of each round, before harvest, the <b>cycle</b> proposes a tide step (+1 while rising, &minus;1 while falling). Each player may spend <b>2 coins once</b> to roll <b>1d3</b>: &uarr; +1, &darr; &minus;1, or &minus; 0. The tide moves by the <b>net</b> of the cycle plus all rolls (clamped 1&ndash;5). If no one influences, the cycle alone applies.<br><br>
+    <b>Omen Cards</b> (optional, on by default): Each round, Hermes reveals one Omen before the Council. The Omen affects <b>everyone</b> for that round. Players whose camps, temples, or triremes are <b>linked to Hermes&rsquo; Ship</b> when the round begins also receive the Omen&rsquo;s <b>Hermes bonus</b> &mdash; another reason to reach the golden merchant.<br><br>
+    Flooded hexes:
     <ul>
       <li>Lose all uncollected resources.</li>
       <li>Cannot harvest, host trade, or be built on.</li>
@@ -738,7 +814,7 @@
     <b>Temple</b> (1 Stone + 2 Wine) &mdash; <b>2 VP</b><br>
     A divine refuge. Built on a non-highland hex (elevation 1&ndash;4) that you own or that is adjacent to one of your structures. Temples <b>permanently protect</b> their hex from Poseidon's wrath &mdash; flooding skips it forever. Temples also count as connection points for trade with Hermes.<br><br>
 
-    <b>Trireme</b> (1 Timber + 1 Bronze) &mdash; <b>2 VP</b><br>
+    <b>Trireme</b> (1 Timber + 1 Bronze + 1 Wine) &mdash; <b>2 VP</b><br>
     A warship-bridge linking two adjacent hexes (including across water). One end must touch one of your existing structures. Triremes extend your <b>network</b>: a hex linked by your trireme counts as adjacent for camp-building and trade-routing, even if you don't own it.
 
     <h4>Hermes' Ship &mdash; Trade &amp; Movement</h4>
@@ -746,7 +822,8 @@
 
     <b>Drifting:</b> Between rounds, Hermes drifts on his own to a random adjacent non-flooded hex. You cannot predict where he'll go.<br><br>
 
-    <b>Trading:</b> On your turn, if your network of camps + temples + triremes forms an unbroken chain leading to Hermes' hex, you may spend an action to trade. Sell any of your resources at fixed prices:
+    <b>Trading:</b> On your turn, if your network of camps + temples + triremes forms an unbroken chain leading to Hermes' hex, you may spend an action to trade. Hermes is a two-way merchant &mdash; he <b>buys cheap and sells dear</b>. You may sell or buy any number of times before closing the trade panel.<br><br>
+    <b>Sell to Hermes</b> (you receive coins):
     <ul>
       <li>Timber = 1 coin</li>
       <li>Olives = 2 coins</li>
@@ -754,12 +831,21 @@
       <li>Bronze = 3 coins</li>
       <li>Ambrosia = 6 coins</li>
     </ul>
-    Coins convert to VP at <b>5 coins = 1 VP</b> at game end.<br><br>
+    <b>Buy from Hermes</b> (you pay coins; common goods at 1.5&times; sell price, Stone/Ambrosia at 2&times;):
+    <ul>
+      <li>Timber = 2 coins</li>
+      <li>Olives = 3 coins</li>
+      <li>Wine = 3 coins</li>
+      <li>Bronze = 5 coins</li>
+      <li>Stone = 6 coins</li>
+      <li>Ambrosia = 12 coins</li>
+    </ul>
+    Stone cannot be sold to Hermes, only bought. Use this when you're stuck with the wrong mix of resources and can't barter with a neighbor. Coins convert to VP at <b>5 coins = 1 VP</b> at game end.<br><br>
 
     <b>Move Hermes (Redirect):</b> Spend 1 Ambrosia and 1 action to <b>push Hermes onto an adjacent non-flooded hex</b>. This is how you bring him to your network when he drifts away &mdash; or how you yank him out from under an opponent who is mid-trade. Movement is one hex at a time; you cannot teleport him across the map.
 
     <h4>Appeasing Poseidon</h4>
-    Once per round, the active player may spend <b>1 action + 1 Ambrosia + 2 Wine</b> to offer libations to Poseidon. The next tide change is skipped &mdash; the tide level holds at its current value for one round before the cycle resumes (the direction is preserved). At most one player per round may appease; the first to act gets it. Use this when low-elevation camps are about to drown and you can't build temples in time.
+    Once per round, the active player may spend <b>1 action + 1 Ambrosia + 2 Wine</b> to offer libations to Poseidon. The next round <b>skips Council entirely</b> &mdash; no cycle step, no influence rolls, tide holds (direction preserved). At most one player per round may appease; the first to act gets it. Use this when low-elevation camps are about to drown and you can't build temples in time.
 
     <h4>Player-to-Player Trade</h4>
     On your turn you may propose a barter trade with another player, but <b>only if you are physically connected to them</b> in one of two ways:
@@ -773,7 +859,7 @@
     Each round has two phases for every player:<br>
     <b>1. Active Phase</b> &mdash; The current player takes <b>2 actions</b>. An action is one of: Build Camp, Build Temple, Build Trireme, Trade with Hermes, Trade with another Player, Move Hermes, or Appease Poseidon.<br>
     <b>2. Special Build Phase</b> &mdash; After the active player finishes, every other player (in clockwise order) gets <b>one optional structure build</b> (camp, temple, or trireme) if they have the resources. They cannot trade or move Hermes during this phase.<br><br>
-    Then the next player becomes active and the round continues. Tide shifts at the start of each new round.
+    Then the next player becomes active and the round continues. At the start of each new round, Poseidon&rsquo;s Council resolves (cycle + optional coin influence), then harvest and Hermes drift.
 
     <h4>Victory</h4>
     First player to <b>15 VP</b> reaches Ithaca and wins. VP sources:
@@ -781,7 +867,7 @@
       <li>Camps: 1 VP each</li>
       <li>Temples &amp; Triremes: 2 VP each</li>
       <li>Coins: 1 VP per 5 coins</li>
-      <li>Largest connected network: 3 VP bonus</li>
+      <li>Largest connected network: 3 VP bonus (2 VP in 2-player games)</li>
     </ul>
   </div>
 
@@ -791,7 +877,7 @@
       <li>Your starting camp is on a highland hex &mdash; it survives even max tide. Use that safety to bank resources.</li>
       <li>Spend your first round building <b>one more camp</b> on a hex with a different terrain type. Two camps roughly doubles your harvest area.</li>
       <li>Don't build temples yet &mdash; you have nothing worth protecting.</li>
-      <li>Note where Hermes starts. If he's nearby (within 2 hexes of your camps), prioritize a camp or trireme that connects you.</li>
+      <li>Note where Hermes starts. If he's nearby (within 2 hexes of your camps), prioritize a camp or trireme that connects you &mdash; you want to be <b>linked when the Omen resolves</b> each round.</li>
     </ul>
 
     <h4>Resource Priorities</h4>
@@ -872,7 +958,7 @@
     <h4>Endgame (12+ VP)</h4>
     <ul>
       <li>Count to 15. Once you can see the win, switch from VP-per-action math to <b>defense</b>: deny opponents trireme links, redirect Hermes away from rivals.</li>
-      <li>Coins are slow VP (5:1) but they're <b>uncontested</b>. If you have a big trade network, just keep selling Ambrosia.</li>
+      <li>Coins are slow VP (5:1) but they're <b>uncontested</b>. If you have a big trade network, sell surplus &mdash; but keep enough coin to <b>buy back</b> a missing resource from Hermes at 2&times; price when you're stuck.</li>
       <li>The largest-network 3 VP bonus often decides close games. In a tied 14-vs-14 race, a single extra trireme wins.</li>
     </ul>
 
@@ -898,6 +984,7 @@
     var RESOURCE_ICONS = { Timber: '\u{1FAB5}', Olives: '\uD83C\uDF3F', Wine: '\uD83C\uDF77', Bronze: '\u2694', Ambrosia: '\u2728', Stone: '\uD83E\uDEA8' };
     var TERRAIN_TYPES = ['Shore', 'Bog', 'Stone', 'Grove'];
     var PRICES = { Timber: 1, Olives: 2, Wine: 2, Bronze: 3, Ambrosia: 6 };
+    var HERMES_BUY_MULTIPLIER = 1.5; // common goods; Stone/Ambrosia stay at 2×
     var PLAYER_COLORS = ['#E8C840', '#60C0B0', '#D06040', '#9070D0', '#50B050', '#E080A0'];
     var PLAYER_LABELS = ['Gold', 'Teal', 'Coral', 'Violet', 'Jade', 'Rose'];
     var PLAYER_NAMES = ['Odysseus', 'Circe', 'Achilles', 'Athena', 'Ajax', 'Penelope'];
@@ -953,6 +1040,49 @@
     var aiTimer = null;
     var preturnTimer = null;
     var tideHeldThisRound = false;
+
+    /* Poseidon's Council */
+    var poseidonsCouncil = true;
+    var COUNCIL_COST = 2;
+    var councilCycleDelta = 0;
+    var councilRolls = [];
+    var councilStep = 0;
+    var councilOrder = [];
+    var pendingOldFlooded = [];
+    var councilTimer = null;
+
+    /* Omen cards */
+    var omenCards = true;
+    var currentOmen = null;
+    var omenDeck = [];
+    var roundOmenFlags = {};
+    var OMEN_DEFINITIONS = [
+      { id: 'storm_surge', icon: '\u26A1', name: 'Storm Surge',
+        globalText: 'After tide resolves, the sea rises one step further (max 5).',
+        hermesText: 'Linked to Hermes: +2 coins.',
+        tideAfter: 1 },
+      { id: 'calm_seas', icon: '\u{1F30A}', name: 'Calm Seas',
+        globalText: 'Net tide change this round is capped between \u22121 and +1.',
+        hermesText: 'Linked to Hermes: +1 Timber.',
+        clampTide: true },
+      { id: 'windfall', icon: '\u{1F4E6}', name: 'Shipwreck Windfall',
+        globalText: 'Each newly revealed hex spawns one extra resource.',
+        hermesText: 'Linked to Hermes: +1 random resource.',
+        extraSpawn: true },
+      { id: 'stalls', icon: '\u2693', name: 'Hermes Stalls',
+        globalText: 'Hermes does not drift this round.',
+        hermesText: 'Linked to Hermes: +1 coin per resource sold at Hermes.',
+        noDrift: true, sellBonus: 1 },
+      { id: 'merchant', icon: '\u{1F4B0}', name: "Merchant's Favor",
+        globalText: 'Hermes buy prices are reduced by 1 coin (minimum 1).',
+        hermesText: 'Linked to Hermes: +1 Olive.',
+        buyDiscount: 1 },
+      { id: 'gift', icon: '\u{1F381}', name: "Poseidon's Gift",
+        globalText: 'Every player receives 1 Wine.',
+        hermesText: 'Linked to Hermes: also receive 1 Bronze.',
+        allWine: true, hermesBronze: true }
+    ];
+    var OMEN_RESOURCE_POOL = ['Timber', 'Olives', 'Wine', 'Bronze', 'Stone', 'Ambrosia'];
 
     /* Map setup options */
     var mapType = 'archipelago';
@@ -1347,20 +1477,326 @@
     }
 
     /* ===== TIDE ===== */
-    function advanceWrath() {
-      // If a player appeased Poseidon last round, the tide is held — skip the change
-      if (tideHeldThisRound) {
-        tideHeldThisRound = false;
+    function isHexFloodedAtTide(hexIdx, level) {
+      var h = hexes[hexIdx];
+      if (h.elevation <= 0) return true;
+      if (h.temple) return false;
+      if (h.elevation === 5) return false;
+      return level >= (h.elevation + 1);
+    }
+
+    function applyTideDelta(totalDelta) {
+      if (totalDelta === 0) return;
+      var newLevel = tideLevel + totalDelta;
+      if (newLevel > 5) newLevel = 5;
+      if (newLevel < 1) newLevel = 1;
+      tideLevel = newLevel;
+      if (tideLevel >= 5) tideDirection = -1;
+      else if (tideLevel <= 1) tideDirection = 1;
+      else if (totalDelta > 0) tideDirection = 1;
+      else tideDirection = -1;
+    }
+
+    function advanceWrathClassic() {
+      resolveTideChange(tideDirection);
+    }
+
+    function resolveTideChange(totalDelta) {
+      var before = tideLevel;
+      if (!omenCards || !currentOmen) {
+        applyTideDelta(totalDelta);
+        return before;
+      }
+      var d = totalDelta;
+      if (currentOmen.clampTide) {
+        if (d > 1) d = 1;
+        if (d < -1) d = -1;
+      }
+      applyTideDelta(d);
+      if (currentOmen.tideAfter) {
+        applyTideDelta(1);
+      }
+      return before;
+    }
+
+    function shuffleOmenDeck(arr) {
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+      }
+    }
+
+    function initOmenDeck() {
+      omenDeck = [];
+      for (var i = 0; i < OMEN_DEFINITIONS.length; i++) {
+        omenDeck.push(OMEN_DEFINITIONS[i]);
+      }
+      shuffleOmenDeck(omenDeck);
+    }
+
+    function drawOmen() {
+      if (!omenCards) {
+        currentOmen = null;
+        roundOmenFlags = {};
         return;
       }
-      tideLevel += tideDirection;
-      if (tideLevel >= 5) {
-        tideLevel = 5;
-        tideDirection = -1;
-      } else if (tideLevel <= 1) {
-        tideLevel = 1;
-        tideDirection = 1;
+      if (omenDeck.length === 0) initOmenDeck();
+      currentOmen = omenDeck.pop();
+      roundOmenFlags = {
+        extraSpawn: !!currentOmen.extraSpawn,
+        noDrift: !!currentOmen.noDrift,
+        sellBonus: currentOmen.sellBonus || 0,
+        buyDiscount: currentOmen.buyDiscount || 0
+      };
+    }
+
+    function getHermesSellPrice(rk) {
+      return (PRICES[rk] || 0) + (roundOmenFlags.sellBonus || 0);
+    }
+
+    function getHermesBuyPrice(rk) {
+      var base;
+      if (rk === 'Stone') base = 6;
+      else if (rk === 'Ambrosia') base = 12;
+      else base = Math.max(1, Math.ceil((PRICES[rk] || 0) * HERMES_BUY_MULTIPLIER));
+      var disc = roundOmenFlags.buyDiscount || 0;
+      return Math.max(1, base - disc);
+    }
+
+    function getNetworkBonusVP() {
+      return numPlayers === 2 ? 2 : 3;
+    }
+
+    function rollSpawnResource() {
+      var roll = Math.random();
+      if (roll < 0.30) return 'Timber';
+      if (roll < 0.50) return 'Olives';
+      if (roll < 0.68) return 'Wine';
+      if (roll < 0.80) return 'Bronze';
+      if (roll < 0.85) return 'Ambrosia';
+      if (roll < 0.92) return 'Stone';
+      return null;
+    }
+
+    function spawnOneResourceOnHex(hi) {
+      var h = hexes[hi];
+      if (h.resources.length >= 2) return null;
+      var res = rollSpawnResource();
+      if (res) {
+        h.resources.push({ type: res, turnsLeft: 2 });
       }
+      return res;
+    }
+
+    function grantRandomResource(playerIdx) {
+      var r = OMEN_RESOURCE_POOL[Math.floor(Math.random() * OMEN_RESOURCE_POOL.length)];
+      players[playerIdx].resources[r] = (players[playerIdx].resources[r] || 0) + 1;
+      return r;
+    }
+
+    function applyOmenRoundStart() {
+      var msgs = [];
+      if (!omenCards || !currentOmen) return msgs;
+
+      if (currentOmen.allWine) {
+        for (var p = 0; p < numPlayers; p++) {
+          players[p].resources.Wine = (players[p].resources.Wine || 0) + 1;
+        }
+        msgs.push('Omen: all players +1 Wine.');
+      }
+
+      for (var p = 0; p < numPlayers; p++) {
+        if (!isConnectedToHermes(p)) continue;
+        var bonus = '';
+        if (currentOmen.id === 'storm_surge') {
+          players[p].coins += 2;
+          bonus = '+2 coins';
+        } else if (currentOmen.id === 'calm_seas') {
+          players[p].resources.Timber = (players[p].resources.Timber || 0) + 1;
+          bonus = '+1 Timber';
+        } else if (currentOmen.id === 'windfall') {
+          var rr = grantRandomResource(p);
+          bonus = '+1 ' + rr;
+        } else if (currentOmen.id === 'merchant') {
+          players[p].resources.Olives = (players[p].resources.Olives || 0) + 1;
+          bonus = '+1 Olives';
+        } else if (currentOmen.hermesBronze) {
+          players[p].resources.Bronze = (players[p].resources.Bronze || 0) + 1;
+          bonus = '+1 Bronze';
+        } else if (currentOmen.id === 'stalls') {
+          bonus = 'sell bonus active';
+        }
+        if (bonus) {
+          msgs.push(PLAYER_LABELS[p] + ' (at Hermes) ' + bonus + '.');
+        }
+      }
+      return msgs;
+    }
+
+    function renderOmenPanel() {
+      var panel = document.getElementById('omen-panel');
+      if (!panel) return;
+      if (!gameStarted || !omenCards || !currentOmen) {
+        panel.classList.remove('visible');
+        return;
+      }
+      document.getElementById('omen-icon').textContent = currentOmen.icon;
+      document.getElementById('omen-name').textContent = currentOmen.name;
+      document.getElementById('omen-global').textContent = 'All: ' + currentOmen.globalText;
+      document.getElementById('omen-hermes').textContent = 'At Hermes: ' + currentOmen.hermesText;
+      panel.classList.add('visible');
+    }
+
+    function rollCouncilDie() {
+      var r = Math.floor(Math.random() * 3);
+      if (r === 0) return { delta: 1, label: '\u2191' };
+      if (r === 1) return { delta: -1, label: '\u2193' };
+      return { delta: 0, label: '\u2212' };
+    }
+
+    function councilDeltaLabel(d) {
+      if (d > 0) return '+' + d;
+      return '' + d;
+    }
+
+    function scoreTideDeltaForPlayer(playerIdx, totalDelta) {
+      var newTide = tideLevel + totalDelta;
+      if (newTide > 5) newTide = 5;
+      if (newTide < 1) newTide = 1;
+      var score = 0;
+      for (var i = 0; i < players[playerIdx].structures.length; i++) {
+        var s = players[playerIdx].structures[i];
+        if (s.type !== 'camp') continue;
+        var hi = s.hex;
+        if (hexes[hi].temple) continue;
+        var was = isHexFloodedAtTide(hi, tideLevel);
+        var will = isHexFloodedAtTide(hi, newTide);
+        if (!was && will) score -= 2;
+        if (was && !will) score += 2;
+      }
+      return score;
+    }
+
+    function aiWantsCouncilRoll(p) {
+      if ((players[p].coins || 0) < COUNCIL_COST) return false;
+      var cycleScore = scoreTideDeltaForPlayer(p, councilCycleDelta);
+      if (cycleScore < 0) return Math.random() < 0.8;
+      if (cycleScore > 0) return Math.random() < 0.35;
+      return Math.random() < 0.2;
+    }
+
+    function recordCouncilChoice(p, paid, roll) {
+      councilRolls.push({
+        player: p,
+        paid: paid,
+        delta: paid ? roll.delta : 0,
+        label: paid ? roll.label : 'pass'
+      });
+    }
+
+    function beginCouncilPhase() {
+      phase = 'council';
+      councilCycleDelta = tideDirection;
+      councilRolls = [];
+      councilStep = 0;
+      councilOrder = [];
+      for (var i = 0; i < numPlayers; i++) {
+        councilOrder.push((roundStartPlayer + i) % numPlayers);
+      }
+      var cycleStr = councilDeltaLabel(councilCycleDelta);
+      var omenHint = (omenCards && currentOmen) ? (' Omen: ' + currentOmen.name + '.') : '';
+      setMessage('Poseidon\u2019s Council \u2014 cycle ' + cycleStr + '.' + omenHint + ' Each player may spend ' + COUNCIL_COST + ' coins to roll.');
+      render();
+      promptCouncilPlayer();
+    }
+
+    function promptCouncilPlayer() {
+      if (councilStep >= numPlayers) {
+        finishCouncilAndApplyTide();
+        return;
+      }
+      var p = councilOrder[councilStep];
+      if (isHumanPlayer(p)) {
+        var cycleStr = councilDeltaLabel(councilCycleDelta);
+        var infStr = '';
+        for (var i = 0; i < councilRolls.length; i++) {
+          var cr = councilRolls[i];
+          infStr += PLAYER_LABELS[cr.player] + ' ' + (cr.paid ? cr.label + councilDeltaLabel(cr.delta) : 'pass') + '; ';
+        }
+        document.getElementById('council-title').textContent = 'Poseidon\u2019s Council';
+        document.getElementById('council-text').innerHTML =
+          playerName(p) + ', the cycle would move <b>' + cycleStr + '</b>.<br>' +
+          (infStr ? 'So far: ' + infStr + '<br>' : '') +
+          'Spend <b>' + COUNCIL_COST + ' coins</b> (you have ' + players[p].coins + ') to roll 1d3: \u2191 +1, \u2193 \u22121, \u2212 hold.';
+        var rollBtn = document.getElementById('council-roll-btn');
+        rollBtn.disabled = players[p].coins < COUNCIL_COST;
+        document.getElementById('council-overlay').classList.add('show');
+        render();
+      } else {
+        if (councilTimer) clearTimeout(councilTimer);
+        councilTimer = setTimeout(function() { aiCouncilChoice(p); }, 500);
+      }
+    }
+
+    function advanceCouncilStep() {
+      document.getElementById('council-overlay').classList.remove('show');
+      councilStep++;
+      promptCouncilPlayer();
+    }
+
+    function councilRoll() {
+      if (phase !== 'council' || gameOver) return;
+      var p = councilOrder[councilStep];
+      if (!isHumanPlayer(p)) return;
+      if (players[p].coins < COUNCIL_COST) return;
+      players[p].coins -= COUNCIL_COST;
+      var roll = rollCouncilDie();
+      recordCouncilChoice(p, true, roll);
+      setMessage(playerName(p) + ' paid ' + COUNCIL_COST + ' coins and rolled ' + roll.label + ' (' + councilDeltaLabel(roll.delta) + ').');
+      advanceCouncilStep();
+    }
+
+    function councilPass() {
+      if (phase !== 'council' || gameOver) return;
+      var p = councilOrder[councilStep];
+      if (!isHumanPlayer(p)) return;
+      recordCouncilChoice(p, false, { delta: 0, label: 'pass' });
+      setMessage(playerName(p) + ' declined to influence the Council.');
+      advanceCouncilStep();
+    }
+
+    function aiCouncilChoice(p) {
+      if (phase !== 'council' || gameOver) return;
+      if (aiWantsCouncilRoll(p)) {
+        players[p].coins -= COUNCIL_COST;
+        var roll = rollCouncilDie();
+        recordCouncilChoice(p, true, roll);
+        setMessage(playerName(p) + ' paid ' + COUNCIL_COST + ' coins and rolled ' + roll.label + ' (' + councilDeltaLabel(roll.delta) + ').');
+      } else {
+        recordCouncilChoice(p, false, { delta: 0, label: 'pass' });
+        setMessage(playerName(p) + ' declined to influence the Council.');
+      }
+      councilStep++;
+      render();
+      promptCouncilPlayer();
+    }
+
+    function finishCouncilAndApplyTide() {
+      var influenceSum = 0;
+      for (var i = 0; i < councilRolls.length; i++) {
+        influenceSum += councilRolls[i].delta;
+      }
+      var totalDelta = councilCycleDelta + influenceSum;
+      var before = resolveTideChange(totalDelta);
+      var parts = ['cycle ' + councilDeltaLabel(councilCycleDelta)];
+      for (var j = 0; j < councilRolls.length; j++) {
+        var cr = councilRolls[j];
+        parts.push(PLAYER_LABELS[cr.player] + (cr.paid ? ' ' + cr.label + councilDeltaLabel(cr.delta) : ' pass'));
+      }
+      var councilMsg = 'Council: ' + parts.join(', ') + ' \u2192 net ' + councilDeltaLabel(totalDelta) + ', tide ' + before + '\u2192' + tideLevel + '. ';
+      runAfterTideChange(pendingOldFlooded, councilMsg);
     }
 
     function getNewlyRevealed(oldFlooded) {
@@ -1387,20 +1823,9 @@
     function spawnResources(revealedHexes) {
       for (var i = 0; i < revealedHexes.length; i++) {
         var hi = revealedHexes[i];
-        var h = hexes[hi];
-        if (h.resources.length >= 2) continue;
-        var roll = Math.random();
-        var res;
-        if (roll < 0.30) res = 'Timber';
-        else if (roll < 0.50) res = 'Olives';
-        else if (roll < 0.68) res = 'Wine';
-        else if (roll < 0.80) res = 'Bronze';
-        else if (roll < 0.85) res = 'Ambrosia';
-        else if (roll < 0.92) res = 'Stone';
-        else res = null;
-
-        if (res) {
-          h.resources.push({ type: res, turnsLeft: 2 });
+        spawnOneResourceOnHex(hi);
+        if (roundOmenFlags.extraSpawn) {
+          spawnOneResourceOnHex(hi);
         }
       }
     }
@@ -1425,6 +1850,7 @@
 
     /* ===== MARKET DRIFT ===== */
     function driftHermes() {
+      if (roundOmenFlags.noDrift) return;
       var neighbors = hexNeighbors[marketHex];
       var candidates = [];
       for (var i = 0; i < neighbors.length; i++) {
@@ -1664,7 +2090,7 @@
         }
       }
       // Ties share no bonus — must have clear lead AND at least 2 structures
-      if (tied.length === 1 && tied[0] === playerIdx && best >= 2) return 3;
+      if (tied.length === 1 && tied[0] === playerIdx && best >= 2) return getNetworkBonusVP();
       return 0;
     }
 
@@ -1677,7 +2103,7 @@
       var r = players[playerIdx].resources;
       if (type === 'camp') return (r.Timber || 0) >= 2 && (r.Olives || 0) >= 1;
       if (type === 'temple') return (r.Stone || 0) >= 1 && (r.Wine || 0) >= 2;
-      if (type === 'trireme') return (r.Timber || 0) >= 1 && (r.Bronze || 0) >= 1;
+      if (type === 'trireme') return (r.Timber || 0) >= 1 && (r.Bronze || 0) >= 1 && (r.Wine || 0) >= 1;
       return false;
     }
 
@@ -1685,7 +2111,7 @@
       var r = players[playerIdx].resources;
       if (type === 'camp') { r.Timber -= 2; r.Olives -= 1; }
       if (type === 'temple') { r.Stone -= 1; r.Wine -= 2; }
-      if (type === 'trireme') { r.Timber -= 1; r.Bronze -= 1; }
+      if (type === 'trireme') { r.Timber -= 1; r.Bronze -= 1; r.Wine -= 1; }
     }
 
     function validCampHexes(playerIdx) {
@@ -1696,26 +2122,16 @@
         var adjacent = false;
         var neighbors = hexNeighbors[i];
         for (var n = 0; n < neighbors.length; n++) {
-          var nb = neighbors[n];
-          // Direct structure adjacency
-          if (hexes[nb].structure && hexes[nb].structure.owner === playerIdx) {
+          if (hexes[neighbors[n]].structure && hexes[neighbors[n]].structure.owner === playerIdx) {
             adjacent = true;
             break;
           }
-          // Trireme FROM candidate hex (i) TO this neighbor which has a player structure
           for (var b = 0; b < hexes[i].triremes.length; b++) {
-            if (hexes[i].triremes[b].to === nb && hexes[i].triremes[b].owner === playerIdx &&
-                hexes[nb].structure && hexes[nb].structure.owner === playerIdx) {
-              adjacent = true; break;
-            }
+            if (hexes[i].triremes[b].owner === playerIdx) { adjacent = true; break; }
           }
           if (adjacent) break;
-          // Trireme FROM this neighbor TO candidate hex (i), where neighbor has a player structure
-          for (var b = 0; b < hexes[nb].triremes.length; b++) {
-            if (hexes[nb].triremes[b].to === i && hexes[nb].triremes[b].owner === playerIdx &&
-                hexes[nb].structure && hexes[nb].structure.owner === playerIdx) {
-              adjacent = true; break;
-            }
+          for (var b = 0; b < hexes[neighbors[n]].triremes.length; b++) {
+            if (hexes[neighbors[n]].triremes[b].to === i && hexes[neighbors[n]].triremes[b].owner === playerIdx) { adjacent = true; break; }
           }
           if (adjacent) break;
         }
@@ -1951,6 +2367,8 @@
       var heldText = tideHeldThisRound ? ' &mdash; <span style="color:#D4A860">Appeased!</span>' : '';
       document.getElementById('tide-label').innerHTML = 'Poseidon\u2019s Wrath: ' + tideLevel + ' / 5 &mdash; ' + dirText + ' &mdash; Turn ' + turnNumber + heldText;
 
+      renderOmenPanel();
+
       // Update buttons
       updateButtons();
     }
@@ -2008,7 +2426,7 @@
         var structStr = 'Camps:' + counts.camp + ' Temples:' + counts.temple + ' Triremes:' + counts.trireme;
         var netSize = largestNetwork(p);
         structStr += ' Net:' + netSize;
-        if (calcNetworkBonus(p) > 0) structStr += '(+3VP)';
+        if (calcNetworkBonus(p) > 0) structStr += '(+' + getNetworkBonusVP() + 'VP)';
         structRow.textContent = structStr;
         panel.appendChild(structRow);
 
@@ -2039,7 +2457,7 @@
           nextBtn.style.display = 'none';
         } else {
           nextBtn.style.display = '';
-          nextBtn.disabled = (phase !== 'preturn' || gameOver);
+          nextBtn.disabled = (phase !== 'preturn' || gameOver || phase === 'council');
         }
       }
 
@@ -2116,33 +2534,41 @@
       if (phase !== 'preturn' || gameOver) return;
 
       turnNumber++;
+      drawOmen();
 
-      // Save old flood state
-      var oldFlooded = [];
+      pendingOldFlooded = [];
       for (var i = 0; i < TOTAL_HEXES; i++) {
-        oldFlooded.push(hexes[i].flooded);
+        pendingOldFlooded.push(hexes[i].flooded);
       }
 
-      // Advance tide
-      advanceWrath();
+      if (tideHeldThisRound) {
+        tideHeldThisRound = false;
+        runAfterTideChange(pendingOldFlooded, 'Poseidon appeased \u2014 tide holds. ');
+        return;
+      }
+
+      if (poseidonsCouncil) {
+        beginCouncilPhase();
+        return;
+      }
+
+      advanceWrathClassic();
+      runAfterTideChange(pendingOldFlooded, '');
+    }
+
+    function runAfterTideChange(oldFlooded, prefixMsg) {
       updateFloodState();
+
+      var omenMsgs = applyOmenRoundStart();
 
       var revealed = getNewlyRevealed(oldFlooded);
       var flooded = getNewlyFlooded(oldFlooded);
 
-      // Decay old resources
       decayResources();
-
-      // Remove resources from flooded hexes
       removeFloodedResources(flooded);
-
-      // Spawn resources on revealed hexes
       spawnResources(revealed);
-
-      // Drift market
       driftHermes();
 
-      // Harvest for ALL players, in round-starter rotation so first-pick rotates fairly
       var harvestMsgs = [];
       for (var pi = 0; pi < numPlayers; pi++) {
         var p = (roundStartPlayer + pi) % numPlayers;
@@ -2151,14 +2577,20 @@
         if (hMsg) harvestMsgs.push(hMsg);
       }
 
-      var msg = 'Turn ' + turnNumber + ': Wrath ' + tideLevel + (tideDirection > 0 ? ' (rising)' : ' (falling)') + '. ';
+      var msg = prefixMsg || '';
+      if (omenCards && currentOmen) {
+        msg += 'Omen \u2014 ' + currentOmen.icon + ' ' + currentOmen.name + '. ';
+      }
+      for (var om = 0; om < omenMsgs.length; om++) {
+        msg += omenMsgs[om] + ' ';
+      }
+      msg += 'Turn ' + turnNumber + ': Wrath ' + tideLevel + (tideDirection > 0 ? ' (rising)' : ' (falling)') + '. ';
       if (revealed.length > 0) msg += revealed.length + ' tiles revealed. ';
       if (flooded.length > 0) msg += flooded.length + ' tiles flooded. ';
       for (var i = 0; i < harvestMsgs.length; i++) {
         msg += harvestMsgs[i] + ' ';
       }
 
-      // Start active phase for the active player
       currentPlayer = activePlayer;
       actionsLeft = 2;
       phase = 'active';
@@ -2171,7 +2603,6 @@
       setMessage(msg);
       render();
 
-      // If active player is AI, trigger AI turn
       if (!isHumanPlayer(currentPlayer)) {
         scheduleAi();
       }
@@ -2219,7 +2650,7 @@
         setMessage('Click a highlighted hex to build a Temple. (1 Stone + 2 Wine)');
       } else if (action === 'trireme') {
         highlightedHexes = validTriremeStartHexes(actingPlayer);
-        setMessage('Click your structure to start a trireme from. (1 Timber + 1 Bronze)');
+        setMessage('Click your structure to start a trireme from. (1 Timber + 1 Bronze + 1 Wine)');
       } else if (action === 'trade') {
         openTrade();
         return;
@@ -2364,33 +2795,78 @@
       var rows = document.getElementById('trade-rows');
       rows.innerHTML = '';
 
-      var rkeys = ['Timber', 'Olives', 'Wine', 'Bronze', 'Ambrosia'];
-      for (var i = 0; i < rkeys.length; i++) {
-        var rk = rkeys[i];
+      var sellKeys = ['Timber', 'Olives', 'Wine', 'Bronze', 'Ambrosia'];
+      var coins = players[currentPlayer].coins;
+
+      for (var i = 0; i < sellKeys.length; i++) {
+        var rk = sellKeys[i];
         var amt = players[currentPlayer].resources[rk] || 0;
         var row = document.createElement('div');
         row.className = 'trade-row';
-        row.innerHTML = '<span>' + (RESOURCE_ICONS[rk] || '') + ' ' + rk + ' (' + amt + ') &mdash; ' + PRICES[rk] + ' coins</span>';
-        var btn = document.createElement('button');
-        btn.className = 'trade-sell-btn';
-        btn.textContent = 'Sell 1';
-        btn.disabled = amt <= 0;
-        btn.setAttribute('data-res', rk);
-        btn.onclick = function() {
+        row.innerHTML = '<span>' + (RESOURCE_ICONS[rk] || '') + ' ' + rk + ' (' + amt + ') &mdash; sell ' + getHermesSellPrice(rk) + ' / buy ' + getHermesBuyPrice(rk) + '</span>';
+        var btnGroup = document.createElement('div');
+        btnGroup.className = 'trade-btn-group';
+        var sellBtn = document.createElement('button');
+        sellBtn.className = 'trade-sell-btn';
+        sellBtn.textContent = 'Sell 1';
+        sellBtn.disabled = amt <= 0;
+        sellBtn.setAttribute('data-res', rk);
+        sellBtn.onclick = function() {
           var res = this.getAttribute('data-res');
           if (players[currentPlayer].resources[res] > 0) {
             players[currentPlayer].resources[res]--;
-            players[currentPlayer].coins += PRICES[res];
+            players[currentPlayer].coins += getHermesSellPrice(res);
             openTrade();
             render();
           }
         };
-        row.appendChild(btn);
+        var buyBtn = document.createElement('button');
+        buyBtn.className = 'trade-buy-btn';
+        buyBtn.textContent = 'Buy 1';
+        buyBtn.disabled = coins < getHermesBuyPrice(rk);
+        buyBtn.setAttribute('data-res', rk);
+        buyBtn.onclick = function() {
+          var res = this.getAttribute('data-res');
+          var cost = getHermesBuyPrice(res);
+          if (players[currentPlayer].coins >= cost) {
+            players[currentPlayer].coins -= cost;
+            players[currentPlayer].resources[res] = (players[currentPlayer].resources[res] || 0) + 1;
+            openTrade();
+            render();
+          }
+        };
+        btnGroup.appendChild(sellBtn);
+        btnGroup.appendChild(buyBtn);
+        row.appendChild(btnGroup);
         rows.appendChild(row);
       }
 
+      // Stone: buy-only (needed for temples, never sold to Hermes)
+      var stoneAmt = players[currentPlayer].resources.Stone || 0;
+      var stoneRow = document.createElement('div');
+      stoneRow.className = 'trade-row';
+      stoneRow.innerHTML = '<span>' + (RESOURCE_ICONS.Stone || '') + ' Stone (' + stoneAmt + ') &mdash; buy ' + getHermesBuyPrice('Stone') + ' (sell n/a)</span>';
+      var stoneGroup = document.createElement('div');
+      stoneGroup.className = 'trade-btn-group';
+      var stoneBuyBtn = document.createElement('button');
+      stoneBuyBtn.className = 'trade-buy-btn';
+      stoneBuyBtn.textContent = 'Buy 1';
+      stoneBuyBtn.disabled = coins < getHermesBuyPrice('Stone');
+      stoneBuyBtn.onclick = function() {
+        var stoneCost = getHermesBuyPrice('Stone');
+        if (players[currentPlayer].coins >= stoneCost) {
+          players[currentPlayer].coins -= stoneCost;
+          players[currentPlayer].resources.Stone = (players[currentPlayer].resources.Stone || 0) + 1;
+          openTrade();
+          render();
+        }
+      };
+      stoneGroup.appendChild(stoneBuyBtn);
+      stoneRow.appendChild(stoneGroup);
+      rows.appendChild(stoneRow);
+
       panel.classList.add('visible');
-      setMessage('Trading at Hermes\' Ship. Sell resources for coins.');
+      setMessage('Trading at Hermes\' Ship. Sell or buy resources, then Done.');
       highlightedHexes = [];
       render();
     }
@@ -2749,7 +3225,7 @@
         // All players have acted this round - resolve any triggered win, then rotate
         resolveEndOfRoundWin();
         if (gameOver) return;
-        roundStartPlayer = (roundStartPlayer + 1) % numPlayers;
+        roundStartPlayer = activePlayer;
         activePlayer = roundStartPlayer;
         phase = 'preturn';
         specialBuildPlayer = -1;
@@ -3128,6 +3604,14 @@
       deepWater = !!on;
       resetGame();
     }
+    function setPoseidonsCouncil(on) {
+      poseidonsCouncil = !!on;
+      resetGame();
+    }
+    function setOmenCards(on) {
+      omenCards = !!on;
+      resetGame();
+    }
     function rerollMap() {
       // Clear seed input so a new random board is generated
       var inp = document.getElementById('map-seed-input');
@@ -3168,6 +3652,7 @@
     /* ===== RESET ===== */
     function resetGame() {
       if (aiTimer) clearTimeout(aiTimer);
+      if (councilTimer) { clearTimeout(councilTimer); councilTimer = null; }
       if (preturnTimer) { clearTimeout(preturnTimer); preturnTimer = null; }
       gameOver = false;
       gameStarted = false;
@@ -3187,12 +3672,17 @@
       specialBuildUsed = false;
 
       document.getElementById('overlay').classList.remove('show');
+      document.getElementById('council-overlay').classList.remove('show');
       document.getElementById('trade-panel').classList.remove('visible');
       document.getElementById('player-trade-panel').classList.remove('visible');
       var tofr = document.getElementById('trade-offer-overlay');
       if (tofr) tofr.classList.remove('show');
       ptpState = null;
       pendingOffer = null;
+
+      currentOmen = null;
+      roundOmenFlags = {};
+      initOmenDeck();
 
       createBoard();
       initPlayers();
@@ -3270,5 +3760,6 @@
   crossorigin="anonymous"
   async></script>
 <script src="/nav.js" defer></script>
+<script src="mobile-init.js"></script>
 </body>
 </html>
