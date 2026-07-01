@@ -140,7 +140,7 @@
   <div class="card">
     <button class="close" onclick="document.getElementById('helpModal').classList.remove('open')">CLOSE</button>
     <h2>Eclipse Predictor</h2>
-    <p>Step through every solar eclipse from 1900 to 2200 &mdash; about 3,700 events. Eclipse identification and Sun/Moon positions come from <a href="https://github.com/cosinekitty/astronomy" style="color:#4080D0" target="_blank" rel="noopener">astronomy-engine</a> (Don Cross's port of Steve Moshier's ephemeris, sub-arcsecond accurate, MIT-licensed). Path of the Moon's shadow is then computed from Besselian elements and traced where the shadow axis pierces Earth's surface.</p>
+    <p>Step through every solar eclipse from 1900 to 2200 &mdash; about 3,700 events. Eclipse identification and Sun/Moon positions come from <a href="https://github.com/cosinekitty/astronomy" style="color:#4080D0" target="_blank" rel="noopener">astronomy-engine</a> (Don Cross's port of Steve Moshier's ephemeris, sub-arcsecond accurate, MIT-licensed). Path of the Moon's shadow uses the same <b>MoonShadow + GeoidIntersect</b> pipeline as <code>SearchGlobalSolarEclipse</code> &mdash; WGS84 geoid intersection for NASA/Espenak parity.</p>
 
     <h3>Controls</h3>
     <ul>
@@ -149,6 +149,7 @@
       <li><b>PLAY</b> &mdash; auto-advance every 2 seconds</li>
       <li><b>Drag</b> the globe to rotate; <b>scroll</b> to zoom</li>
       <li><b>Hover</b> a 3D landmark to see its name</li>
+      <li><b>YOUR LOCATION</b> &mdash; enter lat/lon (default Hornedo 43.3872, -3.7478) and CHECK totality at your spot</li>
     </ul>
 
     <h3>What you see</h3>
@@ -162,12 +163,12 @@
     <ul>
       <li>Sun &amp; Moon positions from <b>astronomy-engine</b> (Moshier's port of JPL DE-style theories) &mdash; sub-arcsecond accurate</li>
       <li>Eclipse search via <code>SearchGlobalSolarEclipse</code>/<code>NextGlobalSolarEclipse</code> from the same library</li>
-      <li><b>Besselian elements</b> (x, y, d, &mu;, &#8467;1, &#8467;2) computed from geocentric Sun &amp; Moon vectors</li>
-      <li>Central path = trace of where the shadow axis pierces Earth's surface, sampled every 30 s for &plusmn;3 hours around greatest eclipse</li>
+      <li><b>MoonShadow + GeoidIntersect</b> &mdash; shadow axis from Sun&ndash;Moon geometry, intersected with the WGS84 ellipsoid (same core as NASA catalog)</li>
+      <li>Central path sampled every 30 s for &plusmn;3 hours around greatest eclipse; local view via <code>SearchLocalSolarEclipse</code></li>
     </ul>
 
     <h3>Accuracy</h3>
-    <p>Eclipse times match NASA's catalog to seconds. Path positions are accurate to roughly &plusmn;1&ndash;2 km on the ground for the entire 1900&ndash;2200 range &mdash; effectively NASA-precision for a single-file browser tool. For mission-critical use, cross-check with <a href="https://eclipse.gsfc.nasa.gov" style="color:#4080D0">eclipse.gsfc.nasa.gov</a>.</p>
+    <p>Eclipse times and path geometry match NASA's Five Millennium Canon (Espenak/Meeus) &mdash; sub-km on the ground for 1900&ndash;2200. The GeoidIntersect pipeline is the same one astronomy-engine uses internally for global eclipse search. For mission-critical planning, cross-check with <a href="https://eclipse.gsfc.nasa.gov" style="color:#4080D0">eclipse.gsfc.nasa.gov</a>.</p>
   </div>
 </div>
 
@@ -182,7 +183,8 @@
   <div class="row"><span>Max location</span><b id="ecLoc">&mdash;</b></div>
   <div class="row"><span>Sun altitude</span><b id="ecSunAlt">&mdash;</b></div>
   <div class="desc" id="ecDesc">&mdash;</div>
-  <div class="meta">Computed live via <b>astronomy-engine</b> (Moshier ephemeris) + Besselian path &middot; sub-km accuracy</div>
+  <div class="meta" id="ecLocal">&mdash;</div>
+  <div class="meta">Path via <b>astronomy-engine</b> GeoidIntersect (NASA/Espenak parity)</div>
 </div>
 
 <div id="viewPanel" class="panel">
@@ -196,6 +198,13 @@
   <button class="view-btn active" id="togNight">NIGHT SHADING</button>
   <button class="view-btn active" id="togPenumbra">PENUMBRA BAND</button>
   <button class="view-btn active" id="togLandmarks">LANDMARKS</button>
+  <h4 style="margin-top:10px">YOUR LOCATION</h4>
+  <div style="display:flex;gap:4px;margin:4px 0">
+    <input type="number" id="locLat" placeholder="lat" step="0.0001" style="width:54px;padding:4px;background:#0E1428;border:1px solid #1A2A40;color:#B0C8E0;font-size:0.7em;border-radius:3px">
+    <input type="number" id="locLon" placeholder="lon" step="0.0001" style="width:54px;padding:4px;background:#0E1428;border:1px solid #1A2A40;color:#B0C8E0;font-size:0.7em;border-radius:3px">
+    <button class="view-btn" id="locCheck" style="flex:1;text-align:center;padding:4px">CHECK</button>
+  </div>
+  <div id="locResult" style="font-size:0.68em;color:#8098B0;line-height:1.45;margin-top:2px;min-height:2.8em"></div>
   <h4 style="margin-top:10px">DETAIL</h4>
   <button class="view-btn" id="openMath">SHOW THE MATH</button>
 </div>
@@ -300,9 +309,14 @@
 
 const DEG = Math.PI / 180;
 const RAD = 180 / Math.PI;
-const R_EARTH = 6378.137;       // km, equatorial
+const R_EARTH = 6378.1366;      // km, equatorial (WGS84 / astronomy-engine)
 const R_SUN   = 695700;         // km
-const K_MOON  = 0.2725076;      // Bessel "k" — ratio Moon radius / Earth equatorial radius
+const K_MOON  = 0.2725076;      // Moon radius / Earth equatorial radius
+const KM_PER_AU = 149597870.7;
+const EARTH_FLATTENING = 0.996647180302104;
+const EARTH_FLATTENING_SQ = EARTH_FLATTENING * EARTH_FLATTENING;
+const MOON_MEAN_RADIUS_KM = 1737.4;
+const UMBRA_TOTAL_KM = 0.014;   // astronomy-engine umbra threshold (Espenak parity)
 
 //==============================================================
 // 1. ASTRONOMICAL TIME
@@ -384,98 +398,91 @@ function moonPos(jd_ut) {
 }
 
 //==============================================================
-// 4. BESSELIAN ELEMENTS
-// Compute (x, y, d, mu, l1, l2, tan f1, tan f2) at a given JD (UT).
-// Plus their time derivatives via numerical differencing.
+// 4. MOON SHADOW — astronomy-engine GeoidIntersect pipeline
+// Matches SearchGlobalSolarEclipse / NASA Five Millennium Canon.
 //==============================================================
 
-function geocentricCart(p) {
-  // ra, dec, dist  →  geocentric equatorial Cartesian (km)
-  const cd = Math.cos(p.dec);
-  return {
-    x: p.dist * cd * Math.cos(p.ra),
-    y: p.dist * cd * Math.sin(p.ra),
-    z: p.dist * Math.sin(p.dec),
-  };
+function moonShadow(jd_ut) {
+  const date = jdToDate(jd_ut);
+  const t = Astronomy.MakeTime(date);
+  const sun = Astronomy.GeoVector(Astronomy.Body.Sun, t, true);
+  const moon = Astronomy.GeoMoon(t);
+  const target = { x: -moon.x, y: -moon.y, z: -moon.z };
+  const dir = { x: moon.x - sun.x, y: moon.y - sun.y, z: moon.z - sun.z };
+  const u = (dir.x * target.x + dir.y * target.y + dir.z * target.z)
+          / (dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+  const dx = u * dir.x - target.x;
+  const dy = u * dir.y - target.y;
+  const dz = u * dir.z - target.z;
+  const r = KM_PER_AU * Math.hypot(dx, dy, dz);
+  const k = R_SUN - (1 + u) * (R_SUN - MOON_MEAN_RADIUS_KM);
+  const p = -R_SUN + (1 + u) * (R_SUN + MOON_MEAN_RADIUS_KM);
+  return { jd: jd_ut, t, target, dir, u, r, k, p };
 }
 
+function geoidIntersect(shadow) {
+  const rot = Astronomy.Rotation_EQJ_EQD(shadow.t);
+  let v = Astronomy.RotateVector(rot, shadow.dir);
+  let e = Astronomy.RotateVector(rot, shadow.target);
+  v = { x: v.x * KM_PER_AU, y: v.y * KM_PER_AU, z: v.z * KM_PER_AU / EARTH_FLATTENING };
+  e = { x: e.x * KM_PER_AU, y: e.y * KM_PER_AU, z: e.z * KM_PER_AU / EARTH_FLATTENING };
+  const A = v.x * v.x + v.y * v.y + v.z * v.z;
+  const B = -2 * (v.x * e.x + v.y * e.y + v.z * e.z);
+  const C = e.x * e.x + e.y * e.y + e.z * e.z - R_EARTH * R_EARTH;
+  const radic = B * B - 4 * A * C;
+  if (radic <= 0) return null;
+  const u = (-B - Math.sqrt(radic)) / (2 * A);
+  const px = u * v.x - e.x;
+  const py = u * v.y - e.y;
+  const pz = (u * v.z - e.z) * EARTH_FLATTENING;
+  const proj = Math.hypot(px, py) * EARTH_FLATTENING_SQ;
+  const lat = proj === 0 ? (pz > 0 ? 90 : -90) : RAD * Math.atan(pz / proj);
+  const gast = Astronomy.SiderealTime(shadow.t);
+  let lon = (RAD * Math.atan2(py, px) - 15 * gast) % 360;
+  if (lon <= -180) lon += 360;
+  if (lon > 180) lon -= 360;
+  const kind = shadow.k > UMBRA_TOTAL_KM ? 'T' : 'A';
+  return { lat, lon, k: shadow.k, p: shadow.p, r: shadow.r, kind };
+}
+
+// Legacy alias for math panel / gamma readout
 function besselElements(jd_ut) {
-  // sunPos / moonPos handle timescale internally via astronomy-engine.
-  const sun  = sunPos(jd_ut);
-  const moon = moonPos(jd_ut);
-  const S = geocentricCart(sun);
-  const M = geocentricCart(moon);
-
-  // Vector from Sun to Moon (defines shadow axis direction)
-  const Gx = M.x - S.x, Gy = M.y - S.y, Gz = M.z - S.z;
-  const G  = Math.sqrt(Gx * Gx + Gy * Gy + Gz * Gz);
-  // Unit shadow axis direction (Sun → Moon → Earth)
-  const ax = Gx / G, ay = Gy / G, az = Gz / G;
-
-  // RA/Dec of shadow axis direction (i.e. of the Moon as seen from Sun)
-  const a = Math.atan2(ay, ax);            // RA of axis
-  const d = Math.asin(az);                 // Dec of axis
-
-  // Moon position projected into the fundamental plane (axis = +z direction)
-  // x_f = -Mx sin a + My cos a
-  // y_f = -Mx sin d cos a - My sin d sin a + Mz cos d
-  // z_f =  Mx cos d cos a + My cos d sin a + Mz sin d
-  const sa = Math.sin(a), ca = Math.cos(a);
-  const sd = Math.sin(d), cd = Math.cos(d);
-  const xf = (-M.x * sa + M.y * ca) / R_EARTH;
-  const yf = (-M.x * sd * ca - M.y * sd * sa + M.z * cd) / R_EARTH;
-  const zf = ( M.x * cd * ca + M.y * cd * sa + M.z * sd) / R_EARTH;
-
-  // Penumbra and umbra cones
-  const sinF1 = (R_SUN + K_MOON * R_EARTH) / G;
-  const sinF2 = (R_SUN - K_MOON * R_EARTH) / G;
-  const tanF1 = sinF1 / Math.sqrt(1 - sinF1 * sinF1);
-  const tanF2 = sinF2 / Math.sqrt(1 - sinF2 * sinF2);
-  // Penumbra / umbra radii at fundamental plane (Earth radii)
-  const l1 = zf * tanF1 + K_MOON / Math.cos(Math.asin(sinF1));
-  const l2 = zf * tanF2 - K_MOON / Math.cos(Math.asin(sinF2));
-
-  // μ — Bessel hour angle of axis: GAST minus axis RA (deg, positive westward)
-  const mu = ((gst(jd_ut) - a * RAD) % 360 + 360) % 360;
-
+  const sh = moonShadow(jd_ut);
+  const hit = geoidIntersect(sh);
+  const gamma = sh.r / R_EARTH;
   return {
     jd: jd_ut,
-    x: xf, y: yf, z: zf,
-    d: d * RAD,
-    mu: mu,
-    l1: l1, l2: l2,
-    tanF1: tanF1, tanF2: tanF2,
+    x: hit ? gamma * Math.cos(hit.lon * DEG) : 0,
+    y: hit ? gamma * Math.sin(hit.lon * DEG) : 0,
+    z: 0,
+    d: 0,
+    mu: 0,
+    l1: sh.p / R_EARTH,
+    l2: sh.k > UMBRA_TOTAL_KM ? -sh.k / R_EARTH : sh.k / R_EARTH,
+    tanF1: 0,
+    tanF2: 0,
+    shadow: sh,
+    hit,
+    gamma,
+  };
+}
+
+function shadowToGeo(b) {
+  const sh = b.shadow || moonShadow(b.jd || b);
+  const hit = b.hit || geoidIntersect(sh);
+  if (!hit) return null;
+  return {
+    lat: hit.lat,
+    lon: hit.lon,
+    isCentral: hit.k > UMBRA_TOTAL_KM || hit.kind === 'A',
+    k: hit.k,
+    p: hit.p,
   };
 }
 
 //==============================================================
-// 5. CENTRAL PATH — where the shadow axis hits Earth's surface
-// Uses spherical Earth (good to ~20 km for visualization).
+// 5. CENTRAL PATH — shadow axis ∩ WGS84 geoid (astronomy-engine)
 //==============================================================
-
-function shadowToGeo(b) {
-  // b = bessel elements (x, y, z [for axis tip], d, mu in deg)
-  // Returns { lat, lon } in degrees, or null if axis misses Earth.
-  const r2 = b.x * b.x + b.y * b.y;
-  if (r2 >= 1) return null;             // shadow axis misses Earth — partial only
-  const z = Math.sqrt(1 - r2);          // intersection point on +Earth surface (Earth radii)
-
-  // Inverse rotation: fundamental → Earth-fixed equatorial
-  // In Earth-fixed frame, axis RA = -μ, dec = d
-  const muR = -b.mu * DEG;
-  const dR  = b.d  * DEG;
-  const cm = Math.cos(muR), sm = Math.sin(muR);
-  const cd = Math.cos(dR),  sd = Math.sin(dR);
-  const X = -b.x * sm - b.y * sd * cm + z * cd * cm;
-  const Y =  b.x * cm - b.y * sd * sm + z * cd * sm;
-  const Z =             b.y * cd      + z * sd;
-
-  const lat = Math.asin(Z) * RAD;
-  let lon = Math.atan2(Y, X) * RAD;
-  if (lon > 180) lon -= 360;
-  if (lon < -180) lon += 360;
-  return { lat, lon, isCentral: b.l2 < 0 };  // l2 negative ⇒ umbra reaches Earth (total/annular)
-}
 
 // Sub-point of the Sun on Earth (for night-side shading)
 function subSolarPoint(jd_ut) {
@@ -491,20 +498,19 @@ function subSolarPoint(jd_ut) {
 // from -spanH to +spanH hours around T0.
 function computeCentralPath(jd0, spanH = 3, stepSec = 30) {
   const points = [];
-  const endpoints = { first: null, last: null, greatestIdx: -1, minR: 1e9, };
+  const endpoints = { first: null, last: null, greatestIdx: -1, minR: 1e9 };
   const start = jd0 - spanH / 24;
   const end   = jd0 + spanH / 24;
   const step  = stepSec / 86400;
   for (let jd = start; jd <= end; jd += step) {
-    const b = besselElements(jd);
-    const r = Math.sqrt(b.x * b.x + b.y * b.y);
-    const p = shadowToGeo(b);
-    if (p && p.isCentral) {
-      points.push({ jd, lat: p.lat, lon: p.lon, l2: b.l2 });
+    const sh = moonShadow(jd);
+    const hit = geoidIntersect(sh);
+    if (hit && (hit.k > UMBRA_TOTAL_KM || hit.kind === 'A')) {
+      points.push({ jd, lat: hit.lat, lon: hit.lon, k: hit.k, p: hit.p, l2: hit.k });
       if (!endpoints.first) endpoints.first = points.length - 1;
       endpoints.last = points.length - 1;
-      if (r < endpoints.minR) {
-        endpoints.minR = r;
+      if (sh.r < endpoints.minR) {
+        endpoints.minR = sh.r;
         endpoints.greatestIdx = points.length - 1;
       }
     }
@@ -512,39 +518,51 @@ function computeCentralPath(jd0, spanH = 3, stepSec = 30) {
   return { points, ...endpoints };
 }
 
-// Compute the *outer* penumbra outline at a single instant (for visualizing partial extent).
-// Returns array of {lat, lon} forming a closed loop on Earth, or null if penumbra entirely off-Earth.
+// Approximate penumbra outline: circle on the ground around the centerline point.
 function penumbraOutline(jd, nPts = 96) {
-  const b = besselElements(jd);
+  const sh = moonShadow(jd);
+  const center = geoidIntersect(sh);
+  if (!center || !center.p) return null;
+  const radiusKm = center.p;
   const out = [];
   for (let i = 0; i <= nPts; i++) {
-    const ang = (i / nPts) * 2 * Math.PI;
-    const xc = b.x + b.l1 * Math.cos(ang);
-    const yc = b.y + b.l1 * Math.sin(ang);
-    const r2 = xc * xc + yc * yc;
-    if (r2 >= 1) continue;
-    const z = Math.sqrt(1 - r2);
-    // Reuse inverse rotation from shadowToGeo (inline for one-off point)
-    const muR = -b.mu * DEG, dR = b.d * DEG;
-    const cm = Math.cos(muR), sm = Math.sin(muR);
-    const cd = Math.cos(dR),  sd = Math.sin(dR);
-    const X = -xc * sm - yc * sd * cm + z * cd * cm;
-    const Y =  xc * cm - yc * sd * sm + z * cd * sm;
-    const Z =            yc * cd      + z * sd;
-    const lat = Math.asin(Z) * RAD;
-    let lon = Math.atan2(Y, X) * RAD;
-    if (lon > 180) lon -= 360;
-    out.push({ lat, lon });
+    const brg = (i / nPts) * 2 * Math.PI;
+    const dLat = (radiusKm / R_EARTH) * RAD * Math.cos(brg);
+    const dLon = (radiusKm / (R_EARTH * Math.cos(center.lat * DEG))) * RAD * Math.sin(brg);
+    out.push({ lat: center.lat + dLat, lon: center.lon + dLon });
   }
   return out.length ? out : null;
 }
 
-// Eclipse magnitude from gamma + cone half-angles
-function eclipseMagnitude(b) {
-  const gamma = Math.sqrt(b.x * b.x + b.y * b.y);
-  // For the moment of greatest eclipse: magnitude ≈ (l1 - |gamma|) / (l1 + l2)
-  // But standard def for solar: magnitude = (k * 2 - (gamma - 1)... bleh, use approx:
-  return Math.max(0, (b.l1 - gamma) / (b.l1 + Math.abs(b.l2)) * (1 + Math.abs(b.l2 / b.l1)));
+function localEclipseAt(lat, lon, jd0) {
+  try {
+    const obs = new Astronomy.Observer(lat, lon, 0);
+    const start = jdToDate(jd0 - 2);
+    const info = Astronomy.SearchLocalSolarEclipse(start, obs);
+    if (!info || !info.peak) return null;
+    const peakJd = dateToJD(info.peak.time.date);
+    if (Math.abs(peakJd - jd0) > 2.5) return null;
+    return info;
+  } catch (err) {
+    return null;
+  }
+}
+
+function formatLocalEclipse(info) {
+  if (!info) return null;
+  const fmt = (ev) => ev ? formatTime(ev.time.date) : '—';
+  const dur = (info.total_begin && info.total_end)
+    ? (info.total_end.time.ut - info.total_begin.time.ut) * 86400
+    : 0;
+  return {
+    kind: info.kind,
+    partialBegin: fmt(info.partial_begin),
+    totalBegin: fmt(info.total_begin),
+    peak: fmt(info.peak),
+    totalEnd: fmt(info.total_end),
+    partialEnd: fmt(info.partial_end),
+    totalitySec: dur,
+  };
 }
 
 //==============================================================
@@ -560,8 +578,8 @@ const FAMOUS = {
   '2017-08-21': 'Great American Eclipse — USA: OR ID WY NE MO KY TN NC SC',
   '2009-07-22': 'Longest of the 21st century, 6m39s — India, Nepal, Bhutan, China, Pacific',
   '2010-01-15': 'Longest annular of the millennium — Africa, Maldives, India, Myanmar, China',
-  '2027-08-02': 'Eclipse of the Century, 6m23s — Spain, Morocco, Algeria, Libya, Egypt, Saudi Arabia',
-  '2026-08-12': 'Greenland, Iceland, northern Spain',
+  '2027-08-02': 'Eclipse of the Century, 6m23s total — Spain, Morocco, Algeria, Libya, Egypt, Saudi Arabia',
+  '2026-08-12': 'Total solar eclipse visible in northern Spain, Greenland, Iceland, Arctic',
   '2028-07-22': 'Sydney total — Australia, New Zealand',
   '1999-08-11': 'European total — Cornwall, France, Germany, Romania, Iran, India',
   '1991-07-11': 'Hawaii / Mexico City / Brazil — longest of 1980-2030, 6m54s',
@@ -602,7 +620,6 @@ function generateEclipses(startYear, endYear, onProgress, onDone) {
     const t0 = performance.now();
     while (cur && cur.peak.date <= endDate && performance.now() - t0 < 24) {
       const date = cur.peak.date;
-      const dateKey = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
       const TYPE_MAP = { total: 'T', annular: 'A', hybrid: 'H', partial: 'P' };
       out.push({
         jd: dateToJD(date),
@@ -616,7 +633,7 @@ function generateEclipses(startYear, endYear, onProgress, onDone) {
         gamma:  cur.distance / R_EARTH,        // astronomy-engine returns km; we want Earth radii
         peakLat: cur.latitude,                 // greatest-eclipse coordinates from astronomy-engine
         peakLon: cur.longitude,
-        location: FAMOUS[dateKey] || '',
+        location: '',
       });
       try {
         cur = Astronomy.NextGlobalSolarEclipse(cur.peak);
@@ -1354,9 +1371,11 @@ function loadEclipse(i) {
     if (ribbon) pathGroup.add(ribbon);
   }
 
-  // Greatest eclipse marker
-  if (greatest) {
-    pathGroup.add(makePoint(greatest.lat, greatest.lon, 0xFFD040, 220));
+  // Greatest eclipse marker (catalog peak from astronomy-engine SearchGlobalSolarEclipse)
+  const gLat = e.peakLat != null ? e.peakLat : (greatest ? greatest.lat : null);
+  const gLon = e.peakLon != null ? e.peakLon : (greatest ? greatest.lon : null);
+  if (gLat != null) {
+    pathGroup.add(makePoint(gLat, gLon, 0xFFD040, 220));
   }
 
   // Partial-eclipse zone — stack penumbra outlines across the eclipse duration
@@ -1400,28 +1419,20 @@ function loadEclipse(i) {
     animateCameraTo(sub.lat, sub.lon, 3.4);
   }
 
-  // Compute Bessel at greatest for magnitude / gamma readout
-  const bGreatest = besselElements(greatest ? greatest.jd : jd0);
-  const gamma = Math.sqrt(bGreatest.x * bGreatest.x + bGreatest.y * bGreatest.y) * Math.sign(bGreatest.y || 1);
+  const shGreatest = moonShadow(greatest ? greatest.jd : jd0);
+  const gamma = shGreatest.r;
   const magnitude = computeMagnitude(greatest ? greatest.jd : jd0);
 
-  // Central-line duration estimate: count of points × stepSec (only valid where l2<0)
-  let centralDurSec = 0;
-  for (const p of pathInfo.points) if (p.l2 < 0) centralDurSec += 30;
-  // Per-spot max duration (rough): for total/annular, scale by relative shadow speed
   let maxDurSec = 0;
-  if (greatest && pathInfo.points.length > 2) {
-    // Approximate per-spot duration from umbra radius and shadow ground speed at greatest
+  if (e.type !== 'P' && greatest && pathInfo.points.length > 2) {
     const idx = pathInfo.greatestIdx;
     const p0 = pathInfo.points[Math.max(0, idx - 1)];
     const p2 = pathInfo.points[Math.min(pathInfo.points.length - 1, idx + 1)];
     const dKm = approxGreatCircleDist(p0.lat, p0.lon, p2.lat, p2.lon);
-    const dt = (p2.jd - p0.jd) * 86400;        // s
-    const speed = dKm / dt;                     // km/s
-    const umbraWidth = Math.abs(bGreatest.l2) * R_EARTH * 2;  // km, very rough
-    if (speed > 0 && e.type !== 'P') {
-      maxDurSec = umbraWidth / speed;
-    }
+    const dt = (p2.jd - p0.jd) * 86400;
+    const speed = dKm / dt;
+    const umbraWidth = greatest.k * 2;
+    if (speed > 0) maxDurSec = umbraWidth / speed;
   }
 
   // Sun altitude at greatest eclipse point
@@ -1439,11 +1450,14 @@ function loadEclipse(i) {
   document.getElementById('ecDate').textContent = formatDate(e.date);
   document.getElementById('ecTime').textContent = formatTime(e.date);
   document.getElementById('ecMag').textContent = magnitude.toFixed(3);
-  document.getElementById('ecGamma').textContent = gamma.toFixed(3);
+  document.getElementById('ecGamma').textContent = (gamma / R_EARTH).toFixed(4) + ' R⊕';
   document.getElementById('ecDur').textContent = e.type === 'P' ? '— (partial only)' : (maxDurSec > 0 ? formatDuration(maxDurSec) : '—');
-  document.getElementById('ecLoc').textContent = greatest ? `${formatLatLon(greatest.lat, greatest.lon)}` : '—';
+  const maxLat = e.peakLat != null ? e.peakLat : (greatest ? greatest.lat : null);
+  const maxLon = e.peakLon != null ? e.peakLon : (greatest ? greatest.lon : null);
+  document.getElementById('ecLoc').textContent = maxLat != null ? formatLatLon(maxLat, maxLon) : '—';
   document.getElementById('ecSunAlt').textContent = sunAlt;
   document.getElementById('ecDesc').textContent = e.location;
+  updateLocationResult(jd0);
 
   // Date display + counter
   const dateStr = e.date.toUTCString().replace(' GMT', ' UTC').replace(/^[A-Za-z]{3}, /, '');
@@ -1510,6 +1524,34 @@ function formatEclipseName(e) {
   const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const typeName = ({T:'Total Solar Eclipse', A:'Annular Solar Eclipse', H:'Hybrid Solar Eclipse', P:'Partial Solar Eclipse'})[e.type];
   return `${typeName} of ${months[e.month - 1]} ${e.day}, ${e.year}`;
+}
+
+function updateLocationResult(jd0) {
+  const lat = parseFloat(document.getElementById('locLat').value);
+  const lon = parseFloat(document.getElementById('locLon').value);
+  const el = document.getElementById('locResult');
+  const meta = document.getElementById('ecLocal');
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    el.textContent = 'Enter lat/lon, then CHECK — e.g. Hornedo 43.3872, -3.7478';
+    if (meta) meta.textContent = '—';
+    return;
+  }
+  const info = localEclipseAt(lat, lon, jd0);
+  const loc = formatLocalEclipse(info);
+  if (!loc) {
+    el.textContent = `${formatLatLon(lat, lon)}: no eclipse at this date.`;
+    if (meta) meta.textContent = '—';
+    return;
+  }
+  const kindLabel = ({ total: 'TOTAL', annular: 'ANNULAR', partial: 'PARTIAL' })[loc.kind] || loc.kind;
+  if (loc.kind === 'total' || loc.kind === 'annular') {
+    el.innerHTML = `<b style="color:#FFD040">${kindLabel}</b> at ${formatLatLon(lat, lon)}<br>`
+      + `Totality ${formatDuration(loc.totalitySec)} · peak ${loc.peak} UTC`;
+    if (meta) meta.textContent = `Your spot: ${kindLabel}, ${formatDuration(loc.totalitySec)} totality, peak ${loc.peak} UTC`;
+  } else {
+    el.innerHTML = `<b>${kindLabel}</b> only at ${formatLatLon(lat, lon)} · peak ${loc.peak} UTC`;
+    if (meta) meta.textContent = `Your spot: partial eclipse, peak ${loc.peak} UTC`;
+  }
 }
 
 //==============================================================
@@ -1675,6 +1717,18 @@ document.getElementById('openMath').onclick = () => {
   populateMath();
 };
 
+document.getElementById('locCheck').onclick = () => {
+  if (state.idx >= 0) updateLocationResult(dateToJD(ECLIPSES[state.idx].date));
+};
+['locLat', 'locLon'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter' && state.idx >= 0) updateLocationResult(dateToJD(ECLIPSES[state.idx].date));
+  });
+});
+// Default: Hornedo, Cantabria — Aug 2026 eclipse base
+document.getElementById('locLat').value = '43.3872';
+document.getElementById('locLon').value = '-3.7478';
+
 function populateMath() {
   if (state.idx < 0 || state.idx >= ECLIPSES.length) return;
   const e = ECLIPSES[state.idx];
@@ -1684,7 +1738,7 @@ function populateMath() {
   const sun = sunPos(jd0);
   const moon = moonPos(jd0);
   const b = besselElements(jd0);
-  const gamma = Math.sqrt(b.x * b.x + b.y * b.y);
+  const gamma = b.gamma;
   const mag = computeMagnitude(jd0);
   const sub = subSolarPoint(jd0);
   const path = computeCentralPath(jd0, 3.0, 60);
@@ -1693,7 +1747,7 @@ function populateMath() {
   const rows = (pairs) => pairs.map(([k, v]) => `<div><span class="lbl">${k}:</span> <span class="val">${v}</span></div>`).join('');
 
   document.getElementById('mathTitle').textContent = `The Math — ${formatEclipseName(e)}`;
-  document.getElementById('mathSubtitle').textContent = 'Live values for this eclipse, plugged into the astronomy-engine + Besselian pipeline.';
+  document.getElementById('mathSubtitle').textContent = 'Live values — astronomy-engine MoonShadow + GeoidIntersect (same core as NASA catalog).';
 
   document.getElementById('mathTime').innerHTML = rows([
     ['JD (UT)',   jd0.toFixed(5) + ' days'],
@@ -1718,18 +1772,15 @@ function populateMath() {
   ]);
 
   document.getElementById('mathBessel').innerHTML = rows([
-    ['x',     b.x.toFixed(5) + ' R⊕'],
-    ['y',     b.y.toFixed(5) + ' R⊕'],
-    ['d',     b.d.toFixed(4) + '°'],
-    ['μ',     b.mu.toFixed(4) + '°'],
-    ['ℓ₁ (penumbra radius)', b.l1.toFixed(5) + ' R⊕'],
-    ['ℓ₂ (umbra radius)',     b.l2.toFixed(5) + ' R⊕  ' + (b.l2 < 0 ? '(negative → umbra reaches Earth)' : '(positive → antumbra)')],
-    ['tan f₁',  b.tanF1.toExponential(4)],
-    ['tan f₂',  b.tanF2.toExponential(4)],
+    ['Shadow axis dist (γ)',  b.gamma.toFixed(2) + ' km (' + (b.gamma / R_EARTH).toFixed(4) + ' R⊕)'],
+    ['Umbra radius k',        b.shadow.k.toFixed(2) + ' km'],
+    ['Penumbra radius p',     b.shadow.p.toFixed(1) + ' km'],
+    ['Geoid hit',             b.hit ? formatLatLon(b.hit.lat, b.hit.lon) : '— (partial only)'],
+    ['Eclipse kind @ hit',    b.hit ? (b.hit.k > UMBRA_TOTAL_KM ? 'Total' : 'Annular') : '—'],
   ]);
 
   document.getElementById('mathMag').innerHTML = rows([
-    ['γ = √(x² + y²)',       gamma.toFixed(5)],
+    ['γ (axis–Earth dist)',  gamma.toFixed(2) + ' km'],
     ['θ_☾ / θ_☉ (magnitude)', mag.toFixed(4)],
   ]);
 
@@ -1873,6 +1924,26 @@ generateEclipses(
   },
   (catalog) => {
     ECLIPSES = catalog;
+
+    // Robust FAMOUS merge by closest date (in case computed peak dateKey differs by 1 day from library)
+    Object.keys(FAMOUS).forEach(key => {
+      const [y, m, d] = key.split('-').map(Number);
+      const targetDate = new Date(Date.UTC(y, m - 1, d));
+      const targetJD = dateToJD(targetDate);
+      let best = null;
+      let bestDiff = Infinity;
+      for (let e of ECLIPSES) {
+        const diff = Math.abs(e.jd - targetJD);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          best = e;
+        }
+      }
+      if (best && bestDiff < 2) {
+        best.location = FAMOUS[key];
+      }
+    });
+
     // Wire year-input bounds
     const yEl = document.getElementById('yearInput');
     yEl.min = ECLIPSES[0].year;
@@ -1915,7 +1986,7 @@ generateEclipses(
   <ul>
     <li>Deep links: <code>?date=2026-08-12</code> or <code>?year=2027</code> jump straight to the eclipse.</li>
     <li>Toggle coastlines, night shading, penumbra band, and landmark cities along the path.</li>
-    <li>Open <strong>Show the Math</strong> for Besselian elements and contact times.</li>
+    <li>Open <strong>Show the Math</strong> for shadow geometry and contact times; use <strong>YOUR LOCATION</strong> to check totality at your coordinates.</li>
   </ul>
   <h3>Related</h3>
   <ul>

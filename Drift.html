@@ -107,12 +107,21 @@
   .info h2 { color: #d4a050; font-size: 0.95em; letter-spacing: 4px; text-transform: uppercase; margin: 18px 0 8px; }
   .info strong { color: #f0d89c; }
   .add-row { margin: 6px 0; }
+  #shareBtn.pulse { animation: sharePulse 1.2s ease-in-out infinite; border-color: #d4a050; color: #ffe8a8; }
+  @keyframes sharePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(212,160,80,0.5); } 50% { box-shadow: 0 0 0 8px rgba(212,160,80,0); } }
+  #shareToast { display: none; margin: 12px auto 0; max-width: 320px; padding: 10px 14px; background: #1a1410; border: 1px solid #5a4028; border-radius: 6px; color: #e8d8b8; font-size: 0.82em; line-height: 1.5; }
+  #shareToast.show { display: block; }
+  #shareToast button { margin-top: 8px; width: 100%; }
+  .daily-sibling { margin: 0 0 14px; font-size: 0.78em; letter-spacing: 2px; color: #8a7858; }
+  .daily-sibling a { color: #94c3e8; text-decoration: none; }
+  .daily-sibling a:hover { color: #ffd896; }
 </style>
 </head>
 <body>
 <div id="wrap">
   <h1>DRIFT</h1>
   <div class="tag">DAILY WORD LADDER</div>
+  <div class="daily-sibling">Also play today's <a href="Wordform.html">Wordform</a> · five letters, six guesses</div>
   <div class="theme" id="theme">Loading…</div>
   <div class="controls">
     <button id="dailyBtn" class="active">DAILY</button>
@@ -127,6 +136,7 @@
     <button id="rmRow">– REMOVE STEP</button>
   </div>
   <div id="msg"></div>
+  <div id="shareToast"><span id="shareToastText"></span><button type="button" id="shareToastBtn">Share result</button></div>
   <div class="stats">STREAK <span id="streak">0</span> · SOLVES <span id="solves">0</span></div>
   <div id="kb"></div>
   <nav><a href="index.html">All games</a> · <a href="Wordform.html">Wordform</a> · <a href="Sudoku.html">Sudoku</a></nav>
@@ -347,23 +357,48 @@
       }
     }
     updateStats();
+    if (mode === 'daily') promptShare();
   }
   function updateStats() {
     const s = JSON.parse(localStorage.getItem('drift_stats') || '{"solves":0,"streak":0}');
     $('streak').textContent = s.streak; $('solves').textContent = s.solves;
   }
-  async function share() {
-    if (!solved) { $('msg').textContent = 'SOLVE FIRST'; return; }
+  const SHARE_URL = 'https://boardgaminghub.com/Drift.html';
+  function shareText() {
+    if (!solved) return '';
     const head = (mode === 'daily' ? 'Drift #' + dailyIndex() : 'Drift RANDOM') + ' — ' + (rows.length - 1) + ' steps' + (hintsUsed ? ' (+' + hintsUsed + ' hints)' : '');
     const grid = rows.map((r,i) => {
       if (i === 0 || i === rows.length-1) return '⬜⬜⬜⬜';
       const above = rows[i-1];
       return r.map((ch, c) => ch === above[c] ? '⬛' : '🟨').join('');
     }).join('\n');
-    const text = head + '\n' + grid + '\nboardgaminghub.com/Drift.html';
-    try { await navigator.clipboard.writeText(text); $('msg').textContent = 'COPIED'; }
-    catch (e) { $('msg').textContent = 'COPY FAILED'; }
+    return head + '\n' + grid + '\n' + SHARE_URL;
   }
+  async function doShare() {
+    const text = shareText();
+    if (!text) { $('msg').textContent = 'SOLVE FIRST'; return; }
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Drift', text: text, url: SHARE_URL });
+        $('msg').textContent = 'SHARED';
+        return;
+      } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      $('msg').textContent = 'COPIED — paste anywhere';
+    } catch (e) { $('msg').textContent = 'COPY FAILED'; }
+  }
+  function promptShare() {
+    $('shareBtn').classList.add('pulse');
+    const toast = $('shareToast');
+    const tbtn = $('shareToastBtn');
+    $('shareToastText').textContent = 'Solved! Share your ladder grid — no spoilers in the words.';
+    toast.classList.add('show');
+    tbtn.textContent = navigator.share ? 'Share result' : 'Copy result';
+    tbtn.onclick = () => { doShare(); toast.classList.remove('show'); $('shareBtn').classList.remove('pulse'); };
+  }
+  async function share() { await doShare(); }
 
   $('dailyBtn').onclick = () => { mode = 'daily'; $('dailyBtn').classList.add('active'); $('randomBtn').classList.remove('active'); init(); };
   $('randomBtn').onclick = () => { mode = 'random'; $('randomBtn').classList.add('active'); $('dailyBtn').classList.remove('active'); init(); };

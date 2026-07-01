@@ -39,6 +39,15 @@
   .demo-badge { display: inline-block; margin-top: 6px; font-size: 0.78em; color: #a0c8a8; letter-spacing: 1px; }
   .demo-badge a { color: #94c3e8; }
   .daily-badge { display: inline-block; margin-left: 8px; font-size: 0.65em; color: #a0d0a8; letter-spacing: 2px; vertical-align: middle; font-weight: normal; }
+  .eclipse-banner { margin: 0 0 28px; padding: 18px 22px; background: linear-gradient(135deg, #1a1428 0%, #141c28 55%, #1a2434 100%); border: 1px solid #5a4a28; border-radius: 4px; text-align: center; box-shadow: 0 0 24px rgba(255,200,80,0.08); }
+  .eclipse-banner .eb-title { color: #ffd896; font-size: 0.92em; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 8px; }
+  .eclipse-banner p { color: #b8c0c8; font-size: 0.9em; line-height: 1.55; margin: 0 0 12px; }
+  .eclipse-banner .eb-links a { color: #94c3e8; text-decoration: none; margin: 0 12px; letter-spacing: 1px; font-size: 0.88em; }
+  .eclipse-banner .eb-links a:hover { color: #ffd896; }
+  .eclipse-banner .eb-cta { display: inline-block; margin-top: 4px; padding: 8px 18px; background: #2a2434; border: 1px solid #ffd896; color: #ffd896; text-decoration: none; letter-spacing: 2px; font-size: 0.82em; border-radius: 3px; }
+  .eclipse-banner .eb-cta:hover { background: #3a3448; }
+  .featured-now .gcard { border-color: #4a5a70; }
+  .hot-badge { display: inline-block; margin-left: 8px; font-size: 0.65em; color: #ffd896; letter-spacing: 2px; vertical-align: middle; font-weight: normal; }
   
   
   
@@ -78,6 +87,48 @@
     <a href="about.html">About</a>
     <a href="contact.html">Contact</a>
   </nav>
+
+  <div class="eclipse-banner" role="region" aria-label="August 2026 solar eclipse">
+    <div class="eb-title">☀ Total solar eclipse · August 12, 2026</div>
+    <p>Northern Spain, Iceland, and the Arctic — paths computed with NASA-grade ephemeris. Plan your spot, check local totality times, and explore every eclipse through 2200 on the 3D globe.</p>
+    <div class="eb-links">
+      <a href="EclipsePredictor.html?year=2026">Open Eclipse Predictor</a>
+      <a href="guides/eclipse-2026.html">2026 &amp; 2027 guide</a>
+      <a href="https://pe-calc.com/tools/eclipse-sun-position.html">Sun alt/az calculator</a>
+    </div>
+    <a class="eb-cta" href="EclipsePredictor.html?date=2026-08-12">VIEW AUG 12 PATH →</a>
+  </div>
+
+  <section class="featured-now">
+    <h2>Featured now</h2>
+    <div class="blurb">Daily puzzles, eclipse season, and Play Store rollouts — July 2026.</div>
+    <div class="grid featured">
+    <a class="gcard featured-card" href="EclipsePredictor.html?date=2026-08-12">
+      <div class="gname">Eclipse Predictor<span class="hot-badge">Aug 2026</span></div>
+      <div class="gsub">3D path of totality · check any lat/lon for local eclipse times</div>
+    </a>
+    <a class="gcard featured-card" href="Wordform.html">
+      <div class="gname">Wordform<span class="daily-badge">Daily</span></div>
+      <div class="gsub">Five-letter word puzzle · share your emoji grid</div>
+    </a>
+    <a class="gcard featured-card" href="Drift.html">
+      <div class="gname">Drift<span class="daily-badge">Daily</span></div>
+      <div class="gsub">Word ladder · one letter per step</div>
+    </a>
+    <a class="gcard featured-card" href="Cliffwalkers.html">
+      <div class="gname">Cliffwalkers<span class="hot-badge">Play soon</span></div>
+      <div class="gsub">100 puzzle levels · first on Google Play this month</div>
+    </a>
+    <a class="gcard featured-card" href="Floodline.html">
+      <div class="gname">Floodline</div>
+      <div class="gsub">California flood defense demo<br><span class="demo-badge">Full game on itch.io — $2</span></div>
+    </a>
+    <a class="gcard featured-card" href="Tower.html">
+      <div class="gname">Tower (SkyStack)</div>
+      <div class="gsub">High-rise ops demo<br><span class="demo-badge">Full game on itch.io — $2</span></div>
+    </a>
+    </div>
+  </section>
 
   <article class="editorial">
     <h2>What is Board Gaming Hub?</h2>
