@@ -193,7 +193,8 @@
   let pair, rows, sel, mode = 'daily', solved = false, hintsUsed = 0;
 
   function dailyIndex() {
-    const epoch = new Date(2026, 0, 1).getTime();
+    // UTC epoch so every player worldwide gets the same daily puzzle (rolls at UTC midnight)
+    const epoch = Date.UTC(2026, 0, 1);
     return Math.floor((Date.now() - epoch) / 86400000);
   }
   function pickPair() {
@@ -319,25 +320,52 @@
     rows.splice(rows.length - 2, 1);
     sel = [Math.min(sel ? sel[0] : 1, rows.length - 2), 0]; render();
   }
-  function hint() {
-    // Reveal one letter that, in some valid neighbor, advances toward target
-    for (let r=1; r<rows.length-1; r++) {
-      for (let c=0; c<W; c++) {
-        if (!rows[r][c]) {
-          const above = rows[r-1], below = rows[r+1];
-          // try letters such that resulting word would be valid and link to above
-          for (const ch of 'abcdefghijklmnopqrstuvwxyz') {
-            const cand = above.map((x,i) => i === c ? ch : (rows[r][i] || x));
-            if (DICT.has(cand.join('')) && diffCount(cand, above) === 1) {
-              rows[r] = cand; hintsUsed++;
-              $('msg').textContent = 'HINT — ROW ' + (r+1) + ' · COLUMN ' + (c+1);
-              render(); return;
-            }
-          }
-        }
+  // Valid one-letter-change neighbors of a word (all in DICT)
+  function neighborsOf(word) {
+    const out = [];
+    for (let i = 0; i < W; i++) {
+      for (const ch of 'abcdefghijklmnopqrstuvwxyz') {
+        if (ch === word[i]) continue;
+        const nw = word.slice(0, i) + ch + word.slice(i + 1);
+        if (DICT.has(nw)) out.push(nw);
       }
     }
-    $('msg').textContent = 'NO HINT AVAILABLE — TRY +ADD STEP';
+    return out;
+  }
+  // First word on a shortest ladder from startW to targetW (null if none)
+  function bfsNext(startW, targetW) {
+    if (startW === targetW) return null;
+    const q = [[startW]], seen = new Set([startW]);
+    while (q.length) {
+      const path = q.shift();
+      const w = path[path.length - 1];
+      for (const nw of neighborsOf(w)) {
+        if (seen.has(nw)) continue;
+        const np = path.concat(nw);
+        if (nw === targetW) return np[1];
+        seen.add(nw); q.push(np);
+      }
+    }
+    return null;
+  }
+  function hint() {
+    // Find the first incomplete row; its row above must be a finished word.
+    let r = 1;
+    for (; r < rows.length - 1; r++) {
+      if (rows[r].some(x => !x)) break;
+    }
+    if (r >= rows.length - 1) { $('msg').textContent = 'NO HINT — ALL ROWS FILLED'; return; }
+    if (rows[r-1].some(x => !x)) { $('msg').textContent = 'FILL THE ROW ABOVE FIRST'; return; }
+    // Reveal one letter of the shortest-path next word toward the target.
+    const next = bfsNext(rows[r-1].join(''), pair[1]);
+    if (!next) { $('msg').textContent = 'NO HINT AVAILABLE — TRY +ADD STEP'; return; }
+    let col = -1;
+    for (let c = 0; c < W; c++) { if (rows[r][c] !== next[c]) { col = c; break; } }
+    if (col < 0) col = 0;
+    rows[r][col] = next[col];
+    hintsUsed++;
+    $('msg').textContent = 'HINT — ROW ' + (r+1) + ' · COLUMN ' + (col+1);
+    render();
   }
   function reset() {
     rows = [pair[0].split(''), ['','','',''], ['','','',''], ['','','',''], pair[1].split('')];

@@ -145,7 +145,8 @@
   let target, guesses, current, mode = 'daily', done = false;
 
   function dailyIndex() {
-    const epoch = new Date(2026, 0, 1).getTime();
+    // UTC epoch so every player worldwide gets the same daily word (rolls at UTC midnight)
+    const epoch = Date.UTC(2026, 0, 1);
     return Math.floor((Date.now() - epoch) / 86400000);
   }
   function pickTarget() {

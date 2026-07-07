@@ -17,6 +17,7 @@
     { slug:'2048', name:'2048', cat:'puzzles', desc:'Slide & merge tiles', keys:['merge','tile','number','slide','arcade'] },
     { slug:'Minesweeper', name:'Minesweeper', cat:'puzzles', desc:'Find the mines', keys:['mines','grid','flag','classic'] },
     { slug:'Abacus', name:'Abacus', cat:'puzzles', desc:'Soroban calculator with Arabic & Roman numerals', keys:['abacus','soroban','calculator','math','roman'] },
+    { slug:'lovedwords/index', name:'LovedWords', cat:'puzzles', desc:'First-words flashcards with your photos & voice', keys:['flashcards','toddler','first words','learning','baby','photos'] },
     { slug:'Agora', name:'Agora', cat:'board', desc:'The Mediterranean Trade', keys:['ancient','greek','trade','strategy','original'] },
     { slug:'Aresia', name:'Aresia', cat:'board', desc:'Colonize the Red Frontier', keys:['mars','colony','strategy','original'] },
     { slug:'Backgammon', name:'Backgammon', cat:'board', desc:'Classic dice & race', keys:['dice','race','classic'] },
