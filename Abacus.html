@@ -304,6 +304,10 @@
 
   function toRoman(n) {
     if (n === 0) return "nulla";
+    // Standard subtractive notation (with M/MM/MMM) for 1–3999, as the help text
+    // promises. Above 3999, fall back to vinculum grouping (a bar = ×1000), the
+    // classical way to write larger values that M-notation can't express cleanly.
+    if (n < 4000) return toRomanGroup(n);
     const groups = [];
     while (n > 0) { groups.unshift(n % 1000); n = Math.floor(n / 1000); }
     return groups.map((g, i) => {

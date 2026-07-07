@@ -2941,7 +2941,7 @@ function hideSplash() {
 function buildCampaignCards() {
   const wrap = document.getElementById('campaign-cards');
   wrap.innerHTML = '';
-  for (const id of ['small', 'bonneville', 'coulee', 'hoover', 'threegorges']) {
+  for (const id of Object.keys(DAM_PRESETS)) {
     const p = DAM_PRESETS[id];
     const diffStr = '◆'.repeat(p.difficulty) + '◇'.repeat(5 - p.difficulty);
     const card = document.createElement('div');

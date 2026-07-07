@@ -371,6 +371,24 @@
       font-size: 1.1em;
       margin-bottom: 20px;
     }
+
+    .promo-choices {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .promo-choices button {
+      font-size: 2em;
+      line-height: 1;
+      width: 60px;
+      height: 60px;
+      cursor: pointer;
+      background: #D4A860;
+      color: #2A1E14;
+      border: none;
+      border-radius: 8px;
+    }
+    .promo-choices button:hover { background: #e8c07a; }
     /* Mobile game nav */
   </style>
 </head>
@@ -417,6 +435,13 @@
     <h2 id="game-over-title">Game Over</h2>
     <p id="game-over-text"></p>
     <button onclick="resetGame()">New Game</button>
+  </div>
+</div>
+
+<div class="game-over-overlay" id="promo-overlay">
+  <div class="game-over-box">
+    <h2>Promote to</h2>
+    <div class="promo-choices" id="promo-choices"></div>
   </div>
 </div>
 
@@ -531,6 +556,8 @@
   var aiTimeout;
   var inCheck;
   var hasCastled; /* {w: bool, b: bool} */
+  var halfmoveClock; /* plies since last pawn move or capture (50-move rule) */
+  var positionHistory; /* position keys seen, for threefold repetition */
 
   /* ===== INITIALIZATION ===== */
 
@@ -573,8 +600,12 @@
     lastMove = null;
     inCheck = false;
     hasCastled = { w: false, b: false };
+    halfmoveClock = 0;
+    positionHistory = [];
+    positionHistory.push(positionKey());
     setMessage('');
     document.getElementById('game-over-overlay').className = 'game-over-overlay';
+    document.getElementById('promo-overlay').className = 'game-over-overlay';
     render();
   }
 
@@ -901,9 +932,52 @@
     return allMoves;
   }
 
+  /* ===== DRAW DETECTION ===== */
+
+  /* Position signature for threefold repetition: placement + side to move +
+     castling rights + en passant target (the fields that define a repeated position). */
+  function positionKey() {
+    var s = '';
+    for (var r = 0; r < 8; r++) {
+      for (var c = 0; c < 8; c++) {
+        var p = board[r][c];
+        s += p ? p.color + p.type : '..';
+      }
+    }
+    s += '|' + turn;
+    s += '|' + (castleRights.wK ? 'K' : '') + (castleRights.wQ ? 'Q' : '') +
+         (castleRights.bK ? 'k' : '') + (castleRights.bQ ? 'q' : '');
+    s += '|' + (enPassantTarget ? enPassantTarget.r + ',' + enPassantTarget.c : '-');
+    return s;
+  }
+
+  /* True when neither side has enough material to force checkmate:
+     K vs K, K+minor vs K, and K+B vs K+B with both bishops on same-colored squares. */
+  function insufficientMaterial(b) {
+    var nonKing = [];
+    for (var r = 0; r < 8; r++) {
+      for (var c = 0; c < 8; c++) {
+        var p = b[r][c];
+        if (p && p.type !== KING) nonKing.push({ p: p, sq: (r + c) % 2 });
+      }
+    }
+    if (nonKing.length === 0) return true;
+    if (nonKing.length === 1) {
+      var t = nonKing[0].p.type;
+      return t === BISHOP || t === KNIGHT;
+    }
+    if (nonKing.length === 2 &&
+        nonKing[0].p.type === BISHOP && nonKing[1].p.type === BISHOP &&
+        nonKing[0].p.color !== nonKing[1].p.color &&
+        nonKing[0].sq === nonKing[1].sq) {
+      return true;
+    }
+    return false;
+  }
+
   /* ===== MAKE MOVE ===== */
 
-  function makeMove(fromR, fromC, toR, toC, special) {
+  function makeMove(fromR, fromC, toR, toC, special, promoType) {
     var piece = board[fromR][fromC];
     var captured = board[toR][toC];
     var color = piece.color;
@@ -924,13 +998,21 @@
       }
     }
 
+    /* 50-move rule clock: resets on a pawn move or any capture, else increments */
+    if (piece.type === PAWN || captured) {
+      halfmoveClock = 0;
+    } else {
+      halfmoveClock++;
+    }
+
     /* Move piece */
     board[toR][toC] = piece;
     board[fromR][fromC] = null;
 
-    /* Handle promotion */
+    /* Handle promotion (defaults to queen; underpromotion via promoType) */
     if (special === 'promote') {
-      board[toR][toC] = { color: color, type: QUEEN };
+      var pt = (promoType === ROOK || promoType === BISHOP || promoType === KNIGHT) ? promoType : QUEEN;
+      board[toR][toC] = { color: color, type: pt };
     }
 
     /* Handle castling - move rook */
@@ -979,9 +1061,16 @@
     selectedSq = null;
     validMoves = [];
 
-    /* Check for check, checkmate, stalemate */
+    /* Check for check, checkmate, stalemate, and the draw conditions */
     inCheck = isInCheck(board, turn);
     var legalMoves = getAllLegalMoves(board, turn, castleRights, enPassantTarget);
+
+    var posKey = positionKey();
+    positionHistory.push(posKey);
+    var repCount = 0;
+    for (var pi = 0; pi < positionHistory.length; pi++) {
+      if (positionHistory[pi] === posKey) repCount++;
+    }
 
     if (legalMoves.length === 0) {
       if (inCheck) {
@@ -995,6 +1084,18 @@
         setMessage('Stalemate!');
         showGameOver('Stalemate!', 'The game is a draw.');
       }
+    } else if (insufficientMaterial(board)) {
+      phase = 'gameover';
+      setMessage('Draw');
+      showGameOver('Draw', 'Insufficient material.');
+    } else if (halfmoveClock >= 100) {
+      phase = 'gameover';
+      setMessage('Draw');
+      showGameOver('Draw', '50-move rule — no capture or pawn move in 50 moves.');
+    } else if (repCount >= 3) {
+      phase = 'gameover';
+      setMessage('Draw');
+      showGameOver('Draw', 'Threefold repetition.');
     } else if (inCheck) {
       setMessage('Check!');
     } else {
@@ -1204,6 +1305,25 @@
     document.getElementById('game-over-overlay').className = 'game-over-overlay show';
   }
 
+  /* Promotion chooser: builds Q/R/B/N buttons in the moving side's color and
+     completes the pending move with the selected piece. */
+  function showPromotionPicker(fromR, fromC, toR, toC, color) {
+    var choices = [QUEEN, ROOK, BISHOP, KNIGHT];
+    var wrap = document.getElementById('promo-choices');
+    wrap.innerHTML = '';
+    choices.forEach(function(t) {
+      var btn = document.createElement('button');
+      btn.textContent = PIECE_UNICODE[color + t];
+      btn.onclick = function() {
+        document.getElementById('promo-overlay').className = 'game-over-overlay';
+        makeMove(fromR, fromC, toR, toC, 'promote', t);
+        render();
+      };
+      wrap.appendChild(btn);
+    });
+    document.getElementById('promo-overlay').className = 'game-over-overlay show';
+  }
+
   /* ===== RENDER ===== */
 
   function createBoard() {
@@ -1367,6 +1487,11 @@
       }
 
       if (moveTarget) {
+        /* Promotion: let the player choose the piece before completing the move */
+        if (moveTarget.special === 'promote') {
+          showPromotionPicker(selectedSq.r, selectedSq.c, r, c, board[selectedSq.r][selectedSq.c].color);
+          return;
+        }
         /* Execute the move */
         makeMove(selectedSq.r, selectedSq.c, r, c, moveTarget.special);
         render();

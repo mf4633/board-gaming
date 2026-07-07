@@ -151,37 +151,38 @@
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  // Daily themed pairs (start, target, theme). Hand-curated to be solvable in 4–6 rungs.
+  // Daily themed pairs (start, target, theme). Every pair is verified solvable
+  // within the 8-row limit (<=7 rungs) by BFS against the dictionary below.
   const PAIRS = [
     ['warm','cold','temperature'],
     ['love','hate','emotion'],
     ['east','west','direction'],
     ['head','tail','two sides of a coin'],
-    ['rich','poor','wealth'],
+    ['gold','coal','wealth'],
     ['hard','soft','texture'],
-    ['fast','slow','speed'],
-    ['work','play','activity'],
+    ['race','walk','speed'],
+    ['work','game','activity'],
     ['life','dead','existence'],
-    ['dawn','dusk','time of day'],
+    ['dawn','noon','time of day'],
     ['rise','fall','direction'],
     ['wild','tame','nature'],
     ['kind','mean','character'],
-    ['open','shut','state'],
-    ['paid','free','cost'],
+    ['lost','gone','state'],
+    ['paid','cash','money'],
     ['heat','cool','temperature'],
-    ['peak','base','elevation'],
-    ['fair','foul','quality'],
-    ['join','part','relationship'],
-    ['wide','thin','dimension'],
+    ['peak','flat','elevation'],
+    ['fair','fine','quality'],
+    ['bond','torn','relationship'],
+    ['wide','tall','dimension'],
     ['weak','bold','strength'],
     ['calm','wild','temperament'],
-    ['fool','sage','wisdom'],
-    ['holy','evil','morality'],
+    ['wise','dull','wisdom'],
+    ['good','vile','morality'],
     ['sick','well','health'],
     ['rest','work','activity'],
     ['fire','rain','element'],
     ['rock','silk','texture'],
-    ['high','flat','elevation'],
+    ['tall','deep','depth'],
     ['ride','walk','movement']
   ];
   // Compact 4-letter dictionary — common English words. Filtered/deduped at runtime.
