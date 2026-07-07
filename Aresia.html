@@ -156,7 +156,7 @@ svg .port-label { font-family: Georgia, serif; font-size: 8px; fill: #C8A888; te
 }
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Board Games","item":"https://boardgaminghub.com/#board"},{"@type":"ListItem","position":3,"name":"Aresia","item":"https://boardgaminghub.com/Aresia.html"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I win Aresia?","acceptedAnswer":{"@type":"Answer","text":"Highest score at game end — points from outposts, terraforming progress, and extracted resources, minus a penalty for ecological damage."}},{"@type":"Question","name":"Should I prioritize terraforming or extraction?","acceptedAnswer":{"@type":"Answer","text":"Both. Pure terraforming runs out of points before mid-game; pure extraction triggers heavy penalties. Most strong runs do 60/40 either way depending on starting region."}},{"@type":"Question","name":"Is Aresia based on Terraforming Mars?","acceptedAnswer":{"@type":"Answer","text":"Independent design with similar themes. Aresia's extraction-vs-terraforming tension and asymmetric starts diverge from the published commercial games."}},{"@type":"Question","name":"What's the player count?","acceptedAnswer":{"@type":"Answer","text":"Designed for 2–4. Solo play uses an automa stand-in for a second player."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I win Aresia?","acceptedAnswer":{"@type":"Answer","text":"Be the first to reach 10 Victory Points. Points come from Habitats (1 VP each), Domes (2 VP each), Hidden VP mission cards, plus 2 VP each for the Longest Pipeline (5 or more segments) and the Largest Fleet (3 or more rovers)."}},{"@type":"Question","name":"How do I collect resources?","acceptedAnswer":{"@type":"Answer","text":"Roll two dice each turn. Every hex whose number token matches the roll produces its resource for all adjacent habitats and domes — a habitat collects 1, a dome collects 2. Trade surplus resources at the bank (4:1) or at launch-pad ports (3:1 or 2:1) to get what you need."}},{"@type":"Question","name":"What happens when someone rolls a 7?","acceptedAnswer":{"@type":"Answer","text":"A 7 triggers a Dust Storm. Anyone holding more than 7 resources discards half, and the active player moves the storm to any hex, steals a resource from an adjacent player, and shuts down that hex's production until the storm moves again."}},{"@type":"Question","name":"What's the player count?","acceptedAnswer":{"@type":"Answer","text":"Aresia supports 2 to 6 players, and any seat can be filled by the built-in AI so you can play solo or watch a full table."}}]}</script>
 </head>
 <body>
 <div id="gameNav">
@@ -232,7 +232,7 @@ svg .port-label { font-family: Georgia, serif; font-size: 8px; fill: #C8A888; te
 <button class="rules-toggle" onclick="document.getElementById('rulesPanel').classList.toggle('show')">Rules</button>
 <div class="rules-panel" id="rulesPanel">
   <h4>Overview</h4>
-  Aresia is a Mars colonization game for 2&ndash;4 players. Build habitats, domes, and pipelines across the Martian surface. Collect resources, trade at the bank, and use mission cards to gain an edge. First to <b>10 Victory Points</b> wins.
+  Aresia is a Mars colonization game for 2&ndash;6 players. Build habitats, domes, and pipelines across the Martian surface. Collect resources, trade at the bank, and use mission cards to gain an edge. First to <b>10 Victory Points</b> wins.
 
   <h4>The Board</h4>
   19 hex tiles produce 5 resource types. Each hex has a number token (2&ndash;12). When the dice match a hex's number, all adjacent habitats/domes collect that resource. The Crater produces nothing.
@@ -1581,16 +1581,16 @@ newGame();
 <script src="/analytics.js"></script>
 <section class="seo-content">
   <h2>About Aresia</h2>
-  <p>Aresia is an original strategy game about colonizing the Red Frontier. Place outposts, harvest resources, and balance terraforming against profitable extraction. Two-to-four player turn-based, with asymmetric starting positions.</p>
+  <p>Aresia is an original Mars-themed strategy game in the Catan tradition. Build habitats, domes, and pipelines across a 19-hex Martian surface, collect resources when the dice favor your network, play mission cards, and race to 10 Victory Points. Turn-based for 2 to 6 players, with a built-in AI for any empty seat.</p>
 
   <h3>How to play</h3>
-  <p>Each turn: collect resources from your outposts, build new structures, attempt one terraforming or extraction action. Terraforming improves long-term yield; extraction gives instant points but degrades the planet. End-game scoring rewards a balance.</p>
+  <p>On your turn, roll two dice — every hex matching the roll produces its resource for adjacent habitats (1 each) and domes (2 each). Spend resources to build habitats (1 VP), upgrade them into domes (2 VP), lay pipelines to extend your network, or buy mission cards. Trade surplus at the bank (4:1) or at launch-pad ports (3:1 or 2:1). Roll a 7 to unleash the Dust Storm, forcing over-stocked players to discard and letting you steal from a neighbor. First colonist to 10 Victory Points wins.</p>
 
   <h3>Frequently asked questions</h3>
-  <details><summary>How do I win Aresia?</summary><p>Highest score at game end — points from outposts, terraforming progress, and extracted resources, minus a penalty for ecological damage.</p></details>
-  <details><summary>Should I prioritize terraforming or extraction?</summary><p>Both. Pure terraforming runs out of points before mid-game; pure extraction triggers heavy penalties. Most strong runs do 60/40 either way depending on starting region.</p></details>
-  <details><summary>Is Aresia based on Terraforming Mars?</summary><p>Independent design with similar themes. Aresia's extraction-vs-terraforming tension and asymmetric starts diverge from the published commercial games.</p></details>
-  <details><summary>What's the player count?</summary><p>Designed for 2–4. Solo play uses an automa stand-in for a second player.</p></details>
+  <details><summary>How do I win Aresia?</summary><p>Be the first to reach 10 Victory Points. Points come from Habitats (1 each), Domes (2 each), Hidden VP mission cards, plus 2 VP each for the Longest Pipeline (5+ segments) and the Largest Fleet (3+ rovers).</p></details>
+  <details><summary>How do I collect resources?</summary><p>Roll two dice each turn; hexes matching the total produce their resource for all adjacent habitats and domes (a dome collects double). Trade what you don't need at the bank or at ports for better ratios.</p></details>
+  <details><summary>What happens when someone rolls a 7?</summary><p>A 7 triggers the Dust Storm. Anyone holding more than 7 resources discards half, and the active player moves the storm to any hex, steals a resource from an adjacent player, and halts that hex's production until the storm moves.</p></details>
+  <details><summary>What's the player count?</summary><p>Aresia supports 2 to 6 players. Any seat can be run by the built-in AI, so you can play solo or fill out a larger table.</p></details>
 
   <h3>Related games</h3>
   <ul>
