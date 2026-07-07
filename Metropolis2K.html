@@ -2888,6 +2888,17 @@ function recomputeNetworks() {
       }
     }
   }
+  // Water shortage: if demand exceeds supply, cut water to a fraction of zone
+  // tiles (mirrors the power brownout above) so exceeding water supply has real effect.
+  if (waterDemand > waterSupply && waterSupply > 0) {
+    const unwateredFrac = 1 - (waterSupply / waterDemand);
+    for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
+      const t = world[x][y];
+      if (t.watered && [K.ZONE_R, K.ZONE_C, K.ZONE_I].includes(t.kind)) {
+        if (tileRand(x, y, game.monthsElapsed) < unwateredFrac) t.watered = false;
+      }
+    }
+  }
 }
 
 function conducts(t) {
@@ -3361,13 +3372,18 @@ function tick() {
   if (game.emissionsRules)   expense += 40;
   if (game.bikeLanes)        expense += 25;
   // Pension debt: 10% income haircut for the period
+  let pensionHaircut = 0;
   if (game.pensionDebt && game.pensionDebt > 0) {
     game.pensionDebt--;
-    // Apply the income haircut promised to citizens
-    game.money -= (incomeR + incomeC + incomeI) * 0.10;
+    // The income haircut promised to citizens, booked as an expense.
+    pensionHaircut = (incomeR + incomeC + incomeI) * 0.10;
   }
   // City Hall: -5% expenses
   if (cityHall) expense *= 0.95;
+  // Add the pension haircut after the City Hall multiplier so its magnitude
+  // matches the old direct money deduction, while still flowing into
+  // expense/yearExpense (yearly net & newspaper).
+  expense += pensionHaircut;
   // Bond interest
   const bondInterest = game.bonds * BOND_AMOUNT * BOND_APR / 12;
   expense += bondInterest;
@@ -3407,6 +3423,30 @@ function tick() {
   game.money += incomeMonth - expense;
   yearIncome  += incomeMonth;
   yearExpense += expense;
+
+  // Tourism — visitors driven by amenities and coastal flavor.
+  // Computed before the calendar rollover so this month's tourism income lands
+  // in the current year's bucket (and yearly newspaper), not next year's.
+  let tour = 0;
+  for (let xx = 0; xx < N; xx++) for (let yy = 0; yy < N; yy++) {
+    const tt = world[xx][yy];
+    if (tt.owner && (tt.owner[0] !== xx || tt.owner[1] !== yy)) continue;
+    if (tt.kind === K.MUSEUM)  tour += 800;
+    if (tt.kind === K.STADIUM) tour += 2000;
+    if (tt.kind === K.SEAPORT) tour += 1500;
+    if (tt.kind === K.PARK)    tour += 100;
+  }
+  // Coastal park bonus
+  for (let xx = 0; xx < N; xx++) for (let yy = 0; yy < N; yy++) {
+    if (world[xx][yy].kind === K.PARK && adjacentWater(xx, yy)) tour += 200;
+  }
+  if (game.ordinances.tourism) tour *= 1.5;
+  if (game.historicalSociety)  tour *= 1.2;
+  game.tourism = Math.round(tour);
+  const tourismIncome = tour * 0.05;
+  game.money += tourismIncome;
+  yearIncome  += tourismIncome;
+  if (tour > 0) demand.c += Math.min(40, tour / 100);
 
   // Calendar
   game.monthsElapsed++;
@@ -3511,28 +3551,6 @@ function tick() {
     // Senior mortality (offsets births roughly)
     dem.seniors = Math.max(0, dem.seniors * 0.93);
   }
-
-  // Tourism — visitors driven by amenities and coastal flavor
-  let tour = 0;
-  for (let xx = 0; xx < N; xx++) for (let yy = 0; yy < N; yy++) {
-    const tt = world[xx][yy];
-    if (tt.owner && (tt.owner[0] !== xx || tt.owner[1] !== yy)) continue;
-    if (tt.kind === K.MUSEUM)  tour += 800;
-    if (tt.kind === K.STADIUM) tour += 2000;
-    if (tt.kind === K.SEAPORT) tour += 1500;
-    if (tt.kind === K.PARK)    tour += 100;
-  }
-  // Coastal park bonus
-  for (let xx = 0; xx < N; xx++) for (let yy = 0; yy < N; yy++) {
-    if (world[xx][yy].kind === K.PARK && adjacentWater(xx, yy)) tour += 200;
-  }
-  if (game.ordinances.tourism) tour *= 1.5;
-  if (game.historicalSociety)  tour *= 1.2;
-  game.tourism = Math.round(tour);
-  const tourismIncome = tour * 0.05;
-  game.money += tourismIncome;
-  yearIncome  += tourismIncome;
-  if (tour > 0) demand.c += Math.min(40, tour / 100);
 
   // History — keep rolling 60-month window
   const hist = game.history || (game.history = { pop: [], money: [], dr: [], dc: [], di: [], pol: [], crime: [], val: [] });
@@ -4371,9 +4389,38 @@ function openBudget() {
   const bondInt = game.bonds * BOND_AMOUNT * BOND_APR / 12;
   const trade = tradeTotals();
 
+  // Tax income estimate — mirror the monthly tax tick formula exactly (same
+  // per-tier subtotals, tax-rate sliders, and City Hall bonus) so the displayed
+  // budget matches reality and responds to the tax sliders.
+  let cityHallB = false;
+  const subB = { rl: 0, rd: 0, cl: 0, cd: 0, id: 0, im: 0, iht: 0 };
+  for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
+    const t = world[x][y];
+    if (t.kind === K.CITY_HALL) cityHallB = true;
+    if (t.level === 0) continue;
+    const m = t.density === DENS_DENSE ? DENSE_MULT : 1;
+    if (t.kind === K.ZONE_R) {
+      const pop = POP_BY_LEVEL[t.level] * m;
+      if (t.density === DENS_DENSE) subB.rd += pop; else subB.rl += pop;
+    } else if (t.kind === K.ZONE_C) {
+      const jobs = JOBS_C_BY_LEVEL[t.level] * m;
+      if (t.density === DENS_DENSE) subB.cd += jobs; else subB.cl += jobs;
+    } else if (t.kind === K.ZONE_I) {
+      const jobs = JOBS_I_BY_LEVEL[t.level] * m;
+      if (t.iTier === I_HITECH) subB.iht += jobs;
+      else if (t.iTier === I_MFG) subB.im += jobs;
+      else subB.id += jobs;
+    }
+  }
+  const taxMultB = cityHallB ? 1.05 : 1.0;
+  const taxIncomeMonthly =
+    (subB.rl * game.tax.rl + subB.rd * game.tax.rd) / 100 * 4 * taxMultB +
+    (subB.cl * game.tax.cl + subB.cd * game.tax.cd) / 100 * 5 * taxMultB +
+    (subB.id * game.tax.id + subB.im * game.tax.im + subB.iht * game.tax.iht) / 100 * 6 * taxMultB;
+
   let html = '<div style="font-size:12px;color:#c9d1d9;line-height:1.7">';
   html += '<div style="display:grid;grid-template-columns:1fr auto;gap:4px 12px">';
-  html += `<div style="color:#7ee787">Tax income (R+C+I)</div><div style="text-align:right;color:#7ee787">~$${Math.round((popR * 0.05 + jobsC * 0.06 + jobsI * 0.07) * 12).toLocaleString()}/yr</div>`;
+  html += `<div style="color:#7ee787">Tax income (R+C+I)</div><div style="text-align:right;color:#7ee787">~$${Math.round(taxIncomeMonthly * 12).toLocaleString()}/yr</div>`;
   html += `<div style="color:${trade.monthlyMoney>=0?'#7ee787':'#ff7b72'}">Regional trade (net)</div><div style="text-align:right;color:${trade.monthlyMoney>=0?'#7ee787':'#ff7b72'}">$${Math.round(trade.monthlyMoney * 12).toLocaleString()}/yr</div>`;
   html += '<div style="grid-column:1/-1;border-top:1px solid #30363d;margin:4px 0"></div>';
   for (const k of Object.keys(items)) {
@@ -4705,6 +4752,7 @@ function buildSavePayload() {
   const slim = world.map(col => col.map(t => ({
     h: t.h, w: t.water ? 1 : 0, k: t.kind, l: t.level, o: t.owner,
     d: t.density, ti: t.iTier, f: t.fill || 0,
+    b: t.burnTime || 0,
     di: (t.district != null ? t.district : -1)
   })));
   return { w: slim, g: game, ver: SAVE_VERSION };
@@ -4733,6 +4781,9 @@ function applyLoadedPayload(p) {
     if (s.d !== undefined) t.density = s.d;
     if (s.ti !== undefined) t.iTier = s.ti;
     if (s.f !== undefined) t.fill = s.f;
+    // Burn timer must survive reload, or a mid-fire load leaves burnTime undefined
+    // → t.burnTime-- = NaN → NaN<=-3 is false → the tile burns forever.
+    t.burnTime = (s.b !== undefined) ? s.b : (t.kind === K.BURNING ? 3 : 0);
     // ver >= 3: district persistence; older saves backfill to -1
     t.district = (s.di !== undefined) ? s.di : -1;
   }

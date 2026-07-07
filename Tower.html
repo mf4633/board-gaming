@@ -819,6 +819,8 @@ var weather = { kind: 'clear', intensity: 0, until: 0, droplets: [], flakes: [] 
 function currentSeason() { return SEASONS[Math.floor(((state.day - 1) % 120) / 30)]; }
 function currentSeasonIdx() { return Math.floor(((state.day - 1) % 120) / 30); }
 function weatherPick() {
+  // Daily challenge can force a fixed weather all week (e.g. "Eye of the Storm").
+  if (state.dailyForcedWeather) return state.dailyForcedWeather;
   var s = currentSeasonIdx();
   var pool;
   if (s === 0) pool = ['clear','clear','cloudy','rain','rain','fog'];         // Spring
@@ -1850,6 +1852,9 @@ function loadFromSlot(n) {
       });
       return;
     }
+    // Clear all prior-run state to defaults first so any field not present in
+    // this snapshot (older saves, transient fields) can't leak across the load.
+    resetGameState();
     applySaveSnapshot(snap);
     hideModal('loadModal');
     startGameFromLoaded();
@@ -1916,12 +1921,21 @@ function captureSaveSnapshot() {
     insurance: state.insurance, market: state.market, marketUntil: state.marketUntil,
     events: state.events.filter(function(e) { return e.kind === 'fire'; }),
     loan: state.loan,
+    bonds: state.bonds || [],
+    lastBondDay: state.lastBondDay || 0,
     demand: state.demand,
     cityPopulation: state.cityPopulation,
     negDays: state.negDays,
     towerName: state.towerName,
     mail: state.mail,
     nextMailId: state.nextMailId,
+    // Transient run state — persisted so a mid-run save restores faithfully
+    strikeUntil: state.strikeUntil || 0,
+    promoUnit: state.promoUnit || null,
+    promoUntil: state.promoUntil || 0,
+    tenantRequests: state.tenantRequests || [],
+    stats: state.stats || null,
+    rivalTower: state.rivalTower || { floors: 0 },
     dailyChallenge: state.dailyChallenge || null,
     scenarioId: state.scenarioId || null,
     thumbnail: captureThumbnail(),
@@ -1951,12 +1965,24 @@ function applySaveSnapshot(snap) {
   state.marketUntil = snap.marketUntil || 0;
   state.events = snap.events || [];
   state.loan = snap.loan || { principal: 0, rate: 0.002 };
+  // Bonds: obligation must survive reload or checkBondMaturity early-returns on
+  // undefined bonds and the principal is never repaid.
+  state.bonds = snap.bonds || [];
+  state.lastBondDay = snap.lastBondDay || 0;
   state.demand = snap.demand || { condo: 8, office: 15, restaurant: 6 };
   state.cityPopulation = snap.cityPopulation || 800;
   state.negDays = snap.negDays || 0;
   state.towerName = snap.towerName || null;
   state.mail = snap.mail || [];
   state.nextMailId = snap.nextMailId || 1;
+  // Transient run state — restore if present, otherwise clear so nothing leaks
+  // from a prior game (resetGameState() also runs before this in loadFromSlot).
+  state.strikeUntil = snap.strikeUntil || 0;
+  state.promoUnit = snap.promoUnit || null;
+  state.promoUntil = snap.promoUntil || 0;
+  state.tenantRequests = snap.tenantRequests || [];
+  state.stats = snap.stats || { totalRevenue: 0, totalUpkeep: 0, peakPop: 0, peakCash: state.cash, unitsBuilt: 0, unitsBulldozed: 0, firesHandled: 0, daysPlayed: 0, revByType: {}, history: [] };
+  state.rivalTower = snap.rivalTower || { floors: 0 };
   // v2: daily-challenge metadata persisted so a saved daily run resumes its
   // seeded RNG stream.
   state.dailyChallenge = snap.dailyChallenge || null;
@@ -2212,6 +2238,8 @@ function resetGameState() {
   state.negDays = 0;
   state._marketDirty = true;
   state.dailyChallenge = null;
+  state.dailyForcedWeather = null;
+  state.dailyOfficeBoost = 1.0;
   _gameRng = null;
   costMultiplier.elevator = 1.0;
   // Keep achievements (persistent across runs)
@@ -4487,7 +4515,7 @@ function endOfDay() {
       var occ = u.tenants / def.capacity;
       var sat = unitSatisfaction(u) / 100;
       var rentClassMult = 1.0;
-      if (u.type === 'office') rentClassMult = mMult.office;
+      if (u.type === 'office') rentClassMult = mMult.office * (state.dailyOfficeBoost || 1.0);
       if (u.type === 'condo' || u.type === 'penthouse') rentClassMult = 0.5 + 0.5 * mMult.condo;
       var rentInc = Math.round(def.rent * occ * (0.4 + 0.6 * sat) * q * tm * rentClassMult);
       income += rentInc;
@@ -4510,6 +4538,9 @@ function endOfDay() {
     if (def.upkeep) expenses += u.damaged ? Math.round(def.upkeep * 0.3) : def.upkeep;
   }
   state.prestige = prestige;
+  // Recompute population from actual occupancy now that spawns/churn/sales are resolved,
+  // so pop-based star tiers, quests, and goals read today's real occupancy.
+  updatePopulation();
   // Per-unit revenue history — push today's tally, trim to last 30 days
   for (var uid3 in state.units) {
     var ru = state.units[uid3];
@@ -4538,9 +4569,9 @@ function endOfDay() {
   var net = income - expenses;
   state.cash += net;
   state.yesterdayIncome = net;
-  // Bankruptcy countdown: 7 consecutive days negative cash + loan maxed = game over
-  var maxLoan = 500000 * state.stars;
-  if (state.cash < 0 && state.loan.principal >= maxLoan * 0.95) {
+  // Bankruptcy countdown: 7 consecutive days of negative cash = game over,
+  // regardless of loan state (a player who never borrows must not run cash negative forever).
+  if (state.cash < 0) {
     state.negDays = (state.negDays || 0) + 1;
     if (state.negDays >= 4) {
       logEvent('WARNING: Insolvency in ' + (7 - state.negDays) + ' days — raise cash or repay debt', 'bad');

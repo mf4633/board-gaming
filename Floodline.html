@@ -1215,6 +1215,17 @@ function startScenario(sc) {
 
 function buildObjectives() {
   const sc = state.scenario;
+  // Record the original count of each protected building type. getInfraDamage()
+  // uses this as a fixed denominator so evacuating (or otherwise losing) all
+  // protected cells can't shrink the denominator to zero and auto-satisfy a
+  // "protect the hospital/school" objective.
+  state.infraOrigCount = {};
+  for (let i = 0; i < state.type.length; i++) {
+    const t = state.type[i];
+    if (t === T.HOSPITAL || t === T.SCHOOL) {
+      state.infraOrigCount[t] = (state.infraOrigCount[t] || 0) + 1;
+    }
+  }
   state.objectives = [
     { id: 'damage', label: `Keep town damage below ${sc.winDamage}%`, check: () => getDamagePct() < sc.winDamage },
     { id: 'survive', label: `Survive ${formatTime(sc._effectiveDuration ?? sc.duration)}`, check: () => state.time >= (sc._effectiveDuration ?? sc.duration) },
@@ -1714,11 +1725,20 @@ function getDamagePct() {
 }
 
 function getInfraDamage(tileType) {
-  let tot = 0, dmg = 0;
+  let cur = 0, dmg = 0;
   for (let i = 0; i < state.type.length; i++) {
-    if (state.type[i] === tileType) { tot++; dmg += state.damage[i]; }
+    if (state.type[i] === tileType) { cur++; dmg += state.damage[i]; }
   }
-  return tot > 0 ? (100 * dmg / tot) : 0;
+  const orig = state.infraOrigCount ? state.infraOrigCount[tileType] : undefined;
+  if (orig && orig > 0) {
+    // Cells that are no longer of this type were evacuated/abandoned. Count each
+    // as fully damaged (against the ORIGINAL count) so evacuation reads as
+    // "not protected" rather than auto-passing via an empty denominator. This
+    // distinguishes "fully evacuated" from "still standing and undamaged".
+    const lost = Math.max(0, orig - cur);
+    return 100 * (dmg + lost) / orig;
+  }
+  return cur > 0 ? (100 * dmg / cur) : 0;
 }
 
 // ---------- Money formatting ----------
@@ -4424,19 +4444,40 @@ function runTutorial() {
 
 // ---------- Main loop ----------
 let lastT = performance.now();
+// Fixed physics timestep (game-seconds). The flux solver, river inflow, storm
+// surge, pumps and siphons move a fixed amount of water per step() call and are
+// NOT dt-scaled, so their per-game-second throughput depends purely on how many
+// times step() runs per game-second. Running the physics at a FIXED number of
+// sub-steps per game-second (1/PHYS_DT) decouples it from frame rate and speed,
+// so total water routed / injected / pumped per game-second is identical at
+// every speed — consistent with the dt-scaled rain/infiltration/stress terms.
+// 1/60 preserves the throughput of the original 60fps / speed-1 case.
+const PHYS_DT = 1 / 60;
+const MAX_SUBSTEPS = 120; // safety cap so a slow frame can't spiral
+
 function loop(t) {
-  const dt = Math.min(0.1, (t - lastT) / 1000) * state.speed;
+  const frameDelta = Math.min(0.1, (t - lastT) / 1000) * state.speed;
   lastT = t;
 
   if (!state.gameOver && state.storming) {
-    state.time += dt;
-    step(dt);
+    state._physAccum = (state._physAccum || 0) + frameDelta;
+    let subSteps = 0;
+    const duration = state.scenario._effectiveDuration ?? state.scenario.duration;
+    while (state._physAccum >= PHYS_DT && subSteps < MAX_SUBSTEPS) {
+      state.time += PHYS_DT;
+      step(PHYS_DT);
+      state._physAccum -= PHYS_DT;
+      subSteps++;
+      if (state.time >= duration) { endGame(); break; }
+    }
     runTutorial();
-    if (state.time >= (state.scenario._effectiveDuration ?? state.scenario.duration)) endGame();
   } else if (!state.storming) {
+    // Not storming: drop any accumulated physics time so the sim doesn't burst
+    // forward on the first storm frame.
+    state._physAccum = 0;
     // Prep phase: count down to auto-start, unless countdown is already running
     if (state.scenario && !state.gameOver && state.countdown === 0 && state.prepTimer > 0) {
-      state.prepTimer = Math.max(0, state.prepTimer - dt);
+      state.prepTimer = Math.max(0, state.prepTimer - frameDelta);
       if (state.prepTimer === 0) {
         document.getElementById('startBtn').disabled = true;
         startCountdown();
