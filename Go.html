@@ -335,6 +335,22 @@
       box-shadow: 0 0 0 2px #90B868, 2px 2px 4px rgba(0,0,0,0.5);
     }
 
+    /* Dead stone marking (scoring mode) */
+    .stone.dead { opacity: 0.35; }
+
+    .stone.dead::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 42%;
+      height: 42%;
+      transform: translate(-50%, -50%);
+      background: #C0392B;
+      border-radius: 50%;
+      box-shadow: 0 0 2px rgba(0,0,0,0.5);
+    }
+
     .hover-stone {
       position: absolute;
       border-radius: 50%;
@@ -426,6 +442,11 @@
     <button onclick="resetGame()">Reset Game</button>
   </div>
 
+  <div class="buttons" id="scoring-buttons" style="display: none;">
+    <button onclick="confirmScore()">Confirm / Final Score</button>
+    <button onclick="resumePlay()">Resume Play</button>
+  </div>
+
   <div class="container">
     <div class="side-panel" id="panel-black">
       <h3>Black (P1)</h3>
@@ -450,7 +471,7 @@
   </div>
 
   <div class="score-display" id="score-display">
-    <h3>Game Over &mdash; Final Score</h3>
+    <h3 id="score-heading">Game Over &mdash; Final Score</h3>
     <div class="score-line" id="score-black"></div>
     <div class="score-line" id="score-white"></div>
     <div class="score-winner" id="score-winner"></div>
@@ -504,6 +525,9 @@
   var aiMode = true;
   var aiTimeout = null;
   var moveHistory = [];
+  var scoringMode = false;   // true during the mark-dead phase after two passes
+  var deadStones = {};       // keyed 'r,c' -> true for stones marked dead
+  var preScoreState = null;  // snapshot for "Resume Play"
 
   var boardEl = document.getElementById('board');
   var boardWrapper = document.getElementById('board-wrapper');
@@ -706,7 +730,10 @@
     }
 
     if (consecutivePasses >= 2) {
-      endGame();
+      // After two passes, the turn would pass to the opponent; keep that so
+      // "Resume Play" hands the move to the correct player.
+      currentPlayer = player === BLACK ? WHITE : BLACK;
+      enterScoringMode();
       return;
     }
 
@@ -718,8 +745,8 @@
   // =============================================
   //  Scoring (Chinese / Area Scoring)
   // =============================================
-  function calculateScore() {
-    var territory = createEmptyBoard(); // 0=neutral, 1=black, 2=white
+  function calculateScore(b) {
+    b = b || board;
     var visited = {};
 
     // Count stones on board
@@ -727,8 +754,8 @@
     var whiteStones = 0;
     for (var r = 0; r < boardSize; r++) {
       for (var c = 0; c < boardSize; c++) {
-        if (board[r][c] === BLACK) blackStones++;
-        else if (board[r][c] === WHITE) whiteStones++;
+        if (b[r][c] === BLACK) blackStones++;
+        else if (b[r][c] === WHITE) whiteStones++;
       }
     }
 
@@ -739,7 +766,7 @@
     for (var r = 0; r < boardSize; r++) {
       for (var c = 0; c < boardSize; c++) {
         var key = r + ',' + c;
-        if (board[r][c] !== EMPTY || visited[key]) continue;
+        if (b[r][c] !== EMPTY || visited[key]) continue;
 
         // BFS to find connected empty region
         var region = [];
@@ -756,8 +783,8 @@
           for (var i = 0; i < adj.length; i++) {
             var nr = adj[i][0], nc = adj[i][1];
             var nkey = nr + ',' + nc;
-            if (board[nr][nc] === BLACK) { touchesBlack = true; continue; }
-            if (board[nr][nc] === WHITE) { touchesWhite = true; continue; }
+            if (b[nr][nc] === BLACK) { touchesBlack = true; continue; }
+            if (b[nr][nc] === WHITE) { touchesWhite = true; continue; }
             if (visited[nkey]) continue;
             visited[nkey] = true;
             stack.push([nr, nc]);
@@ -783,28 +810,138 @@
     };
   }
 
-  function endGame() {
-    gameOver = true;
-    var score = calculateScore();
+  // Returns a board copy with all dead-marked stones removed, so that under
+  // Chinese area scoring they become empty points surrounded by the opponent.
+  function scoringBoard() {
+    var b = cloneBoard(board);
+    for (var key in deadStones) {
+      if (deadStones[key]) {
+        var parts = key.split(',');
+        b[parseInt(parts[0], 10)][parseInt(parts[1], 10)] = EMPTY;
+      }
+    }
+    return b;
+  }
 
+  function fillScoreLines(score) {
     document.getElementById('score-black').textContent =
       'Black: ' + score.blackStones + ' stones + ' + score.blackTerritory + ' territory = ' + score.blackTotal;
     document.getElementById('score-white').textContent =
       'White: ' + score.whiteStones + ' stones + ' + score.whiteTerritory + ' territory + ' + KOMI + ' komi = ' + score.whiteTotal;
+  }
 
-    var winner;
+  function winnerText(score, isFinal) {
+    var verb = isFinal ? 'wins' : 'leads';
+    var bang = isFinal ? '!' : '';
     if (score.blackTotal > score.whiteTotal) {
-      winner = 'Black wins by ' + (score.blackTotal - score.whiteTotal) + ' points!';
+      return 'Black ' + verb + ' by ' + (score.blackTotal - score.whiteTotal) + ' points' + bang;
     } else if (score.whiteTotal > score.blackTotal) {
-      winner = 'White wins by ' + (score.whiteTotal - score.blackTotal) + ' points!';
-    } else {
-      winner = 'The game is a tie!';
+      return 'White ' + verb + ' by ' + (score.whiteTotal - score.blackTotal) + ' points' + bang;
     }
-    document.getElementById('score-winner').textContent = winner;
+    return isFinal ? 'The game is a tie!' : 'Even game';
+  }
+
+  // =============================================
+  //  Dead-Stone Marking (Scoring Mode)
+  // =============================================
+  function enterScoringMode() {
+    if (aiTimeout) { clearTimeout(aiTimeout); aiTimeout = null; }
+    scoringMode = true;
+    deadStones = {};
+    // Snapshot the position so "Resume Play" can restore it exactly.
+    preScoreState = {
+      board: cloneBoard(board),
+      currentPlayer: currentPlayer,
+      lastMove: lastMove ? { r: lastMove.r, c: lastMove.c } : null,
+      prisonersBlack: prisoners[BLACK],
+      prisonersWhite: prisoners[WHITE]
+    };
+
+    document.getElementById('scoring-buttons').style.display = '';
+    document.getElementById('score-heading').innerHTML = 'Scoring &mdash; Mark Dead Stones';
     document.getElementById('score-display').style.display = 'block';
+    document.getElementById('pass-btn').disabled = true;
+
+    setMessage('Both players passed. Click groups to mark them dead, then confirm.');
+    updateScoreDisplay();
+    render();
+  }
+
+  function toggleDeadGroup(r, c) {
+    if (board[r][c] === EMPTY) return;
+    var group = getGroup(board, r, c);
+    var makeDead = !deadStones[r + ',' + c];
+    for (var i = 0; i < group.stones.length; i++) {
+      var key = group.stones[i][0] + ',' + group.stones[i][1];
+      if (makeDead) deadStones[key] = true;
+      else delete deadStones[key];
+    }
+    updateScoreDisplay();
+    render();
+  }
+
+  function updateScoreDisplay() {
+    var score = calculateScore(scoringBoard());
+    fillScoreLines(score);
+    document.getElementById('score-winner').textContent = winnerText(score, false);
+  }
+
+  function confirmScore() {
+    if (!scoringMode) return;
+    // Permanently remove dead stones and credit them as prisoners (cosmetic;
+    // area scoring already reflects them via scoringBoard()).
+    for (var key in deadStones) {
+      if (!deadStones[key]) continue;
+      var parts = key.split(',');
+      var dr = parseInt(parts[0], 10), dc = parseInt(parts[1], 10);
+      var color = board[dr][dc];
+      if (color === BLACK) prisoners[WHITE]++;
+      else if (color === WHITE) prisoners[BLACK]++;
+      board[dr][dc] = EMPTY;
+    }
+    deadStones = {};
+
+    scoringMode = false;
+    gameOver = true;
+    preScoreState = null;
+
+    var score = calculateScore(board);
+    fillScoreLines(score);
+    var winner = winnerText(score, true);
+    document.getElementById('score-winner').textContent = winner;
+    document.getElementById('score-heading').innerHTML = 'Game Over &mdash; Final Score';
+    document.getElementById('score-display').style.display = 'block';
+    document.getElementById('scoring-buttons').style.display = 'none';
+    document.getElementById('pass-btn').disabled = true;
 
     setMessage('Game over. ' + winner);
-    document.getElementById('pass-btn').disabled = true;
+    render();
+  }
+
+  function resumePlay() {
+    if (!scoringMode || !preScoreState) return;
+    board = cloneBoard(preScoreState.board);
+    currentPlayer = preScoreState.currentPlayer;
+    lastMove = null;
+    prisoners[BLACK] = preScoreState.prisonersBlack;
+    prisoners[WHITE] = preScoreState.prisonersWhite;
+
+    scoringMode = false;
+    gameOver = false;
+    deadStones = {};
+    preScoreState = null;
+    prevBoardState = null;   // ko is reset after passes
+    consecutivePasses = 0;   // require two fresh passes to end again
+
+    document.getElementById('pass-black').textContent = '';
+    document.getElementById('pass-white').textContent = '';
+    document.getElementById('score-display').style.display = 'none';
+    document.getElementById('scoring-buttons').style.display = 'none';
+    document.getElementById('pass-btn').disabled = false;
+    document.getElementById('score-heading').innerHTML = 'Game Over &mdash; Final Score';
+
+    setMessage('Play resumed. Settle life & death disputes on the board.');
+    render();
   }
 
   // =============================================
@@ -885,7 +1022,7 @@
       var hover = cell.querySelector('.hover-stone');
       if (hover) {
         hover.classList.remove('black', 'white');
-        if (board[r][c] === EMPTY && !gameOver) {
+        if (board[r][c] === EMPTY && !gameOver && !scoringMode) {
           hover.classList.add(currentPlayer === BLACK ? 'black' : 'white');
         }
       }
@@ -901,6 +1038,11 @@
         // Last move indicator
         if (lastMove && lastMove.r === r && lastMove.c === c) {
           stone.classList.add('last-move');
+        }
+
+        // Dead-stone marking (scoring mode)
+        if (scoringMode && deadStones[r + ',' + c]) {
+          stone.classList.add('dead');
         }
 
         cell.appendChild(stone);
@@ -921,6 +1063,11 @@
   }
 
   function updateTurnIndicator() {
+    if (scoringMode) {
+      document.getElementById('turn-indicator').textContent = 'Scoring — Mark Dead Stones';
+      document.getElementById('pass-btn').disabled = true;
+      return;
+    }
     if (gameOver) {
       document.getElementById('turn-indicator').textContent = 'Game Over';
       document.getElementById('pass-btn').disabled = true;
@@ -936,6 +1083,10 @@
   //  User Interaction
   // =============================================
   function handleCellClick(r, c) {
+    if (scoringMode) {
+      toggleDeadGroup(r, c);
+      return;
+    }
     if (gameOver) return;
     if (isAiTurn()) return;
 
@@ -984,7 +1135,7 @@
   //  AI (Heuristic)
   // =============================================
   function isAiTurn() {
-    return aiMode && currentPlayer === WHITE && !gameOver;
+    return aiMode && currentPlayer === WHITE && !gameOver && !scoringMode;
   }
 
   function scheduleAi() {
@@ -1215,10 +1366,15 @@
     gameOver = false;
     lastMove = null;
     moveHistory = [];
+    scoringMode = false;
+    deadStones = {};
+    preScoreState = null;
 
     document.getElementById('pass-black').textContent = '';
     document.getElementById('pass-white').textContent = '';
     document.getElementById('score-display').style.display = 'none';
+    document.getElementById('score-heading').innerHTML = 'Game Over &mdash; Final Score';
+    document.getElementById('scoring-buttons').style.display = 'none';
     document.getElementById('pass-btn').disabled = false;
 
     setMessage('');
