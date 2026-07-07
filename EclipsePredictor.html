@@ -239,11 +239,12 @@
     </div>
 
     <div class="section">
-      <div class="sec-title">4 &middot; BESSELIAN ELEMENTS</div>
-      <div class="sec-formula">$$ \vec{G} = \vec{r}_\text{☾} - \vec{r}_\odot,\quad \hat{a} = \tfrac{\vec G}{|\vec G|}\;\Rightarrow\; (\alpha, d) $$
-        $$ x = \tfrac{-M_x \sin\alpha + M_y\cos\alpha}{R_\oplus},\quad y = \tfrac{-M_x\sin d\cos\alpha - M_y\sin d\sin\alpha + M_z\cos d}{R_\oplus} $$
-        $$ \mu = \theta_0 - \alpha,\quad \tan f_1 = \tfrac{R_\odot + k R_\oplus}{|\vec G|},\quad \tan f_2 = \tfrac{R_\odot - k R_\oplus}{|\vec G|} $$
-        $$ \ell_1 = z\tan f_1 + \tfrac{k}{\cos f_1},\quad \ell_2 = z\tan f_2 - \tfrac{k}{\cos f_2} $$</div>
+      <div class="sec-title">4 &middot; SHADOW-CONE GEOMETRY (MoonShadow &middot; GeoidIntersect)</div>
+      <div class="sec-formula">$$ \vec{G} = \vec{r}_\text{☾} - \vec{r}_\odot,\quad u = \tfrac{\vec G \cdot (-\vec r_\text{☾})}{|\vec G|^2} $$
+        $$ k = R_\odot - (1+u)\,(R_\odot - R_\text{☾}),\qquad p = -R_\odot + (1+u)\,(R_\odot + R_\text{☾}) $$
+        $$ \gamma = \tfrac{r_\perp}{R_\oplus}\ \ (\text{axis–geocentre distance}),\qquad \gamma < 1 \Rightarrow \text{central line exists} $$
+        $$ k > 0\ \text{at surface} \Rightarrow \text{total},\qquad k < 0 \Rightarrow \text{annular} $$
+        <span style="opacity:.7;font-size:.85em">(This engine uses astronomy-engine's MoonShadow/GeoidIntersect — not the Besselian fundamental-plane elements.)</span></div>
       <div class="sec-vals" id="mathBessel">&mdash;</div>
     </div>
 
@@ -316,6 +317,8 @@ const KM_PER_AU = 149597870.7;
 const EARTH_FLATTENING = 0.996647180302104;
 const EARTH_FLATTENING_SQ = EARTH_FLATTENING * EARTH_FLATTENING;
 const MOON_MEAN_RADIUS_KM = 1737.4;
+const MOON_UMBRA_RADIUS_KM = 1736;  // Moon polar radius astronomy-engine uses for the
+                                    // total-vs-annular test at the surface intersection
 const UMBRA_TOTAL_KM = 0.014;   // astronomy-engine umbra threshold (Espenak parity)
 
 //==============================================================
@@ -330,30 +333,20 @@ function jdToDate(jd) {
   return new Date((jd - 2440587.5) * 86400000);
 }
 
-// ΔT (TT - UT) in seconds, Espenak/Meeus polynomial for 2005..2050
+// ΔT (TT - UT) in seconds. Use astronomy-engine's own TT↔UT relation (valid
+// across its full supported range) rather than a limited-range polynomial that
+// flat-lined at 67 s outside 1986-2050.
 function deltaT(year) {
-  if (year >= 2005 && year < 2050) {
-    const t = year - 2000;
-    return 62.92 + 0.32217 * t + 0.005589 * t * t;
-  }
-  if (year >= 1986 && year < 2005) {
-    const t = year - 2000;
-    return 63.86 + 0.3345 * t - 0.060374 * t * t
-         + 0.0017275 * t * t * t + 0.000651814 * t * t * t * t
-         + 0.00002373599 * t * t * t * t * t;
-  }
-  // crude fallback
-  return 67;
+  const t = Astronomy.MakeTime(new Date(Date.UTC(year, 6, 1)));
+  return (t.tt - t.ut) * 86400;
 }
 
-// Apparent Greenwich Sidereal Time (degrees) at JD (UT)
+// Apparent Greenwich Sidereal Time (degrees) at JD (UT). Uses astronomy-engine's
+// SiderealTime (apparent GAST, hours) so it is consistent with the
+// geoidIntersect pipeline that already relies on it.
 function gst(jd_ut) {
-  const T = (jd_ut - 2451545.0) / 36525;
-  let theta = 280.46061837
-            + 360.98564736629 * (jd_ut - 2451545.0)
-            + 0.000387933 * T * T
-            - T * T * T / 38710000;
-  return ((theta % 360) + 360) % 360;
+  const t = Astronomy.MakeTime(jdToDate(jd_ut));
+  return ((Astronomy.SiderealTime(t) * 15) % 360 + 360) % 360;
 }
 
 //==============================================================
@@ -441,30 +434,28 @@ function geoidIntersect(shadow) {
   let lon = (RAD * Math.atan2(py, px) - 15 * gast) % 360;
   if (lon <= -180) lon += 360;
   if (lon > 180) lon -= 360;
-  const kind = shadow.k > UMBRA_TOTAL_KM ? 'T' : 'A';
-  return { lat, lon, k: shadow.k, p: shadow.p, r: shadow.r, kind };
+  // Total vs annular must be judged from the shadow-cone radius at the actual
+  // SURFACE intersection point, not at closest approach to Earth's centre.
+  // astronomy-engine re-runs CalcShadow (r=1736) there; for a point on the
+  // axis the projection parameter equals this quadratic's `u`, so
+  //   k_surface = R_SUN − (1+u)·(R_SUN − 1736).
+  const kSurf = R_SUN - (1 + u) * (R_SUN - MOON_UMBRA_RADIUS_KM);
+  const kind = kSurf > UMBRA_TOTAL_KM ? 'T' : 'A';
+  return { lat, lon, k: shadow.k, kSurf, p: shadow.p, r: shadow.r, kind };
 }
 
 // Legacy alias for math panel / gamma readout
+// Shadow-cone geometry for the math panel.
+// NOTE: these are NOT true Besselian elements. This whole positional pipeline
+// uses astronomy-engine's MoonShadow + GeoidIntersect (not the Besselian
+// fundamental-plane formulation), so we expose only the honest quantities the
+// panel actually shows: the shadow-axis distance γ, the shadow-cone radii
+// k (umbra, +total/-annular) and p (penumbra), and the geoid intersection.
 function besselElements(jd_ut) {
   const sh = moonShadow(jd_ut);
   const hit = geoidIntersect(sh);
-  const gamma = sh.r / R_EARTH;
-  return {
-    jd: jd_ut,
-    x: hit ? gamma * Math.cos(hit.lon * DEG) : 0,
-    y: hit ? gamma * Math.sin(hit.lon * DEG) : 0,
-    z: 0,
-    d: 0,
-    mu: 0,
-    l1: sh.p / R_EARTH,
-    l2: sh.k > UMBRA_TOTAL_KM ? -sh.k / R_EARTH : sh.k / R_EARTH,
-    tanF1: 0,
-    tanF2: 0,
-    shadow: sh,
-    hit,
-    gamma,
-  };
+  const gamma = sh.r / R_EARTH; // shadow-axis distance from geocentre, in Earth radii
+  return { jd: jd_ut, gamma, shadow: sh, hit };
 }
 
 function shadowToGeo(b) {
@@ -474,7 +465,7 @@ function shadowToGeo(b) {
   return {
     lat: hit.lat,
     lon: hit.lon,
-    isCentral: hit.k > UMBRA_TOTAL_KM || hit.kind === 'A',
+    isCentral: hit.kind === 'T' || hit.kind === 'A',
     k: hit.k,
     p: hit.p,
   };
@@ -505,8 +496,8 @@ function computeCentralPath(jd0, spanH = 3, stepSec = 30) {
   for (let jd = start; jd <= end; jd += step) {
     const sh = moonShadow(jd);
     const hit = geoidIntersect(sh);
-    if (hit && (hit.k > UMBRA_TOTAL_KM || hit.kind === 'A')) {
-      points.push({ jd, lat: hit.lat, lon: hit.lon, k: hit.k, p: hit.p, l2: hit.k });
+    if (hit && (hit.kind === 'T' || hit.kind === 'A')) {
+      points.push({ jd, lat: hit.lat, lon: hit.lon, k: hit.k, kSurf: hit.kSurf, p: hit.p, l2: hit.k });
       if (!endpoints.first) endpoints.first = points.length - 1;
       endpoints.last = points.length - 1;
       if (sh.r < endpoints.minR) {
@@ -518,20 +509,51 @@ function computeCentralPath(jd0, spanH = 3, stepSec = 30) {
   return { points, ...endpoints };
 }
 
-// Approximate penumbra outline: circle on the ground around the centerline point.
+// Surface point directly beneath the shadow axis (closest approach), valid
+// whether or not the axis actually strikes the geoid. Geocentric approximation.
+function axisGroundPoint(sh) {
+  const rot = Astronomy.Rotation_EQJ_EQD(sh.t);
+  const off = Astronomy.RotateVector(rot, {
+    x: sh.u * sh.dir.x - sh.target.x,
+    y: sh.u * sh.dir.y - sh.target.y,
+    z: sh.u * sh.dir.z - sh.target.z,
+  });
+  const mag = Math.hypot(off.x, off.y, off.z) || 1;
+  const lat = RAD * Math.asin(off.z / mag);
+  const gast = Astronomy.SiderealTime(sh.t);
+  let lon = (RAD * Math.atan2(off.y, off.x) - 15 * gast) % 360;
+  if (lon <= -180) lon += 360;
+  if (lon > 180) lon -= 360;
+  return { lat, lon };
+}
+
+// Approximate penumbra outline: a circle (of the penumbra ground radius) around
+// the sub-axis point. Rendered even for purely PARTIAL eclipses (axis misses
+// the geoid) and computed with a proper spherical offset so it stays sane at
+// the poles (no division by cos(lat)).
 function penumbraOutline(jd, nPts = 96) {
   const sh = moonShadow(jd);
-  const center = geoidIntersect(sh);
-  if (!center || !center.p) return null;
-  const radiusKm = center.p;
+  const radiusKm = sh.p;
+  if (!(radiusKm > 0)) return null;
+  // Centre on the geoid hit for central eclipses; otherwise the surface point
+  // nearest the axis so partial eclipses still get a penumbra zone.
+  const central = geoidIntersect(sh);
+  const center = central ? { lat: central.lat, lon: central.lon } : axisGroundPoint(sh);
+  const latR = center.lat * DEG, lonR = center.lon * DEG;
+  const delta = radiusKm / R_EARTH;                 // angular radius (rad)
+  const sinLat = Math.sin(latR), cosLat = Math.cos(latR);
+  const sinD = Math.sin(delta), cosD = Math.cos(delta);
   const out = [];
   for (let i = 0; i <= nPts; i++) {
     const brg = (i / nPts) * 2 * Math.PI;
-    const dLat = (radiusKm / R_EARTH) * RAD * Math.cos(brg);
-    const dLon = (radiusKm / (R_EARTH * Math.cos(center.lat * DEG))) * RAD * Math.sin(brg);
-    out.push({ lat: center.lat + dLat, lon: center.lon + dLon });
+    const lat2 = Math.asin(sinLat * cosD + cosLat * sinD * Math.cos(brg));
+    const lon2 = lonR + Math.atan2(Math.sin(brg) * sinD * cosLat, cosD - sinLat * Math.sin(lat2));
+    let lonDeg = lon2 * RAD;
+    if (lonDeg > 180) lonDeg -= 360;
+    if (lonDeg < -180) lonDeg += 360;
+    out.push({ lat: lat2 * RAD, lon: lonDeg });
   }
-  return out.length ? out : null;
+  return out;
 }
 
 function localEclipseAt(lat, lon, jd0) {
@@ -1473,13 +1495,29 @@ function loadEclipse(i) {
   document.getElementById('nextBtn1').disabled = (i === ECLIPSES.length - 1);
 }
 
-function computeMagnitude(jd) {
-  // Magnitude at greatest eclipse = ratio of Moon's apparent angular diameter
-  // to Sun's, as seen from Earth's center.
-  const sun  = sunPos(jd);
-  const moon = moonPos(jd);
-  const thSun = R_SUN / sun.dist;
-  const thMoon = K_MOON * R_EARTH / moon.dist;
+function computeMagnitude(jd, lat, lon) {
+  // Magnitude = ratio of the Moon's apparent angular diameter to the Sun's.
+  // Use TOPOCENTRIC distances (observer at the greatest-eclipse ground point):
+  // geocentric underestimates magnitude by ~1.5-1.7% because a surface observer
+  // sits ~1 Earth radius closer to the Moon. Moon radius kept at 1737.4 km
+  // (MOON_MEAN_RADIUS_KM) for consistency with the rest of the pipeline.
+  const t = Astronomy.MakeTime(jdToDate(jd));
+  if (lat === undefined || lon === undefined) {
+    const hit = geoidIntersect(moonShadow(jd)); // central eclipse ground point
+    if (hit) { lat = hit.lat; lon = hit.lon; }
+  }
+  let sunDist, moonDist;
+  if (lat !== undefined && lon !== undefined) {
+    const obs = new Astronomy.Observer(lat, lon, 0);
+    sunDist  = Astronomy.Equator(Astronomy.Body.Sun,  t, obs, true, true).dist * KM_PER_AU;
+    moonDist = Astronomy.Equator(Astronomy.Body.Moon, t, obs, true, true).dist * KM_PER_AU;
+  } else {
+    // Partial eclipse (axis misses Earth): no ground point → geocentric.
+    sunDist  = sunPos(jd).dist;
+    moonDist = moonPos(jd).dist;
+  }
+  const thSun  = R_SUN / sunDist;
+  const thMoon = MOON_MEAN_RADIUS_KM / moonDist;
   return thMoon / thSun;
 }
 
@@ -1776,7 +1814,7 @@ function populateMath() {
     ['Umbra radius k',        b.shadow.k.toFixed(2) + ' km'],
     ['Penumbra radius p',     b.shadow.p.toFixed(1) + ' km'],
     ['Geoid hit',             b.hit ? formatLatLon(b.hit.lat, b.hit.lon) : '— (partial only)'],
-    ['Eclipse kind @ hit',    b.hit ? (b.hit.k > UMBRA_TOTAL_KM ? 'Total' : 'Annular') : '—'],
+    ['Eclipse kind @ hit',    b.hit ? (b.hit.kind === 'T' ? 'Total' : 'Annular') : '—'],
   ]);
 
   document.getElementById('mathMag').innerHTML = rows([
@@ -1785,9 +1823,9 @@ function populateMath() {
   ]);
 
   let classExplain = '';
-  if (gamma < 1 && b.l2 < 0) classExplain = 'γ < 1 and ℓ₂ < 0 ⇒ TOTAL';
-  else if (gamma < 1 && b.l2 >= 0) classExplain = 'γ < 1 and ℓ₂ > 0 ⇒ ANNULAR';
-  else classExplain = 'γ ≥ 1 ⇒ PARTIAL (penumbra only)';
+  if (b.hit && b.hit.kind === 'T') classExplain = 'γ < 1, umbra reaches surface (k > 0) ⇒ TOTAL';
+  else if (b.hit && b.hit.kind === 'A') classExplain = 'γ < 1, antumbra reaches surface (k < 0) ⇒ ANNULAR';
+  else classExplain = 'γ ≥ 1 (axis misses Earth) ⇒ PARTIAL (penumbra only)';
   document.getElementById('mathClass').innerHTML = rows([
     ['Computed type', e.type + ` — ${({T:'TOTAL',A:'ANNULAR',H:'HYBRID',P:'PARTIAL'})[e.type]}`],
     ['Reason',         classExplain],
@@ -1797,7 +1835,7 @@ function populateMath() {
     ['Sub-solar point',                `${sub.lat.toFixed(2)}°, ${sub.lon.toFixed(2)}°`],
     ['Greatest eclipse point',         greatest ? `${greatest.lat.toFixed(3)}°, ${greatest.lon.toFixed(3)}°` : '(no central path)'],
     ['Path samples',                    path.points.length + ' points across ±3 h'],
-    ['z² check at greatest', greatest ? `1 − x² − y² = ${(1 - b.x*b.x - b.y*b.y).toFixed(5)} ${(1 - b.x*b.x - b.y*b.y) > 0 ? '> 0 ✓' : '≤ 0 ✗'}` : '—'],
+    ['Central-line check', greatest ? `1 − γ² = ${(1 - b.gamma*b.gamma).toFixed(5)} ${(1 - b.gamma*b.gamma) > 0 ? '> 0 ✓ (axis strikes Earth)' : '≤ 0 ✗'}` : '—'],
   ]);
 
   // Render KaTeX

@@ -1024,6 +1024,7 @@ function physicsTick3D(s) {
   // Reentry heating: high Q AND descending AND in atmosphere
   // (s.pos has been updated above; recompute radial from current pos)
   var rNow = s.pos.length();
+  var altNow = rNow - parent.radius;
   _phyRadial.copy(s.pos).multiplyScalar(rNow > 0 ? 1 / rNow : 0);
   var descending = s.vel.dot(_phyRadial) < 0;
   if (parent.atm && alt < ENV.KARMAN && descending && q > 4000) {
@@ -1039,9 +1040,9 @@ function physicsTick3D(s) {
   if (alt > s.maxAlt) s.maxAlt = alt;
   if (speed > s.maxVel) s.maxVel = speed;
   if (q > s.maxQ) s.maxQ = q;
-  if (alt < 0 && descending) {
+  if (altNow < 0 && descending) {
     s.pos.normalize().multiplyScalar(parent.radius);
-    var impactSpeed = speed;
+    var impactSpeed = s.vel.length();
     s.vel.set(0, 0, 0);
     var hasLegs = false;
     for (var li = 0; li < s.parts.length; li++) if (PARTS[s.parts[li].key].type === 'leg') { hasLegs = true; break; }
@@ -1109,14 +1110,27 @@ function computeOrbitalElements(s) {
   var r = s.pos.length(), v = s.vel.length();
   s.orbitalEnergy = v * v / 2 - mu / r;
   var h = new THREE.Vector3().crossVectors(s.pos, s.vel);
-  if (s.orbitalEnergy >= 0 || v < 1) { s.periapsis = 0; s.apoapsis = Infinity; s.eccentricity = 1; return; }
-  var a = -mu / (2 * s.orbitalEnergy);
   var rHat = s.pos.clone().normalize();
   var eVec = new THREE.Vector3().crossVectors(s.vel, h).divideScalar(mu).sub(rHat);
   var e = eVec.length();
   s.eccentricity = e;
-  s.periapsis = a * (1 - e) - parent.radius;
-  s.apoapsis = a * (1 + e) - parent.radius;
+  if (s.orbitalEnergy < 0) {
+    // Bound elliptical orbit
+    var a = -mu / (2 * s.orbitalEnergy);
+    s.periapsis = a * (1 - e) - parent.radius;
+    s.apoapsis = a * (1 + e) - parent.radius;
+  } else {
+    // Unbound (hyperbolic e>1, or parabolic e≈1): no apoapsis. Periapsis from
+    // proper hyperbolic elements — a is negative so a(1-e) is positive.
+    if (s.orbitalEnergy > 0) {
+      var aHyp = -mu / (2 * s.orbitalEnergy); // negative
+      s.periapsis = aHyp * (1 - e) - parent.radius;
+    } else {
+      // parabolic: rp = p/(1+e) = h^2 / (mu*(1+e))
+      s.periapsis = h.lengthSq() / (mu * (1 + e)) - parent.radius;
+    }
+    s.apoapsis = Infinity;
+  }
 }
 
 /* ===== STAGING ===== */
@@ -2080,14 +2094,24 @@ function sampleHyperbolicPatch(cur, kep, maxLookAhead) {
   var nuMax = kep.e > 1 ? Math.acos(-1/kep.e) - 0.01 : nu0 + Math.PI; // hyperbolic asymptote
   var steps = 64;
   var points = [], event = null;
+  // Advance time along the arc using the hyperbolic Kepler equation so moving
+  // bodies are evaluated at their FUTURE positions (mirrors sampleBoundPatch).
+  // kep.a is 0 for unbound states, so derive the semi-major axis from energy.
+  var canTime = kep.e > 1 && kep.energy > 0;
+  var aAbs = canTime ? parent.mu / (2 * kep.energy) : 0; // |a|, a<0 for hyperbola
+  var meanMotion = canTime ? Math.sqrt(parent.mu / (aAbs * aAbs * aAbs)) : 0;
+  var hypF = function(nu) { return 2 * Math.atanh(Math.sqrt((kep.e - 1) / (kep.e + 1)) * Math.tan(nu / 2)); };
+  var hypM = function(nu) { var F = hypF(nu); return kep.e * Math.sinh(F) - F; };
+  var M0 = canTime ? hypM(nu0) : 0;
   for (var i = 0; i <= steps; i++) {
     var nu = nu0 + (nuMax - nu0) * (i/steps);
     var rN = kep.p / (1 + kep.e * Math.cos(nu));
     if (rN < 0 || !isFinite(rN)) break;
     if (isFinite(parent.soiRadius) && rN > parent.soiRadius * 1.02) break;
     var pv = posVelFromKepler(kep, nu, parent.mu);
-    // Approximate time: use mean motion-like; just use nu for SOI check
-    var tSample = cur.t; // inaccurate time, body positions treated as current
+    // Time since current state from hyperbolic mean anomaly difference.
+    var tSample = cur.t;
+    if (canTime) { var dtH = (hypM(nu) - M0) / meanMotion; if (isFinite(dtH)) tSample = cur.t + dtH; }
     var parentInertial = inertialBodyPos(cur.parent, tSample);
     var ptInertial = pv.pos.clone().add(parentInertial);
     points.push(ptInertial);

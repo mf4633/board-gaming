@@ -714,8 +714,9 @@ class Lemming {
     if (!this.alive) return;
     this.frame++;
 
-    // Drowning check
-    if (this.y >= t.h - 1) {
+    // Drowning check — only trigger once; let the drown animation/counter
+    // progress to death instead of zeroing actionFrame every tick.
+    if (this.y >= t.h - 1 && this.state !== ST.DROWNER) {
       this.state = ST.DROWNER;
       this.actionFrame = 0;
     }
@@ -1482,6 +1483,11 @@ class Game {
     const allSpawned = this.spawnedCount >= this.level.count;
     const noneAlive = !this.lemmings.some(l => l.alive);
     if (this.timeRemaining <= 0 || (allSpawned && noneAlive)) {
+      // Finalize: lemmings already committed to the exit are saved, but
+      // savedCount only increments when the 24-tick exit animation completes.
+      // Count in-progress exiters now so a timeout doesn't drop them.
+      const committed = this.lemmings.filter(l => l.alive && l.state === ST.EXITER).length;
+      this.savedCount += committed;
       if (this.savedCount >= this.level.target) {
         this.gameState = 'won';
         this.unlocked.unlocked = Math.max(this.unlocked.unlocked, this.levelIdx + 2);

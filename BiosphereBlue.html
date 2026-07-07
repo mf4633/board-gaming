@@ -1360,8 +1360,10 @@ function stepGlobal(W, dtY) {
   if (SIM.lifeStage >= 7) ch4Source += 600;                      // livestock (civilization)
   var ch4Sink = 0.35 * (SIM.ch4 - 700);                          // relaxation toward background
   SIM.ch4 = clamp(SIM.ch4 + (ch4Source - ch4Sink) * step, 200, 25000);
-  // CH4 that oxidizes becomes atmospheric CO2 (molecule-for-molecule), in ppm/step
-  var ch4ToCo2 = 0.35 * (SIM.ch4 - 700) * step * 1e-3;
+  // CH4 that oxidizes becomes atmospheric CO2 (molecule-for-molecule), in ppm/step.
+  // Use the SAME pre-update CH4 (via ch4Sink) that was removed above, so moles
+  // lost from CH4 exactly equal moles gained as CO2.
+  var ch4ToCo2 = ch4Sink * step * 1e-3;
 
   // --- Ocean CO2 solubility (Henry's law) ---
   // Warm oceans outgas, cold oceans absorb; reference ~15 degC neutral.
@@ -1378,10 +1380,14 @@ function stepGlobal(W, dtY) {
   var plantDraw = SIM.lifeStage >= 4 ? 4.0 * SIM.vegFrac : 0;
   var fireC = SIM.fireCarbon || 0;  // ppm released this step by wildfires
   SIM.fireCarbon = 0;
-  var dco2 = (volc - weath - plantDraw + oceanOutgas) * step + ch4ToCo2 + fireC;
+  // Rate-cap only the slow geochemical terms (volcanism, weathering, plant draw,
+  // ocean outgassing). Fire and CH4-oxidation carbon are fast pulses and must
+  // bypass the cap (like the event CO2 pulses) so carbon is conserved, not
+  // truncated/destroyed.
+  var dco2Geo = (volc - weath - plantDraw + oceanOutgas) * step;
   var maxDelta = Math.max(2, SIM.co2 * 0.04);
-  dco2 = clamp(dco2, -maxDelta, maxDelta);
-  SIM.co2 = clamp(SIM.co2 + dco2 + (SIM.co2Forcing || 0) * step, 60, 25000);
+  dco2Geo = clamp(dco2Geo, -maxDelta, maxDelta);
+  SIM.co2 = clamp(SIM.co2 + dco2Geo + ch4ToCo2 + fireC + (SIM.co2Forcing || 0) * step, 60, 25000);
 
   // --- O2: photosynthesis - oxidation sink - wildfire consumption ---
   if (SIM.lifeStage >= 1) {

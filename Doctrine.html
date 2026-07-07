@@ -388,19 +388,28 @@ function log(kind, msg) {
 // alignment helper
 function aliSum(c) { return Object.values(c.ali).reduce((a,b)=>a+b,0); }
 function neutral(c) { return Math.max(0, 100 - aliSum(c)); }
+// Defense Pact locks the pacted power's alignment at a floor of 60 while active.
+function pactFloor(country, power) {
+  const pr = S.presence[power] && S.presence[power][country];
+  return (pr && pr.pact) ? 60 : 0;
+}
+
 function aliShift(country, power, delta) {
   const c = S.countries[country];
-  c.ali[power] = clamp((c.ali[power]||0) + delta, 0, 100);
-  // Drain neutral first; if no neutral, take from rivals proportionally.
+  c.ali[power] = clamp((c.ali[power]||0) + delta, pactFloor(country, power), 100);
+  // Drain neutral first; if no neutral, take from rivals proportionally —
+  // but never below a rival's own pact floor.
   let total = aliSum(c);
   if (total > 100) {
     const excess = total - 100;
     const others = POWERS.filter(p => p !== power);
-    const rivalSum = others.reduce((a,p) => a + (c.ali[p]||0), 0);
-    if (rivalSum > 0) {
+    const room = {};
+    let roomSum = 0;
+    for (const p of others) { room[p] = Math.max(0, (c.ali[p]||0) - pactFloor(country, p)); roomSum += room[p]; }
+    if (roomSum > 0) {
       for (const p of others) {
-        const share = excess * (c.ali[p]||0) / rivalSum;
-        c.ali[p] = Math.max(0, c.ali[p] - share);
+        const share = Math.min(room[p], excess * room[p] / roomSum);
+        c.ali[p] = Math.max(pactFloor(country, p), (c.ali[p]||0) - share);
       }
     }
   }
@@ -487,11 +496,6 @@ function doAction(power, action, target) {
     if (power === S.player) log('event', `${A.name} → ${S.countries[target].name}: +${swing} alignment.`);
   }
 
-  // pact effects
-  if (action === 'pact') {
-    aliShift(target, power, 5); // slight bonus
-  }
-
   return true;
 }
 
@@ -501,15 +505,18 @@ function annualEconomy() {
     const P = S.powers[p];
     const B = S.budget[p];
 
-    // Base growth modified by infrastructure spend, social spend, military spend, rate, debt
-    let growth = P.growth;
+    // Base growth modified by infrastructure spend, social spend, military spend, rate, debt.
+    // Compute each year freshly from a persistent base so settings don't ratchet
+    // the growth rate cumulatively toward the clamp.
+    if (P.baseGrowth === undefined) P.baseGrowth = P.growth;
+    let growth = P.baseGrowth;
     growth += (B.infra - 4) * 0.5;        // infra above 4% boosts growth
     growth -= Math.max(0, B.mil - 6) * 0.3; // overspending on military hurts
     growth -= Math.max(0, P.rate - 6) * 0.2; // high rates slow growth
     growth -= Math.max(0, P.debtGdp - 1.0) * 1.5; // overhang
     // big deficits stimulate short-run but not modeled deeply
     growth = clamp(growth + rand(-1.0, 1.0), -8, 12);
-    P.growth = growth;
+    P.growth = growth; // store effective growth for display only (not fed back as base)
     P.gdp = P.gdp * (1 + growth/100);
 
     // Tax revenue (simplified): 20% of GDP for OECD-ish, 15% for CHN/RUS
@@ -806,8 +813,9 @@ function checkEnd() {
   } else {
     S.holdStreak = 0;
   }
-  // end of campaign
-  if (S.year >= 2050) {
+  // end of campaign — 2050 is played, then S.year rolls to 2051 and ends
+  // (campaign runs 1990–2050 inclusive, 61 turns)
+  if (S.year > 2050) {
     const ranking = POWERS.map(p => ({ p, s: S.score[p] })).sort((a,b) => b.s - a.s);
     const winner = ranking[0].p;
     const won = winner === S.player;
