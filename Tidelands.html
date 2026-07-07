@@ -2315,15 +2315,13 @@
           inner.appendChild(resDiv);
         }
 
-        // Structure
-        if (h.structure) {
+        // Structure (temples are drawn by the temple indicator below)
+        if (h.structure && h.structure.type === 'camp') {
           var sDiv = document.createElement('div');
           sDiv.className = 'hex-struct';
           var sColor = PLAYER_COLORS[h.structure.owner];
           sDiv.style.color = sColor;
-          if (h.structure.type === 'camp') {
-            sDiv.textContent = h.flooded ? '\u25CB' : '\u25C6';
-          }
+          sDiv.textContent = h.flooded ? '\u25CB' : '\u25C6';
           inner.appendChild(sDiv);
         }
 
@@ -2652,6 +2650,7 @@
         highlightedHexes = validTriremeStartHexes(actingPlayer);
         setMessage('Click your structure to start a trireme from. (1 Timber + 1 Bronze + 1 Wine)');
       } else if (action === 'trade') {
+        hermesTradeCharged = false;
         openTrade();
         return;
       } else if (action === 'tradeplayer') {
@@ -2719,6 +2718,7 @@
         payBuildCost(actingPlayer, 'temple');
         hexes[idx].temple = true;
         hexes[idx].flooded = false;
+        hexes[idx].structure = { type: 'temple', owner: actingPlayer };
         players[actingPlayer].structures.push({ type: 'temple', hex: idx });
         if (isSpecialPhase) {
           specialBuildUsed = true;
@@ -2781,6 +2781,14 @@
       }
     }
 
+    // True once the current Hermes trade session has committed a buy/sell
+    // (and therefore consumed its one action). Prevents free trades when the
+    // player commits coins but never clicks Done.
+    var hermesTradeCharged = false;
+    function chargeHermesTrade() {
+      if (!hermesTradeCharged) { hermesTradeCharged = true; actionsLeft--; }
+    }
+
     function openTrade() {
       // Trade not allowed in special build
       if (phase === 'special') return;
@@ -2814,6 +2822,7 @@
         sellBtn.onclick = function() {
           var res = this.getAttribute('data-res');
           if (players[currentPlayer].resources[res] > 0) {
+            chargeHermesTrade();
             players[currentPlayer].resources[res]--;
             players[currentPlayer].coins += getHermesSellPrice(res);
             openTrade();
@@ -2829,6 +2838,7 @@
           var res = this.getAttribute('data-res');
           var cost = getHermesBuyPrice(res);
           if (players[currentPlayer].coins >= cost) {
+            chargeHermesTrade();
             players[currentPlayer].coins -= cost;
             players[currentPlayer].resources[res] = (players[currentPlayer].resources[res] || 0) + 1;
             openTrade();
@@ -2855,6 +2865,7 @@
       stoneBuyBtn.onclick = function() {
         var stoneCost = getHermesBuyPrice('Stone');
         if (players[currentPlayer].coins >= stoneCost) {
+          chargeHermesTrade();
           players[currentPlayer].coins -= stoneCost;
           players[currentPlayer].resources.Stone = (players[currentPlayer].resources.Stone || 0) + 1;
           openTrade();
@@ -2873,12 +2884,17 @@
 
     function closeTrade() {
       document.getElementById('trade-panel').classList.remove('visible');
-      actionsLeft--;
       selectedAction = null;
-      setMessage('Trade complete. ' + actionsLeft + ' actions left.');
+      // The action was already consumed on the first committed buy/sell
+      // (chargeHermesTrade). Opening the panel and backing out costs nothing.
+      if (hermesTradeCharged) {
+        setMessage('Trade complete. ' + actionsLeft + ' actions left.');
+      } else {
+        setMessage('Trade cancelled. ' + actionsLeft + ' actions left.');
+      }
       checkWin();
       render();
-      if (actionsLeft <= 0 && !gameOver) finishActivePlayerTurn();
+      if (hermesTradeCharged && actionsLeft <= 0 && !gameOver) finishActivePlayerTurn();
     }
 
     /* ===== PLAYER-TO-PLAYER TRADE ===== */
@@ -3377,6 +3393,7 @@
           payBuildCost(p, 'temple');
           hexes[target].temple = true;
           hexes[target].flooded = false;
+          hexes[target].structure = { type: 'temple', owner: p };
           players[p].structures.push({ type: 'temple', hex: target });
           actionsLeft--;
           didAction = true;
@@ -3431,6 +3448,7 @@
           actionsLeft--;
           didAction = true;
           setMessage(playerName(p) + ' traded surplus at Hermes\' Ship.');
+          checkWin();
         }
       }
 
@@ -3511,6 +3529,7 @@
           payBuildCost(pIdx, 'temple');
           hexes[target].temple = true;
           hexes[target].flooded = false;
+          hexes[target].structure = { type: 'temple', owner: pIdx };
           players[pIdx].structures.push({ type: 'temple', hex: target });
           didBuild = true;
           setMessage(playerName(pIdx) + ' built a Temple (special build).');

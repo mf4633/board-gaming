@@ -753,6 +753,7 @@ function buyResource(resIdx) {
   priceDeltas[resIdx] = 1;
   marketPrices[resIdx] = Math.min(10, marketPrices[resIdx] + 1);
   setMessage('Bought 1 ' + RES_NAMES[resIdx] + ' for ' + cost + ' coins.');
+  if (checkWin()) return; // portfolio value change may reach the VP target
   render();
 }
 
@@ -769,6 +770,7 @@ function sellResource(resIdx) {
   priceDeltas[resIdx] = -1;
   marketPrices[resIdx] = Math.max(1, marketPrices[resIdx] - 1);
   setMessage('Sold 1 ' + RES_NAMES[resIdx] + ' for ' + revenue + ' coins.');
+  if (checkWin()) return; // portfolio value change may reach the VP target
   render();
 }
 
@@ -790,6 +792,7 @@ function rollDice() {
 
   phase = 'market';
   setMessage('Rolled ' + d1 + '+' + d2 + '=' + total + '. Trade or build.');
+  if (checkWin()) return; // production / market-event price swings may reach the VP target
   render();
 
   if (mode === 1 && currentPlayer === 1) {
@@ -916,12 +919,13 @@ function getValidCityVertices(player) {
 }
 
 function getValidMarketVertices(player) {
-  // Same as settlement positions but for market buildings
-  // Actually, market goes on existing settlement
-  // Let's make market buildable on any owned settlement/city vertex
+  // A market is an add-on to one of your settlements/cities that does not
+  // already have one (it doesn't replace the building — see clickVertex).
   var valid = [];
   for (var i = 0; i < vertices.length; i++) {
-    if (vertices[i].owner === player && vertices[i].type === 'settlement') {
+    if (vertices[i].owner === player &&
+        (vertices[i].type === 'settlement' || vertices[i].type === 'city') &&
+        !vertices[i].hasMarket) {
       valid.push(i);
     }
   }
@@ -966,6 +970,7 @@ function clickVertex(vi) {
     buildMode = '';
     phase = 'market';
     setMessage('Settlement built!');
+    updateLongestRoad(); // a new settlement can split an opponent's road
     checkWin();
     render();
   } else if (buildMode === 'city') {
@@ -984,7 +989,9 @@ function clickVertex(vi) {
     if (valid.indexOf(vi) === -1) { setMessage('Cannot build market there.'); return; }
     if (!canAfford(currentPlayer, 'market')) { setMessage('Cannot afford a market!'); return; }
     payForBuild(currentPlayer, 'market');
-    vertices[vi].type = 'market';
+    // Market is an add-on: keep the settlement/city (its VP + city-upgrade
+    // eligibility) and track the market as a separate flag.
+    vertices[vi].hasMarket = true;
     players[currentPlayer].marketBuildings++;
     buildMode = '';
     phase = 'market';
@@ -1072,7 +1079,7 @@ function calcVP(player) {
     if (vertices[i].owner !== player) continue;
     if (vertices[i].type === 'settlement') vp += 1;
     if (vertices[i].type === 'city') vp += 2;
-    if (vertices[i].type === 'market') vp += 1;
+    if (vertices[i].hasMarket) vp += 1;
   }
   if (longestRoadOwner === player) vp += 2;
   if (calcPortfolioValue(player) >= 20) vp += 2;
@@ -1201,7 +1208,7 @@ function aiBuildPhase() {
     var mverts = getValidMarketVertices(1);
     if (mverts.length > 0) {
       payForBuild(1, 'market');
-      vertices[mverts[0]].type = 'market';
+      vertices[mverts[0]].hasMarket = true;
       players[1].marketBuildings++;
       setMessage('AI built a Market!');
       if (checkWin()) return;
@@ -1228,6 +1235,7 @@ function aiBuildPhase() {
         vertices[best].owner = 1;
         vertices[best].type = 'settlement';
         setMessage('AI built a Settlement!');
+        updateLongestRoad(); // a new settlement can split an opponent's road
         if (checkWin()) return;
         render();
       }
@@ -1354,11 +1362,11 @@ function renderBoard() {
 
     if (v.owner === 0) {
       if (v.type === 'city') vert.className += ' p1-city';
-      else if (v.type === 'market') vert.className += ' p1-market';
+      else if (v.hasMarket) vert.className += ' p1-market';
       else vert.className += ' p1-settlement';
     } else if (v.owner === 1) {
       if (v.type === 'city') vert.className += ' p2-city';
-      else if (v.type === 'market') vert.className += ' p2-market';
+      else if (v.hasMarket) vert.className += ' p2-market';
       else vert.className += ' p2-settlement';
     } else if (buildMode === 'settlement') {
       var validS = getValidSettlementVertices(currentPlayer);
@@ -1387,7 +1395,7 @@ function renderBoard() {
       lbl.textContent = 'C';
       board.appendChild(lbl);
     }
-    if (v.owner !== -1 && v.type === 'market') {
+    if (v.owner !== -1 && v.hasMarket && v.type !== 'city') {
       var lbl = document.createElement('div');
       lbl.className = 'vertex-label';
       lbl.style.left = v.x + 'px';

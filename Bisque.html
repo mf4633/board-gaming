@@ -1547,11 +1547,27 @@ function checkPlayerEliminated(player) {
     state.eliminatedPlayers.push(player);
     var pc = PLAYER_COLORS[player];
     setMessage(pc.name + " has been eliminated from the bay!");
+    /* If the human player is knocked out, declare their loss rather than
+       silently continuing AI-vs-AI. */
+    if (mode === 1 && player === 1) {
+      showDefeat();
+    }
   }
+}
+
+function showDefeat() {
+  state.gameOver = true;
+  document.getElementById('olTitle').textContent = "Defeated 🦞";
+  document.getElementById('olText').textContent = "Your fleet has been driven from the Peconic. The rival captains fight on without you. Better luck next season!";
+  document.getElementById('overlay').classList.add('show');
+  render();
 }
 
 /* ===== VICTORY ===== */
 function checkVictory() {
+  /* If the game is already over (e.g. the human was just eliminated), don't
+     overwrite that outcome. */
+  if (state.gameOver) return true;
   /* Count territories per player (excluding neutral = 0) */
   var counts = {};
   var neutralCount = 0;

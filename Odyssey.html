@@ -730,8 +730,8 @@
         } else if (h.elevation === 5) {
           h.flooded = false;
         } else {
-          // elevation 1 floods at tide >= 2, elev 2 at tide >= 3, etc.
-          h.flooded = tideLevel >= (h.elevation + 1);
+          // Rule: an island is swallowed when the wrath reaches its elevation.
+          h.flooded = tideLevel >= h.elevation;
         }
       }
     }
@@ -920,9 +920,11 @@
       var structHexes = [];
       for (var i = 0; i < players[playerIdx].structures.length; i++) {
         var s = players[playerIdx].structures[i];
-        if (s.type !== 'trireme') {
-          structHexes.push(s.hex);
-        }
+        if (s.type === 'trireme') continue;
+        // Submerged camps are temporarily lost beneath the waves — they don't
+        // count toward the network (temples are protected and never flood).
+        if (hexes[s.hex].flooded) continue;
+        structHexes.push(s.hex);
       }
 
       var visited = {};
@@ -976,8 +978,10 @@
       var vp = 0;
       for (var i = 0; i < players[playerIdx].structures.length; i++) {
         var s = players[playerIdx].structures[i];
-        if (s.type === 'camp' || s.type === 'temple') vp += 1;
-        if (s.type === 'trireme') vp += 2;
+        // A submerged camp is temporarily lost beneath the waves — no VP while flooded.
+        if (s.type === 'camp') { if (!hexes[s.hex].flooded) vp += 1; }
+        else if (s.type === 'temple') vp += 1;
+        else if (s.type === 'trireme') vp += 2;
       }
       vp += Math.floor(players[playerIdx].coins / 5);
       return vp;
@@ -1211,15 +1215,13 @@
           inner.appendChild(resDiv);
         }
 
-        // Structure
-        if (h.structure) {
+        // Structure (temples are drawn by the temple indicator below)
+        if (h.structure && h.structure.type === 'camp') {
           var sDiv = document.createElement('div');
           sDiv.className = 'hex-struct';
           var sColor = PLAYER_COLORS[h.structure.owner];
           sDiv.style.color = sColor;
-          if (h.structure.type === 'camp') {
-            sDiv.textContent = h.flooded ? '\u25CB' : '\u25C6'; // hollow when submerged
-          }
+          sDiv.textContent = h.flooded ? '\u25CB' : '\u25C6'; // hollow when submerged
           inner.appendChild(sDiv);
         }
 
@@ -1363,6 +1365,12 @@
       var h0 = harvestForPlayer(0);
       var h1 = harvestForPlayer(1);
 
+      // Flooding/revealing hexes can swing the largest-network bonus (and a
+      // submerged camp drops VP), while harvest can push coins over a VP
+      // threshold — any of these can end the game.
+      checkWin();
+      if (gameOver) { render(); return; }
+
       var msg = 'Turn ' + turnNumber + ': Wrath ' + tideLevel + (tideDirection > 0 ? ' (rising)' : ' (falling)') + '. ';
       if (revealed.length > 0) msg += revealed.length + ' tiles revealed. ';
       if (flooded.length > 0) msg += flooded.length + ' tiles flooded. ';
@@ -1415,6 +1423,7 @@
         highlightedHexes = validTriremeStartHexes(currentPlayer);
         setMessage('Click your structure to start a trireme from. (1 Timber + 1 Salt)');
       } else if (action === 'trade') {
+        hermesTradeCharged = false;
         openTrade();
         return;
       } else if (action === 'movemarket') {
@@ -1453,6 +1462,7 @@
         payBuildCost(currentPlayer, 'temple');
         hexes[idx].temple = true;
         hexes[idx].flooded = false;
+        hexes[idx].structure = { type: 'temple', owner: currentPlayer };
         players[currentPlayer].structures.push({ type: 'temple', hex: idx });
         actionsLeft--;
         setMessage('Player ' + (currentPlayer + 1) + ' built a Temple! ' + actionsLeft + ' actions left.');
@@ -1495,6 +1505,14 @@
       }
     }
 
+    // True once the current trade session has committed a sell (and therefore
+    // consumed its one action). Prevents free coins when a player sells but
+    // never clicks Done.
+    var hermesTradeCharged = false;
+    function chargeHermesTrade() {
+      if (!hermesTradeCharged) { hermesTradeCharged = true; actionsLeft--; }
+    }
+
     function openTrade() {
       if (!isConnectedToHermes(currentPlayer)) {
         setMessage("Not connected to Hermes' Ship!");
@@ -1521,6 +1539,7 @@
         btn.onclick = function() {
           var res = this.getAttribute('data-res');
           if (players[currentPlayer].resources[res] > 0) {
+            chargeHermesTrade();
             players[currentPlayer].resources[res]--;
             players[currentPlayer].coins += PRICES[res];
             openTrade(); // refresh
@@ -1539,12 +1558,17 @@
 
     function closeTrade() {
       document.getElementById('trade-panel').classList.remove('visible');
-      actionsLeft--;
       selectedAction = null;
-      setMessage('Trade complete. ' + actionsLeft + ' actions left.');
+      // The action was already consumed on the first committed sell
+      // (chargeHermesTrade). Opening the panel and backing out costs nothing.
+      if (hermesTradeCharged) {
+        setMessage('Trade complete. ' + actionsLeft + ' actions left.');
+      } else {
+        setMessage('Trade cancelled. ' + actionsLeft + ' actions left.');
+      }
       checkWin();
       render();
-      if (actionsLeft <= 0 && !gameOver) finishPlayerTurn();
+      if (hermesTradeCharged && actionsLeft <= 0 && !gameOver) finishPlayerTurn();
     }
 
     function endActionPhase() {
@@ -1632,6 +1656,7 @@
           actionsLeft--;
           didAction = true;
           setMessage("Player 2 traded at Hermes' Ship.");
+          checkWin();
         }
       }
 
@@ -1671,6 +1696,7 @@
           payBuildCost(1, 'temple');
           hexes[target].temple = true;
           hexes[target].flooded = false;
+          hexes[target].structure = { type: 'temple', owner: 1 };
           players[1].structures.push({ type: 'temple', hex: target });
           actionsLeft--;
           didAction = true;

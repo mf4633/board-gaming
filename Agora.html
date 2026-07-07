@@ -744,16 +744,18 @@
   }
 
   function playerConnectedToAgora(p) {
-    // BFS: starting from any city the player owns that touches the center hex,
-    // or from any city connected via the player's routes to such a city
+    // Rules: "You must have a trade route connected to the Agora (center) to
+    // buy or sell." A post alone does NOT connect you — the connection must be
+    // made by a trade route. So seed the BFS only from cities that are
+    // endpoints of the player's routes, then walk the route network; if any
+    // reached city borders the center hex, the player is connected.
     var visited = {};
     var queue = [];
 
-    // Find all cities owned by player
-    for (var i = 0; i < cities.length; i++) {
-      if (cities[i].owner === p) {
-        queue.push(i);
-        visited[i] = true;
+    for (var i = 0; i < edges.length; i++) {
+      if (edges[i].owner === p) {
+        if (!visited[edges[i].cityA]) { visited[edges[i].cityA] = true; queue.push(edges[i].cityA); }
+        if (!visited[edges[i].cityB]) { visited[edges[i].cityB] = true; queue.push(edges[i].cityB); }
       }
     }
 
@@ -1054,7 +1056,10 @@
 
   function checkWin() {
     for (var i = 0; i < 2; i++) {
-      var total = players[i].coins + players[i].posts.length * 2 + players[i].routes.length * 2;
+      // Rules: "First to 30 coins wins!" — the win is decided on actual coins.
+      // (Posts/routes worth 2 each are a final-score flavor bonus at game end,
+      // not part of the win trigger, so a player can't win below the target.)
+      var total = players[i].coins;
       if (total >= WIN_COINS) {
         gameOver = true;
         setMessage(PLAYER_NAMES[i] + ' wins with ' + total + ' coins! Glorious merchant!');

@@ -580,10 +580,11 @@ function updateLongestRoad() {
   for (var p = 0; p < numPlayers; p++) {
     var len = calcLongestRoad(p);
     if (len > best) { best = len; bestP = p; }
-    else if (len === best && longestRoadPlayer === p) bestP = p;
+    else if (len === best && len >= 5 && longestRoadPlayer === p) bestP = p;
   }
   for (var p = 0; p < numPlayers; p++) players[p].hasLongestRoad = false;
   if (bestP >= 0) { players[bestP].hasLongestRoad = true; longestRoadPlayer = bestP; }
+  else longestRoadPlayer = -1;
 }
 
 function updateLargestFleet() {
@@ -828,10 +829,7 @@ function renderActions() {
   var html = '';
   if (phase === 'roll') {
     html += '<button class="act-btn" onclick="rollDice()">Roll Dice</button>';
-    // Allow playing dev card before roll
-    if (hasPlayableDevCard(currentPlayer) && !devCardPlayedThisTurn) {
-      html += '<button class="act-btn" onclick="showDevCards()">Play Card</button>';
-    }
+    // Dev cards may only be played after rolling (in the main phase).
   } else if (phase === 'main') {
     var cp = currentPlayer;
     html += '<button class="act-btn' + (pendingAction === 'pipeline' ? ' active-action' : '') + '"' +
@@ -1166,7 +1164,9 @@ function stealFrom(targetPlayer) {
 function enterMainPhase() {
   phase = 'main';
   pendingAction = null;
-  devCardPlayedThisTurn = false;
+  // NOTE: do not reset devCardPlayedThisTurn here — that would defeat the
+  // one-card-per-turn guard when a Rover routes through moveDust. It is reset
+  // only at the start of a player's turn (endTurn / newGame / after roll).
   setMessage(PLAYER_NAMES[currentPlayer] + ': build, trade, or end turn.');
   render();
   if (!isHuman(currentPlayer)) scheduleAI(aiMainPhase, aiDelay());
@@ -1201,6 +1201,8 @@ function hasPlayableDevCard(p) {
 }
 
 function showDevCards() {
+  if (phase !== 'main') return; // must roll before playing dev cards
+  if (devCardPlayedThisTurn) return; // one dev card per turn
   var cp = currentPlayer;
   var cards = players[cp].devCards;
   var playable = [];
@@ -1222,6 +1224,7 @@ function playDevCard(p, cardIdx) {
   if (card === 'rover') {
     players[p].roversPlayed++;
     updateLargestFleet();
+    if (checkWin()) return;
     pendingAction = 'moveDust';
     phase = 'moveDust';
     if (isHuman(p)) {
@@ -1314,6 +1317,7 @@ function endTurn() {
   currentPlayer = (currentPlayer + 1) % numPlayers;
   phase = 'roll';
   devCardPlayedThisTurn = false;
+  window._surgeLeft = 0;
   document.getElementById('diceArea').innerHTML = '';
   setMessage(PLAYER_NAMES[currentPlayer] + ': roll the dice.');
   render();
