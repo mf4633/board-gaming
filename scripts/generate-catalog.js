@@ -163,7 +163,7 @@ const dailyGames = games.filter(g => g.daily);
 const dailyStrip = dailyGames.length
   ? `  <div class="daily-strip">
     <b>TODAY'S DAILY PUZZLES</b> —
-    ${dailyGames.map(g => `<a href="${g.sourceHtml}">${esc(g.title)}</a>`).join(' · ')}
+    ${dailyGames.map(g => `<a href="${g.sourceHtml}#daily">${esc(g.title)}</a>`).join(' · ')}
     <span style="color:#5a6874;font-size:0.85em"> · add to home screen for quick access</span>
   </div>`
   : '';
@@ -327,7 +327,8 @@ function navGameLine(g) {
   const keys = (g.searchKeys || []).map(k => `'${k.replace(/'/g, "\\'")}'`).join(',');
   const name = g.title.replace(/'/g, "\\'");
   const desc = (g.description || '').replace(/'/g, "\\'");
-  return `    { slug:'${slug}', name:'${name}', cat:'${g.category}', desc:'${desc}', keys:[${keys}] },`;
+  const daily = g.daily ? ', daily:true' : '';
+  return `    { slug:'${slug}', name:'${name}', cat:'${g.category}', desc:'${desc}', keys:[${keys}]${daily} },`;
 }
 
 const navGamesBlock = games.map(navGameLine).join('\n');

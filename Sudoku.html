@@ -122,7 +122,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const SIZE = 9, BOX = 3;
-  let solution, puzzle, given, user, notes, sel = null, noteMode = false, errs = 0, t0, timer, history = [], diff = 'easy';
+  let solution, puzzle, given, user, notes, sel = null, noteMode = false, errs = 0, t0, timer, history = [], diff = 'easy', isDaily = false, dailyDone = false;
 
   const targetClues = { easy: 40, medium: 32, hard: 28, expert: 24 };
 
@@ -197,7 +197,7 @@
     given = puzzle.map(r => r.map(v => v !== 0));
     user = puzzle.map(r => r.slice());
     notes = Array.from({length:9}, () => Array.from({length:9}, () => new Set()));
-    sel = null; noteMode = false; errs = 0; history = [];
+    sel = null; noteMode = false; errs = 0; history = []; isDaily = false;
     if (timer) clearInterval(timer); t0 = Date.now();
     timer = setInterval(updateTime, 1000);
     $('errs').textContent = '0'; $('msg').textContent = '';
@@ -207,6 +207,38 @@
   function updateTime() {
     const s = Math.floor((Date.now()-t0)/1000);
     $('time').textContent = Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  }
+  // ----- Daily puzzle: same grid for everyone, shareable spoiler-free result -----
+  function dailyNumber() { return Math.floor((Date.now() - Date.UTC(2025, 0, 1)) / 86400000); }
+  function startDaily() {
+    dailyGenerate();
+    given = puzzle.map(r => r.map(v => v !== 0));
+    user = puzzle.map(r => r.slice());
+    notes = Array.from({length:9}, () => Array.from({length:9}, () => new Set()));
+    sel = null; errs = 0; history = []; isDaily = true; dailyDone = false;
+    if (timer) clearInterval(timer); t0 = Date.now();
+    timer = setInterval(updateTime, 1000);
+    $('errs').textContent = '0';
+    $('dlbl').textContent = 'DAILY';
+    $('msg').textContent = 'DAILY #' + dailyNumber() + ' — ' + new Date().toISOString().slice(0,10);
+    render();
+  }
+  function recordDailyWin() {
+    const st = JSON.parse(localStorage.getItem('sudoku_daily') || '{"lastDay":-1,"streak":0,"solves":0}');
+    const day = dailyNumber();
+    if (st.lastDay === day) return st; // already counted today
+    st.solves++;
+    st.streak = (st.lastDay === day - 1) ? st.streak + 1 : 1;
+    st.lastDay = day;
+    localStorage.setItem('sudoku_daily', JSON.stringify(st));
+    return st;
+  }
+  async function shareDaily() {
+    const txt = 'Sudoku #' + dailyNumber() + ' — ' + $('time').textContent + ', ' + errs +
+      ' mistake' + (errs === 1 ? '' : 's') + '\nhttps://boardgaminghub.com/Sudoku.html#daily';
+    try { if (navigator.share) { await navigator.share({ text: txt }); return; } } catch (e) { /* fall through */ }
+    try { await navigator.clipboard.writeText(txt); $('msg').textContent = 'RESULT COPIED — PASTE TO SHARE'; }
+    catch (e) { $('msg').textContent = txt; }
   }
   function render() {
     const b = $('board'); b.innerHTML = '';
@@ -272,7 +304,19 @@
   function checkWin() {
     for (let r=0;r<9;r++) for (let c=0;c<9;c++) if (user[r][c] !== solution[r][c]) return;
     clearInterval(timer);
-    $('msg').textContent = 'SOLVED IN ' + $('time').textContent + ' (' + errs + ' MISTAKES)';
+    let m = 'SOLVED IN ' + $('time').textContent + ' (' + errs + ' MISTAKE' + (errs === 1 ? '' : 'S') + ')';
+    if (isDaily && !dailyDone) {
+      dailyDone = true;
+      const st = recordDailyWin();
+      $('msg').textContent = m + ' · DAILY #' + dailyNumber() + ' · STREAK ' + st.streak + ' 🔥';
+      const b = document.createElement('button');
+      b.id = 'share'; b.textContent = 'SHARE RESULT'; b.style.marginTop = '10px';
+      b.onclick = shareDaily;
+      $('msg').appendChild(document.createElement('br'));
+      $('msg').appendChild(b);
+    } else {
+      $('msg').textContent = m;
+    }
   }
   document.querySelectorAll('[data-d]').forEach(b => b.onclick = () => {
     diff = b.dataset.d;
@@ -280,11 +324,7 @@
     newGame();
   });
   $('newgame').onclick = () => newGame();
-  $('daily').onclick = () => { dailyGenerate(); given = puzzle.map(r => r.map(v=>v!==0));
-    user = puzzle.map(r=>r.slice()); notes = Array.from({length:9}, () => Array.from({length:9}, () => new Set()));
-    sel = null; errs = 0; history = []; if (timer) clearInterval(timer); t0 = Date.now();
-    timer = setInterval(updateTime, 1000); $('errs').textContent = '0';
-    $('msg').textContent = 'DAILY ' + new Date().toISOString().slice(0,10); render(); };
+  $('daily').onclick = () => startDaily();
   $('notes').onclick = () => { noteMode = !noteMode; render(); };
   $('hint').onclick = hint;
   $('check').onclick = check;
@@ -303,7 +343,7 @@
       sel = [r,c]; render(); e.preventDefault();
     }
   });
-  newGame();
+  if ((location.hash || '').toLowerCase() === '#daily') startDaily(); else newGame();
 })();
 </script>
 <script src="/analytics.js"></script>
