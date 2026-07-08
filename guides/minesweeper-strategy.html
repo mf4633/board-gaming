@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="theme-color" content="#0c1016">
+<title>Minesweeper Strategy for Beginners | Board Gaming Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="First-click safety, reading the numbers, the 1-2-1 and 1-2-2-1 patterns, flagging vs chording, and the three difficulty grids.">
+<link rel="canonical" href="https://boardgaminghub.com/guides/minesweeper-strategy">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Board Gaming Hub">
+<meta property="og:url" content="https://boardgaminghub.com/guides/minesweeper-strategy">
+<meta property="og:title" content="Minesweeper Strategy for Beginners">
+<meta property="og:description" content="First-click safety, reading the numbers, the 1-2-1 and 1-2-2-1 patterns, flagging vs chording, and the three difficulty grids.">
+<meta name="twitter:card" content="summary">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; line-height: 1.75; }
+  #wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+  .crumb { font-size: 0.82em; letter-spacing: 2px; color: #5a6874; margin-bottom: 28px; }
+  .crumb a { color: #8098a8; text-decoration: none; }
+  .crumb a:hover { color: #f0d89c; }
+  header h1 { font-size: 1.75em; letter-spacing: 4px; color: #f0d89c; margin: 0 0 10px; line-height: 1.3; }
+  header .deck { color: #8098a8; font-size: 0.95em; letter-spacing: 1px; margin-bottom: 8px; }
+  header .updated { color: #5a6874; font-size: 0.78em; font-style: italic; }
+  article { margin-top: 32px; }
+  article p { color: #c0c8d0; font-size: 1.02em; margin: 0 0 18px; }
+  article h2 { color: #f0d89c; font-size: 1.05em; letter-spacing: 4px; text-transform: uppercase; margin: 36px 0 14px; border-bottom: 1px solid #2a3540; padding-bottom: 8px; }
+  article h3 { color: #d8d0c0; font-size: 1.0em; letter-spacing: 2px; margin: 28px 0 10px; }
+  article ul, article ol { color: #c0c8d0; padding-left: 24px; margin: 0 0 18px; }
+  article li { margin-bottom: 8px; }
+  article a { color: #94c3e8; }
+  article a:hover { color: #f0d89c; }
+  .callout { background: #141c28; border: 1px solid #3a5060; border-radius: 4px; padding: 18px 22px; margin: 28px 0; }
+  .callout b { color: #f0d89c; letter-spacing: 1px; }
+  .scenario-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.92em; }
+  .scenario-table th, .scenario-table td { border: 1px solid #2a3540; padding: 10px 12px; text-align: left; vertical-align: top; }
+  .scenario-table th { color: #f0d89c; background: #141c28; letter-spacing: 1px; }
+  .scenario-table td { color: #c0c8d0; }
+  .play-cta { display: inline-block; margin-top: 8px; padding: 10px 18px; background: #1a2434; border: 1px solid #3a5060; border-radius: 4px; color: #f0d89c; text-decoration: none; letter-spacing: 2px; font-size: 0.88em; }
+  .play-cta:hover { background: #243044; border-color: #5a7090; color: #f0d89c; }
+  .related { margin-top: 48px; padding-top: 24px; border-top: 1px solid #2a3540; }
+  .related h2 { font-size: 0.9em; letter-spacing: 4px; color: #8098a8; text-transform: uppercase; margin-bottom: 14px; }
+  .related a { display: block; color: #94c3e8; text-decoration: none; margin-bottom: 8px; font-size: 0.95em; }
+  .related a:hover { color: #f0d89c; }
+  footer { margin-top: 56px; text-align: center; color: #5a6874; font-size: 0.78em; letter-spacing: 2px; }
+  footer a { color: #8098a8; text-decoration: none; }
+  footer a:hover { color: #d8d0c0; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div class="crumb"><a href="/">Board Gaming Hub</a> · <a href="/guides/">Guides</a></div>
+  <header>
+    <h1>Minesweeper Strategy for Beginners</h1>
+    <div class="deck">First-click safety, reading the numbers, the 1-2-1 and 1-2-2-1 patterns, flagging vs chording, and the three difficulty grids.</div>
+    <div class="updated">Updated June 2026</div>
+  </header>
+  <article>
+
+    <p><a href="/Minesweeper.html">Minesweeper</a> is a pure-logic puzzle: clear every safe cell without detonating a hidden mine. Each revealed number tells you exactly how many of its eight neighbors are mines. On Board Gaming Hub the board offers three classic sizes and right-click flagging (long-press on touch). This guide takes you from random clicking to reading the board like an expert.</p>
+
+    <h2>The first click is always safe</h2>
+    <p>Your opening click can never hit a mine — the board places mines only after you click, avoiding your cell and its neighbors. So always open with a click in the middle of a large area to trigger the biggest possible cascade of zeros and hand yourself a wall of numbers to work from.</p>
+
+    <h2>Reading the numbers</h2>
+    <p>A number is a promise: a <b>1</b> touches exactly one mine among its unrevealed neighbors, a <b>2</b> touches two, and so on. Two deductions do most of the work:</p>
+    <ul>
+      <li><b>Satisfied number:</b> if a number already touches that many flagged mines, every other neighbor is safe.</li>
+      <li><b>Forced mine:</b> if a number has exactly as many unrevealed neighbors as its value, all of them are mines — flag them.</li>
+    </ul>
+
+    <h2>Patterns worth memorizing</h2>
+    <p>Along a straight edge of revealed cells, certain number sequences resolve instantly without any counting:</p>
+    <table class="scenario-table">
+      <thead><tr><th>Pattern</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><b>1-2-1</b></td><td>The mines sit under the two <b>1</b>s; the cell under the <b>2</b> is safe.</td></tr>
+        <tr><td><b>1-2-2-1</b></td><td>The mines sit under the two middle <b>2</b>s; the cells under the outer <b>1</b>s are safe.</td></tr>
+        <tr><td><b>1-1 on an edge</b></td><td>Where a new wall opens, the cell just past the second <b>1</b> is usually safe.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Flagging vs chording</h2>
+    <p>Flag a cell (right-click or long-press) once you have proven it is a mine — flags are your notes, not guesses. Once a number is fully flagged you can <b>chord</b> it: left+right click together (or middle-click) on the number auto-reveals all of its remaining unflagged neighbors at once. Chording is the single biggest speed boost on larger boards, but it only fires when the flag count matches the number, so keep your flags honest.</p>
+
+    <div class="callout">
+      <b>When logic runs out:</b> some positions force a genuine 50/50 guess — classic Minesweeper is not always deducible. Guess in the corner or lowest-probability cell, and save the guess for when no forced move remains.
+    </div>
+
+    <h2>The three difficulties</h2>
+    <ul>
+      <li><b>Beginner</b> — 9×9 grid, 10 mines (about 12% density). Ideal for learning patterns.</li>
+      <li><b>Intermediate</b> — 16×16 grid, 40 mines (about 16%). Chording starts to matter.</li>
+      <li><b>Expert</b> — 30×16 grid, 99 mines (about 21%). Speed, patterns, and clean flagging all count.</li>
+    </ul>
+
+    <p>Enjoy deduction with no luck at all? <a href="/Sudoku.html">Sudoku</a> is the natural companion — see the <a href="/guides/sudoku-tips">Sudoku tips guide</a>.</p>
+
+    <p><a class="play-cta" href="/Minesweeper.html">Play Minesweeper now</a></p>
+
+  </article>
+<div class="related"><h2>More guides</h2><a href="/guides/wordform-tips.html">Wordform Tips & Daily Strategy</a><a href="/guides/drift-word-ladder.html">Drift Word Ladder Guide</a><a href="/guides/sudoku-tips.html">Sudoku Tips for Beginners</a><a href="/guides/eclipse-2026.html">2026 & 2027 Solar Eclipse Guide</a><a href="/guides/floodline-scenarios.html">Floodline Scenarios Explained</a><a href="/guides/bonneville-dam-guide.html">Bonneville Dam Operator Guide</a><a href="/guides/free-browser-chess.html">Play Chess Free in Your Browser</a><a href="/guides/solitaire-klondike.html">How to Play Klondike Solitaire</a><a href="/guides/2048-strategy.html">2048 Strategy: How to Reach 2048</a><a href="/guides/backgammon-rules.html">Backgammon Rules & Opening Strategy</a><a href="/guides/go-rules-beginners.html">Go Rules for Beginners (Baduk / Weiqi)</a><a href="/guides/mahjong-solitaire.html">How to Play Mahjong Solitaire</a></div>
+  <footer>
+    <a href="/">Home</a> ·
+    <a href="/play.html">Play</a> ·
+    <a href="/about.html">About</a> ·
+    <a href="/guides/">All guides</a>
+  </footer>
+</div>
+<script src="/analytics.js"></script>
+<script src="/nav.js" defer></script>
+</body>
+</html>

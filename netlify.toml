@@ -70,6 +70,36 @@
   to = "/guides/bonneville-dam-guide.html"
   status = 200
 
+[[redirects]]
+  from = "/guides/solitaire-klondike"
+  to = "/guides/solitaire-klondike.html"
+  status = 200
+
+[[redirects]]
+  from = "/guides/2048-strategy"
+  to = "/guides/2048-strategy.html"
+  status = 200
+
+[[redirects]]
+  from = "/guides/minesweeper-strategy"
+  to = "/guides/minesweeper-strategy.html"
+  status = 200
+
+[[redirects]]
+  from = "/guides/backgammon-rules"
+  to = "/guides/backgammon-rules.html"
+  status = 200
+
+[[redirects]]
+  from = "/guides/go-rules-beginners"
+  to = "/guides/go-rules-beginners.html"
+  status = 200
+
+[[redirects]]
+  from = "/guides/mahjong-solitaire"
+  to = "/guides/mahjong-solitaire.html"
+  status = 200
+
 # Game slugs (lowercase from games.json)
 [[redirects]]
   from = "/solitaire"

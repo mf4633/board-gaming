@@ -382,6 +382,250 @@ const pages = [
     <p><a class="play-cta" href="/Chess.html">Play chess now</a></p>
 `,
   },
+  {
+    slug: 'solitaire-klondike',
+    file: 'solitaire-klondike.html',
+    title: 'How to Play Klondike Solitaire (and Win More Often)',
+    description: 'Klondike rules, draw-1 vs draw-3, foundations and tableau, and the stock-cycling strategy that wins more deals.',
+    body: `
+    <p><a href="/Solitaire.html">Solitaire</a> on Board Gaming Hub is classic Klondike: a single 52-card deck, seven tableau columns, four foundations, and a stock you cycle through the waste. It runs in one HTML page with unlimited undo, smart-click auto-moves, and a toggle for <b>Draw 1</b> or <b>Draw 3</b>. This guide covers the rules and the habits that turn losses into wins.</p>
+
+    <h2>The layout</h2>
+    <p>The deal puts 28 cards into seven columns — one card in the first column, two in the second, up to seven in the last — and only the bottom card of each column starts face-up. The remaining 24 cards form the <b>stock</b>; the <b>waste</b> and the four <b>foundations</b> begin empty.</p>
+    <ul>
+      <li><b>Tableau</b> — build downward in alternating colors (a black 7 goes on a red 8).</li>
+      <li><b>Foundations</b> — build upward by suit, from Ace to King. Emptying all four wins the game.</li>
+      <li><b>Empty columns</b> — only a King (or a run headed by a King) may fill a gap.</li>
+    </ul>
+
+    <h2>Draw 1 vs Draw 3</h2>
+    <p>The board offers both modes. <b>Draw 1</b> turns one stock card at a time and every card is immediately playable — roughly 80% of deals are solvable with perfect play. <b>Draw 3</b> turns three cards but only the top of the packet is live, so cards you need are often buried; solvability drops to around 5%. Learn on Draw 1, then switch to Draw 3 when you want the harder game.</p>
+
+    <div class="callout">
+      <b>Undo is a tool, not cheating:</b> This build allows unlimited undo. Serious solvers use it to backtrack out of dead ends — with backtracking, real win rates climb close to the theoretical ceiling.
+    </div>
+
+    <h2>Winning strategy</h2>
+    <ol>
+      <li><b>Work the stock early.</b> Cycle the stock before you commit to big tableau moves so you know what is coming. In Draw 3, count where useful cards land — the order is fixed until you disturb it.</li>
+      <li><b>Expose face-down cards first.</b> Every hidden card is locked information. Prefer moves that flip a face-down card over moves that merely shuffle face-up runs.</li>
+      <li><b>Do not rush to the foundation.</b> A low card sent up too early can strand a card that needed it in the tableau. Keep 2s through 5s available as landing spots for the opposite color.</li>
+      <li><b>Save empty columns for Kings.</b> An empty column is your most valuable resource. Do not fill it with a random King if a more useful King (one that unblocks a long buried run) is coming.</li>
+      <li><b>Send to the foundation when it is safe.</b> A card is safe to bank once both opposite-color cards one rank lower are already up (or no longer needed as landing spots).</li>
+    </ol>
+
+    <h2>Use smart-click and auto-complete</h2>
+    <p>Click any card to auto-move it to its best legal destination — foundation first, then the most useful tableau column. Once every card is face-up, use <b>AUTO-COMPLETE</b> to finish the deal in a single tap instead of clicking each card home.</p>
+
+    <p>Prefer a puzzle with no luck at all? Try <a href="/Sudoku.html">Sudoku</a> or its companion <a href="/guides/sudoku-tips">Sudoku tips guide</a>. For a similar solo pace with tiles instead of cards, see <a href="/Mahjong.html">Mahjong Solitaire</a>.</p>
+
+    <p><a class="play-cta" href="/Solitaire.html">Play Solitaire now</a></p>
+`,
+  },
+  {
+    slug: '2048-strategy',
+    file: '2048-strategy.html',
+    title: '2048 Strategy: How to Reach 2048 (and Beyond)',
+    description: 'Corner strategy, anchoring your biggest tile, building a monotonic chain, and how to push past the 2048 tile.',
+    body: `
+    <p><a href="/2048.html">2048</a> is a slide-and-merge puzzle on a 4×4 grid. Every move slides all tiles one direction; equal tiles that collide merge into their sum, and a new <b>2</b> or <b>4</b> spawns in a random empty cell (weighted about 90/10 toward the 2). You win when a tile reaches <b>2048</b> — then you can keep going for 4096 and higher. Reaching 2048 is not luck; it is one disciplined pattern.</p>
+
+    <h2>The one rule that wins: anchor a corner</h2>
+    <p>Pick a corner — bottom-right is a common choice — and keep your largest tile pinned there for the entire game. In practice this means using only two or three of the four directions and almost never pressing the fourth. If your big tile lives in the bottom-right, drive with <b>Down</b> and <b>Right</b>, use <b>Left</b> sparingly, and treat <b>Up</b> as forbidden except in emergencies.</p>
+
+    <div class="callout">
+      <b>Why the anchor works:</b> the moment your biggest tile leaves its corner, smaller tiles slide under it and it can be stranded in the middle, blocking merges on all sides. A tile in the center is a liability; a tile in the corner is a foundation.
+    </div>
+
+    <h2>Build a monotonic chain</h2>
+    <p>Keep the values in your anchor row (or column) descending in order — for example 2048, 1024, 512, 256 lined up along the bottom edge. This is called a <b>monotonic</b> layout. When the chain is intact, one push collapses it like dominoes: the 256 feeds the 512, the 512 feeds the 1024, and so on.</p>
+    <ul>
+      <li>Fill the anchor row first, largest at the corner.</li>
+      <li>Feed new small tiles from the opposite side so they queue up behind the chain.</li>
+      <li>Only merge upward into the chain, never break it apart to grab a stray pair.</li>
+    </ul>
+
+    <h2>Avoid the shuffle</h2>
+    <p>The fastest way to lose is pressing all four arrows in a panic. Each wasted direction scatters tiles and spawns another blocker. If a move would not merge anything and would only shuffle the board, look for a better one. Plan two moves ahead: ask what the board looks like <em>after</em> the new tile spawns, not just after your slide.</p>
+
+    <h2>Past 2048</h2>
+    <p>The win tile is only the halfway point of a good board. To chase 4096 and 8192, the same rules apply with tighter margins — a full board with a broken chain is a dead end. Keep at least one empty cell as breathing room and never let the anchor drift.</p>
+
+    <p>Like number puzzles? <a href="/Minesweeper.html">Minesweeper</a> and <a href="/Sudoku.html">Sudoku</a> scratch the same solo-logic itch — the <a href="/guides/minesweeper-strategy">Minesweeper strategy guide</a> is a good next read.</p>
+
+    <p><a class="play-cta" href="/2048.html">Play 2048 now</a></p>
+`,
+  },
+  {
+    slug: 'minesweeper-strategy',
+    file: 'minesweeper-strategy.html',
+    title: 'Minesweeper Strategy for Beginners',
+    description: 'First-click safety, reading the numbers, the 1-2-1 and 1-2-2-1 patterns, flagging vs chording, and the three difficulty grids.',
+    body: `
+    <p><a href="/Minesweeper.html">Minesweeper</a> is a pure-logic puzzle: clear every safe cell without detonating a hidden mine. Each revealed number tells you exactly how many of its eight neighbors are mines. On Board Gaming Hub the board offers three classic sizes and right-click flagging (long-press on touch). This guide takes you from random clicking to reading the board like an expert.</p>
+
+    <h2>The first click is always safe</h2>
+    <p>Your opening click can never hit a mine — the board places mines only after you click, avoiding your cell and its neighbors. So always open with a click in the middle of a large area to trigger the biggest possible cascade of zeros and hand yourself a wall of numbers to work from.</p>
+
+    <h2>Reading the numbers</h2>
+    <p>A number is a promise: a <b>1</b> touches exactly one mine among its unrevealed neighbors, a <b>2</b> touches two, and so on. Two deductions do most of the work:</p>
+    <ul>
+      <li><b>Satisfied number:</b> if a number already touches that many flagged mines, every other neighbor is safe.</li>
+      <li><b>Forced mine:</b> if a number has exactly as many unrevealed neighbors as its value, all of them are mines — flag them.</li>
+    </ul>
+
+    <h2>Patterns worth memorizing</h2>
+    <p>Along a straight edge of revealed cells, certain number sequences resolve instantly without any counting:</p>
+    <table class="scenario-table">
+      <thead><tr><th>Pattern</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><b>1-2-1</b></td><td>The mines sit under the two <b>1</b>s; the cell under the <b>2</b> is safe.</td></tr>
+        <tr><td><b>1-2-2-1</b></td><td>The mines sit under the two middle <b>2</b>s; the cells under the outer <b>1</b>s are safe.</td></tr>
+        <tr><td><b>1-1 on an edge</b></td><td>Where a new wall opens, the cell just past the second <b>1</b> is usually safe.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Flagging vs chording</h2>
+    <p>Flag a cell (right-click or long-press) once you have proven it is a mine — flags are your notes, not guesses. Once a number is fully flagged you can <b>chord</b> it: left+right click together (or middle-click) on the number auto-reveals all of its remaining unflagged neighbors at once. Chording is the single biggest speed boost on larger boards, but it only fires when the flag count matches the number, so keep your flags honest.</p>
+
+    <div class="callout">
+      <b>When logic runs out:</b> some positions force a genuine 50/50 guess — classic Minesweeper is not always deducible. Guess in the corner or lowest-probability cell, and save the guess for when no forced move remains.
+    </div>
+
+    <h2>The three difficulties</h2>
+    <ul>
+      <li><b>Beginner</b> — 9×9 grid, 10 mines (about 12% density). Ideal for learning patterns.</li>
+      <li><b>Intermediate</b> — 16×16 grid, 40 mines (about 16%). Chording starts to matter.</li>
+      <li><b>Expert</b> — 30×16 grid, 99 mines (about 21%). Speed, patterns, and clean flagging all count.</li>
+    </ul>
+
+    <p>Enjoy deduction with no luck at all? <a href="/Sudoku.html">Sudoku</a> is the natural companion — see the <a href="/guides/sudoku-tips">Sudoku tips guide</a>.</p>
+
+    <p><a class="play-cta" href="/Minesweeper.html">Play Minesweeper now</a></p>
+`,
+  },
+  {
+    slug: 'backgammon-rules',
+    file: 'backgammon-rules.html',
+    title: 'Backgammon Rules &amp; Opening Strategy',
+    description: 'Board setup, hitting and the bar, bearing off, blocking points, and a simple opening plan for the dice-race classic.',
+    body: `
+    <p><a href="/Backgammon.html">Backgammon</a> is a two-player race on a 24-point board — one of the oldest games in the world. Each side has 15 checkers; you roll two dice, race your checkers home, and bear them all off before your opponent does. The Board Gaming Hub build is single-player versus an AI and focuses on the movement game: this version has <b>no doubling cube</b>, so you can learn the core race without stakes-play complications.</p>
+
+    <h2>Board setup and direction</h2>
+    <p>The 24 points split into four quadrants. Each player moves their checkers in the opposite direction toward their own <b>home board</b> (the final quadrant), then bears them off. The standard starting position places checkers on the 24, 13, 8, and 6 points relative to each player. You always move toward your home; you can never move backward.</p>
+
+    <h2>Rolling and moving</h2>
+    <ul>
+      <li>Roll two dice and move checkers by each die value — either two different checkers, or one checker twice (first one die, then the other), as long as each intermediate landing point is legal.</li>
+      <li><b>Doubles are worth four moves:</b> rolling a 3-3 lets you make four moves of three points each.</li>
+      <li>You may land on any point that is empty, holds your own checkers, or holds exactly one enemy checker.</li>
+    </ul>
+
+    <h2>Hitting, the bar, and blocked points</h2>
+    <p>A lone enemy checker on a point is a <b>blot</b>. Land on it and you <b>hit</b> it — the blot goes to the <b>bar</b> in the center, and its owner must re-enter it in their opponent's home board before making any other move. A point held by two or more enemy checkers is <b>blocked</b>; you cannot land there. Stack six blocked points in a row and you build a <b>prime</b> that a trapped checker cannot jump.</p>
+
+    <div class="callout">
+      <b>Priority rule:</b> if you have a checker on the bar, you must enter it first. If neither die lets you enter (both landing points are blocked), you forfeit the turn.
+    </div>
+
+    <h2>Bearing off</h2>
+    <p>Once all 15 of your checkers are inside your home board, you may start <b>bearing off</b> — removing checkers from the board. A die value bears off a checker from the matching point; if that point is empty, you may bear off from the next-lower occupied point. First player to bear off all 15 wins. If your opponent still has a checker on the bar or in your home board when you finish, you win a double (a <em>gammon</em>).</p>
+
+    <h2>Opening strategy</h2>
+    <ol>
+      <li><b>Make points, don't just run.</b> Building your own blocked points — especially the 5-point (your "golden point") — restricts the opponent and gives your checkers safe landing spots.</li>
+      <li><b>Split or slot, then cover.</b> Common opening rolls make an inner-board point or advance builders that can make one next turn.</li>
+      <li><b>Balance racing and blocking.</b> Track the pip count (total distance left to bear off): if you are ahead, race; if you are behind, hold back an anchor and play for a hit.</li>
+      <li><b>Avoid leaving blots</b> where the opponent can hit you back onto the bar — one bad hit can swing the race.</li>
+    </ol>
+
+    <p>Prefer perfect-information strategy with no dice? Try <a href="/Chess.html">Chess</a> (see <a href="/guides/free-browser-chess">the free browser chess guide</a>) or the territorial classic <a href="/Go.html">Go</a>.</p>
+
+    <p><a class="play-cta" href="/Backgammon.html">Play Backgammon now</a></p>
+`,
+  },
+  {
+    slug: 'go-rules-beginners',
+    file: 'go-rules-beginners.html',
+    title: 'Go Rules for Beginners (Baduk / Weiqi)',
+    description: 'Liberties, capture, ko, territory vs area scoring, the pass-pass endgame, and dead-stone marking on 9, 13, and 19 boards.',
+    body: `
+    <p><a href="/Go.html">Go</a> — known as Baduk in Korea and Weiqi in China — is the ancient game of territory and influence. Two players place black and white stones on the intersections of a grid, competing to surround more of the board. The Board Gaming Hub build is single-player versus an AI and offers three board sizes: <b>9×9</b> for a quick game, <b>13×13</b> for a middle ground, and the full <b>19×19</b>. The rules are short; the depth is famous.</p>
+
+    <h2>Placing stones</h2>
+    <p>Black plays first. Stones go on the <b>intersections</b> of the grid lines, not the squares, and once placed a stone never moves — it can only be captured. Same-color stones connected horizontally or vertically (never diagonally) form a single <b>group</b> that lives or dies together.</p>
+
+    <h2>Liberties and capture</h2>
+    <p>A group's <b>liberties</b> are the empty intersections directly adjacent to it. As long as a group has at least one liberty it stays on the board. Fill its last liberty and the whole group is <b>captured</b> and removed. You may not play a stone that would leave your own group with zero liberties (a <b>suicide</b>) — unless that same move captures an enemy group and thereby gains a liberty.</p>
+
+    <div class="callout">
+      <b>The ko rule:</b> you may not play a move that recreates the exact board position of the previous turn. This stops endless back-and-forth recapture of a single stone; you must play elsewhere first, then you can return.
+    </div>
+
+    <h2>Ending the game: pass, pass, then mark the dead</h2>
+    <p>When neither player wants to add stones, they pass. <b>Two consecutive passes end the game.</b> The board then enters a scoring step: click any group of stones that cannot avoid capture to mark it as <b>dead</b> — those stones are removed and count for the surrounding player. Press <b>Confirm / Final Score</b> when both sides agree, or <b>Resume Play</b> if there is a disagreement to settle on the board.</p>
+
+    <h2>Territory vs area scoring</h2>
+    <p>There are two scoring traditions, and it helps to know both:</p>
+    <ul>
+      <li><b>Territory scoring</b> (Japanese) — count empty intersections you surround, plus prisoners you captured.</li>
+      <li><b>Area scoring</b> (Chinese) — count empty intersections you surround <em>plus your own live stones on the board</em>.</li>
+    </ul>
+    <p>They usually give the same winner, differing by at most a point or two. This build uses <b>area (Chinese) scoring</b>: your score is your stones on the board plus the empty territory you enclose.</p>
+
+    <h2>Beginner strategy</h2>
+    <ol>
+      <li><b>Start in the corners</b>, then the sides — corners are easiest to enclose because the board edges do part of the surrounding for you.</li>
+      <li><b>Keep your groups connected</b> and give them room to make two separate eyes (enclosed empty points), which makes them uncapturable.</li>
+      <li><b>Do not chase every stone.</b> Trading a small capture for a large framework of influence is usually the winning choice.</li>
+      <li><b>Learn on 9×9.</b> A small board teaches life, death, and capture in minutes before you scale up to 19×19.</li>
+    </ol>
+
+    <p>Want another two-player abstract? <a href="/Chess.html">Chess</a> and <a href="/Othello.html">Othello</a> are close cousins in the strategy shelf.</p>
+
+    <p><a class="play-cta" href="/Go.html">Play Go now</a></p>
+`,
+  },
+  {
+    slug: 'mahjong-solitaire',
+    file: 'mahjong-solitaire.html',
+    title: 'How to Play Mahjong Solitaire',
+    description: 'Free vs blocked tiles, exact-glyph matching, the 72-tile Bamboo and Characters set, and top-down planning with shuffle and undo.',
+    body: `
+    <p><a href="/Mahjong.html">Mahjong Solitaire</a> is a single-player tile-matching game — not the four-player gambling game of the same name. You clear a layered layout of tiles by matching identical pairs until the board is empty. The Board Gaming Hub build uses a compact <b>72-tile set</b> drawn from two mahjong suits: <b>Bamboo</b> and <b>Characters</b>, nine faces each, four copies of every face. It runs in one HTML page with hint, undo, and shuffle.</p>
+
+    <h2>Free vs blocked tiles</h2>
+    <p>You can only remove a tile that is <b>free</b>. A tile is free when two conditions are both true:</p>
+    <ul>
+      <li><b>Uncovered</b> — nothing rests on top of it in a higher layer.</li>
+      <li><b>Open edge</b> — its left OR its right side is unblocked. A tile with a neighbor on both its left and right is locked, even if nothing sits on top.</li>
+    </ul>
+    <p>Blocked tiles are dimmed. Freeing them is the whole puzzle: every pair you remove may open the tiles that were leaning on it.</p>
+
+    <h2>Exact-glyph matching</h2>
+    <p>Two free tiles match only if they show the <b>exact same glyph</b>. In this build there are no flower or season groups — a 3-Bamboo pairs only with another 3-Bamboo, never with a Character tile that merely looks similar. Because every face has four copies, each glyph forms two possible pairs on a full board.</p>
+
+    <div class="callout">
+      <b>The four-of-a-kind rule:</b> when all four copies of a face are free at once, clear all four immediately. Leaving two behind risks stranding them under later tiles with no partner reachable.
+    </div>
+
+    <h2>Plan from the top down</h2>
+    <p>The fastest way to lose is matching the first pair you see. A greedy match can bury a tile whose only partner is now locked. Instead:</p>
+    <ol>
+      <li><b>Clear the top layers first.</b> Upper tiles cover the most cells below them, so removing them opens the widest set of future moves.</li>
+      <li><b>Look before you match.</b> If a glyph has all four copies visible but you only need to open one specific tile, match the pair that frees the most blocked tiles.</li>
+      <li><b>Keep a spare pair.</b> Avoid clearing both pairs of a face early if one of those tiles is the only thing you will be able to match later.</li>
+    </ol>
+
+    <h2>Hint, undo, and shuffle</h2>
+    <p>Use <b>HINT</b> to highlight a legal pair when you are stuck, and <b>UNDO</b> to step back after a match that locked the board. If no legal moves remain among the free tiles, <b>SHUFFLE</b> reassigns the faces on the remaining tiles so the game can continue. A clean solve uses shuffle sparingly — treat it as a rescue, not a strategy.</p>
+
+    <p>For another relaxed solo game with a similar pace, try <a href="/Solitaire.html">Klondike Solitaire</a> — the <a href="/guides/solitaire-klondike">Klondike guide</a> covers its strategy. Prefer numbers? <a href="/2048.html">2048</a> is a quick palate cleanser.</p>
+
+    <p><a class="play-cta" href="/Mahjong.html">Play Mahjong Solitaire now</a></p>
+`,
+  },
 ];
 
 for (const g of pages) {

@@ -31,7 +31,13 @@
     { "slug": "eclipse-2026", "file": "guides/eclipse-2026.html", "title": "2026 & 2027 Solar Eclipse Guide", "description": "Paths of totality, timing, and how to use the free 3D eclipse predictor." },
     { "slug": "floodline-scenarios", "file": "guides/floodline-scenarios.html", "title": "Floodline Scenarios Explained", "description": "Real California and US flood events behind the simulation scenarios." },
     { "slug": "bonneville-dam-guide", "file": "guides/bonneville-dam-guide.html", "title": "Bonneville Dam Operator Guide", "description": "TDG, salmon passage, spillway vs turbines, and career mode strategy." },
-    { "slug": "free-browser-chess", "file": "guides/free-browser-chess.html", "title": "Play Chess Free in Your Browser", "description": "Rules refresher, special moves, and tips for the Board Gaming Hub chess board." }
+    { "slug": "free-browser-chess", "file": "guides/free-browser-chess.html", "title": "Play Chess Free in Your Browser", "description": "Rules refresher, special moves, and tips for the Board Gaming Hub chess board." },
+    { "slug": "solitaire-klondike", "file": "guides/solitaire-klondike.html", "title": "How to Play Klondike Solitaire", "description": "Rules, draw-1 vs draw-3, foundations and tableau, and the strategy that wins more deals." },
+    { "slug": "2048-strategy", "file": "guides/2048-strategy.html", "title": "2048 Strategy: How to Reach 2048", "description": "Corner strategy, anchoring your biggest tile, monotonic chains, and pushing past 2048." },
+    { "slug": "minesweeper-strategy", "file": "guides/minesweeper-strategy.html", "title": "Minesweeper Strategy for Beginners", "description": "First-click safety, reading numbers, 1-2-1 patterns, flagging vs chording, and the three grids." },
+    { "slug": "backgammon-rules", "file": "guides/backgammon-rules.html", "title": "Backgammon Rules & Opening Strategy", "description": "Board setup, hitting and the bar, bearing off, blocking points, and a simple opening plan." },
+    { "slug": "go-rules-beginners", "file": "guides/go-rules-beginners.html", "title": "Go Rules for Beginners (Baduk / Weiqi)", "description": "Liberties, capture, ko, territory vs area scoring, the pass-pass endgame, and board sizes." },
+    { "slug": "mahjong-solitaire", "file": "guides/mahjong-solitaire.html", "title": "How to Play Mahjong Solitaire", "description": "Free vs blocked tiles, exact-glyph matching, the 72-tile set, and top-down planning." }
   ],
   "games": [
     { "slug": "solitaire", "title": "Solitaire", "sourceHtml": "Solitaire.html", "category": "puzzles", "featured": true, "daily": false, "priority": 0.95, "ogImage": "/og/solitaire.png", "description": "Klondike — the classic card game", "searchKeys": ["cards", "klondike", "patience", "solitaire", "classic"], "appId": "com.hydroengineer.solitaire", "platforms": ["android", "web"], "hasSteam": false, "admob": true },

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="theme-color" content="#0c1016">
+<title>Go Rules for Beginners (Baduk / Weiqi) | Board Gaming Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Liberties, capture, ko, territory vs area scoring, the pass-pass endgame, and dead-stone marking on 9, 13, and 19 boards.">
+<link rel="canonical" href="https://boardgaminghub.com/guides/go-rules-beginners">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Board Gaming Hub">
+<meta property="og:url" content="https://boardgaminghub.com/guides/go-rules-beginners">
+<meta property="og:title" content="Go Rules for Beginners (Baduk / Weiqi)">
+<meta property="og:description" content="Liberties, capture, ko, territory vs area scoring, the pass-pass endgame, and dead-stone marking on 9, 13, and 19 boards.">
+<meta name="twitter:card" content="summary">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; line-height: 1.75; }
+  #wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+  .crumb { font-size: 0.82em; letter-spacing: 2px; color: #5a6874; margin-bottom: 28px; }
+  .crumb a { color: #8098a8; text-decoration: none; }
+  .crumb a:hover { color: #f0d89c; }
+  header h1 { font-size: 1.75em; letter-spacing: 4px; color: #f0d89c; margin: 0 0 10px; line-height: 1.3; }
+  header .deck { color: #8098a8; font-size: 0.95em; letter-spacing: 1px; margin-bottom: 8px; }
+  header .updated { color: #5a6874; font-size: 0.78em; font-style: italic; }
+  article { margin-top: 32px; }
+  article p { color: #c0c8d0; font-size: 1.02em; margin: 0 0 18px; }
+  article h2 { color: #f0d89c; font-size: 1.05em; letter-spacing: 4px; text-transform: uppercase; margin: 36px 0 14px; border-bottom: 1px solid #2a3540; padding-bottom: 8px; }
+  article h3 { color: #d8d0c0; font-size: 1.0em; letter-spacing: 2px; margin: 28px 0 10px; }
+  article ul, article ol { color: #c0c8d0; padding-left: 24px; margin: 0 0 18px; }
+  article li { margin-bottom: 8px; }
+  article a { color: #94c3e8; }
+  article a:hover { color: #f0d89c; }
+  .callout { background: #141c28; border: 1px solid #3a5060; border-radius: 4px; padding: 18px 22px; margin: 28px 0; }
+  .callout b { color: #f0d89c; letter-spacing: 1px; }
+  .scenario-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.92em; }
+  .scenario-table th, .scenario-table td { border: 1px solid #2a3540; padding: 10px 12px; text-align: left; vertical-align: top; }
+  .scenario-table th { color: #f0d89c; background: #141c28; letter-spacing: 1px; }
+  .scenario-table td { color: #c0c8d0; }
+  .play-cta { display: inline-block; margin-top: 8px; padding: 10px 18px; background: #1a2434; border: 1px solid #3a5060; border-radius: 4px; color: #f0d89c; text-decoration: none; letter-spacing: 2px; font-size: 0.88em; }
+  .play-cta:hover { background: #243044; border-color: #5a7090; color: #f0d89c; }
+  .related { margin-top: 48px; padding-top: 24px; border-top: 1px solid #2a3540; }
+  .related h2 { font-size: 0.9em; letter-spacing: 4px; color: #8098a8; text-transform: uppercase; margin-bottom: 14px; }
+  .related a { display: block; color: #94c3e8; text-decoration: none; margin-bottom: 8px; font-size: 0.95em; }
+  .related a:hover { color: #f0d89c; }
+  footer { margin-top: 56px; text-align: center; color: #5a6874; font-size: 0.78em; letter-spacing: 2px; }
+  footer a { color: #8098a8; text-decoration: none; }
+  footer a:hover { color: #d8d0c0; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div class="crumb"><a href="/">Board Gaming Hub</a> · <a href="/guides/">Guides</a></div>
+  <header>
+    <h1>Go Rules for Beginners (Baduk / Weiqi)</h1>
+    <div class="deck">Liberties, capture, ko, territory vs area scoring, the pass-pass endgame, and dead-stone marking on 9, 13, and 19 boards.</div>
+    <div class="updated">Updated June 2026</div>
+  </header>
+  <article>
+
+    <p><a href="/Go.html">Go</a> — known as Baduk in Korea and Weiqi in China — is the ancient game of territory and influence. Two players place black and white stones on the intersections of a grid, competing to surround more of the board. The Board Gaming Hub build is single-player versus an AI and offers three board sizes: <b>9×9</b> for a quick game, <b>13×13</b> for a middle ground, and the full <b>19×19</b>. The rules are short; the depth is famous.</p>
+
+    <h2>Placing stones</h2>
+    <p>Black plays first. Stones go on the <b>intersections</b> of the grid lines, not the squares, and once placed a stone never moves — it can only be captured. Same-color stones connected horizontally or vertically (never diagonally) form a single <b>group</b> that lives or dies together.</p>
+
+    <h2>Liberties and capture</h2>
+    <p>A group's <b>liberties</b> are the empty intersections directly adjacent to it. As long as a group has at least one liberty it stays on the board. Fill its last liberty and the whole group is <b>captured</b> and removed. You may not play a stone that would leave your own group with zero liberties (a <b>suicide</b>) — unless that same move captures an enemy group and thereby gains a liberty.</p>
+
+    <div class="callout">
+      <b>The ko rule:</b> you may not play a move that recreates the exact board position of the previous turn. This stops endless back-and-forth recapture of a single stone; you must play elsewhere first, then you can return.
+    </div>
+
+    <h2>Ending the game: pass, pass, then mark the dead</h2>
+    <p>When neither player wants to add stones, they pass. <b>Two consecutive passes end the game.</b> The board then enters a scoring step: click any group of stones that cannot avoid capture to mark it as <b>dead</b> — those stones are removed and count for the surrounding player. Press <b>Confirm / Final Score</b> when both sides agree, or <b>Resume Play</b> if there is a disagreement to settle on the board.</p>
+
+    <h2>Territory vs area scoring</h2>
+    <p>There are two scoring traditions, and it helps to know both:</p>
+    <ul>
+      <li><b>Territory scoring</b> (Japanese) — count empty intersections you surround, plus prisoners you captured.</li>
+      <li><b>Area scoring</b> (Chinese) — count empty intersections you surround <em>plus your own live stones on the board</em>.</li>
+    </ul>
+    <p>They usually give the same winner, differing by at most a point or two. This build uses <b>area (Chinese) scoring</b>: your score is your stones on the board plus the empty territory you enclose.</p>
+
+    <h2>Beginner strategy</h2>
+    <ol>
+      <li><b>Start in the corners</b>, then the sides — corners are easiest to enclose because the board edges do part of the surrounding for you.</li>
+      <li><b>Keep your groups connected</b> and give them room to make two separate eyes (enclosed empty points), which makes them uncapturable.</li>
+      <li><b>Do not chase every stone.</b> Trading a small capture for a large framework of influence is usually the winning choice.</li>
+      <li><b>Learn on 9×9.</b> A small board teaches life, death, and capture in minutes before you scale up to 19×19.</li>
+    </ol>
+
+    <p>Want another two-player abstract? <a href="/Chess.html">Chess</a> and <a href="/Othello.html">Othello</a> are close cousins in the strategy shelf.</p>
+
+    <p><a class="play-cta" href="/Go.html">Play Go now</a></p>
+
+  </article>
+<div class="related"><h2>More guides</h2><a href="/guides/wordform-tips.html">Wordform Tips & Daily Strategy</a><a href="/guides/drift-word-ladder.html">Drift Word Ladder Guide</a><a href="/guides/sudoku-tips.html">Sudoku Tips for Beginners</a><a href="/guides/eclipse-2026.html">2026 & 2027 Solar Eclipse Guide</a><a href="/guides/floodline-scenarios.html">Floodline Scenarios Explained</a><a href="/guides/bonneville-dam-guide.html">Bonneville Dam Operator Guide</a><a href="/guides/free-browser-chess.html">Play Chess Free in Your Browser</a><a href="/guides/solitaire-klondike.html">How to Play Klondike Solitaire</a><a href="/guides/2048-strategy.html">2048 Strategy: How to Reach 2048</a><a href="/guides/minesweeper-strategy.html">Minesweeper Strategy for Beginners</a><a href="/guides/backgammon-rules.html">Backgammon Rules & Opening Strategy</a><a href="/guides/mahjong-solitaire.html">How to Play Mahjong Solitaire</a></div>
+  <footer>
+    <a href="/">Home</a> ·
+    <a href="/play.html">Play</a> ·
+    <a href="/about.html">About</a> ·
+    <a href="/guides/">All guides</a>
+  </footer>
+</div>
+<script src="/analytics.js"></script>
+<script src="/nav.js" defer></script>
+</body>
+</html>
