@@ -5030,6 +5030,36 @@ requestAnimationFrame(loop);
   <details><summary>What's the hardest scenario?</summary><p>2017 Oroville. Three independent failure modes (auxiliary spillway erosion, main spillway erosion, downstream evacuation logistics) all in 72 hours of game time.</p></details>
   <details><summary>Where can I buy it?</summary><p>itch.io and Steam — search "Floodline". Single $2 purchase; free in-browser demo at boardgaminghub.com/Floodline.html.</p></details>
 
+  <h2>How the model works — the real hydrology</h2>
+  <p>Floodline routes water with an explicit, mass-conserving <strong>shallow-water cellular scheme</strong> on the terrain grid, not a full 2D Saint-Venant / HEC-RAS solver. It is a first-order diffusive-wave approximation: fast, stable, and directionally honest, but it does not resolve momentum, backwater dynamics, or supercritical shocks the way a professional engineering model would. Everything below is exactly what the code does.</p>
+
+  <h3>Per-cell flux &amp; mass balance</h3>
+  <p>Each cell tracks a water depth. Its hydraulic head is the sum of terrain, any structure height, and the standing water: <strong>h = elevation + structure + depth</strong>. Every step, water is pushed to each of the 8 neighbours in proportion to the positive head difference:</p>
+  <ul>
+    <li><strong>flux fₙ = min( depthᵢ , Δh · k )</strong> for each neighbour where Δh = hᵢ − hₙ &gt; 0.</li>
+    <li>The conveyance coefficient <strong>k</strong> is 0.22 over open ground, 0.45 in dredged channels, and 0.35 over spillways — channels move water roughly twice as fast, which is why cutting a channel drains a bowl.</li>
+    <li>Diagonal fluxes are scaled by <strong>1/√2 ≈ 0.7071</strong> to correct for the longer cell-to-cell distance.</li>
+    <li><strong>Per-cell outflow cap:</strong> if the eight outgoing fluxes sum to more than the water actually present, every flux is rescaled by depthᵢ / total. A cell can never export more water than it holds — this is the conservation guarantee.</li>
+  </ul>
+  <p>Mass balance is enforced by construction: each step subtracts the total outgoing flux from the source cell and adds it to the receiving cells (<code>waterNext[i] −= total</code>; neighbours <code>+= flux</code>). Nothing is created or destroyed except through the explicit source/sink terms below. A small wind-shear term (≈0.045% of wind speed, capped at 25% of cell depth, active only when depth &gt; 5 cm) nudges shallow sheet-flow but never overrides gravity.</p>
+
+  <h3>Sources &amp; sinks</h3>
+  <ul>
+    <li><strong>Rain</strong> is applied as depth per step: rainPerStep = (rain_mm_per_hr / 3600) · dt · 0.15, added to every non-outlet cell.</li>
+    <li><strong>Off-map watershed runoff</strong> is a first-order linear reservoir: watershedQ += (inflowFromRain − watershedQ/τ) · dt, with lag τ = 18 s. This produces the delayed limb of the hydrograph from rain falling on the (unseen) upstream basin, whose area is the scenario's watershedRatio (default 5×) times the visible map.</li>
+    <li><strong>Infiltration</strong> is a Green-Ampt-style sink limited by antecedent soil saturation: taken = min(depth, rate · (1 − saturation)), with rate depending on soil — sand 0.0012, loam 0.0006, clay 0.0002 per unit time. Pre-wet soil (high AMC in historical scenarios) infiltrates far less, so rain wins during a storm.</li>
+    <li><strong>Pumps</strong> remove up to 0.03 (× power multiplier) of depth from each cell in a 5×5 footprint; they need a powered, non-flooded cell to run. <strong>Siphons</strong> passively drain up to 0.012 from a 3×3 footprint once primed by &gt; 0.1 m of standing water — slower, but no power needed.</li>
+  </ul>
+
+  <h3>Downstream boundary (stage-discharge)</h3>
+  <p>The outlet row is held at a tailwater stage set by a rating curve, not a fixed wall. The measured incremental outflow q is low-pass filtered, then the stage is <strong>H = 3.2 + min(1.5, 6.0 · q^0.6)</strong> metres. The exponent ≈ 0.6 and offset come from collapsing a wide-rectangular Manning solve (n ≈ 0.035 vegetated channel, slope S₀ ≈ 0.001, breadth ≈ 30 m) into the form H = H₀ + a·q^b; the 1.5 m cap represents the backwater rise before the channel leaves the frame.</p>
+
+  <h3>Levee stress &amp; overtopping</h3>
+  <p>Levees do not fail on a simple height check — they accumulate stress while overtopped. When any neighbour's water surface exceeds the levee crest (maxHead &gt; 0), stress builds as <strong>stress += dt · rate · (1 + 3·maxHead)</strong>, where rate = 1.0 (0.5 if reinforced), so deeper overtopping fails a levee faster. A breach fires when stress crosses the threshold of 5 (10 if reinforced), times the scenario difficulty multiplier; the crest then drops and the cell becomes a breach. When not overtopped, stress relaxes at −0.5·dt. Sandbags erode separately under sustained flow shear (flow &gt; 0.15), not under static head.</p>
+
+  <h3>Integration</h3>
+  <p>The solver runs on a <strong>fixed timestep of PHYS_DT = 1/60 game-second</strong> using an accumulator, capped at 120 sub-steps per frame. Because the flux, inflow, pump and siphon terms move a fixed amount of water per <code>step()</code> call, the fixed sub-step count decouples total throughput from frame rate and game speed — the same volume is routed per game-second whether you run at 1× or 8×. Scenarios are calibrated against published DWR and USACE post-event reports, but the model stays first-order: treat it as an intuition-builder for routing, storage and levee risk, not as a certified flood forecast.</p>
+
   <h3>Related games</h3>
   <ul>
     <li><a href="BonnevilleSpillwayOperator.html">BonnevilleSpillwayOperator</a> — dam operator sim.</li>

@@ -2026,6 +2026,30 @@ generateEclipses(
     <li>Toggle coastlines, night shading, penumbra band, and landmark cities along the path.</li>
     <li>Open <strong>Show the Math</strong> for shadow geometry and contact times; use <strong>YOUR LOCATION</strong> to check totality at your coordinates.</li>
   </ul>
+  <h3>How the model works — the real astronomy</h3>
+  <p>Every eclipse position in this tool comes from the open-source <strong>astronomy-engine</strong> library (<code>astronomy.browser.min.js</code>), which implements the VSOP87 / high-precision lunar theory used for professional ephemerides. Nothing here is a hand-rolled Kepler approximation: the Sun's geocentric vector is read from <code>Astronomy.GeoVector(Sun, t, aberration=true)</code> and the Moon's from <code>Astronomy.GeoMoon(t)</code>, and eclipses are located with the library's own <code>SearchGlobalSolarEclipse</code> / <code>NextGlobalSolarEclipse</code>. The catalog spans <strong>1900–2200</strong>, matching NASA's Five Millennium Canon of Solar Eclipses (Espenak &amp; Meeus).</p>
+
+  <h3>Shadow cone &amp; geoid intersection</h3>
+  <p>The path is built by the <strong>MoonShadow → GeoidIntersect</strong> pipeline — the same geometry astronomy-engine uses internally for global eclipse search, <em>not</em> the classical Besselian fundamental-plane elements. In outline:</p>
+  <ul>
+    <li><strong>Shadow axis:</strong> a line running from the Sun through the Moon, direction <code>dir = moon − sun</code>. The geocentre's projection onto that axis gives a parameter u and a perpendicular miss-distance r.</li>
+    <li><strong>Cone radii:</strong> the umbral radius along the axis is <code>k = R_sun − (1+u)·(R_sun − R_moon)</code> and the penumbral radius is <code>p = −R_sun + (1+u)·(R_sun + R_moon)</code>, with R_sun = 695 700 km and R_moon = 1737.4 km.</li>
+    <li><strong>Geoid intersection:</strong> the axis is intersected with the <strong>WGS84 ellipsoid</strong> (equatorial radius 6378.1366 km, flattening factor 0.9966472) by scaling the z-axis to a sphere and solving the resulting quadratic <code>A·u² + B·u + C = 0</code>; the near root is the ground point. Longitude is de-rotated by Greenwich Apparent Sidereal Time.</li>
+  </ul>
+
+  <h3>Total vs annular classification</h3>
+  <p>Whether the eclipse is total or annular is decided by the umbral cone radius <strong>at the actual surface intersection point</strong>, not at closest approach to Earth's centre. Using the Moon's polar radius (1736 km, the value astronomy-engine uses for this test), the code evaluates <code>k_surface = R_sun − (1+u)·(R_sun − 1736)</code> and classifies:</p>
+  <ul>
+    <li><strong>Total</strong> when <code>k_surface &gt; 0.014 km</code> (the umbra tip reaches below the ground — the Espenak-parity threshold),</li>
+    <li><strong>Annular</strong> otherwise (the antumbra falls short, leaving a ring of Sun).</li>
+  </ul>
+  <p>The shadow-axis miss-distance is reported as gamma, <code>γ = r / R_earth</code> in Earth radii; when the axis misses the globe entirely the event is partial-only.</p>
+
+  <h3>Topocentric magnitude</h3>
+  <p>Eclipse magnitude is the ratio of the Moon's apparent angular radius to the Sun's, <code>mag = θ_moon / θ_sun</code>. Crucially it uses <strong>topocentric</strong> distances — the Sun and Moon distances as seen from the greatest-eclipse ground point via <code>Astronomy.Equator(..., observer)</code> — because a surface observer sits about one Earth radius closer to the Moon than the geocentre, and a geocentric figure understates magnitude by roughly 1.5–1.7%.</p>
+
+  <p>The positions are sub-arcsecond and the ground path is sub-kilometre for 1900–2200, but this is a visualisation, not a substitute for official predictions: for mission-critical timing, cross-check <a href="https://eclipse.gsfc.nasa.gov">eclipse.gsfc.nasa.gov</a>.</p>
+
   <h3>Related</h3>
   <ul>
     <li><a href="Apoapsis.html">Apoapsis</a> — 3D rocket orbital mechanics.</li>

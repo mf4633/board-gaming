@@ -3053,6 +3053,43 @@ requestAnimationFrame(loop);
   <details><summary>Are there career mode wins?</summary><p>Ten-year campaign awards a "career bronze/silver/gold" based on aggregate performance. Going golden requires anticipating inflow uncertainty rather than reacting.</p></details>
   <details><summary>Can I cause a dam failure?</summary><p>Soft-fail only — overtopping or spillway overload triggers a critical penalty and ends the campaign. The model does not simulate physical breach.</p></details>
 
+  <h2>How the model works — the real formulas</h2>
+  <p>The simulation runs a small set of first-principles equations every tick. Units are kept in the operator's own working system — flow in <strong>kcfs</strong> (thousands of cubic feet per second), power in <strong>MW</strong>, pool elevation in <strong>ft</strong>, time in <strong>minutes</strong>. Reservoir geometry, turbine count and spillway capacity follow public USACE data for Bonneville (nameplate ≈ 1077 MW, Francis units, flip-lip deflectors). Here is what each meter is actually computing.</p>
+
+  <h3>Reservoir mass balance</h3>
+  <p>The pool is a bathtub. Net storage change is inflow minus everything leaving:</p>
+  <ul>
+    <li><strong>netQ = inflow − turbineFlow − spillQ − ladderQ</strong> (kcfs)</li>
+    <li><strong>ΔStorage = netQ · 1.377 · dt</strong> acre-feet, where 1.377 = 1000·60/43560 converts kcfs·minutes to acre-feet.</li>
+    <li><strong>Δelevation = ΔStorage / reservoirAcres</strong> — a flat-pool approximation (surface area constant with stage).</li>
+  </ul>
+
+  <h3>Hydropower</h3>
+  <p>The powerhouse uses the standard hydraulic-power equation P = ρ·g·Q·H·η, with water density ρ = 1000 kg/m³ and g = 9.81 m/s². Rather than convert units every frame, the code folds the kcfs→m³/s and ft→m conversions plus ρg and the ÷10⁶ (W→MW) into a single constant:</p>
+  <ul>
+    <li><strong>P(MW) ≈ Q(kcfs) · H(ft) · 0.0846 · η</strong></li>
+  </ul>
+  <p>The 0.0846 is that lumped unit-conversion constant (it represents ρg with the imperial-to-SI and W-to-MW factors baked in). Efficiency η is 0.86 for the baseline Francis units, 0.90 after a Kaplan retrofit. Net head is <strong>H = poolElev − tailwater − 0.015·Q</strong> (a 0.015 ft/kcfs penstock head-loss term), tailwater rising with total discharge along a linearised rating curve capped at +18 ft. Generation is clipped to the nameplate ceiling, and revenue accrues as genMW · (dt/60) · $42/MWh.</p>
+
+  <h3>Total dissolved gas (TDG)</h3>
+  <p>Spilled water plunges into the stilling basin and entrains air, driving nitrogen/oxygen supersaturation downstream — the mechanism behind gas-bubble trauma in salmon. The model uses the familiar square-root-of-spill form, floored at 100% saturation:</p>
+  <ul>
+    <li><strong>TDG_target = 100 + coef · √(spillQ)</strong>, with spillQ clamped ≥ 0.</li>
+    <li>coef = <strong>1.5</strong> with plain gates, dropping to <strong>1.0</strong> once flip-lip deflectors are installed (deflectors skim the jet along the surface instead of plunging it).</li>
+    <li>The displayed TDG relaxes toward that target: TDG += (target − TDG)·min(1, 0.12·dt).</li>
+  </ul>
+  <p>Regulatory thresholds mirror the real EPA/ODEQ regime: harm to fish begins above 115% (110% during a DEQ inspection window), monetary penalties accrue above 120%, and 130% is a hard shutdown.</p>
+
+  <h3>Salmon survival</h3>
+  <p>With a fish ladder installed, passage each tick scales with attraction flow and inverse TDG harm:</p>
+  <ul>
+    <li>attract = clamp(ladderQ / 3.5, 0, 1.2)</li>
+    <li>TDG harm fraction <strong>= clamp((TDG − 115) / 10, 0, 1)</strong> — zero at 115%, total kill at 125%; a juvenile-bypass system multiplies this harm by 0.2 (a 5× reduction).</li>
+    <li>Surviving passage ∝ attract · <strong>(1 − harm)</strong>; mortality ∝ attract · harm. The survival fraction is literally 1 − harm, so every extra point of TDG above 115% converts passing fish into kills.</li>
+  </ul>
+
+  <p>This is an operations model, not a CFD or fisheries-population model: the pool is treated as a single well-mixed volume, tailwater and TDG use algebraic rating relations rather than routed hydraulics, and salmon are a flow-and-gas response curve rather than individual agents. It is calibrated to give the real tradeoffs — spill for fish attraction versus TDG kill, turbine flow for revenue versus pool drawdown — not certified numbers.</p>
+
   <h3>Related games</h3>
   <ul>
     <li><a href="Floodline.html">Floodline</a> — California flood defense.</li>

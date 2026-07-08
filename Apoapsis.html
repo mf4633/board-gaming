@@ -3221,6 +3221,53 @@ maybeShowTutorial();
   <details><summary>What's a good gravity-turn altitude?</summary><p>Begin pitching over at ~5 km, target ~45° pitch by 20 km. Earlier pitch wastes fuel on horizontal velocity at sea level (high drag); later pitch wastes fuel fighting gravity.</p></details>
   <details><summary>Can I land on the Moon?</summary><p>Single-stage to orbit and a circumlunar flyby are both achievable with the default rocket. A surface-landing mission requires a custom multi-stage build.</p></details>
 
+  <h2>How the model works — the real physics</h2>
+  <p>Apoapsis integrates the equations of motion numerically every tick rather than drawing an analytic conic — the trajectory you see emerges from the forces, so a badly timed burn distorts the orbit exactly as it should. Units are SI throughout (metres, kilograms, seconds, newtons). Here is the actual math the code runs.</p>
+
+  <h3>Gravity</h3>
+  <p>Gravity is inverse-square about the current primary body. Earth's gravitational parameter is built from surface gravity and radius:</p>
+  <ul>
+    <li><strong>GM = g₀·R²</strong>, with g₀ = 9.80665 m/s² and R = 6 371 000 m.</li>
+    <li>Acceleration magnitude at radius r is <strong>g = GM / r²</strong>, directed along −r̂ (toward the body centre). Equivalently g(alt) = g₀·(R/(R+alt))².</li>
+  </ul>
+
+  <h3>Integration — semi-implicit (symplectic) Euler</h3>
+  <p>Each step advances velocity first, then position with the <em>updated</em> velocity:</p>
+  <ul>
+    <li><strong>v ← v + a·dt</strong>, then <strong>x ← x + v·dt</strong>, with a fixed step dt = 0.01 s.</li>
+  </ul>
+  <p>This ordering is what makes the method symplectic: unlike plain (explicit) Euler it conserves orbital energy over many revolutions, so a circular orbit stays circular instead of spiralling out from integration error.</p>
+
+  <h3>Thrust, mass flow &amp; the rocket equation</h3>
+  <p>Engines are defined by thrust F and specific impulse Isp. Propellant burns at the mass-flow rate</p>
+  <ul>
+    <li><strong>ṁ = F / (Isp · g₀)</strong> — mass is drained from the active stage each step, so the vehicle accelerates harder as tanks empty (a = F/m with m falling).</li>
+  </ul>
+  <p>Stage and total Δv budgets come straight from the <strong>Tsiolkovsky rocket equation</strong>:</p>
+  <ul>
+    <li><strong>Δv = Isp · g₀ · ln(m_wet / m_dry)</strong>, where Isp is thrust-weighted-averaged across the engines firing in that stage and m_wet/m_dry include all mass carried above the stage.</li>
+  </ul>
+
+  <h3>Atmosphere &amp; drag</h3>
+  <p>Air density follows the International Standard Atmosphere in the troposphere and an exponential fall-off above it:</p>
+  <ul>
+    <li>Below 11 km: T = T₀ − L·alt, then <strong>P = P₀·(T/T₀)^(g₀·M/(R·L))</strong> and <strong>ρ = P·M/(R·T)</strong>, with T₀ = 288.15 K, P₀ = 101 325 Pa, lapse L = 0.0065 K/m, molar mass M = 0.029 kg/mol, gas constant R = 8.314.</li>
+    <li>Above 11 km: ρ = ρ₁₁·exp(−(alt−11000)/6500) — a 6.5 km scale height — cut to zero above 140 km.</li>
+    <li>Drag force <strong>F_d = ½·ρ·v²·C_d·A</strong>, opposing the velocity vector.</li>
+  </ul>
+
+  <h3>Orbital elements — vis-viva &amp; the eccentricity vector</h3>
+  <p>Live orbit readouts are derived every tick from the state vectors (position r, velocity v):</p>
+  <ul>
+    <li>Specific orbital energy (the vis-viva relation) <strong>ε = v²/2 − μ/r</strong>.</li>
+    <li>Specific angular momentum <strong>h = r × v</strong>.</li>
+    <li>Eccentricity vector <strong>e = (v × h)/μ − r̂</strong>; eccentricity is its magnitude.</li>
+    <li>Semi-major axis <strong>a = −μ/(2ε)</strong>, giving periapsis a(1−e) and apoapsis a(1+e), each minus the body radius to report altitude. When ε ≥ 0 the orbit is unbound (hyperbolic/parabolic) and apoapsis is infinite.</li>
+  </ul>
+
+  <h3>What's simplified</h3>
+  <p>Within the active body's sphere of influence gravity is integrated numerically from the single primary — genuine Newtonian motion, not a precomputed two-body conic. Transitions between bodies use the standard <strong>patched-conic / SOI hand-off</strong> (only one gravitating body at a time; no n-body perturbations). The Mun and Minmus and their SOI radii are <strong>KSP-scaled toy bodies</strong> (Mun radius 300 km, SOI 1500 km, etc.), deliberately shrunk so a transfer fits in a short play session rather than matching the real Earth-Moon system.</p>
+
   <h3>Related games</h3>
   <ul>
     <li><a href="BiosphereBlue.html">BiosphereBlue</a> — planet-scale geosim.</li>
