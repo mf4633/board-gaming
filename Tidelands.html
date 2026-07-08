@@ -1450,9 +1450,22 @@
         var j = Math.floor(rng() * (i + 1));
         var tmp = slotOrder[i]; slotOrder[i] = slotOrder[j]; slotOrder[j] = tmp;
       }
+      function firstFreeSafeHex() {
+        // Prefer the highest unoccupied, unflooded hex; guarantees a valid land tile.
+        var bestHex = -1, bestElev = -1;
+        for (var k = 0; k < TOTAL_HEXES; k++) {
+          if (hexes[k].structure) continue;
+          if (hexes[k].elevation <= 0) continue;
+          if (hexes[k].elevation > bestElev) { bestElev = hexes[k].elevation; bestHex = k; }
+        }
+        return bestHex;
+      }
       for (var i = 0; i < numPlayers; i++) {
         var slot = slotOrder[i];
-        var hi = chosen[slot] !== undefined ? chosen[slot] : (slot < highlands.length ? highlands[slot].idx : slot);
+        var hi = chosen[slot] !== undefined ? chosen[slot]
+               : (slot < highlands.length ? highlands[slot].idx : firstFreeSafeHex());
+        if (hi < 0 || hexes[hi].structure) hi = firstFreeSafeHex(); // never place on an occupied/invalid hex
+        if (hi < 0) continue;
         hexes[hi].structure = { type: 'camp', owner: i };
         players[i].structures.push({ type: 'camp', hex: hi });
       }
@@ -2112,6 +2125,16 @@
       if (type === 'trireme') { r.Timber -= 1; r.Bronze -= 1; r.Wine -= 1; }
     }
 
+    // Remove a player's structure entry of a given type at a hex (used when a
+    // temple is raised on an existing camp: the camp is consecrated into the
+    // temple rather than both counting — otherwise one hex would score 3 VP).
+    function removeStructAt(playerIdx, hexIdx, type) {
+      var arr = players[playerIdx].structures;
+      for (var i = arr.length - 1; i >= 0; i--) {
+        if (arr[i].hex === hexIdx && arr[i].type === type) arr.splice(i, 1);
+      }
+    }
+
     function validCampHexes(playerIdx) {
       var valid = [];
       for (var i = 0; i < TOTAL_HEXES; i++) {
@@ -2361,7 +2384,13 @@
       marker.textContent = tideLevel;
       var dirText = tideDirection > 0 ? 'Gathering \u2191' : 'Subsiding \u2193';
       var heldText = tideHeldThisRound ? ' &mdash; <span style="color:#D4A860">Appeased!</span>' : '';
-      document.getElementById('tide-label').innerHTML = 'Poseidon\u2019s Wrath: ' + tideLevel + ' / 5 &mdash; ' + dirText + ' &mdash; Turn ' + turnNumber + heldText;
+      // Forecast the next natural wrath level (the 1-2-3-4-5-4-3-2-1 drift); held rounds stay put.
+      var nextLevel;
+      if (tideHeldThisRound) nextLevel = tideLevel;
+      else if (tideDirection > 0) nextLevel = tideLevel >= 5 ? 4 : tideLevel + 1;
+      else nextLevel = tideLevel <= 1 ? 2 : tideLevel - 1;
+      var forecast = ' &mdash; <span style="opacity:.8">next ~' + nextLevel + '</span>';
+      document.getElementById('tide-label').innerHTML = 'Poseidon\u2019s Wrath: ' + tideLevel + ' / 5 &mdash; ' + dirText + forecast + ' &mdash; Turn ' + turnNumber + heldText;
 
       renderOmenPanel();
 
@@ -2397,7 +2426,7 @@
         var vp = totalVP(p);
         var vpRow = document.createElement('div');
         vpRow.className = 'panel-row';
-        vpRow.innerHTML = 'VP: <span>' + vp + '</span> &nbsp; Coins: <span>' + players[p].coins + '</span>';
+        vpRow.innerHTML = 'VP: <span>' + vp + '</span> / ' + WIN_VP + ' &nbsp; Coins: <span>' + players[p].coins + '</span>';
         panel.appendChild(vpRow);
 
         var resRow = document.createElement('div');
@@ -2714,6 +2743,7 @@
       } else if (selectedAction === 'temple') {
         if (highlightedHexes.indexOf(idx) < 0) return;
         payBuildCost(actingPlayer, 'temple');
+        removeStructAt(actingPlayer, idx, 'camp'); // consecrate any camp here into the temple
         hexes[idx].temple = true;
         hexes[idx].flooded = false;
         hexes[idx].structure = { type: 'temple', owner: actingPlayer };
@@ -3291,7 +3321,14 @@
         if (vp < WIN_VP) continue;
         if (vp > best) { best = vp; bestIdx = p; }
         else if (vp === best) {
-          if (players[p].coins > players[bestIdx].coins) bestIdx = p;
+          // Tie-break: coins, then camp count, then lower player index (kept implicitly).
+          var campsP = 0, campsB = 0;
+          for (var c = 0; c < players[p].structures.length; c++) if (players[p].structures[c].type === 'camp') campsP++;
+          for (var c = 0; c < players[bestIdx].structures.length; c++) if (players[bestIdx].structures[c].type === 'camp') campsB++;
+          if (players[p].coins > players[bestIdx].coins ||
+              (players[p].coins === players[bestIdx].coins && campsP > campsB)) {
+            bestIdx = p;
+          }
         }
       }
       if (bestIdx < 0) { winTriggered = false; return; }
@@ -3326,6 +3363,97 @@
       }, 500);
     }
 
+    // ---- AI build heuristics ----
+    function aiCountAdjacentOwn(playerIdx, hexIdx) {
+      var c = 0, nb = hexNeighbors[hexIdx];
+      for (var n = 0; n < nb.length; n++) {
+        var h = hexes[nb[n]];
+        if (h.structure && h.structure.owner === playerIdx) c++;
+      }
+      return c;
+    }
+    function aiBestCampHex(playerIdx, list) {
+      var best = null;
+      for (var i = 0; i < list.length; i++) {
+        var h = list[i];
+        var adj = aiCountAdjacentOwn(playerIdx, h);
+        var sc = adj * 4 + hexes[h].elevation; // grow the network, prefer safe ground
+        if (!best || sc > best.sc) best = { hex: h, adj: adj, sc: sc };
+      }
+      return best;
+    }
+    function aiBestTempleHex(playerIdx, list) {
+      var best = null;
+      for (var i = 0; i < list.length; i++) {
+        var h = list[i];
+        var adj = aiCountAdjacentOwn(playerIdx, h);
+        var st = hexes[h].structure;
+        var ownCampHere = st && st.owner === playerIdx && st.type === 'camp';
+        var protect = ownCampHere && hexes[h].elevation < 3; // flood-proof a low camp
+        var netVp = ownCampHere ? 1 : 2; // upgrading a camp is net +1 VP
+        var sc = adj * 4 + (5 - hexes[h].elevation) + (protect ? 6 : 0);
+        if (!best || sc > best.sc) best = { hex: h, adj: adj, protect: protect, netVp: netVp, sc: sc };
+      }
+      return best;
+    }
+    function aiBestTrireme(playerIdx) {
+      var starts = validTriremeStartHexes(playerIdx);
+      var bestStart = -1, bestEnd = -1, bestDist = 9999;
+      for (var s = 0; s < starts.length; s++) {
+        var ends = validTriremeEndHexes(playerIdx, starts[s]);
+        for (var e = 0; e < ends.length; e++) {
+          var d = hexDist(ends[e], marketHex);
+          if (d < bestDist) { bestDist = d; bestStart = starts[s]; bestEnd = ends[e]; }
+        }
+      }
+      return bestStart >= 0 ? { start: bestStart, end: bestEnd } : null;
+    }
+    // Pick the best build: close out a win when reachable, else maximise VP with
+    // a bias toward network growth and flood safety.
+    function aiChooseBuild(playerIdx) {
+      var opts = [];
+      if (canBuild(playerIdx, 'camp')) {
+        var cv = validCampHexes(playerIdx);
+        if (cv.length) { var bc = aiBestCampHex(playerIdx, cv); opts.push({ type: 'camp', hex: bc.hex, vp: 1, score: 1 + bc.adj * 0.4 + hexes[bc.hex].elevation * 0.12 }); }
+      }
+      if (canBuild(playerIdx, 'temple')) {
+        var tv = validTempleHexes(playerIdx);
+        if (tv.length) { var bt = aiBestTempleHex(playerIdx, tv); opts.push({ type: 'temple', hex: bt.hex, vp: bt.netVp, score: bt.netVp + bt.adj * 0.4 + (bt.protect ? 1.5 : 0) }); }
+      }
+      if (canBuild(playerIdx, 'trireme')) {
+        var br = aiBestTrireme(playerIdx);
+        if (br) opts.push({ type: 'trireme', start: br.start, end: br.end, vp: 2, score: 2.3 });
+      }
+      if (!opts.length) return null;
+      var vpNow = totalVP(playerIdx);
+      var winning = null;
+      for (var o = 0; o < opts.length; o++) {
+        if (vpNow + opts[o].vp >= WIN_VP && (!winning || opts[o].vp > winning.vp)) winning = opts[o];
+      }
+      if (winning) return winning;
+      opts.sort(function(a, b) { return b.score - a.score; });
+      return opts[0];
+    }
+    function aiExecuteBuild(playerIdx, choice, tag) {
+      payBuildCost(playerIdx, choice.type);
+      if (choice.type === 'camp') {
+        hexes[choice.hex].structure = { type: 'camp', owner: playerIdx };
+        players[playerIdx].structures.push({ type: 'camp', hex: choice.hex });
+      } else if (choice.type === 'temple') {
+        removeStructAt(playerIdx, choice.hex, 'camp');
+        hexes[choice.hex].temple = true;
+        hexes[choice.hex].flooded = false;
+        hexes[choice.hex].structure = { type: 'temple', owner: playerIdx };
+        players[playerIdx].structures.push({ type: 'temple', hex: choice.hex });
+      } else {
+        hexes[choice.start].triremes.push({ to: choice.end, owner: playerIdx });
+        players[playerIdx].structures.push({ type: 'trireme', hex: choice.start, to: choice.end });
+      }
+      var label = choice.type.charAt(0).toUpperCase() + choice.type.slice(1);
+      setMessage(playerName(playerIdx) + ' built a ' + label + (tag || '') + '.');
+      checkWin();
+    }
+
     function aiTurn() {
       if (phase !== 'active' || gameOver) return;
       if (!players[currentPlayer]) return;
@@ -3358,71 +3486,13 @@
         }
       }
 
-      // Priority 1: Build camp on high elevation hex
-      if (!didAction && canBuild(p, 'camp')) {
-        var valid = validCampHexes(p);
-        if (valid.length > 0) {
-          valid.sort(function(a, b) {
-            var elevDiff = hexes[b].elevation - hexes[a].elevation;
-            if (elevDiff !== 0) return elevDiff;
-            var dA = hexDist(a, marketHex);
-            var dB = hexDist(b, marketHex);
-            return dA - dB;
-          });
-          var target = valid[0];
-          payBuildCost(p, 'camp');
-          hexes[target].structure = { type: 'camp', owner: p };
-          players[p].structures.push({ type: 'camp', hex: target });
+      // Priority 1: Best build — plays to win, grows the scoring network, shields camps
+      if (!didAction) {
+        var choice = aiChooseBuild(p);
+        if (choice) {
+          aiExecuteBuild(p, choice);
           actionsLeft--;
           didAction = true;
-          setMessage(playerName(p) + ' built a Camp.');
-          checkWin();
-        }
-      }
-
-      // Priority 2: Build temple on productive low-elevation hex near camp
-      if (!didAction && canBuild(p, 'temple')) {
-        var valid = validTempleHexes(p);
-        if (valid.length > 0) {
-          valid.sort(function(a, b) {
-            return hexes[a].elevation - hexes[b].elevation;
-          });
-          var target = valid[0];
-          payBuildCost(p, 'temple');
-          hexes[target].temple = true;
-          hexes[target].flooded = false;
-          hexes[target].structure = { type: 'temple', owner: p };
-          players[p].structures.push({ type: 'temple', hex: target });
-          actionsLeft--;
-          didAction = true;
-          setMessage(playerName(p) + ' built a Temple.');
-          checkWin();
-        }
-      }
-
-      // Priority 3: Build trireme toward market
-      if (!didAction && canBuild(p, 'trireme')) {
-        var starts = validTriremeStartHexes(p);
-        var bestStart = -1, bestEnd = -1, bestDist = 9999;
-        for (var s = 0; s < starts.length; s++) {
-          var ends = validTriremeEndHexes(p, starts[s]);
-          for (var e = 0; e < ends.length; e++) {
-            var d = hexDist(ends[e], marketHex);
-            if (d < bestDist) {
-              bestDist = d;
-              bestStart = starts[s];
-              bestEnd = ends[e];
-            }
-          }
-        }
-        if (bestStart >= 0) {
-          payBuildCost(p, 'trireme');
-          hexes[bestStart].triremes.push({ to: bestEnd, owner: p });
-          players[p].structures.push({ type: 'trireme', hex: bestStart, to: bestEnd });
-          actionsLeft--;
-          didAction = true;
-          setMessage(playerName(p) + ' built a Trireme.');
-          checkWin();
         }
       }
 
@@ -3438,7 +3508,7 @@
           var keep = keepMap[rk] || 0;
           if (have > keep) {
             players[p].resources[rk]--;
-            players[p].coins += PRICES[rk];
+            players[p].coins += getHermesSellPrice(rk);
             traded = true;
           }
         }
@@ -3497,67 +3567,10 @@
 
       var didBuild = false;
 
-      // Try to build camp
-      if (!didBuild && canBuild(pIdx, 'camp')) {
-        var valid = validCampHexes(pIdx);
-        if (valid.length > 0) {
-          valid.sort(function(a, b) {
-            var elevDiff = hexes[b].elevation - hexes[a].elevation;
-            if (elevDiff !== 0) return elevDiff;
-            return hexDist(a, marketHex) - hexDist(b, marketHex);
-          });
-          var target = valid[0];
-          payBuildCost(pIdx, 'camp');
-          hexes[target].structure = { type: 'camp', owner: pIdx };
-          players[pIdx].structures.push({ type: 'camp', hex: target });
-          didBuild = true;
-          setMessage(playerName(pIdx) + ' built a Camp (special build).');
-          checkWin();
-        }
-      }
-
-      // Try to build temple
-      if (!didBuild && canBuild(pIdx, 'temple')) {
-        var valid = validTempleHexes(pIdx);
-        if (valid.length > 0) {
-          valid.sort(function(a, b) {
-            return hexes[a].elevation - hexes[b].elevation;
-          });
-          var target = valid[0];
-          payBuildCost(pIdx, 'temple');
-          hexes[target].temple = true;
-          hexes[target].flooded = false;
-          hexes[target].structure = { type: 'temple', owner: pIdx };
-          players[pIdx].structures.push({ type: 'temple', hex: target });
-          didBuild = true;
-          setMessage(playerName(pIdx) + ' built a Temple (special build).');
-          checkWin();
-        }
-      }
-
-      // Try to build trireme
-      if (!didBuild && canBuild(pIdx, 'trireme')) {
-        var starts = validTriremeStartHexes(pIdx);
-        var bestStart = -1, bestEnd = -1, bestDist = 9999;
-        for (var s = 0; s < starts.length; s++) {
-          var ends = validTriremeEndHexes(pIdx, starts[s]);
-          for (var e = 0; e < ends.length; e++) {
-            var d = hexDist(ends[e], marketHex);
-            if (d < bestDist) {
-              bestDist = d;
-              bestStart = starts[s];
-              bestEnd = ends[e];
-            }
-          }
-        }
-        if (bestStart >= 0) {
-          payBuildCost(pIdx, 'trireme');
-          hexes[bestStart].triremes.push({ to: bestEnd, owner: pIdx });
-          players[pIdx].structures.push({ type: 'trireme', hex: bestStart, to: bestEnd });
-          didBuild = true;
-          setMessage(playerName(pIdx) + ' built a Trireme (special build).');
-          checkWin();
-        }
+      var choice = aiChooseBuild(pIdx);
+      if (choice) {
+        aiExecuteBuild(pIdx, choice, ' (special build)');
+        didBuild = true;
       }
 
       if (!didBuild) {
