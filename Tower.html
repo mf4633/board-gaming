@@ -7398,6 +7398,37 @@ window.addEventListener('DOMContentLoaded', init);
   <details><summary>Why 27 floors?</summary><p>SimTower used 100; Tower trims to 27 to keep the simulation tractable and focus on layout decisions per floor. The first 10 floors are typically commercial, mid-floors residential, top floors premium.</p></details>
   <details><summary>When is the Steam release?</summary><p>In progress as "SKYSTACK". Tauri-packaged desktop build, target $2.99. Browser playtest version is the canonical free version while the paid build matures.</p></details>
 
+  <h2>How the model works</h2>
+  <p>Tower (SKYSTACK) is engineer-built, and the building runs on a real economic simulation that settles once per in-game day. The elevators, tenants, and foot traffic you watch in real time feed into an end-of-day accounting pass that computes revenue, upkeep, satisfaction, population, and net cash. Every formula below is read directly from the simulation source. The calendar is a 120-day year, 30 days per season.</p>
+
+  <h3>The daily economic tick</h3>
+  <p>At the close of each day the engine grows the surrounding city, updates market demand, then walks every unit: it churns tenants who have been unhappy too long, computes that unit's rent and any passive income, and accumulates prestige and upkeep. Income is then scaled by the boom/bust market multiplier and a prestige multiplier (1 + prestige/100), loan interest and matured bonds are deducted, and <strong>net = income − expenses</strong> is applied to your cash.</p>
+
+  <h3>Rent, occupancy, and satisfaction</h3>
+  <p>Rentable units (offices, condos, penthouses) earn a daily amount that couples occupancy, satisfaction, quality, tenant traits, and market class multipliers:</p>
+  <p><strong>rent = base rent × occupancy × (0.4 + 0.6 × satisfaction) × quality × tenantMult × classMult</strong></p>
+  <p>Occupancy is simply tenants ÷ capacity. Satisfaction is a 0–100 score: it starts at 100, is eroded when tenants wait too long for an elevator, boosted by nearby amenities (gardens, spas, gyms, parking within radius), and docked by noise from restaurants, cinemas, and helipads and by distance from the nearest transit hub — stairs are punishing (roughly −2 per floor from a hub), elevators are fine until about 20 floors out. Because satisfaction enters rent through the (0.4 + 0.6 × satisfaction) term, a miserable full building still earns only 40% of its rent. Class multipliers apply the live market: offices track the office market index (and a challenge can double it), while condos and penthouses use 0.5 + 0.5 × the condo index. A three-day grand-opening bonus adds +30%.</p>
+
+  <h3>Population and star tiers</h3>
+  <p>Population is not an abstract counter — it is recomputed every day as the <strong>sum of actual tenants across all units</strong>, after spawns, churn, and sales resolve. That real occupancy drives promotion. Star tiers are monotonic (once earned, never lost) and unlock new unit types and perks:</p>
+  <table>
+    <thead><tr><th>Tier</th><th>Requirement</th><th>Unlocks</th></tr></thead>
+    <tbody>
+      <tr><td>1★</td><td>Lobby + an office or condo</td><td>Base units</td></tr>
+      <tr><td>2★</td><td>300 population</td><td>Save/load, −20% elevators, quests</td></tr>
+      <tr><td>3★</td><td>1,000 population</td><td>Insurance, cinema/clinic/gym</td></tr>
+      <tr><td>4★</td><td>3,000 population</td><td>+1 elevator car per shaft, renovate, penthouses</td></tr>
+      <tr><td>5★</td><td>5,000 population</td><td>Prestige loop: cathedral, metro, helipad, observatory</td></tr>
+    </tbody>
+  </table>
+  <p>Each promotion also pays a one-time civic cash grant.</p>
+
+  <h3>Debt and bankruptcy</h3>
+  <p>Two borrowing instruments exist. A <strong>loan</strong> (2★+) bridges cash crunches at 0.2%/day interest, up to $500k × your star count; interest accrues daily on the outstanding principal. <strong>Bonds</strong> are periodic city offers — roughly every 25 days when the tower is healthy — of $500k + $200k × stars on a 30-day term at an implied 12% rate; the full repayment is deducted automatically at maturity. The failsafe is blunt and honest: <strong>seven consecutive days of negative cash triggers bankruptcy and ends the run</strong>, whether or not you ever borrowed.</p>
+
+  <h3>Weather and challenge modifiers</h3>
+  <p>Weather is rolled once each morning and holds all day, applying a foot-traffic multiplier — storm 0.5, snow 0.7, rain 0.85, fog 0.9, clear 1.0 — which throttles the visit-based revenue of shops, restaurants, and cinemas. Daily challenges layer on fixed conditions: a set starting budget, a forced week of storms ("Eye of the Storm"), doubled office rent ("Office Crunch"), or a build deadline. This is a stylized daily-settlement model rather than a continuous financial simulation — traffic and elevator physics run in real time, but money, satisfaction, and population are reconciled once per day.</p>
+
   <h3>Related games</h3>
   <ul>
     <li><a href="Cliffwalkers.html">Cliffwalkers</a> — Lemmings-style puzzle.</li>

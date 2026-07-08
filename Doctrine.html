@@ -123,7 +123,7 @@
   ::-webkit-scrollbar-thumb { background: var(--border-bright); }
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Simulations","item":"https://boardgaminghub.com/#sims"},{"@type":"ListItem","position":3,"name":"Doctrine","item":"https://boardgaminghub.com/Doctrine.html"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How accurate is the geopolitics?","acceptedAnswer":{"@type":"Answer","text":"Doctrine's economic and military models are simplified but draw on real datasets (Maddison historical GDP, SIPRI military expenditure). Specific event probabilities are tuned for replayability over historical accuracy."}},{"@type":"Question","name":"Can I play as a minor power?","acceptedAnswer":{"@type":"Answer","text":"Yes. Smaller nations have less budget but more flexibility — alliance-shopping is a viable strategy. Some of the strongest scoring runs come from middle-power coalition-building."}},{"@type":"Question","name":"How long is a campaign?","acceptedAnswer":{"@type":"Answer","text":"60 in-game years = 240 turns ≈ 90–120 minutes of real time. Save and resume across sessions."}},{"@type":"Question","name":"Is multiplayer planned?","acceptedAnswer":{"@type":"Answer","text":"Asymmetric hot-seat (different powers per session) is in design. Real-time multiplayer is not on the near roadmap."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How accurate is the geopolitics?","acceptedAnswer":{"@type":"Answer","text":"Doctrine's economic and military models are simplified but draw on real datasets (Maddison historical GDP, SIPRI military expenditure). Specific event probabilities are tuned for replayability over historical accuracy."}},{"@type":"Question","name":"Can I play as a minor power?","acceptedAnswer":{"@type":"Answer","text":"Yes. Smaller nations have less budget but more flexibility — alliance-shopping is a viable strategy. Some of the strongest scoring runs come from middle-power coalition-building."}},{"@type":"Question","name":"How long is a campaign?","acceptedAnswer":{"@type":"Answer","text":"61 annual turns spanning 1990–2050 ≈ 30–60 minutes of real time. Save and resume across sessions."}},{"@type":"Question","name":"Is multiplayer planned?","acceptedAnswer":{"@type":"Answer","text":"Asymmetric hot-seat (different powers per session) is in design. Real-time multiplayer is not on the near roadmap."}}]}</script>
 </head>
 <body>
 <div class="scanline"></div>
@@ -1184,13 +1184,61 @@ window.playerAction = playerAction;
   <p>Doctrine is a geopolitical simulation spanning 1990 to 2050. Take charge of a major or minor power; navigate post-Cold-War alliances, manage economic and military doctrine, and respond to procedurally generated crises. Aerobiz-style decisions on a real d3-geo world map.</p>
 
   <h3>How to play</h3>
-  <p>Quarterly turns. Each quarter: review intelligence, set foreign-policy posture, allocate military and economic budgets, respond to crises. Non-deterministic events (recessions, civil wars, climate shocks) inject realism. Win condition is open — accumulate national capability score across the full 60-year campaign.</p>
+  <p>Annual turns from 1990 to 2050 (61 turns). Each year: review intelligence, set foreign-policy posture, allocate military and economic budgets, respond to crises. Non-deterministic events (recessions, civil wars, climate shocks) inject realism. Win condition is open — accumulate national capability score across the full campaign.</p>
 
   <h3>Frequently asked questions</h3>
   <details><summary>How accurate is the geopolitics?</summary><p>Doctrine's economic and military models are simplified but draw on real datasets (Maddison historical GDP, SIPRI military expenditure). Specific event probabilities are tuned for replayability over historical accuracy.</p></details>
   <details><summary>Can I play as a minor power?</summary><p>Yes. Smaller nations have less budget but more flexibility — alliance-shopping is a viable strategy. Some of the strongest scoring runs come from middle-power coalition-building.</p></details>
-  <details><summary>How long is a campaign?</summary><p>60 in-game years = 240 turns ≈ 90–120 minutes of real time. Save and resume across sessions.</p></details>
+  <details><summary>How long is a campaign?</summary><p>61 annual turns spanning 1990–2050 ≈ 30–60 minutes of real time. Save and resume across sessions.</p></details>
   <details><summary>Is multiplayer planned?</summary><p>Asymmetric hot-seat (different powers per session) is in design. Real-time multiplayer is not on the near roadmap.</p></details>
+
+  <h2>How the model works</h2>
+  <p>Doctrine is built by engineers, and the whole campaign is a deterministic turn loop wrapped around a handful of transparent equations. It runs <strong>annual turns from 1990 to 2050 inclusive</strong> — 61 turns. Each time you end a year the engine resolves rivals, events, and the economy in a fixed order, then advances the clock and checks win/lose conditions. Nothing is hidden dice-rolling behind the scenes; every number below comes straight from the simulation source.</p>
+
+  <h3>The annual turn cycle</h3>
+  <p>Ending a year runs six steps in sequence: (1) each AI rival spends its <em>tempo</em> on instruments, (2) scripted and random events fire, (3) the economy ticks for all four powers and all twelve middle powers, (4) influence scores are recomputed, (5) the year advances, and (6) win/lose conditions are tested. Tempo — action points per turn — then resets (USA/China/Russia get 3, the fragmented EU gets 2).</p>
+
+  <h3>The economy model</h3>
+  <p>Growth is recomputed fresh every year from a persistent base rate, so budget dials never ratchet the growth number cumulatively toward its clamp. For each power the effective growth is:</p>
+  <p><strong>growth = baseGrowth + (infra − 4)×0.5 − max(0, mil − 6)×0.3 − max(0, rate − 6)×0.2 − max(0, debt/GDP − 1.0)×1.5</strong>, plus ±1 of noise, clamped to the range −8% … +12%.</p>
+  <p>GDP then compounds by that growth. Infrastructure spending above 4% of GDP lifts growth; military spending above 6%, interest rates above 6%, and a debt overhang above 100% of GDP all drag it down. Each year the budget is then balanced against revenue:</p>
+  <table>
+    <thead><tr><th>Line</th><th>Formula</th></tr></thead>
+    <tbody>
+      <tr><td>Tax revenue</td><td>GDP × 20% (15% for China and Russia)</td></tr>
+      <tr><td>Program spend</td><td>GDP × (military% + social% + infra%)</td></tr>
+      <tr><td>Debt interest</td><td>GDP × debt/GDP × rate%</td></tr>
+      <tr><td>Force upkeep</td><td>per-carrier, per-base, plus overseas base/carrier/pact upkeep</td></tr>
+      <tr><td>Deficit</td><td>(spend + interest + upkeep) − revenue → added to debt/GDP</td></tr>
+    </tbody>
+  </table>
+  <p>Debt/GDP is clamped to 0–500%. Military capability eases 15% of the way toward a target set by your military budget each year (clamped 5–200). Approval drifts on growth, social spending, high rates, and debt overhang. Interest rates are a dial you set — there is no automatic central-bank feedback, an honest simplification the dev notes flag as under-tuned.</p>
+
+  <h3>Alignment and diplomacy</h3>
+  <p>Each middle power holds an alignment score (0–100) toward every bloc. Instruments push those scores with a fixed swing on use and a slow yearly drift while the presence remains:</p>
+  <table>
+    <thead><tr><th>Instrument</th><th>Tempo</th><th>Cost</th><th>Swing</th><th>Yearly drift</th></tr></thead>
+    <tbody>
+      <tr><td>Issue Loan / Aid</td><td class="num">1</td><td class="num">$5B</td><td class="num">+18</td><td>—</td></tr>
+      <tr><td>Trade Deal</td><td class="num">1</td><td class="num">0</td><td class="num">+10</td><td class="num">+0.5</td></tr>
+      <tr><td>Forward Base</td><td class="num">2</td><td class="num">$8B</td><td class="num">+14</td><td class="num">+0.4</td></tr>
+      <tr><td>Carrier Group</td><td class="num">2</td><td class="num">upkeep</td><td class="num">+12</td><td class="num">+0.3</td></tr>
+      <tr><td>Intel Op</td><td class="num">1</td><td class="num">$2B</td><td class="num">+8</td><td>probabilistic</td></tr>
+      <tr><td>Defense Pact</td><td class="num">2</td><td class="num">upkeep</td><td class="num">+25</td><td class="num">+0.6</td></tr>
+    </tbody>
+  </table>
+  <p>One-shot costs are financed by issuing debt. Intel operations resolve stochastically: a 60% success chance for the full swing, a 15% chance of blowback (−10), and a 25% chance of nothing. A Defense Pact requires alignment ≥55, then locks that country under a floor and pulls it into your security umbrella. Alignment is effectively zero-sum above saturation: when a country's total alignment across all four blocs would exceed 100, the excess is drained proportionally from rivals — but never below any rival's own pact floor.</p>
+
+  <h3>Scoring</h3>
+  <p>Influence for a power is computed as the GDP-weighted sum of everyone it has drawn toward it, plus a modest premium on its own hard power:</p>
+  <p><strong>score = Σ (alignment ÷ 100 × country GDP) + own GDP × 0.5 + own military × 5</strong></p>
+  <p>Because middle-power GDP dominates that sum, coalition-building among the twelve contested states outscores raw domestic size — the dev notes acknowledge own-military barely moves the needle here.</p>
+
+  <h3>Events and win/lose</h3>
+  <p>History is layered on in two ways. Eight <strong>scripted events</strong> fire on their real years — Gulf War (1991), USSR dissolution (1992), Asian financial crisis (1997), 9/11 (2001), the 2008 GFC, Arab Spring (2011), a Crimea-style annexation window (2014, gated on Russian military strength), and the 2020 pandemic. On top of that, <strong>random events</strong> (Hormuz closure, Taiwan crisis, tech breakthrough, climate disaster, coup, oil spike) draw from a weighted pool with a two-year cooldown and roughly a 45% chance each eligible year, each gated behind a minimum year. The campaign ends with a debt crisis (debt/GDP &gt; 250% and rates &gt; 12%), losing office (approval &lt; 20% for three straight years), hegemony (≥80% of weighted global alignment held for five straight years), or — reaching 2050 — the highest influence score.</p>
+
+  <h3>Where the model is stylized</h3>
+  <p>Doctrine is a playable model, not a forecasting tool. Tax is a flat share of GDP rather than a real fiscal code; interest rates have no inflation feedback; rival AI is a single greedy heuristic that chases the highest-GDP, lowest-alignment target it can afford; listed alliances (NATO, CSTO) are flavor that grants no mechanical bonus; and chokepoint closures apply GDP shocks without physically blocking deployments. Event probabilities are tuned for replayability over historical fidelity. The starting numbers, though, are grounded in real 1990 data (Maddison-style GDP, SIPRI-style military expenditure).</p>
 
   <h3>Related games</h3>
   <ul>

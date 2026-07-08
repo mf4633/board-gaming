@@ -5863,6 +5863,43 @@ init();
     <li>Watch demand meters — build what your city asks for.</li>
     <li>Use the budget panel before issuing bonds; interest drains monthly cash flow.</li>
   </ul>
+  <h2>How the model works</h2>
+  <p>Metropolis 2K is engineer-built, and the city is driven by a single monthly simulation tick rather than scripted growth. Each tick recomputes the utility networks, the pollution / crime / land-value heat maps, and the weather, then tallies your population and jobs, recalculates R/C/I demand, grows or abandons zones, rolls for disasters, and finally settles the budget. Every formula below is taken directly from the simulation source.</p>
+
+  <h3>The monthly tick loop</h3>
+  <p>Order matters: networks and heat maps are refreshed <em>first</em> so demand and land value react to this month's conditions, not last month's. The engine then sums residential population and commercial/industrial jobs per tier — light vs dense zones, and industrial split into dirty, manufacturing, and hi-tech — because taxes and demand are computed per tier, not in aggregate.</p>
+
+  <h3>R/C/I demand</h3>
+  <p>Demand for each zone type is a linear balance of supply, jobs, taxes, and desirability, then clamped to ±300:</p>
+  <ul>
+    <li><strong>Residential</strong> = (commercial jobs + industrial jobs − population) + (7 − residential tax) × 25 + pollution drag + crime drag + land-value lift</li>
+    <li><strong>Commercial</strong> = (population × 0.4 − commercial jobs) + (7 − commercial tax) × 20 + heavier crime drag + land-value lift</li>
+    <li><strong>Industrial</strong> = (population × 0.55 − industrial jobs + outside-trade floor) + (7 − industrial tax) × 20 + light pollution drag</li>
+  </ul>
+  <p>7% is the neutral tax rate: below it, demand rises and growth shifts toward that tier; above it, demand falls. Pollution drag is −0.6 × average pollution, crime drag −0.5 × average crime, and land-value lift 0.5 × (average land value − 35). Ordinance and civic-building bonuses (pro-business, tourism, stadiums, seaports) are added <em>after</em> the clamp.</p>
+
+  <h3>The tax formula</h3>
+  <p>Monthly tax income is computed per tier, using that tier's population or job subtotal, its own tax-rate slider, and a fixed category weight, all scaled by a City Hall bonus:</p>
+  <p><strong>income = Σ(tier subtotal × tier rate) ÷ 100 × category weight × cityHallMult</strong></p>
+  <table>
+    <thead><tr><th>Category</th><th>Weight</th><th>Tiers taxed separately</th></tr></thead>
+    <tbody>
+      <tr><td>Residential</td><td class="num">4</td><td>light, dense</td></tr>
+      <tr><td>Commercial</td><td class="num">5</td><td>light, dense</td></tr>
+      <tr><td>Industrial</td><td class="num">6</td><td>dirty, manufacturing, hi-tech</td></tr>
+    </tbody>
+  </table>
+  <p>A City Hall reward building grants a +5% intake bonus (and −5% on expenses). Net cash for the month is simply income minus all service, ordinance, and bond expenses.</p>
+
+  <h3>The bond model</h3>
+  <p>Bonds are deliberately punishing: each is a fixed <strong>$10,000</strong> borrowed instantly, at <strong>7% APR</strong>, capped at five outstanding. The model is <em>interest-only</em> — every month you pay bonds × $10,000 × 0.07 ÷ 12 in interest, and the principal never amortizes on its own. You clear a bond only by manually retiring it, which pays the full $10,000 back out of the treasury. This makes bonds genuine emergency cash rather than free money.</p>
+
+  <h3>Power and water</h3>
+  <p>Both utilities are modeled as supply-versus-demand with a partial-shortage response. Power demand is summed from zones (scaled by density, economy, and heat) plus services and regional trade. When demand exceeds supply, the shortfall fraction — <strong>1 − supply/demand</strong> — of the higher-numbered zones is flagged as a brownout. Water works identically: pumps produce supply, zones and exports consume it, and an unmet fraction of zone tiles loses water. This is a stylized shortfall model, not a per-tile electrical or hydraulic network solve.</p>
+
+  <h3>Pollution, crime, and land value</h3>
+  <p>These are spatial heat maps rebuilt each tick: point sources are painted radially, then <strong>diffused</strong> across neighbors (a blur pass), then clipped to 0–100. Coal plants and industry emit pollution (scaled by tier and cut by Clean Air / recycling ordinances); parks and trees scrub it. Crime rises with residential and commercial density but falls with local education and police coverage. Land value builds from terrain, waterfront, and amenities, then is docked by pollution (×0.5), crime (×0.45), and noise, and lifted by education. The map-wide averages of all three feed straight back into next month's demand — the coupling that makes neglected cities spiral.</p>
+
   <h3>Related</h3>
   <ul>
     <li><a href="Tower.html">Tower / SKYSTACK</a> — high-rise management sim.</li>

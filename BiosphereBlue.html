@@ -4744,6 +4744,42 @@ window.addEventListener('load', function() { init(); wireMusicButton(); wireSave
   <details><summary>Can I trigger a snowball Earth?</summary><p>Yes — drop solar input by 5–10% and watch the ice-albedo feedback take over. Recovery requires CO₂ buildup from volcanism.</p></details>
   <details><summary>Is there a research version?</summary><p>Biosphere Blue is a teaching tool, not a research GCM. For research-grade earth-system modeling, see CESM or GFDL's ESM4.</p></details>
 
+  <h2>How the model works</h2>
+  <p>Biosphere Blue is engineer-built, and its climate engine is the reason the planet behaves the way it does. It is an <strong>energy-balance-style model, not a Stefan-Boltzmann general-circulation model</strong>: rather than solving radiative transfer with σT⁴ at every level, each surface tile relaxes toward an equilibrium temperature set by absorbed sunlight plus an additive greenhouse offset, then diffuses heat to its neighbors. Every quantity below is read directly from the simulation source, and every reservoir is bounded so the planet stays physically plausible even in extreme runs. The clock advances in 100,000-year steps.</p>
+
+  <h3>Energy balance</h3>
+  <p>For each tile the engine computes an equilibrium temperature from absorbed shortwave radiation and greenhouse forcing:</p>
+  <p><strong>T_eq = −14 + 60 × insolation × solar × (1 − albedo) + greenhouseFactor</strong> (minus an elevation lapse-rate term).</p>
+  <p>Insolation uses a zonal-mean Legendre-P2 approximation of latitude — poles receive less than the equator. Albedo is surface-dependent: ice reflects ~0.62, open ocean ~0.08, and land takes its biome albedo lowered by up to 40% where vegetation is dense. Tile temperature then relaxes toward T_eq with a ~60,000-year time constant and is smoothed by one neighbor-diffusion pass. This is deliberately "energy-balance-ish" — a linear absorbed-sunlight term plus a greenhouse offset relaxing to equilibrium, rather than a full radiative-convective GCM.</p>
+
+  <h3>Greenhouse forcing and the two feedback loops</h3>
+  <p>Greenhouse warming is the sum of logarithmic CO₂ and CH₄ forcings, amplified by water vapor:</p>
+  <ul>
+    <li><strong>CO₂ / CH₄ forcing</strong> scale with the logarithm of concentration (log₂ of the ratio to a preindustrial reference), so each doubling adds a fixed increment.</li>
+    <li><strong>Water-vapor feedback (Clausius-Clapeyron)</strong> is computed from the Magnus formula for saturation vapor pressure, <em>e_s = 6.112·exp(17.67·T / (T + 243.5))</em>. Warmer air holds ~7% more moisture per °C, and that moisture ratio multiplies the greenhouse factor — so warming self-amplifies. The forcing is tied to the <em>current</em> global temperature, which is what makes a runaway greenhouse possible.</li>
+    <li><strong>Ice-albedo feedback</strong> is the opposing loop: cooling grows ice, ice reflects far more sunlight (0.62 vs 0.08 over ocean), which cools further. The model detects the Budyko-Sellers saddle-node: it latches a Snowball Earth state once ice cover crosses ~78%, and only lets it thaw once cover drops back below ~55%. Because silicate weathering shuts off under ice, volcanic CO₂ then accumulates until the greenhouse overpowers the albedo lock — the physical escape route from a frozen planet.</li>
+  </ul>
+
+  <h3>The carbon cycle</h3>
+  <p>CO₂ and CH₄ are tracked as separate reservoirs each step:</p>
+  <table>
+    <thead><tr><th>Term</th><th>Behavior</th></tr></thead>
+    <tbody>
+      <tr><td>Volcanism</td><td>Constant CO₂ source</td></tr>
+      <tr><td>Silicate weathering</td><td>Temperature-dependent CO₂ sink (the long-term thermostat), throttled by ice cover</td></tr>
+      <tr><td>Ocean solubility (Henry's law)</td><td>Warm oceans outgas, cold oceans absorb (neutral near 15 °C)</td></tr>
+      <tr><td>Plant drawdown</td><td>Photosynthetic CO₂ uptake scaling with vegetation</td></tr>
+      <tr><td>Methane</td><td>Wetland, permafrost-thaw, and livestock sources; atmospheric oxidation sink</td></tr>
+    </tbody>
+  </table>
+  <p>Two transient <strong>pulses</strong> ride on top: <strong>wildfires</strong> and <strong>methane oxidation</strong>. Methane that oxidizes is converted to CO₂ molecule-for-molecule, so carbon is conserved rather than destroyed. Wildfire ignition is a per-tile probability driven by dryness, heat, and vegetation, gated by atmospheric O₂ — nothing burns below ~13% O₂, and above ~25% even damp biomes combust explosively (the Carboniferous fire regime). Each burned tile dumps a CO₂ pulse, releases CH₄, and consumes O₂. The slow geochemical terms are rate-capped per step, but the fast fire and oxidation pulses deliberately bypass that cap so total carbon stays conserved.</p>
+
+  <h3>Ecology: logistic biomass</h3>
+  <p>Life is modeled per clade with classic logistic growth toward a fitness-scaled carrying capacity: <strong>Δbiomass = r · biomass · (1 − biomass / K)</strong>, layered with trophic interactions — producers face grazing pressure, consumers starve without producer mass, and carnivores prey on smaller consumers — plus mutation, speciation, and extinction. Vegetation both lowers surface albedo and drives the biological carbon and methane fluxes, coupling the ecosystem back into the climate.</p>
+
+  <h3>Everything is bounded</h3>
+  <p>Because it is a playable model rather than a forecasting tool, every reservoir is clamped to a plausible range — CO₂ (60–25,000 ppm), CH₄, O₂ (0–28%), water-vapor multiplier, sea level, ice depth, and per-clade biomass all saturate rather than diverge. That is what keeps a runaway or a snowball dramatic but recoverable. For research-grade earth-system modeling, see CESM or GFDL's ESM4; Biosphere Blue is a teaching sandbox that gets the first-order physics and the tipping-point behavior right.</p>
+
   <h3>Related games</h3>
   <ul>
     <li><a href="BonnevilleSpillwayOperator.html">BonnevilleSpillwayOperator</a> — dam operator sim.</li>
