@@ -15,6 +15,12 @@ const CARDS = [
   { file: 'drift', title: 'DRIFT', sub: 'Daily word ladder puzzle', accent: '#a0d0a8', bg: '#0c1016' },
   { file: 'solitaire', title: 'SOLITAIRE', sub: 'Klondike in your browser', accent: '#f0d89c', bg: '#0c1016' },
   { file: 'bonneville', title: 'BONNEVILLE DAM', sub: 'Columbia River operator sim', accent: '#80c8a8', bg: '#0a1218' },
+  { file: 'apoapsis', title: 'APOAPSIS', sub: '3D rocket flight & orbital mechanics', accent: '#7dd3fc', bg: '#04060e' },
+  { file: 'biosphereblue', title: 'BIOSPHERE BLUE', sub: 'Planet-scale climate & ecology sim', accent: '#5ec8e0', bg: '#04101a' },
+  { file: 'metropolis2k', title: 'METROPOLIS 2K', sub: 'City-building sim — districts & bonds', accent: '#f0c060', bg: '#0c1016' },
+  { file: 'tower', title: 'TOWER · SKYSTACK', sub: 'High-rise operations tycoon', accent: '#e0b070', bg: '#100c08' },
+  { file: 'doctrine', title: 'DOCTRINE', sub: 'Geopolitical sim · 1990–2050', accent: '#d08868', bg: '#0a0c12' },
+  { file: 'cliffwalkers', title: 'CLIFFWALKERS', sub: 'Save the wee folk — puzzle platformer', accent: '#90c8f0', bg: '#0a1016' },
 ];
 
 function xmlEsc(s) {
