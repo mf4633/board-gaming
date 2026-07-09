@@ -2,25 +2,25 @@
 
 > A free browser-based collection of original and classic board games and simulations. Single-file HTML5, no installs, no accounts, no ads-on-gameplay. Originals span strategy, simulation, and puzzle; classics include the standard public-domain board game canon.
 
-Every game on Board Gaming Hub is a single HTML file with no server-side dependency — open the page and play. The collection mixes original designs (Bisque, Tidelands, Aresia, Apoapsis, Floodline, Doctrine, Cliffwalkers, Tower / SKYSTACK, Bonneville Spillway Operator) with traditional games (Chess, Go, Backgammon, Mancala, Senet, Ur, Othello, Mahjong, Sudoku, Solitaire, Minesweeper, 2048). Several titles have companion native ports on itch.io and the Google Play Store.
+Every game on Board Gaming Hub is a single HTML file with no server-side dependency — open the page and play. The collection mixes original designs (Bisque, Tidelands, Aresia, Apoapsis, Floodline, Doctrine, Cliffwalkers, Tower / SKYSTACK, Bonneville Spillway Operator) with traditional games (Chess, Go, Backgammon, Mancala, Senet, Ur, Othello, Mahjong, Sudoku, Solitaire, Minesweeper, 2048). The engineering and science simulations each document the real formulas behind them — shallow-water flood routing, dam total-dissolved-gas curves, arcsecond-accurate eclipse ephemeris, and Tsiolkovsky/vis-viva orbital mechanics — in a "How the model works" section on the page. Several titles have companion native ports on itch.io and the Google Play Store.
 
 ## Core pages
-- [Home / catalog](https://boardgaminghub.com/): All 31 games with editorial intro, category essays, and guide links
-- [Play / ad-supported catalog](https://boardgaminghub.com/play.html): Primary discovery page with daily puzzles strip
-- [Guides](https://boardgaminghub.com/guides/): Seven strategy/science articles (Wordform, Drift, Sudoku, eclipses, Floodline, Bonneville dam, chess)
+- [Home / catalog](https://boardgaminghub.com/): All 32 games with editorial intro, category essays, and guide links
+- [Play / ad-supported catalog](https://boardgaminghub.com/play.html): Primary discovery page with daily puzzles strip (Wordform, Drift, Sudoku)
+- [Guides](https://boardgaminghub.com/guides/): 13 strategy/science articles — Wordform, Drift, Sudoku, solar eclipses, Floodline scenarios, Bonneville dam, chess, Klondike solitaire, 2048, Minesweeper, backgammon, Go/baduk, and Mahjong solitaire
 - [Apps / native ports](https://boardgaminghub.com/apps.html): Links to itch.io and Play Store builds
 - [About](https://boardgaminghub.com/about.html): Gaming hub mission and author background
 - [Privacy](https://boardgaminghub.com/privacy.html)
 
 ## Original strategy games
-- [Bisque](https://boardgaminghub.com/Bisque.html): Cooking-themed area control
+- [Bisque](https://boardgaminghub.com/Bisque.html): Risk-style naval area control over 26 territories — deploy, attack, and fortify; last captain standing wins
 - [Tidelands](https://boardgaminghub.com/Tidelands.html): Coastal resource management
 - [Aresia](https://boardgaminghub.com/Aresia.html): Mars-colonization strategy
 - [Doctrine](https://boardgaminghub.com/Doctrine.html): 1990–2050 geopolitical sim, Aerobiz-style, real d3-geo world map
-- [Agora](https://boardgaminghub.com/Agora.html): Greek city-state debate
-- [Convergence](https://boardgaminghub.com/Convergence.html)
-- [Drift](https://boardgaminghub.com/Drift.html)
-- [Odyssey](https://boardgaminghub.com/Odyssey.html)
+- [Agora](https://boardgaminghub.com/Agora.html): Mediterranean trade — roll for resources, trade at the central Agora, race to 30 coins
+- [Convergence](https://boardgaminghub.com/Convergence.html): Catan-style economy with a swinging market — build settlements, cities, roads, and markets to 12 VP
+- [Drift](https://boardgaminghub.com/Drift.html): Daily word-ladder puzzle — change one letter per step
+- [Odyssey](https://boardgaminghub.com/Odyssey.html): Poseidon's tide floods islands on a cycle — harvest, build camps/temples/triremes, race to 15 VP
 - [Pente Grammai](https://boardgaminghub.com/PenteGrammai.html): Ancient Greek racing game
 - [Wordform](https://boardgaminghub.com/Wordform.html): Word puzzle
 

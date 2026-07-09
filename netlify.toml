@@ -100,6 +100,11 @@
   to = "/guides/mahjong-solitaire.html"
   status = 200
 
+[[redirects]]
+  from = "/guides/othello-reversi"
+  to = "/guides/othello-reversi.html"
+  status = 200
+
 # Game slugs (lowercase from games.json)
 [[redirects]]
   from = "/solitaire"

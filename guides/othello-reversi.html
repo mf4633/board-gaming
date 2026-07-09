@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="theme-color" content="#0c1016">
+<title>Othello (Reversi) Rules &amp; Winning Strategy | Board Gaming Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="How to play Othello / Reversi, why corners win games, and the mobility and edge tactics that beat the computer.">
+<link rel="canonical" href="https://boardgaminghub.com/guides/othello-reversi">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Board Gaming Hub">
+<meta property="og:url" content="https://boardgaminghub.com/guides/othello-reversi">
+<meta property="og:title" content="Othello (Reversi) Rules &amp; Winning Strategy">
+<meta property="og:description" content="How to play Othello / Reversi, why corners win games, and the mobility and edge tactics that beat the computer.">
+<meta name="twitter:card" content="summary">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; line-height: 1.75; }
+  #wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+  .crumb { font-size: 0.82em; letter-spacing: 2px; color: #5a6874; margin-bottom: 28px; }
+  .crumb a { color: #8098a8; text-decoration: none; }
+  .crumb a:hover { color: #f0d89c; }
+  header h1 { font-size: 1.75em; letter-spacing: 4px; color: #f0d89c; margin: 0 0 10px; line-height: 1.3; }
+  header .deck { color: #8098a8; font-size: 0.95em; letter-spacing: 1px; margin-bottom: 8px; }
+  header .updated { color: #5a6874; font-size: 0.78em; font-style: italic; }
+  article { margin-top: 32px; }
+  article p { color: #c0c8d0; font-size: 1.02em; margin: 0 0 18px; }
+  article h2 { color: #f0d89c; font-size: 1.05em; letter-spacing: 4px; text-transform: uppercase; margin: 36px 0 14px; border-bottom: 1px solid #2a3540; padding-bottom: 8px; }
+  article h3 { color: #d8d0c0; font-size: 1.0em; letter-spacing: 2px; margin: 28px 0 10px; }
+  article ul, article ol { color: #c0c8d0; padding-left: 24px; margin: 0 0 18px; }
+  article li { margin-bottom: 8px; }
+  article a { color: #94c3e8; }
+  article a:hover { color: #f0d89c; }
+  .callout { background: #141c28; border: 1px solid #3a5060; border-radius: 4px; padding: 18px 22px; margin: 28px 0; }
+  .callout b { color: #f0d89c; letter-spacing: 1px; }
+  .scenario-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.92em; }
+  .scenario-table th, .scenario-table td { border: 1px solid #2a3540; padding: 10px 12px; text-align: left; vertical-align: top; }
+  .scenario-table th { color: #f0d89c; background: #141c28; letter-spacing: 1px; }
+  .scenario-table td { color: #c0c8d0; }
+  .play-cta { display: inline-block; margin-top: 8px; padding: 10px 18px; background: #1a2434; border: 1px solid #3a5060; border-radius: 4px; color: #f0d89c; text-decoration: none; letter-spacing: 2px; font-size: 0.88em; }
+  .play-cta:hover { background: #243044; border-color: #5a7090; color: #f0d89c; }
+  .related { margin-top: 48px; padding-top: 24px; border-top: 1px solid #2a3540; }
+  .related h2 { font-size: 0.9em; letter-spacing: 4px; color: #8098a8; text-transform: uppercase; margin-bottom: 14px; }
+  .related a { display: block; color: #94c3e8; text-decoration: none; margin-bottom: 8px; font-size: 0.95em; }
+  .related a:hover { color: #f0d89c; }
+  footer { margin-top: 56px; text-align: center; color: #5a6874; font-size: 0.78em; letter-spacing: 2px; }
+  footer a { color: #8098a8; text-decoration: none; }
+  footer a:hover { color: #d8d0c0; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div class="crumb"><a href="/">Board Gaming Hub</a> · <a href="/guides/">Guides</a></div>
+  <header>
+    <h1>Othello (Reversi) Rules &amp; Winning Strategy</h1>
+    <div class="deck">How to play Othello / Reversi, why corners win games, and the mobility and edge tactics that beat the computer.</div>
+    <div class="updated">Updated June 2026</div>
+  </header>
+  <article>
+
+    <p><a href="/Othello.html">Othello</a> — also known as Reversi — is a two-player disc-flipping game on an 8×8 board. It takes a minute to learn and years to master: the rules are trivial, but the strategy is deep enough that top play looks almost paradoxical. This guide covers the rules and the handful of ideas that will beat a casual opponent or the browser AI.</p>
+
+    <h2>The rules in a minute</h2>
+    <ul>
+      <li>The board starts with four discs in the center — two black, two white, placed diagonally.</li>
+      <li>On your turn you place a disc so that it <b>flanks</b> one or more of the opponent&rsquo;s discs in a straight line (horizontal, vertical, or diagonal) between your new disc and another of your discs.</li>
+      <li>Every flanked disc <b>flips to your color</b>. You must flip at least one disc — if you cannot, you pass.</li>
+      <li>The game ends when neither player can move (usually when the board is full). Whoever has more discs wins.</li>
+    </ul>
+
+    <h2>The beginner&rsquo;s trap: don&rsquo;t grab discs early</h2>
+    <p>New players flip as many discs as possible every turn. This loses. Because any disc can be flipped again later, a big early lead means nothing — and having more discs mid-game often means you have <em>fewer</em> safe moves. The real currency of Othello is not discs; it is <b>stable squares</b> and <b>mobility</b>.</p>
+
+    <h2>Corners win games</h2>
+    <p>A disc in a corner can never be flipped — there is no square beyond it to flank from. Corners anchor entire edges and rows of stability. The whole game is really a fight to take corners and to force your opponent into giving them to you.</p>
+    <h3>Avoid the X-squares and C-squares</h3>
+    <p>The square diagonally adjacent to a corner (the <b>X-square</b>) is the most dangerous square on the board — playing there early usually hands your opponent the corner. The squares orthogonally next to a corner (<b>C-squares</b>) are risky for the same reason. Leave the region around empty corners alone until you can take the corner itself.</p>
+
+    <h2>Mobility: the counter-intuitive core</h2>
+    <p>Good Othello players try to have <b>many</b> moves while their opponent has <b>few</b>. Fewer discs of your own, placed compactly in the center early on, often gives you more flanking options later. If your opponent runs out of safe moves, they are forced to play an X-square or C-square and surrender a corner. Aim to end the midgame with your opponent nearly out of good options.</p>
+
+    <h2>Edges and parity</h2>
+    <ul>
+      <li><b>Edge discs</b> are harder to flip than interior discs and support corner captures — but only take an edge when it does not expose a corner.</li>
+      <li><b>Parity</b> — who plays the last disc in a region — decides many close endgames. Late in the game, count empty squares in each isolated region; playing last in a region often lets you flip without reply.</li>
+    </ul>
+
+    <div class="callout">
+      <b>Practical plan vs. the AI:</b> keep your discs central and few for the first dozen moves, refuse the squares next to empty corners, take corners when offered, then convert corners into stable edges and flip aggressively only in the final ten moves.
+    </div>
+
+    <h2>Also try</h2>
+    <p>If you like the pure-abstract tension of Othello, <a href="/Go.html">Go</a> (see the <a href="/guides/go-rules-beginners">beginner&rsquo;s guide</a>) rewards the same territorial thinking on a bigger canvas, and <a href="/Chess.html">Chess</a> scratches the tactical itch.</p>
+
+    <p><a class="play-cta" href="/Othello.html">Play Othello now</a></p>
+
+  </article>
+<div class="related"><h2>More guides</h2><a href="/guides/wordform-tips.html">Wordform Tips & Daily Strategy</a><a href="/guides/drift-word-ladder.html">Drift Word Ladder Guide</a><a href="/guides/sudoku-tips.html">Sudoku Tips for Beginners</a><a href="/guides/eclipse-2026.html">2026 & 2027 Solar Eclipse Guide</a><a href="/guides/floodline-scenarios.html">Floodline Scenarios Explained</a><a href="/guides/bonneville-dam-guide.html">Bonneville Dam Operator Guide</a><a href="/guides/free-browser-chess.html">Play Chess Free in Your Browser</a><a href="/guides/solitaire-klondike.html">How to Play Klondike Solitaire</a><a href="/guides/2048-strategy.html">2048 Strategy: How to Reach 2048</a><a href="/guides/minesweeper-strategy.html">Minesweeper Strategy for Beginners</a><a href="/guides/backgammon-rules.html">Backgammon Rules & Opening Strategy</a><a href="/guides/go-rules-beginners.html">Go Rules for Beginners (Baduk / Weiqi)</a><a href="/guides/mahjong-solitaire.html">How to Play Mahjong Solitaire</a></div>
+  <footer>
+    <a href="/">Home</a> ·
+    <a href="/play.html">Play</a> ·
+    <a href="/about.html">About</a> ·
+    <a href="/guides/">All guides</a>
+  </footer>
+</div>
+<script src="/analytics.js"></script>
+<script src="/nav.js" defer></script>
+</body>
+</html>

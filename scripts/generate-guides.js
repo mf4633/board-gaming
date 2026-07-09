@@ -626,6 +626,49 @@ const pages = [
     <p><a class="play-cta" href="/Mahjong.html">Play Mahjong Solitaire now</a></p>
 `,
   },
+  {
+    slug: 'othello-reversi',
+    file: 'othello-reversi.html',
+    title: 'Othello (Reversi) Rules &amp; Winning Strategy',
+    description: 'How to play Othello / Reversi, why corners win games, and the mobility and edge tactics that beat the computer.',
+    body: `
+    <p><a href="/Othello.html">Othello</a> — also known as Reversi — is a two-player disc-flipping game on an 8×8 board. It takes a minute to learn and years to master: the rules are trivial, but the strategy is deep enough that top play looks almost paradoxical. This guide covers the rules and the handful of ideas that will beat a casual opponent or the browser AI.</p>
+
+    <h2>The rules in a minute</h2>
+    <ul>
+      <li>The board starts with four discs in the center — two black, two white, placed diagonally.</li>
+      <li>On your turn you place a disc so that it <b>flanks</b> one or more of the opponent&rsquo;s discs in a straight line (horizontal, vertical, or diagonal) between your new disc and another of your discs.</li>
+      <li>Every flanked disc <b>flips to your color</b>. You must flip at least one disc — if you cannot, you pass.</li>
+      <li>The game ends when neither player can move (usually when the board is full). Whoever has more discs wins.</li>
+    </ul>
+
+    <h2>The beginner&rsquo;s trap: don&rsquo;t grab discs early</h2>
+    <p>New players flip as many discs as possible every turn. This loses. Because any disc can be flipped again later, a big early lead means nothing — and having more discs mid-game often means you have <em>fewer</em> safe moves. The real currency of Othello is not discs; it is <b>stable squares</b> and <b>mobility</b>.</p>
+
+    <h2>Corners win games</h2>
+    <p>A disc in a corner can never be flipped — there is no square beyond it to flank from. Corners anchor entire edges and rows of stability. The whole game is really a fight to take corners and to force your opponent into giving them to you.</p>
+    <h3>Avoid the X-squares and C-squares</h3>
+    <p>The square diagonally adjacent to a corner (the <b>X-square</b>) is the most dangerous square on the board — playing there early usually hands your opponent the corner. The squares orthogonally next to a corner (<b>C-squares</b>) are risky for the same reason. Leave the region around empty corners alone until you can take the corner itself.</p>
+
+    <h2>Mobility: the counter-intuitive core</h2>
+    <p>Good Othello players try to have <b>many</b> moves while their opponent has <b>few</b>. Fewer discs of your own, placed compactly in the center early on, often gives you more flanking options later. If your opponent runs out of safe moves, they are forced to play an X-square or C-square and surrender a corner. Aim to end the midgame with your opponent nearly out of good options.</p>
+
+    <h2>Edges and parity</h2>
+    <ul>
+      <li><b>Edge discs</b> are harder to flip than interior discs and support corner captures — but only take an edge when it does not expose a corner.</li>
+      <li><b>Parity</b> — who plays the last disc in a region — decides many close endgames. Late in the game, count empty squares in each isolated region; playing last in a region often lets you flip without reply.</li>
+    </ul>
+
+    <div class="callout">
+      <b>Practical plan vs. the AI:</b> keep your discs central and few for the first dozen moves, refuse the squares next to empty corners, take corners when offered, then convert corners into stable edges and flip aggressively only in the final ten moves.
+    </div>
+
+    <h2>Also try</h2>
+    <p>If you like the pure-abstract tension of Othello, <a href="/Go.html">Go</a> (see the <a href="/guides/go-rules-beginners">beginner&rsquo;s guide</a>) rewards the same territorial thinking on a bigger canvas, and <a href="/Chess.html">Chess</a> scratches the tactical itch.</p>
+
+    <p><a class="play-cta" href="/Othello.html">Play Othello now</a></p>
+`,
+  },
 ];
 
 for (const g of pages) {
