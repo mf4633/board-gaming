@@ -669,6 +669,55 @@ const pages = [
     <p><a class="play-cta" href="/Othello.html">Play Othello now</a></p>
 `,
   },
+  {
+    slug: 'royal-game-of-ur',
+    file: 'royal-game-of-ur.html',
+    title: 'The Royal Game of Ur — Rules, History &amp; Strategy',
+    description: 'How to play the 4,500-year-old Mesopotamian race game: the board, the rosettes, capturing, and how to actually win.',
+    body: `
+    <p>The <a href="/Ur.html">Royal Game of Ur</a> is one of the oldest board games in the world — playable boards were buried in the Royal Tombs of Ur (modern Iraq) around 2600 BCE, and the rules survive on a Babylonian clay tablet translated by the British Museum&rsquo;s Irving Finkel. It is a two-player race game: get all seven of your pieces around the track and off the board before your opponent. Fast to learn, genuinely tense to play.</p>
+
+    <h2>The board and the path</h2>
+    <p>The board has 20 squares in an unmistakable shape: two 3×4 blocks joined by a 1×2 bridge. Each player runs their own private column at the start and end, and both share the central lane in the middle:</p>
+    <ul>
+      <li><b>Your private start</b> — four squares only your pieces travel.</li>
+      <li><b>The shared middle lane</b> — eight squares both players cross; this is where the fighting happens.</li>
+      <li><b>Your private exit</b> — two more private squares, then off the board.</li>
+    </ul>
+
+    <h2>Dice: four tetrahedral rolls</h2>
+    <p>You roll four four-sided (tetrahedral) dice, each with two marked corners. Count the marked corners that land up: your move is 0–4. Because it is the sum of four coin-flips, the distribution is binomial — <b>2 is the most common roll</b> (about 3 in 8), while 0 and 4 are rare (1 in 16 each). Roll a 0 and you forfeit the turn. Good players plan around expecting a 2.</p>
+
+    <h2>Rosettes: the whole strategy</h2>
+    <p>Five squares carry a rosette symbol, and they do two things that decide games:</p>
+    <ul>
+      <li><b>Extra roll.</b> Land exactly on a rosette and you immediately roll again.</li>
+      <li><b>Safety.</b> A piece on a rosette cannot be captured.</li>
+    </ul>
+    <p>The rosette in the center of the shared lane is the single most valuable square on the board: it is safe, it grants a bonus roll, and — in this build — a piece parked there blocks the opponent from passing through the choke point.</p>
+
+    <h2>Capturing</h2>
+    <p>In the shared middle lane, landing exactly on a square occupied by a single opposing piece sends that piece all the way back to start. You cannot capture on a rosette (it is safe), and you cannot land on your own piece. A well-timed capture in the middle lane can swing an entire game — a piece knocked back near the finish loses a dozen squares of progress.</p>
+
+    <h2>Bearing off</h2>
+    <p>To remove a piece you need an <b>exact</b> roll to move it off the final square — overshooting is not allowed, so a piece one square from home needs a 1. First player to bear off all seven pieces wins.</p>
+
+    <h2>How to actually win</h2>
+    <ol>
+      <li><b>Fight for the central rosette.</b> It is safe, gives a free roll, and blocks the lane. Take it early and hold it.</li>
+      <li><b>Advance a spread, not a single runner.</b> Multiple pieces in play give you choices when the dice disappoint and more capture threats against your opponent.</li>
+      <li><b>Use the safe start.</b> Pieces in your private lane cannot be captured — do not rush them into the shared lane until you can land on a rosette or make a capture.</li>
+      <li><b>Weaponize the extra roll.</b> Chaining rosette bonus rolls can move two or three pieces in a single turn — the biggest tempo swings in the game come from rosette chains.</li>
+      <li><b>Play the odds.</b> Expect a 2. Position pieces so a 2 lands on a rosette or captures, and so your own pieces are not sitting one common roll away from an enemy.</li>
+    </ol>
+
+    <div class="callout">
+      <b>Also from the ancient world:</b> try <a href="/Senet.html">Senet</a>, the Egyptian racing game entombed with pharaohs, and <a href="/PenteGrammai.html">Pente Grammai</a>, the Greek &ldquo;game of five lines.&rdquo; All three are short to learn and deep to play.
+    </div>
+
+    <p><a class="play-cta" href="/Ur.html">Play the Royal Game of Ur now</a></p>
+`,
+  },
 ];
 
 for (const g of pages) {

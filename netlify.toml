@@ -105,6 +105,11 @@
   to = "/guides/othello-reversi.html"
   status = 200
 
+[[redirects]]
+  from = "/guides/royal-game-of-ur"
+  to = "/guides/royal-game-of-ur.html"
+  status = 200
+
 # Game slugs (lowercase from games.json)
 [[redirects]]
   from = "/solitaire"
