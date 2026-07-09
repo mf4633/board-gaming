@@ -23,8 +23,8 @@
   "applicationCategory": "Game", "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<script src="/d3.v7.min.js"></script>
+<script src="/topojson-client.v3.min.js"></script>
 <style>
   :root {
     --bg: #07090d;
@@ -979,7 +979,7 @@ function renderMap() {
 
 async function loadWorld() {
   try {
-    const topo = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(r => r.json());
+    const topo = await fetch('/countries-110m.json').then(r => r.json());
     WORLD_DATA = topojson.feature(topo, topo.objects.countries);
     PROJECTION = d3.geoEqualEarth().fitSize([1000, 500], WORLD_DATA);
     PATH_GEN = d3.geoPath(PROJECTION);
