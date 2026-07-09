@@ -718,6 +718,98 @@ const pages = [
     <p><a class="play-cta" href="/Ur.html">Play the Royal Game of Ur now</a></p>
 `,
   },
+  {
+    slug: 'senet-rules',
+    file: 'senet-rules.html',
+    title: 'Senet — Rules of the Ancient Egyptian Game',
+    description: 'How to play Senet: throwing sticks, the special houses, sending pieces back, and bearing off to win.',
+    body: `
+    <p><a href="/Senet.html">Senet</a> is the oldest board game we can name — Egyptians were playing it before 3000 BCE, and boards turn up in tombs including Tutankhamun&rsquo;s. The full ancient rules were lost, but game historians (notably Timothy Kendall and R.C. Bell) reconstructed a playable set from tomb paintings and surviving boards. It is a race: move all your pieces along a 30-square track and off the board before your opponent.</p>
+
+    <h2>The board and setup</h2>
+    <p>Senet is 30 squares — three rows of ten — travelled in a boustrophedon (&ldquo;as the ox plows&rdquo;) S-shape: left-to-right along the top row, right-to-left along the middle, left-to-right along the bottom. Each player starts with five pieces on the first ten squares, interleaved so the two colors alternate.</p>
+
+    <h2>Throwing sticks instead of dice</h2>
+    <p>You throw four two-sided casting sticks (one painted face, one plain). Count the painted faces up:</p>
+    <ul>
+      <li>1, 2, 3, or 4 painted = move that many squares.</li>
+      <li>All four plain = a throw of 6.</li>
+      <li>A throw of <b>1, 4, or 6 earns another turn</b> — chain them to move several pieces.</li>
+    </ul>
+    <p>You must move if you legally can. If no piece can make the throw, you forfeit the turn.</p>
+
+    <h2>Moving, blocking, and capturing</h2>
+    <ul>
+      <li>You cannot land on your own piece.</li>
+      <li>Landing on a single opponent piece <b>swaps places</b> with it — you take its square, it takes yours.</li>
+      <li>Two of your opponent&rsquo;s pieces sitting side by side are <b>protected</b> — you cannot swap onto either. Three or more in a row form a <b>blockade</b> that cannot be passed at all.</li>
+    </ul>
+
+    <h2>The special houses</h2>
+    <p>The last five squares carry markings that decide games:</p>
+    <ul>
+      <li><b>House of Rebirth (square 15)</b> — the square a drowned piece returns to.</li>
+      <li><b>House of Beauty (26)</b> — a piece must stop here before it can go on; it is the gateway to bearing off.</li>
+      <li><b>House of Water (27)</b> — the trap. A piece that lands here (or is forced back to it) is sent back to the House of Rebirth.</li>
+      <li><b>Squares 28, 29, 30</b> — bear off with an exact throw: a 3 from square 28, a 2 from 29, a 1 from 30. Overshooting is not allowed.</li>
+    </ul>
+
+    <h2>How to win</h2>
+    <ol>
+      <li><b>Guard the House of Water.</b> Getting bounced back to square 15 is the single biggest swing — keep spare throws in hand so you are never forced onto square 27.</li>
+      <li><b>Build pairs.</b> Two adjacent pieces cannot be swapped; advancing in protected pairs denies your opponent captures.</li>
+      <li><b>Bank your extra turns.</b> Throws of 1, 4, and 6 repeat — sequence your moves so a bonus throw lands a piece safely or onto square 26.</li>
+      <li><b>Don&rsquo;t rush a lone runner.</b> A single exposed piece is a swap target that can lose a dozen squares.</li>
+    </ol>
+
+    <div class="callout">
+      <b>More from the ancient world:</b> <a href="/Ur.html">The Royal Game of Ur</a> (see the <a href="/guides/royal-game-of-ur">Ur guide</a>) is Senet&rsquo;s Mesopotamian cousin, and <a href="/PenteGrammai.html">Pente Grammai</a> is the Greek &ldquo;game of five lines.&rdquo;
+    </div>
+
+    <p><a class="play-cta" href="/Senet.html">Play Senet now</a></p>
+`,
+  },
+  {
+    slug: 'pente-grammai',
+    file: 'pente-grammai.html',
+    title: 'Pente Grammai — the Ancient Greek Game of Five Lines',
+    description: 'Rules and strategy for Pente Grammai, the Greek race game of five lines: movement, the sacred line, capturing, and bearing off.',
+    body: `
+    <p><a href="/PenteGrammai.html">Pente Grammai</a> — literally &ldquo;five lines&rdquo; — is an ancient Greek race game mentioned by writers from Alcaeus to Sophocles and depicted on Greek vases (most famously Achilles and Ajax at their game). The exact rules did not survive, so this is a plausible reconstruction: race your five pieces along the lines and bear them all off before your opponent.</p>
+
+    <h2>The board</h2>
+    <p>The board is five parallel lines (with later versions adding a divided grid). Each player has five pieces. The central line is the <b>sacred line</b> (&ldquo;the sacred line&rdquo; was a Greek proverb for a last resort — &ldquo;to move the piece from the sacred line&rdquo; meant making a desperate final play).</p>
+
+    <h2>Movement and the throw</h2>
+    <p>You roll knucklebones (astragaloi), which land on values of <b>1, 3, 4, or 6</b> — the four stable faces of an ankle bone. Move one piece the thrown number of spaces along its track toward the far end. A piece that moves past the last space bears off the board.</p>
+
+    <h2>Capturing</h2>
+    <p>Land <b>exactly</b> on a space occupied by a single opposing piece and you capture it — the captured piece is sent all the way back to its start. This is the heart of the game: a well-placed capture near the finish undoes most of an opponent&rsquo;s progress.</p>
+
+    <h2>The sacred line and safe squares</h2>
+    <ul>
+      <li>A piece on the <b>sacred (central) line</b> is safe — it cannot be captured there, and cannot capture from there. It still moves forward like any other piece.</li>
+      <li>A piece on its own <b>starting square</b> is likewise immune to capture.</li>
+    </ul>
+
+    <h2>Winning</h2>
+    <p>The first player to bear off all five pieces wins. Because only one piece moves per throw, tempo is everything — every roll is a choice about which piece to advance, which to keep safe, and which capture to set up.</p>
+
+    <h2>Strategy</h2>
+    <ol>
+      <li><b>Use the sacred line as a shield.</b> Park a vulnerable piece on the center line to deny a capture, then release it when the coast is clear.</li>
+      <li><b>Threaten captures, don&rsquo;t just race.</b> Position pieces so a common throw (3 or 4) lands on an opponent — forcing them to play defensively.</li>
+      <li><b>Mind exact-landing captures.</b> You can only capture by landing exactly; keep your leaders a non-obvious distance from enemy pieces.</li>
+      <li><b>Bear off from the back.</b> Advance the piece nearest home when a capture isn&rsquo;t available, so you are always converting throws into finished pieces.</li>
+    </ol>
+
+    <div class="callout">
+      <b>The ancient-games trilogy:</b> pair this with <a href="/Senet.html">Senet</a> (Egypt, see the <a href="/guides/senet-rules">Senet guide</a>) and <a href="/Ur.html">the Royal Game of Ur</a> (Mesopotamia) — three short-to-learn race games separated by a thousand years and a few hundred miles.
+    </div>
+
+    <p><a class="play-cta" href="/PenteGrammai.html">Play Pente Grammai now</a></p>
+`,
+  },
 ];
 
 for (const g of pages) {

@@ -39,7 +39,9 @@
     { "slug": "go-rules-beginners", "file": "guides/go-rules-beginners.html", "title": "Go Rules for Beginners (Baduk / Weiqi)", "description": "Liberties, capture, ko, territory vs area scoring, the pass-pass endgame, and board sizes." },
     { "slug": "mahjong-solitaire", "file": "guides/mahjong-solitaire.html", "title": "How to Play Mahjong Solitaire", "description": "Free vs blocked tiles, exact-glyph matching, the 72-tile set, and top-down planning." },
     { "slug": "othello-reversi", "file": "guides/othello-reversi.html", "title": "Othello (Reversi) Rules & Strategy", "description": "Rules, why corners win, and the mobility and edge tactics that beat the computer." },
-    { "slug": "royal-game-of-ur", "file": "guides/royal-game-of-ur.html", "title": "The Royal Game of Ur — Rules, History & Strategy", "description": "How to play the 4,500-year-old Mesopotamian race game: rosettes, capturing, and winning tactics." }
+    { "slug": "royal-game-of-ur", "file": "guides/royal-game-of-ur.html", "title": "The Royal Game of Ur — Rules, History & Strategy", "description": "How to play the 4,500-year-old Mesopotamian race game: rosettes, capturing, and winning tactics." },
+    { "slug": "senet-rules", "file": "guides/senet-rules.html", "title": "Senet — Rules of the Ancient Egyptian Game", "description": "Throwing sticks, the special houses, sending pieces back, and bearing off to win." },
+    { "slug": "pente-grammai", "file": "guides/pente-grammai.html", "title": "Pente Grammai — the Ancient Greek Game of Five Lines", "description": "Movement, the sacred line, capturing, and bearing off in the Greek race game." }
   ],
   "games": [
     { "slug": "solitaire", "title": "Solitaire", "sourceHtml": "Solitaire.html", "category": "puzzles", "featured": true, "daily": false, "priority": 0.95, "ogImage": "/og/solitaire.png", "description": "Klondike — the classic card game", "searchKeys": ["cards", "klondike", "patience", "solitaire", "classic"], "appId": "com.hydroengineer.solitaire", "platforms": ["android", "web"], "hasSteam": false, "admob": true },

@@ -110,6 +110,16 @@
   to = "/guides/royal-game-of-ur.html"
   status = 200
 
+[[redirects]]
+  from = "/guides/senet-rules"
+  to = "/guides/senet-rules.html"
+  status = 200
+
+[[redirects]]
+  from = "/guides/pente-grammai"
+  to = "/guides/pente-grammai.html"
+  status = 200
+
 # Game slugs (lowercase from games.json)
 [[redirects]]
   from = "/solitaire"
