@@ -5060,6 +5060,8 @@ requestAnimationFrame(loop);
   <h3>Integration</h3>
   <p>The solver runs on a <strong>fixed timestep of PHYS_DT = 1/60 game-second</strong> using an accumulator, capped at 120 sub-steps per frame. Because the flux, inflow, pump and siphon terms move a fixed amount of water per <code>step()</code> call, the fixed sub-step count decouples total throughput from frame rate and game speed — the same volume is routed per game-second whether you run at 1× or 8×. Scenarios are calibrated against published DWR and USACE post-event reports, but the model stays first-order: treat it as an intuition-builder for routing, storage and levee risk, not as a certified flood forecast.</p>
 
+  <p style="margin-top:18px;color:#8098a8;font-size:0.95em;line-height:1.6;">Built by a practicing water-resources engineer. For the professional versions of this math, see the free <a href="https://pe-calc.com/tools/mannings?utm_source=boardgaminghub&amp;utm_medium=sim-model&amp;utm_campaign=floodline" target="_blank" rel="noopener">open-channel &amp; hydrology calculators at pe-calc.com</a>, or <a href="https://hydrocomplete.com/?utm_source=boardgaminghub&amp;utm_medium=sim-model&amp;utm_campaign=floodline" target="_blank" rel="noopener">HydroComplete</a> for stormwater design software.</p>
+
   <h3>Related games</h3>
   <ul>
     <li><a href="BonnevilleSpillwayOperator.html">BonnevilleSpillwayOperator</a> — dam operator sim.</li>
