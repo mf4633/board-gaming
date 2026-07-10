@@ -227,6 +227,7 @@ ${adUnit('margin:32px 0')}
   </p>
 
   <footer>
+    <p style="margin-bottom:10px;font-size:0.95em;">Enjoying the games? <a href="https://buymeacoffee.com/mf4633" style="color:#f0c060;" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
     <p style="color:#7090a0;margin-bottom:10px;font-size:0.95em;">Engineering tools by the same author at <a href="https://pe-calc.com/" style="color:#a8c0d8;">pe-calc.com</a> · Stormwater design SaaS at <a href="https://hydrocomplete.com/" style="color:#a8c0d8;">hydrocomplete.com</a></p>
     <a href="index.html">Clean version</a> ·
     <a href="apps.html">Android apps</a> ·
@@ -288,6 +289,7 @@ ${dailyStrip}
 ${categories.map(c => indexSection(c)).join('\n')}
 
   <footer>
+    <p style="margin-bottom:10px;font-size:0.95em;">Enjoying the games? <a href="https://buymeacoffee.com/mf4633" style="color:#f0c060;" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
     <a href="play.html">Ad-supported catalog</a> ·
     <a href="apps.html">Android apps</a> ·
     <a href="https://github.com/mf4633/board-gaming">github.com/mf4633/board-gaming</a>

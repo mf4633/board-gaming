@@ -80,6 +80,7 @@ ${body}
   </article>
 ${relatedHtml}
   <footer>
+    <p style="margin-bottom:10px;">Enjoying the games? <a href="https://buymeacoffee.com/mf4633" style="color:#f0c060;" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
     <a href="/">Home</a> ·
     <a href="/play.html">Play</a> ·
     <a href="/about.html">About</a> ·

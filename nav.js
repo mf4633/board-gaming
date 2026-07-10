@@ -297,6 +297,11 @@
         more.appendChild(elt('a', { class:'bgh-rail-daily', href:'/' + g.slug + '.html#daily' }, g.name));
       });
     }
+    more.appendChild(document.createTextNode('   ·   '));
+    const coffee = elt('a', { href:'https://buymeacoffee.com/mf4633', target:'_blank', rel:'noopener' }, '☕ Buy me a coffee');
+    coffee.style.color = '#f0c060';
+    more.appendChild(coffee);
+
     rail.appendChild(more);
     return rail;
   }
