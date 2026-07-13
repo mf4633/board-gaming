@@ -420,6 +420,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
         <h3>Life stages</h3>
         <ul>
           <li>Lifeless &rarr; Prokaryotes &rarr; Eukaryotes &rarr; Multicellular &rarr; Land plants &rarr; Animals &rarr; Sapients &rarr; Civilization. Each gated by O&#8322;, age, and climate stability.</li>
+          <li>A civilization then climbs a tech arc &mdash; Stone &rarr; Bronze &rarr; Iron &rarr; Industrial &rarr; Atomic &rarr; Information &rarr; Nanotech &rarr; <b>Exodus</b>. The Industrial age emits its own CO&#8322;, the Atomic age risks nuclear war, a hostile climate collapses it, and a civilization that survives to the top departs the planet.</li>
         </ul>
       </div>
 
@@ -847,6 +848,11 @@ function resetSim() {
     seaLevel: 0.0,
     sunLum: 0.78,         // faint young sun
     lifeStage: 0,
+    civTech: 0,             // technology arc a civilization climbs (0..7 -> Stone..Exodus)
+    civPeakTech: 0,         // highest tech age this world's civilization reached
+    civIndustrialCO2: 0,    // ppm/step the civilization is currently emitting (diagnostic)
+    exodus: false,          // set once a civilization departs the planet
+    lastCivEvent: 0,        // sim-year of the last nuclear war / exodus
     globalTemp: 30,
     landFrac: 0,
     iceFrac: 0,
@@ -906,6 +912,12 @@ var STAGES = [
   { name: 'Sapients',     desc: 'Minds emerge.' },
   { name: 'Civilization', desc: 'A thinking species shapes the world.' }
 ];
+
+// Technology arc a civilization climbs once it reaches stage 7 (SimEarth-style).
+// Compressed across a handful of 100-Ky steps so it is observable on the geologic
+// clock. Industrial ages self-pollute CO2; the Atomic age risks nuclear war;
+// reaching the top triggers Exodus — the species leaves the planet.
+var CIV_TECH_AGES = ['Stone', 'Bronze', 'Iron', 'Industrial', 'Atomic', 'Information', 'Nanotech', 'Exodus'];
 
 // =============================================================
 // Clade system — multiple lineages evolve in parallel.
@@ -1643,6 +1655,77 @@ function recomputeLifeStage() {
   if (anyCiv && SIM.lifeStage < 7) SIM.lifeStage = 7;
 }
 
+// Civilization technology arc (SimEarth-style). Once a clade holds a civilization,
+// it climbs Stone -> ... -> Exodus over a few steps, self-pollutes CO2 in the
+// industrial ages, risks nuclear war from the Atomic age, collapses under a hostile
+// climate, and — if it survives to the top — departs the planet. Called each tick.
+function stepCivilization(dtY) {
+  var step = dtY / 100000;
+  var civClade = null;
+  for (var i = 0; i < SIM.clades.length; i++) {
+    var c = SIM.clades[i];
+    if (!c.extinct && c.hasCiv) { civClade = c; break; }
+  }
+  if (!civClade || SIM.exodus) {
+    // No living civilization (extinct or already departed): its technology fades.
+    if (!civClade && SIM.civTech > 0) SIM.civTech = Math.max(0, SIM.civTech - 0.4 * step);
+    SIM.civIndustrialCO2 = 0;
+    return;
+  }
+
+  var T = SIM.globalTemp;
+  var hostile = (T > 32 || T < -2 || SIM.o2 < 0.15);   // too hot/cold/anoxic for a tech society
+  var prevAge = Math.floor(SIM.civTech);
+  if (hostile) {
+    SIM.civTech = Math.max(0, SIM.civTech - 0.5 * step);   // environmental collapse
+    if (prevAge >= 3 && Math.floor(SIM.civTech) < prevAge) {
+      notifyEvent(civClade.name + '’s civilization buckles under a hostile climate.', 'warn');
+    }
+  } else {
+    SIM.civTech = Math.min(7, SIM.civTech + 0.6 * step);   // ~1 tech age per ~1.6 steps
+  }
+  SIM.civPeakTech = Math.max(SIM.civPeakTech || 0, SIM.civTech);
+  var age = Math.floor(SIM.civTech);
+
+  // Industrial self-pollution: Industrial/Atomic burn carbon; Information decarbonizes;
+  // Nanotech captures. Added outside the geochemical rate cap (it is an anthropogenic pulse).
+  var ind = 0;
+  if (age === 3) ind = 18;
+  else if (age === 4) ind = 12;
+  else if (age === 5) ind = 4;
+  else if (age >= 6) ind = -2;
+  SIM.civIndustrialCO2 = ind;
+  if (ind !== 0) SIM.co2 = clamp(SIM.co2 + ind * step, 60, 25000);
+
+  // Announce each new tech age.
+  if (age > prevAge && age >= 1 && age <= 7) {
+    var nm = CIV_TECH_AGES[age] || 'Advanced';
+    if (age === 3) showBanner('INDUSTRIAL AGE', civClade.name + ' burn fossil fuels — CO₂ begins to climb.', 'warn');
+    else if (age === 4) notifyEvent(civClade.name + ' enter the Atomic Age — a fragile new power.', 'warn');
+    else notifyEvent(civClade.name + ' reach the ' + nm + ' Age.', 'good');
+  }
+
+  // Nuclear war risk from the Atomic age until they mature past it.
+  if (age >= 4 && age < 7 && SIM.rng() < 0.06 * step * (age === 4 ? 2 : 1)) {
+    showBanner('NUCLEAR WAR', civClade.name + ' turn their arsenals on themselves.', 'bad');
+    applyHazard('nuclear', 0.22);                 // mass die-off across the biosphere
+    SIM.co2 = clamp(SIM.co2 + 40, 60, 25000);     // firestorms release a carbon pulse
+    SIM.civTech = Math.max(0, SIM.civTech - 3);   // the survivors fall back centuries
+    SIM.lastCivEvent = SIM.year;
+  }
+
+  // Exodus — the culmination. A civilization that reaches the top leaves the planet.
+  if (SIM.civTech >= 7 && !SIM.exodus) {
+    SIM.exodus = true;
+    SIM.lastCivEvent = SIM.year;
+    SIM.civIndustrialCO2 = 0;
+    civClade.hasCiv = false;                      // their cities go dark; the clade lives on as fauna
+    showBanner('EXODUS', civClade.name + ' build starships and depart for the stars.', 'good');
+    notifyEvent(civClade.name + ' achieve Exodus — the planet falls quiet.', 'good');
+    SIM.cladeLog.push({ year: SIM.year, kind: 'exodus', name: civClade.name });
+  }
+}
+
 // Try to spawn a child clade with a different body plan when conditions allow.
 // Probability is small per step; only fires when the parent is well-established.
 function trySpeciate(parent) {
@@ -1887,6 +1970,7 @@ function simStep() {
   stepWildfires(WORLD, dtY);
   stepGlobal(WORLD, dtY);
   stepLife(WORLD, dtY);
+  stepCivilization(dtY);
   stepEvents(dtY);
   checkAchievements();
   checkBanners();
@@ -3872,8 +3956,17 @@ function updateStats() {
 
 function updateLifePanel() {
   var s = STAGES[SIM.lifeStage];
-  document.getElementById('lifeName').textContent = s.name;
-  document.getElementById('lifeDesc').textContent = s.desc;
+  if (SIM.exodus) {
+    document.getElementById('lifeName').textContent = 'Post-Exodus';
+    document.getElementById('lifeDesc').textContent = 'The civilization has left for the stars; the biosphere endures.';
+  } else if (SIM.lifeStage >= 7) {
+    var age = Math.max(0, Math.min(7, Math.floor(SIM.civTech || 0)));
+    document.getElementById('lifeName').textContent = s.name + ' — ' + (CIV_TECH_AGES[age] || 'Stone') + ' Age';
+    document.getElementById('lifeDesc').textContent = s.desc;
+  } else {
+    document.getElementById('lifeName').textContent = s.name;
+    document.getElementById('lifeDesc').textContent = s.desc;
+  }
   document.getElementById('lifeMass').textContent = (SIM.biomass*100).toFixed(2) + '%';
   document.getElementById('lifeVeg').textContent = (SIM.vegFrac*100).toFixed(1) + '%';
   var dots = document.getElementById('stageDots');
@@ -4189,6 +4282,7 @@ function saveWorld(slot) {
       monoliths: SIM.monoliths, sunOverride: SIM.sunOverride, co2Forcing: SIM.co2Forcing,
       axialTilt: SIM.axialTilt, seasonPhase: SIM.seasonPhase, showSeasons: SIM.showSeasons,
       geothermal: SIM.geothermal,
+      civTech: SIM.civTech, civPeakTech: SIM.civPeakTech, exodus: SIM.exodus, lastCivEvent: SIM.lastCivEvent,
       clades: SIM.clades, cladeNextId: SIM.cladeNextId, cladeLog: (SIM.cladeLog || []).slice(-40)
     },
     plateInfo: d.plateInfo,
