@@ -69,6 +69,8 @@
 .bgh-nav{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
 .bgh-nav>a{color:#d8d0c0;font-size:0.88em;letter-spacing:1px;text-decoration:none;padding:6px 12px;border-radius:4px;}
 .bgh-nav>a:hover{color:#f0d89c;background:#1a2434;text-decoration:none;}
+.bgh-nav>a.bgh-coffee{color:#f0c060;border:1px solid #6a5a2a;white-space:nowrap;}
+.bgh-nav>a.bgh-coffee:hover{background:#f0c060;color:#1a1410;border-color:#f0c060;}
 .bgh-dd{position:relative;}
 .bgh-dd>summary{list-style:none;cursor:pointer;color:#d8d0c0;font-size:0.88em;letter-spacing:1px;padding:6px 12px;border-radius:4px;transition:background 0.12s,color 0.12s;user-select:none;font-weight:500;}
 .bgh-dd>summary::-webkit-details-marker{display:none;}
@@ -245,7 +247,8 @@
     // Auto-close on outside click
     document.addEventListener('click', e => { if (!dd.contains(e.target)) dd.removeAttribute('open'); });
 
-    const nav = elt('nav', { class:'bgh-nav' }, dd, elt('a', { href:'/about.html' }, 'About'));
+    const nav = elt('nav', { class:'bgh-nav' }, dd, elt('a', { href:'/about.html' }, 'About'),
+      elt('a', { class:'bgh-coffee', href:'https://buymeacoffee.com/mf4633', target:'_blank', rel:'noopener' }, '☕ Coffee'));
 
     const inner = elt('div', { class:'bgh-head-inner' },
       elt('a', { class:'bgh-logo', href:'/' }, 'Board Gaming'),
