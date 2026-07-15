@@ -58,6 +58,21 @@
   </header>
   <article>
 
+    <p id="eclipse-countdown" style="background:#141c30;border:1px solid #5a5080;border-radius:4px;padding:14px 18px;color:#ffd040;letter-spacing:1px;"></p>
+    <script>
+    (function(){
+      var el = document.getElementById('eclipse-countdown');
+      var d = Math.ceil((Date.UTC(2026,7,12) - Date.now()) / 86400000);
+      if (d > 1) el.textContent = '🌒 The August 12, 2026 total eclipse is ' + d + ' days away.';
+      else if (d >= 0) el.textContent = '🌒 The August 12, 2026 total eclipse is ' + (d === 0 ? 'TODAY' : 'tomorrow') + '.';
+      else {
+        var d27 = Math.ceil((Date.UTC(2027,7,2) - Date.now()) / 86400000);
+        el.textContent = d27 >= 0 ? '🌒 Next up: the August 2, 2027 total eclipse — ' + d27 + ' days away.' : '';
+        if (!el.textContent) el.style.display = 'none';
+      }
+    })();
+    </script>
+
     <p>Two major total solar eclipses cross populated land masses in 2026 and 2027. The <a href="/EclipsePredictor.html">Eclipse Predictor</a> on Board Gaming Hub renders every eclipse from 1900–2200 on a rotatable 3D globe, using astronomy-engine ephemeris calculations accurate to sub-arcsecond precision. This guide summarizes what each eclipse offers observers and how to explore paths interactively.</p>
 
     <h2>August 12, 2026 — Arctic and Spain</h2>
@@ -78,6 +93,14 @@
 
     <h2>Planning a trip around totality</h2>
     <p>Book lodging early along the center line — roads converge on a narrow corridor hours before totality. Carry paper maps: cell networks saturate. Never observe the partial phases without certified ISO 12312-2 solar filters; remove filters only during the brief total phase when the photosphere is fully covered.</p>
+
+    <h2>The August 12 checklist</h2>
+    <ul>
+      <li><b>Pick your spot with the predictor.</b> Open the <a href="/EclipsePredictor.html">3D globe</a>, select the Aug 12 2026 eclipse, and check whether your location sits inside the path limits — being 20 km outside the edge means no totality at all.</li>
+      <li><b>Spain sees it at low sun, near sunset.</b> Scout a site with a clear western horizon; a hill or coastline beats a valley.</li>
+      <li><b>Glasses now, not in August.</b> ISO 12312-2 filters sell out in the final weeks before every eclipse.</li>
+      <li><b>Have a weather fallback.</b> Decide in advance which direction you can drive if the forecast sours — the corridor across Spain is wide enough to relocate within a morning.</li>
+    </ul>
 
     <div class="callout">
       <b>Accuracy note:</b> The predictor is an educational astronomy visualization, not a surveying instrument. Verify contact times against NASA or IOTA publications before committing expedition logistics.

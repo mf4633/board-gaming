@@ -69,6 +69,22 @@ first ~2 hours. Never ask for upvotes. One community at a time.
 **Title:** `A free 3D tool that shows the path of totality for the 2026 and 2027 eclipses (and every eclipse to 2200)`
 **Body:** same as r/astronomy, trimmed to the 2026/2027 paragraph up front.
 
+### Eclipse-week second wave (post Aug 8–11, 2026)
+Peak search interest. Post to r/eclipse (and r/astronomy if the first post
+was ≥2 weeks earlier — don't repost into the same sub within days).
+
+**Title:** `Watch Wednesday's total eclipse path sweep across Iceland and Spain in 3D — free, no signup`
+**Body:**
+> The Aug 12 eclipse is almost here. I built a free 3D globe that shows the
+> umbral shadow sweeping from the Arctic across Iceland to a sunset finish in
+> Spain — scrub the timeline to see exactly when totality reaches any point on
+> the center line. Positions come from the astronomy-engine ephemeris
+> (sub-arcsecond), projected onto the WGS84 ellipsoid. If you're near the path:
+> check whether you're inside the limits — 20 km outside the edge means no
+> totality at all. Safe viewing: ISO 12312-2 filters for all partial phases.
+> [link] — and the 2027 six-minute eclipse is loaded too if you want to plan
+> the big one.
+
 ---
 
 ## BONNEVILLE

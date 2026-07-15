@@ -70,6 +70,11 @@ const sharedCss = `  * { box-sizing: border-box; }
   header h1 { font-size: 2.0em; letter-spacing: 8px; color: #f0d89c; margin: 0; }
   header .tag { color: #8098a8; letter-spacing: 3px; font-size: 0.82em; margin-top: 10px; }
   header .free-tag { display: inline-block; margin-top: 14px; padding: 4px 14px; border: 1px solid #5a8060; border-radius: 3px; color: #a0d0a8; font-size: 0.78em; letter-spacing: 3px; }
+  .eclipse-strip { text-align: center; margin: 0 0 16px; padding: 13px 18px; background: linear-gradient(90deg,#0a0618,#141c30,#0a0618); border: 1px solid #5a5080; border-radius: 4px; }
+  .eclipse-strip b { color: #ffd040; letter-spacing: 2px; }
+  .eclipse-strip a { color: #94c3e8; text-decoration: none; margin: 0 8px; letter-spacing: 1px; }
+  .eclipse-strip a:hover { color: #ffd040; }
+  .eclipse-strip .days { color: #ffd040; font-weight: bold; }
   .daily-strip { text-align: center; margin: 0 0 28px; padding: 14px 18px; background: #141c28; border: 1px solid #3a5060; border-radius: 4px; }
   .daily-strip b { color: #f0d89c; letter-spacing: 2px; }
   .daily-strip a { color: #94c3e8; text-decoration: none; margin: 0 10px; letter-spacing: 1px; }
@@ -159,6 +164,33 @@ ${guides.map(g => `      <a href="${g.file}">${esc(g.title)}</a>`).join('\n')}
   </nav>`
   : '';
 
+// Eclipse-season banner: client-side countdown that auto-rolls from the
+// Aug 12 2026 eclipse to the Aug 2 2027 eclipse once 2026 has passed.
+const eclipseStrip = `  <div class="eclipse-strip" id="eclipse-strip" style="display:none">
+    <b>🌒 TOTAL SOLAR ECLIPSE</b> — <span id="eclipse-when"></span>
+    <a href="EclipsePredictor.html">Watch the path in 3D</a> ·
+    <a href="guides/eclipse-2026.html">Viewing guide</a>
+  </div>
+  <script>
+  (function () {
+    var events = [
+      { t: Date.UTC(2026, 7, 12), label: 'Arctic · Iceland · Spain' },
+      { t: Date.UTC(2027, 7, 2),  label: 'Spain · North Africa · Arabia — 6+ min totality' }
+    ];
+    var now = Date.now();
+    for (var i = 0; i < events.length; i++) {
+      var d = Math.ceil((events[i].t - now) / 86400000);
+      if (d >= 0) {
+        var when = d === 0 ? '<span class="days">TODAY</span>'
+                 : '<span class="days">' + d + ' day' + (d === 1 ? '' : 's') + '</span> away';
+        document.getElementById('eclipse-when').innerHTML = when + ' · ' + events[i].label + ' · ';
+        document.getElementById('eclipse-strip').style.display = '';
+        return;
+      }
+    }
+  })();
+  </script>`;
+
 const dailyGames = games.filter(g => g.daily);
 const dailyStrip = dailyGames.length
   ? `  <div class="daily-strip">
@@ -211,6 +243,7 @@ ${guidesStrip}
 
 ${adUnit()}
 
+${eclipseStrip}
 ${dailyStrip}
 ${section('puzzles', { highlightPuzzles: true })}
 ${adUnit('margin:32px 0')}
@@ -285,6 +318,7 @@ ${sharedCss.replace(/header \.free-tag[^}]+\}/g, '').replace(/\.ad-slot[^}]+\}/g
 ${hubEditorial}
 ${guidesStrip}
 
+${eclipseStrip}
 ${dailyStrip}
 ${categories.map(c => indexSection(c)).join('\n')}
 
