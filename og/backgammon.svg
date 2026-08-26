@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#120e0a"/>
+  <rect x="0" y="0" width="1200" height="6" fill="#d4a574"/>
+  <text x="80" y="290" fill="#d4a574" font-family="Georgia, serif" font-size="72" font-weight="700" letter-spacing="12">BACKGAMMON</text>
+  <text x="80" y="360" fill="#a8b0c0" font-family="Georgia, serif" font-size="36" letter-spacing="2">Classic dice &amp; race — vs AI or 2P</text>
+  <text x="80" y="540" fill="#5a6874" font-family="Georgia, serif" font-size="28" letter-spacing="6">BOARD GAMING HUB · FREE</text>
+  <text x="80" y="580" fill="#8098a8" font-family="Georgia, serif" font-size="22">boardgaminghub.com</text>
+</svg>

@@ -283,3 +283,66 @@
   from = "/tower"
   to = "/Tower.html"
   status = 200
+# ─── Headers ───────────────────────────────────────────────────────────────
+# Version-pinned vendor libraries and generated OG cards never change under the
+# same name, so they can be cached hard. HTML keeps must-revalidate (default).
+[[headers]]
+  for = "/og/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/three.r128.min.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/d3.v7.min.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/topojson-client.v3.min.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/astronomy.browser.min.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/countries-110m.json"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/land-110m.json"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+# nav.js is edited occasionally — a day of caching, revalidated after.
+[[headers]]
+  for = "/nav.js"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, must-revalidate"
+
+# Site-wide safety headers. frame-ancestors 'self' stops third parties from
+# iframing the games into their own ad-wrapped pages.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "frame-ancestors 'self'"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=(), interest-cohort=()"

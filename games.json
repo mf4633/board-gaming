@@ -25,58 +25,907 @@
     }
   ],
   "guides": [
-    { "slug": "wordform-tips", "file": "guides/wordform-tips.html", "title": "Wordform Tips & Daily Strategy", "description": "Opening words, color feedback, daily vs random mode, and how to share your grid." },
-    { "slug": "drift-word-ladder", "file": "guides/drift-word-ladder.html", "title": "Drift Word Ladder Guide", "description": "How word ladders work, daily puzzle tips, and shortest-path strategy." },
-    { "slug": "sudoku-tips", "file": "guides/sudoku-tips.html", "title": "Sudoku Tips for Beginners", "description": "Scanning, pencil marks, X-Wing, and difficulty levels on the free browser grid." },
-    { "slug": "eclipse-2026", "file": "guides/eclipse-2026.html", "title": "2026 & 2027 Solar Eclipse Guide", "description": "Paths of totality, timing, and how to use the free 3D eclipse predictor." },
-    { "slug": "floodline-scenarios", "file": "guides/floodline-scenarios.html", "title": "Floodline Scenarios Explained", "description": "Real California and US flood events behind the simulation scenarios." },
-    { "slug": "bonneville-dam-guide", "file": "guides/bonneville-dam-guide.html", "title": "Bonneville Dam Operator Guide", "description": "TDG, salmon passage, spillway vs turbines, and career mode strategy." },
-    { "slug": "free-browser-chess", "file": "guides/free-browser-chess.html", "title": "Play Chess Free in Your Browser", "description": "Rules refresher, special moves, and tips for the Board Gaming Hub chess board." },
-    { "slug": "solitaire-klondike", "file": "guides/solitaire-klondike.html", "title": "How to Play Klondike Solitaire", "description": "Rules, draw-1 vs draw-3, foundations and tableau, and the strategy that wins more deals." },
-    { "slug": "2048-strategy", "file": "guides/2048-strategy.html", "title": "2048 Strategy: How to Reach 2048", "description": "Corner strategy, anchoring your biggest tile, monotonic chains, and pushing past 2048." },
-    { "slug": "minesweeper-strategy", "file": "guides/minesweeper-strategy.html", "title": "Minesweeper Strategy for Beginners", "description": "First-click safety, reading numbers, 1-2-1 patterns, flagging vs chording, and the three grids." },
-    { "slug": "backgammon-rules", "file": "guides/backgammon-rules.html", "title": "Backgammon Rules & Opening Strategy", "description": "Board setup, hitting and the bar, bearing off, blocking points, and a simple opening plan." },
-    { "slug": "go-rules-beginners", "file": "guides/go-rules-beginners.html", "title": "Go Rules for Beginners (Baduk / Weiqi)", "description": "Liberties, capture, ko, territory vs area scoring, the pass-pass endgame, and board sizes." },
-    { "slug": "mahjong-solitaire", "file": "guides/mahjong-solitaire.html", "title": "How to Play Mahjong Solitaire", "description": "Free vs blocked tiles, exact-glyph matching, the 72-tile set, and top-down planning." },
-    { "slug": "othello-reversi", "file": "guides/othello-reversi.html", "title": "Othello (Reversi) Rules & Strategy", "description": "Rules, why corners win, and the mobility and edge tactics that beat the computer." },
-    { "slug": "royal-game-of-ur", "file": "guides/royal-game-of-ur.html", "title": "The Royal Game of Ur — Rules, History & Strategy", "description": "How to play the 4,500-year-old Mesopotamian race game: rosettes, capturing, and winning tactics." },
-    { "slug": "senet-rules", "file": "guides/senet-rules.html", "title": "Senet — Rules of the Ancient Egyptian Game", "description": "Throwing sticks, the special houses, sending pieces back, and bearing off to win." },
-    { "slug": "pente-grammai", "file": "guides/pente-grammai.html", "title": "Pente Grammai — the Ancient Greek Game of Five Lines", "description": "Movement, the sacred line, capturing, and bearing off in the Greek race game." }
+    {
+      "slug": "wordform-tips",
+      "file": "guides/wordform-tips.html",
+      "title": "Wordform Tips & Daily Strategy",
+      "description": "Opening words, color feedback, daily vs random mode, and how to share your grid."
+    },
+    {
+      "slug": "drift-word-ladder",
+      "file": "guides/drift-word-ladder.html",
+      "title": "Drift Word Ladder Guide",
+      "description": "How word ladders work, daily puzzle tips, and shortest-path strategy."
+    },
+    {
+      "slug": "sudoku-tips",
+      "file": "guides/sudoku-tips.html",
+      "title": "Sudoku Tips for Beginners",
+      "description": "Scanning, pencil marks, X-Wing, and difficulty levels on the free browser grid."
+    },
+    {
+      "slug": "eclipse-2026",
+      "file": "guides/eclipse-2026.html",
+      "title": "2026 & 2027 Solar Eclipse Guide",
+      "description": "Paths of totality, timing, and how to use the free 3D eclipse predictor."
+    },
+    {
+      "slug": "floodline-scenarios",
+      "file": "guides/floodline-scenarios.html",
+      "title": "Floodline Scenarios Explained",
+      "description": "Real California and US flood events behind the simulation scenarios."
+    },
+    {
+      "slug": "bonneville-dam-guide",
+      "file": "guides/bonneville-dam-guide.html",
+      "title": "Bonneville Dam Operator Guide",
+      "description": "TDG, salmon passage, spillway vs turbines, and career mode strategy."
+    },
+    {
+      "slug": "free-browser-chess",
+      "file": "guides/free-browser-chess.html",
+      "title": "Play Chess Free in Your Browser",
+      "description": "Rules refresher, special moves, and tips for the Board Gaming Hub chess board."
+    },
+    {
+      "slug": "solitaire-klondike",
+      "file": "guides/solitaire-klondike.html",
+      "title": "How to Play Klondike Solitaire",
+      "description": "Rules, draw-1 vs draw-3, foundations and tableau, and the strategy that wins more deals."
+    },
+    {
+      "slug": "2048-strategy",
+      "file": "guides/2048-strategy.html",
+      "title": "2048 Strategy: How to Reach 2048",
+      "description": "Corner strategy, anchoring your biggest tile, monotonic chains, and pushing past 2048."
+    },
+    {
+      "slug": "minesweeper-strategy",
+      "file": "guides/minesweeper-strategy.html",
+      "title": "Minesweeper Strategy for Beginners",
+      "description": "First-click safety, reading numbers, 1-2-1 patterns, flagging vs chording, and the three grids."
+    },
+    {
+      "slug": "backgammon-rules",
+      "file": "guides/backgammon-rules.html",
+      "title": "Backgammon Rules & Opening Strategy",
+      "description": "Board setup, hitting and the bar, bearing off, blocking points, and a simple opening plan."
+    },
+    {
+      "slug": "go-rules-beginners",
+      "file": "guides/go-rules-beginners.html",
+      "title": "Go Rules for Beginners (Baduk / Weiqi)",
+      "description": "Liberties, capture, ko, territory vs area scoring, the pass-pass endgame, and board sizes."
+    },
+    {
+      "slug": "mahjong-solitaire",
+      "file": "guides/mahjong-solitaire.html",
+      "title": "How to Play Mahjong Solitaire",
+      "description": "Free vs blocked tiles, exact-glyph matching, the 72-tile set, and top-down planning."
+    },
+    {
+      "slug": "othello-reversi",
+      "file": "guides/othello-reversi.html",
+      "title": "Othello (Reversi) Rules & Strategy",
+      "description": "Rules, why corners win, and the mobility and edge tactics that beat the computer."
+    },
+    {
+      "slug": "royal-game-of-ur",
+      "file": "guides/royal-game-of-ur.html",
+      "title": "The Royal Game of Ur — Rules, History & Strategy",
+      "description": "How to play the 4,500-year-old Mesopotamian race game: rosettes, capturing, and winning tactics."
+    },
+    {
+      "slug": "senet-rules",
+      "file": "guides/senet-rules.html",
+      "title": "Senet — Rules of the Ancient Egyptian Game",
+      "description": "Throwing sticks, the special houses, sending pieces back, and bearing off to win."
+    },
+    {
+      "slug": "pente-grammai",
+      "file": "guides/pente-grammai.html",
+      "title": "Pente Grammai — the Ancient Greek Game of Five Lines",
+      "description": "Movement, the sacred line, capturing, and bearing off in the Greek race game."
+    }
   ],
   "games": [
-    { "slug": "solitaire", "title": "Solitaire", "sourceHtml": "Solitaire.html", "category": "puzzles", "featured": true, "daily": false, "priority": 0.95, "ogImage": "/og/solitaire.png", "description": "Klondike — the classic card game", "searchKeys": ["cards", "klondike", "patience", "solitaire", "classic"], "appId": "com.hydroengineer.solitaire", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "wordform", "title": "Wordform", "sourceHtml": "Wordform.html", "category": "puzzles", "featured": true, "daily": true, "priority": 0.95, "ogImage": "/og/wordform.png", "description": "Daily 5-letter word puzzle", "searchKeys": ["word", "wordle", "letter", "daily", "vocabulary"], "appId": "com.hydroengineer.wordform", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "drift", "title": "Drift", "sourceHtml": "Drift.html", "category": "puzzles", "featured": true, "daily": true, "priority": 0.9, "ogImage": "/og/drift.png", "description": "Daily word ladder — original", "searchKeys": ["word", "ladder", "daily", "vocabulary", "original"], "appId": "com.hydroengineer.drift", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "sudoku", "title": "Sudoku", "sourceHtml": "Sudoku.html", "category": "puzzles", "featured": true, "daily": true, "priority": 0.95, "ogImage": "/og/sudoku.png", "description": "Place 1–9, easy to expert", "searchKeys": ["logic", "number", "grid", "classic"], "appId": "com.hydroengineer.sudoku", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "mahjong", "title": "Mahjong", "sourceHtml": "Mahjong.html", "category": "puzzles", "featured": true, "daily": false, "priority": 0.9, "description": "Solitaire tile matching", "searchKeys": ["tile", "matching", "asian", "solitaire"], "appId": "com.hydroengineer.mahjong", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "chess", "title": "Chess", "sourceHtml": "Chess.html", "category": "puzzles", "featured": true, "daily": false, "priority": 0.9, "ogImage": "/og/chess.png", "description": "The royal game", "searchKeys": ["chess", "board", "strategy", "classic", "royal"], "appId": "com.hydroengineer.chess", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "2048", "title": "2048", "sourceHtml": "2048.html", "category": "puzzles", "featured": true, "daily": false, "priority": 0.9, "description": "Slide & merge tiles", "searchKeys": ["merge", "tile", "number", "slide", "arcade"], "appId": "com.hydroengineer.game2048", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "minesweeper", "title": "Minesweeper", "sourceHtml": "Minesweeper.html", "category": "puzzles", "featured": true, "daily": false, "priority": 0.9, "description": "Find the mines", "searchKeys": ["mines", "grid", "flag", "classic"], "appId": "com.hydroengineer.minesweeper", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "abacus", "title": "Abacus", "sourceHtml": "Abacus.html", "category": "puzzles", "featured": false, "daily": false, "priority": 0.8, "description": "Soroban calculator with Arabic & Roman numerals", "searchKeys": ["abacus", "soroban", "calculator", "math", "roman"], "appId": "com.hydroengineer.abacus", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "lovedwords", "title": "LovedWords", "sourceHtml": "lovedwords/index.html", "assetDir": "lovedwords", "category": "puzzles", "featured": false, "daily": false, "priority": 0.85, "description": "First-words flashcards with your photos & voice", "searchKeys": ["flashcards", "toddler", "first words", "learning", "baby", "photos"], "appId": "com.hydroengineer.lovedwords", "platforms": ["android", "web"], "hasSteam": false, "admob": false },
-
-    { "slug": "agora", "title": "Agora", "sourceHtml": "Agora.html", "category": "board", "featured": false, "daily": false, "priority": 0.8, "description": "The Mediterranean Trade", "searchKeys": ["ancient", "greek", "trade", "strategy", "original"], "appId": "com.hydroengineer.agora", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "aresia", "title": "Aresia", "sourceHtml": "Aresia.html", "category": "board", "featured": false, "daily": false, "priority": 0.8, "description": "Colonize the Red Frontier", "searchKeys": ["mars", "colony", "strategy", "original"], "appId": "com.hydroengineer.aresia", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "backgammon", "title": "Backgammon", "sourceHtml": "Backgammon.html", "category": "board", "featured": false, "daily": false, "priority": 0.85, "description": "Classic dice & race", "searchKeys": ["dice", "race", "classic"], "appId": "com.hydroengineer.backgammon", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "bisque", "title": "Bisque", "sourceHtml": "Bisque.html", "category": "board", "featured": false, "daily": false, "priority": 0.8, "description": "Battle for the Bay", "searchKeys": ["naval", "strategy", "original", "war"], "appId": "com.hydroengineer.bisque", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "convergence", "title": "Convergence", "sourceHtml": "Convergence.html", "category": "board", "featured": false, "daily": false, "priority": 0.8, "description": "Rival Civilizations, Shared Economy", "searchKeys": ["civilization", "strategy", "original", "economy"], "appId": "com.hydroengineer.convergence", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "go", "title": "Go", "sourceHtml": "Go.html", "category": "board", "featured": false, "daily": false, "priority": 0.85, "description": "Territory & influence, 19×19", "searchKeys": ["go", "asian", "classic", "territory", "baduk"], "appId": "com.hydroengineer.go", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "mancala", "title": "Mancala", "sourceHtml": "Mancala.html", "category": "board", "featured": false, "daily": false, "priority": 0.8, "description": "Ancient count-and-capture", "searchKeys": ["ancient", "african", "count", "classic"], "appId": "com.hydroengineer.mancala", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "odyssey", "title": "Odyssey", "sourceHtml": "Odyssey.html", "category": "board", "featured": false, "daily": false, "priority": 0.8, "description": "Upon the Wine-Dark Sea", "searchKeys": ["ancient", "greek", "sea", "original", "homer"], "appId": "com.hydroengineer.odyssey", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "othello", "title": "Othello", "sourceHtml": "Othello.html", "category": "board", "featured": false, "daily": false, "priority": 0.8, "description": "Flip to claim the board", "searchKeys": ["othello", "reversi", "classic", "flip"], "appId": "com.hydroengineer.othello", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "pentegrammai", "title": "Pente Grammai", "sourceHtml": "PenteGrammai.html", "category": "board", "featured": false, "daily": false, "priority": 0.8, "description": "Ancient Greek Game of Five Lines", "searchKeys": ["ancient", "greek", "classic", "five lines"], "appId": "com.hydroengineer.pentegrammai", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "senet", "title": "Senet", "sourceHtml": "Senet.html", "category": "board", "featured": false, "daily": false, "priority": 0.8, "description": "Ancient Egyptian racing game", "searchKeys": ["egyptian", "ancient", "classic", "race"], "appId": "com.hydroengineer.senet", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "tidelands", "title": "Tidelands", "sourceHtml": "Tidelands.html", "category": "board", "featured": false, "daily": false, "priority": 0.8, "description": "Bronze-age maritime trade", "searchKeys": ["ancient", "bronze", "sea", "original", "trade"], "appId": "com.hydroengineer.tidelands", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "ur", "title": "Ur", "sourceHtml": "Ur.html", "category": "board", "featured": false, "daily": false, "priority": 0.8, "description": "The Royal Game of Ur", "searchKeys": ["mesopotamian", "royal", "ancient", "race", "classic"], "appId": "com.hydroengineer.ur", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-
-    { "slug": "apoapsis", "title": "Apoapsis", "sourceHtml": "Apoapsis.html", "category": "sims", "featured": false, "daily": false, "priority": 0.8, "description": "3D rocket flight sim", "searchKeys": ["rocket", "space", "3d", "simulation", "orbital"], "appId": "com.hydroengineer.apoapsis", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "biosphereblue", "title": "Biosphere Blue", "sourceHtml": "BiosphereBlue.html", "category": "sims", "featured": false, "daily": false, "priority": 0.8, "description": "Planet-scale geosim", "searchKeys": ["planet", "climate", "geosim", "simulation", "earth"], "appId": "com.hydroengineer.biosphereblue", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "bonnevillespillwayoperator", "title": "Bonneville Spillway", "sourceHtml": "BonnevilleSpillwayOperator.html", "category": "sims", "featured": false, "daily": false, "priority": 0.8, "ogImage": "/og/bonneville.png", "description": "Columbia River dam operator", "searchKeys": ["dam", "spillway", "river", "engineering", "simulation", "hydraulic"], "demo": true, "storeUrl": "https://hydroengineer.itch.io/bonneville-spillway-operator", "appId": "com.hydroengineer.bonnevillespillwayoperator", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "cliffwalkers", "title": "Cliffwalkers", "sourceHtml": "Cliffwalkers.html", "category": "sims", "featured": false, "daily": false, "priority": 0.8, "description": "Save the wee folk", "searchKeys": ["lemmings", "puzzle", "arcade"], "appId": "com.hydroengineer.cliffwalkers", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "doctrine", "title": "Doctrine", "sourceHtml": "Doctrine.html", "category": "sims", "featured": false, "daily": false, "priority": 0.8, "description": "Geopolitical sim, 1990–2050", "searchKeys": ["geopolitical", "history", "simulation", "war", "strategy"], "appId": "com.hydroengineer.doctrine", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "eclipsepredictor", "title": "Eclipse Predictor", "sourceHtml": "EclipsePredictor.html", "category": "sims", "featured": false, "daily": false, "priority": 0.85, "ogImage": "/og/eclipse.png", "description": "3D solar eclipse paths on globe (1900–2200)", "searchKeys": ["eclipse", "solar", "astronomy", "3d", "globe", "predictor"], "appId": "com.hydroengineer.eclipsepredictor", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "floodline", "title": "Floodline", "sourceHtml": "Floodline.html", "category": "sims", "featured": false, "daily": false, "priority": 0.8, "ogImage": "/og/floodline.png", "description": "California flood defense", "searchKeys": ["flood", "defense", "engineering", "simulation", "water"], "demo": true, "storeUrl": "https://hydroengineer.itch.io/floodline", "appId": "com.hydroengineer.floodline", "platforms": ["android", "tauri", "web"], "hasSteam": false, "admob": true },
-    { "slug": "metropolis2k", "title": "Metropolis 2K", "sourceHtml": "Metropolis2K.html", "category": "sims", "featured": false, "daily": false, "priority": 0.8, "description": "City-building sim with districts & bonds", "searchKeys": ["city", "building", "simulation", "tycoon", "urban"], "appId": "com.hydroengineer.metropolis2k", "platforms": ["android", "web"], "hasSteam": false, "admob": true },
-    { "slug": "tower", "title": "Tower", "sourceHtml": "Tower.html", "category": "sims", "featured": false, "daily": false, "priority": 0.8, "description": "High-rise operations (SKYSTACK)", "searchKeys": ["tower", "building", "simulation", "tycoon", "skyscraper"], "demo": true, "storeUrl": "https://hydroengineer.itch.io/skystack", "appId": "com.hydroengineer.skystack", "platforms": ["android", "tauri", "web"], "hasSteam": true, "admob": true }
+    {
+      "slug": "solitaire",
+      "title": "Solitaire",
+      "sourceHtml": "Solitaire.html",
+      "category": "puzzles",
+      "featured": true,
+      "daily": false,
+      "priority": 0.95,
+      "ogImage": "/og/solitaire.png",
+      "description": "Klondike — the classic card game",
+      "searchKeys": [
+        "cards",
+        "klondike",
+        "patience",
+        "solitaire",
+        "classic"
+      ],
+      "appId": "com.hydroengineer.solitaire",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true
+    },
+    {
+      "slug": "wordform",
+      "title": "Wordform",
+      "sourceHtml": "Wordform.html",
+      "category": "puzzles",
+      "featured": true,
+      "daily": true,
+      "priority": 0.95,
+      "ogImage": "/og/wordform.png",
+      "description": "Daily 5-letter word puzzle",
+      "searchKeys": [
+        "word",
+        "wordle",
+        "letter",
+        "daily",
+        "vocabulary"
+      ],
+      "appId": "com.hydroengineer.wordform",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true
+    },
+    {
+      "slug": "drift",
+      "title": "Drift",
+      "sourceHtml": "Drift.html",
+      "category": "puzzles",
+      "featured": true,
+      "daily": true,
+      "priority": 0.9,
+      "ogImage": "/og/drift.png",
+      "description": "Daily word ladder — original",
+      "searchKeys": [
+        "word",
+        "ladder",
+        "daily",
+        "vocabulary",
+        "original"
+      ],
+      "appId": "com.hydroengineer.drift",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true
+    },
+    {
+      "slug": "sudoku",
+      "title": "Sudoku",
+      "sourceHtml": "Sudoku.html",
+      "category": "puzzles",
+      "featured": true,
+      "daily": true,
+      "priority": 0.95,
+      "ogImage": "/og/sudoku.png",
+      "description": "Place 1–9, easy to expert",
+      "searchKeys": [
+        "logic",
+        "number",
+        "grid",
+        "classic"
+      ],
+      "appId": "com.hydroengineer.sudoku",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true
+    },
+    {
+      "slug": "mahjong",
+      "title": "Mahjong",
+      "sourceHtml": "Mahjong.html",
+      "category": "puzzles",
+      "featured": true,
+      "daily": false,
+      "priority": 0.9,
+      "description": "Solitaire tile matching",
+      "searchKeys": [
+        "tile",
+        "matching",
+        "asian",
+        "solitaire"
+      ],
+      "appId": "com.hydroengineer.mahjong",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/mahjong.png"
+    },
+    {
+      "slug": "chess",
+      "title": "Chess",
+      "sourceHtml": "Chess.html",
+      "category": "puzzles",
+      "featured": true,
+      "daily": false,
+      "priority": 0.9,
+      "ogImage": "/og/chess.png",
+      "description": "The royal game",
+      "searchKeys": [
+        "chess",
+        "board",
+        "strategy",
+        "classic",
+        "royal"
+      ],
+      "appId": "com.hydroengineer.chess",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true
+    },
+    {
+      "slug": "2048",
+      "title": "2048",
+      "sourceHtml": "2048.html",
+      "category": "puzzles",
+      "featured": true,
+      "daily": false,
+      "priority": 0.9,
+      "description": "Slide & merge tiles",
+      "searchKeys": [
+        "merge",
+        "tile",
+        "number",
+        "slide",
+        "arcade"
+      ],
+      "appId": "com.hydroengineer.game2048",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/2048.png"
+    },
+    {
+      "slug": "minesweeper",
+      "title": "Minesweeper",
+      "sourceHtml": "Minesweeper.html",
+      "category": "puzzles",
+      "featured": true,
+      "daily": false,
+      "priority": 0.9,
+      "description": "Find the mines",
+      "searchKeys": [
+        "mines",
+        "grid",
+        "flag",
+        "classic"
+      ],
+      "appId": "com.hydroengineer.minesweeper",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/minesweeper.png"
+    },
+    {
+      "slug": "abacus",
+      "title": "Abacus",
+      "sourceHtml": "Abacus.html",
+      "category": "puzzles",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Soroban calculator with Arabic & Roman numerals",
+      "searchKeys": [
+        "abacus",
+        "soroban",
+        "calculator",
+        "math",
+        "roman"
+      ],
+      "appId": "com.hydroengineer.abacus",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/abacus.png"
+    },
+    {
+      "slug": "lovedwords",
+      "title": "LovedWords",
+      "sourceHtml": "lovedwords/index.html",
+      "assetDir": "lovedwords",
+      "category": "puzzles",
+      "featured": false,
+      "daily": false,
+      "priority": 0.85,
+      "description": "First-words flashcards with your photos & voice",
+      "searchKeys": [
+        "flashcards",
+        "toddler",
+        "first words",
+        "learning",
+        "baby",
+        "photos"
+      ],
+      "appId": "com.hydroengineer.lovedwords",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": false,
+      "ogImage": "/og/lovedwords.png"
+    },
+    {
+      "slug": "agora",
+      "title": "Agora",
+      "sourceHtml": "Agora.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "The Mediterranean Trade",
+      "searchKeys": [
+        "ancient",
+        "greek",
+        "trade",
+        "strategy",
+        "original"
+      ],
+      "appId": "com.hydroengineer.agora",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/agora.png"
+    },
+    {
+      "slug": "aresia",
+      "title": "Aresia",
+      "sourceHtml": "Aresia.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Colonize the Red Frontier",
+      "searchKeys": [
+        "mars",
+        "colony",
+        "strategy",
+        "original"
+      ],
+      "appId": "com.hydroengineer.aresia",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/aresia.png"
+    },
+    {
+      "slug": "backgammon",
+      "title": "Backgammon",
+      "sourceHtml": "Backgammon.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.85,
+      "description": "Classic dice & race",
+      "searchKeys": [
+        "dice",
+        "race",
+        "classic"
+      ],
+      "appId": "com.hydroengineer.backgammon",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/backgammon.png"
+    },
+    {
+      "slug": "bisque",
+      "title": "Bisque",
+      "sourceHtml": "Bisque.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Battle for the Bay",
+      "searchKeys": [
+        "naval",
+        "strategy",
+        "original",
+        "war"
+      ],
+      "appId": "com.hydroengineer.bisque",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/bisque.png"
+    },
+    {
+      "slug": "convergence",
+      "title": "Convergence",
+      "sourceHtml": "Convergence.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Rival Civilizations, Shared Economy",
+      "searchKeys": [
+        "civilization",
+        "strategy",
+        "original",
+        "economy"
+      ],
+      "appId": "com.hydroengineer.convergence",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/convergence.png"
+    },
+    {
+      "slug": "go",
+      "title": "Go",
+      "sourceHtml": "Go.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.85,
+      "description": "Territory & influence, 19×19",
+      "searchKeys": [
+        "go",
+        "asian",
+        "classic",
+        "territory",
+        "baduk"
+      ],
+      "appId": "com.hydroengineer.go",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/go.png"
+    },
+    {
+      "slug": "mancala",
+      "title": "Mancala",
+      "sourceHtml": "Mancala.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Ancient count-and-capture",
+      "searchKeys": [
+        "ancient",
+        "african",
+        "count",
+        "classic"
+      ],
+      "appId": "com.hydroengineer.mancala",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/mancala.png"
+    },
+    {
+      "slug": "odyssey",
+      "title": "Odyssey",
+      "sourceHtml": "Odyssey.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Upon the Wine-Dark Sea",
+      "searchKeys": [
+        "ancient",
+        "greek",
+        "sea",
+        "original",
+        "homer"
+      ],
+      "appId": "com.hydroengineer.odyssey",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/odyssey.png"
+    },
+    {
+      "slug": "othello",
+      "title": "Othello",
+      "sourceHtml": "Othello.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Flip to claim the board",
+      "searchKeys": [
+        "othello",
+        "reversi",
+        "classic",
+        "flip"
+      ],
+      "appId": "com.hydroengineer.othello",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/othello.png"
+    },
+    {
+      "slug": "pentegrammai",
+      "title": "Pente Grammai",
+      "sourceHtml": "PenteGrammai.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Ancient Greek Game of Five Lines",
+      "searchKeys": [
+        "ancient",
+        "greek",
+        "classic",
+        "five lines"
+      ],
+      "appId": "com.hydroengineer.pentegrammai",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/pentegrammai.png"
+    },
+    {
+      "slug": "senet",
+      "title": "Senet",
+      "sourceHtml": "Senet.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Ancient Egyptian racing game",
+      "searchKeys": [
+        "egyptian",
+        "ancient",
+        "classic",
+        "race"
+      ],
+      "appId": "com.hydroengineer.senet",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/senet.png"
+    },
+    {
+      "slug": "tidelands",
+      "title": "Tidelands",
+      "sourceHtml": "Tidelands.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Bronze-age maritime trade",
+      "searchKeys": [
+        "ancient",
+        "bronze",
+        "sea",
+        "original",
+        "trade"
+      ],
+      "appId": "com.hydroengineer.tidelands",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/tidelands.png"
+    },
+    {
+      "slug": "ur",
+      "title": "Ur",
+      "sourceHtml": "Ur.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "The Royal Game of Ur",
+      "searchKeys": [
+        "mesopotamian",
+        "royal",
+        "ancient",
+        "race",
+        "classic"
+      ],
+      "appId": "com.hydroengineer.ur",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/ur.png"
+    },
+    {
+      "slug": "apoapsis",
+      "title": "Apoapsis",
+      "sourceHtml": "Apoapsis.html",
+      "category": "sims",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "3D rocket flight sim",
+      "searchKeys": [
+        "rocket",
+        "space",
+        "3d",
+        "simulation",
+        "orbital"
+      ],
+      "appId": "com.hydroengineer.apoapsis",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/apoapsis.png"
+    },
+    {
+      "slug": "biosphereblue",
+      "title": "Biosphere Blue",
+      "sourceHtml": "BiosphereBlue.html",
+      "category": "sims",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Planet-scale geosim",
+      "searchKeys": [
+        "planet",
+        "climate",
+        "geosim",
+        "simulation",
+        "earth"
+      ],
+      "appId": "com.hydroengineer.biosphereblue",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/biosphereblue.png"
+    },
+    {
+      "slug": "bonnevillespillwayoperator",
+      "title": "Bonneville Spillway",
+      "sourceHtml": "BonnevilleSpillwayOperator.html",
+      "category": "sims",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "ogImage": "/og/bonneville.png",
+      "description": "Columbia River dam operator",
+      "searchKeys": [
+        "dam",
+        "spillway",
+        "river",
+        "engineering",
+        "simulation",
+        "hydraulic"
+      ],
+      "demo": true,
+      "storeUrl": "https://hydroengineer.itch.io/bonneville-spillway-operator",
+      "appId": "com.hydroengineer.bonnevillespillwayoperator",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true
+    },
+    {
+      "slug": "cliffwalkers",
+      "title": "Cliffwalkers",
+      "sourceHtml": "Cliffwalkers.html",
+      "category": "sims",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Save the wee folk",
+      "searchKeys": [
+        "lemmings",
+        "puzzle",
+        "arcade"
+      ],
+      "appId": "com.hydroengineer.cliffwalkers",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/cliffwalkers.png"
+    },
+    {
+      "slug": "doctrine",
+      "title": "Doctrine",
+      "sourceHtml": "Doctrine.html",
+      "category": "sims",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "Geopolitical sim, 1990–2050",
+      "searchKeys": [
+        "geopolitical",
+        "history",
+        "simulation",
+        "war",
+        "strategy"
+      ],
+      "appId": "com.hydroengineer.doctrine",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/doctrine.png"
+    },
+    {
+      "slug": "eclipsepredictor",
+      "title": "Eclipse Predictor",
+      "sourceHtml": "EclipsePredictor.html",
+      "category": "sims",
+      "featured": false,
+      "daily": false,
+      "priority": 0.85,
+      "ogImage": "/og/eclipse.png",
+      "description": "3D solar eclipse paths on globe (1900–2200)",
+      "searchKeys": [
+        "eclipse",
+        "solar",
+        "astronomy",
+        "3d",
+        "globe",
+        "predictor"
+      ],
+      "appId": "com.hydroengineer.eclipsepredictor",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true
+    },
+    {
+      "slug": "floodline",
+      "title": "Floodline",
+      "sourceHtml": "Floodline.html",
+      "category": "sims",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "ogImage": "/og/floodline.png",
+      "description": "California flood defense",
+      "searchKeys": [
+        "flood",
+        "defense",
+        "engineering",
+        "simulation",
+        "water"
+      ],
+      "demo": true,
+      "storeUrl": "https://hydroengineer.itch.io/floodline",
+      "appId": "com.hydroengineer.floodline",
+      "platforms": [
+        "android",
+        "tauri",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true
+    },
+    {
+      "slug": "metropolis2k",
+      "title": "Metropolis 2K",
+      "sourceHtml": "Metropolis2K.html",
+      "category": "sims",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "City-building sim with districts & bonds",
+      "searchKeys": [
+        "city",
+        "building",
+        "simulation",
+        "tycoon",
+        "urban"
+      ],
+      "appId": "com.hydroengineer.metropolis2k",
+      "platforms": [
+        "android",
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": true,
+      "ogImage": "/og/metropolis2k.png"
+    },
+    {
+      "slug": "tower",
+      "title": "Tower",
+      "sourceHtml": "Tower.html",
+      "category": "sims",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "High-rise operations (SKYSTACK)",
+      "searchKeys": [
+        "tower",
+        "building",
+        "simulation",
+        "tycoon",
+        "skyscraper"
+      ],
+      "demo": true,
+      "storeUrl": "https://hydroengineer.itch.io/skystack",
+      "appId": "com.hydroengineer.skystack",
+      "platforms": [
+        "android",
+        "tauri",
+        "web"
+      ],
+      "hasSteam": true,
+      "admob": true,
+      "ogImage": "/og/tower.png"
+    }
   ]
 }
