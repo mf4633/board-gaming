@@ -287,11 +287,6 @@
 # Version-pinned vendor libraries and generated OG cards never change under the
 # same name, so they can be cached hard. HTML keeps must-revalidate (default).
 [[headers]]
-  for = "/og/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
   for = "/three.r128.min.js"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
@@ -330,6 +325,12 @@
   for = "/*.png"
   [headers.values]
     Cache-Control = "public, max-age=2592000"
+
+# Must follow /*.png — on overlapping matches Netlify lets the later rule win.
+[[headers]]
+  for = "/og/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 
 # nav.js is edited occasionally — a day of caching, revalidated after.
 [[headers]]
