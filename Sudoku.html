@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Play Sudoku free online: easy, medium, hard, and expert puzzles. Pencil-mark notes, hint and check, daily seed. No signup, no downloads — single-page browser game.">
 <meta name="keywords" content="sudoku, play sudoku online, free sudoku, sudoku puzzle, daily sudoku, hard sudoku">
-<link rel="canonical" href="https://boardgaminghub.com/Sudoku.html">
+<link rel="canonical" href="https://boardgaminghub.com/sudoku">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://boardgaminghub.com/Sudoku.html">
+<meta property="og:url" content="https://boardgaminghub.com/sudoku">
 <meta property="og:title" content="Sudoku — Free Online Daily Puzzle">
 <meta property="og:description" content="Easy to expert puzzles, pencil notes, hint mode, daily seed. Free, in-browser, single-file HTML.">
 <meta property="og:image" content="https://boardgaminghub.com/og/sudoku.png">
@@ -20,11 +20,11 @@
 <script type="application/ld+json">
 { "@context": "https://schema.org", "@type": "VideoGame", "name": "Sudoku",
   "description": "Place digits 1–9 so that every row, column, and 3×3 box contains each digit exactly once.",
-  "url": "https://boardgaminghub.com/Sudoku.html", "genre": "Logic Puzzle",
+  "url": "https://boardgaminghub.com/sudoku", "genre": "Logic Puzzle",
   "applicationCategory": "Game", "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Sudoku","item":"https://boardgaminghub.com/Sudoku.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Sudoku","item":"https://boardgaminghub.com/sudoku"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What are the rules of sudoku?","acceptedAnswer":{"@type":"Answer","text":"Fill the 9×9 grid with digits 1–9 so that every row, every column, and every 3×3 box contains each digit exactly once. The puzzle starts with some cells already filled (clues); a well-formed puzzle has exactly one solution reachable by logic alone — no guessing required."}},{"@type":"Question","name":"What's the difference between a naked single and a hidden single?","acceptedAnswer":{"@type":"Answer","text":"Naked single: a cell where only one digit is still possible after eliminating digits already in its row, column, and box. Hidden single: a digit that has only one possible cell in a particular row, column, or box, even if that cell could in principle hold other digits. Both are the easiest deductions; expert puzzles require chains of these plus advanced techniques (X-Wing, Swordfish)."}},{"@type":"Question","name":"How do pencil marks work?","acceptedAnswer":{"@type":"Answer","text":"Pencil marks (or candidates) are small notes inside an empty cell listing the digits still possible there. As you fill cells and eliminate possibilities, you erase pencil marks accordingly. They make advanced techniques tractable — most expert puzzles are unsolvable without them."}},{"@type":"Question","name":"Can every sudoku be solved by logic alone?","acceptedAnswer":{"@type":"Answer","text":"Every well-formed (single-solution) sudoku CAN be solved by some logical chain — but the chain may require techniques most humans don't use (forcing chains, nishio, etc.). Most published \"expert\" puzzles are solvable with X-Wing, swordfish, and unique-rectangle techniques. The minimum number of clues for a unique-solution sudoku is 17 (proven 2012)."}},{"@type":"Question","name":"What's the difference between easy and expert difficulty?","acceptedAnswer":{"@type":"Answer","text":"Easy puzzles solve with naked-singles and hidden-singles only. Medium adds naked pairs and pointing pairs. Hard requires X-Wings and swordfish. Expert requires chains and unique-rectangle reasoning. The clue count is a poor proxy for difficulty — a 30-clue \"expert\" can be much harder than a 24-clue \"hard\"."}}]}</script>
 <style>
   * { box-sizing: border-box; }
@@ -109,7 +109,7 @@
   <div id="board"></div>
   <div class="pad" id="pad"></div>
   <div id="msg"></div>
-  <nav><a href="index.html">All games</a> · <a href="2048.html">2048</a> · <a href="Minesweeper.html">Minesweeper</a></nav>
+  <nav><a href="/">All games</a> · <a href="/2048">2048</a> · <a href="/minesweeper">Minesweeper</a></nav>
 
   <div class="info">
     <h2>How to play Sudoku</h2>
@@ -235,7 +235,7 @@
   }
   async function shareDaily() {
     const txt = 'Sudoku #' + dailyNumber() + ' — ' + $('time').textContent + ', ' + errs +
-      ' mistake' + (errs === 1 ? '' : 's') + '\nhttps://boardgaminghub.com/Sudoku.html#daily';
+      ' mistake' + (errs === 1 ? '' : 's') + '\nhttps://boardgaminghub.com/sudoku#daily';
     try { if (navigator.share) { await navigator.share({ text: txt }); return; } } catch (e) { /* fall through */ }
     try { await navigator.clipboard.writeText(txt); $('msg').textContent = 'RESULT COPIED — PASTE TO SHARE'; }
     catch (e) { $('msg').textContent = txt; }
@@ -380,10 +380,10 @@
 
   <h3>Related games</h3>
   <ul>
-    <li><a href="Minesweeper.html">Minesweeper</a> — pure-deduction logic puzzle.</li>
-    <li><a href="2048.html">2048</a> — number puzzle with movement.</li>
-    <li><a href="Chess.html">Chess</a> — strategic logic across moves.</li>
-    <li><a href="Mahjong.html">Mahjong Solitaire</a> — pattern-matching puzzle.</li>
+    <li><a href="/minesweeper">Minesweeper</a> — pure-deduction logic puzzle.</li>
+    <li><a href="/2048">2048</a> — number puzzle with movement.</li>
+    <li><a href="/chess">Chess</a> — strategic logic across moves.</li>
+    <li><a href="/mahjong">Mahjong Solitaire</a> — pattern-matching puzzle.</li>
   </ul>
 </section>
 

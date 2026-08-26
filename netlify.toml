@@ -1,3 +1,11 @@
+# Canonical host: 301 the *.netlify.app mirror to the custom domain so Google
+# doesn't index duplicate copies of every page. Must be first — first match wins.
+[[redirects]]
+  from = "https://boardgaminghub.netlify.app/*"
+  to = "https://boardgaminghub.com/:splat"
+  status = 301
+  force = true
+
 # Serve SVG favicon when browsers auto-request /favicon.ico
 [[redirects]]
   from = "/favicon.ico"

@@ -7,10 +7,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Play 2048 free online. Slide tiles, merge matching numbers, reach the 2048 tile. No signup, no downloads — single-page browser game with arrow-key and swipe controls.">
 <meta name="keywords" content="2048, 2048 game, play 2048 online, free 2048, number puzzle, sliding tile game">
-<link rel="canonical" href="https://boardgaminghub.com/2048.html">
+<link rel="canonical" href="https://boardgaminghub.com/2048">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Board Gaming Hub">
-<meta property="og:url" content="https://boardgaminghub.com/2048.html">
+<meta property="og:url" content="https://boardgaminghub.com/2048">
 <meta property="og:title" content="2048 — Free Online Slide & Merge Puzzle">
 <meta property="og:description" content="Slide tiles, merge matching numbers, reach 2048. Free in-browser, single-file HTML.">
 <meta name="twitter:card" content="summary">
@@ -20,7 +20,7 @@
   "@type": "VideoGame",
   "name": "2048",
   "description": "Slide tiles to merge matching numbers and reach the 2048 tile.",
-  "url": "https://boardgaminghub.com/2048.html",
+  "url": "https://boardgaminghub.com/2048",
   "genre": "Puzzle",
   "gamePlatform": "Web Browser",
   "applicationCategory": "Game",
@@ -28,7 +28,7 @@
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
 }
 </script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"2048","item":"https://boardgaminghub.com/2048.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"2048","item":"https://boardgaminghub.com/2048"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do you play 2048?","acceptedAnswer":{"@type":"Answer","text":"Use arrow keys (or swipe on touch devices) to slide every tile in one direction. When two adjacent tiles with the same number meet, they merge into a single tile of double value. After every move a new 2 (90% of the time) or 4 (10%) appears in a random empty cell. The game ends when no moves are possible."}},{"@type":"Question","name":"What's the best 2048 strategy?","acceptedAnswer":{"@type":"Answer","text":"Pin the largest tile in one corner (most players use bottom-right) and never move it. Build a snake-pattern descending row that feeds into that corner: e.g., bottom row left-to-right increasing, second row right-to-left, etc. Avoid pressing the direction that would shift the corner — typically Up if your corner is bottom-right. With perfect play this strategy reaches 2048 reliably and 4096 often."}},{"@type":"Question","name":"What's the highest tile possible in 2048?","acceptedAnswer":{"@type":"Answer","text":"Theoretical maximum is 131,072 (2^17), achieved by merging tiles up to that value on a 4×4 grid. Practically the cap is far lower because once tiles fill the board and the highest tile cannot be merged, you lose. The 2048 tile (the win condition) is reached by ~5–10% of casual players; 4096 by perhaps 1%."}},{"@type":"Question","name":"How is the score calculated?","acceptedAnswer":{"@type":"Answer","text":"Each merge adds the value of the new tile to your score. Two 2s → 4 (+4). Two 8s → 16 (+16). Two 1024s → 2048 (+2048). Total score after reaching 2048 from a fresh game is around 20,000; reaching 4096 around 50,000."}},{"@type":"Question","name":"Why does the same tile keep spawning in the wrong place?","acceptedAnswer":{"@type":"Answer","text":"Spawn position is uniformly random among empty cells. It feels biased after a streak but isn't. The 2 vs 4 spawn is weighted 90/10 — getting a 4 spawn is meaningful because it skips a doubling step (and slightly accelerates filling the board)."}}]}</script>
 <style>
   * { box-sizing: border-box; }
@@ -115,7 +115,7 @@
   </div>
   <div id="board"></div>
   <div id="msg"></div>
-  <nav><a href="index.html">All games</a> · <a href="Sudoku.html">Sudoku</a> · <a href="Minesweeper.html">Minesweeper</a></nav>
+  <nav><a href="/">All games</a> · <a href="/sudoku">Sudoku</a> · <a href="/minesweeper">Minesweeper</a></nav>
 
   <div class="info">
     <h2>How to play 2048</h2>
@@ -271,10 +271,10 @@
 
   <h3>Related games</h3>
   <ul>
-    <li><a href="Sudoku.html">Sudoku</a> — number puzzle, pure logic.</li>
-    <li><a href="Solitaire.html">Solitaire</a> — solo card game, similar pace.</li>
-    <li><a href="Minesweeper.html">Minesweeper</a> — solo logic puzzle, deduction-driven.</li>
-    <li><a href="Mahjong.html">Mahjong Solitaire</a> — solo pattern matching.</li>
+    <li><a href="/sudoku">Sudoku</a> — number puzzle, pure logic.</li>
+    <li><a href="/solitaire">Solitaire</a> — solo card game, similar pace.</li>
+    <li><a href="/minesweeper">Minesweeper</a> — solo logic puzzle, deduction-driven.</li>
+    <li><a href="/mahjong">Mahjong Solitaire</a> — solo pattern matching.</li>
   </ul>
 </section>
 

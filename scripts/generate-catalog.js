@@ -23,12 +23,16 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
+function gameUrl(g) {
+  return g.sourceHtml.endsWith('/index.html') ? `/${g.slug}/` : `/${g.slug}`;
+}
+
 function card(g, opts = {}) {
   const demo = g.demo && g.storeUrl;
   const badge = demo ? `<span class="demo-badge">Demo — full version on itch.io</span>` : '';
   const daily = g.daily ? `<span class="daily-badge">Daily</span>` : '';
   const cls = opts.featured ? 'gcard featured-card' : 'gcard';
-  return `    <a class="${cls}" href="${g.sourceHtml}">
+  return `    <a class="${cls}" href="${gameUrl(g)}">
       <div class="gname">${esc(g.title)}${daily}</div>
       <div class="gsub">${esc(g.description)}${badge ? '<br>' + badge : ''}</div>
     </a>`;
@@ -151,7 +155,7 @@ const hubEditorial = `  <article class="editorial">
     <h2>What is Board Gaming Hub?</h2>
     <p>Board Gaming Hub is a free collection of ${count} browser games maintained by Michael Flynn, PE — a dam-safety and hydrology engineer who builds simulations with real formulas behind them. Every game is a single HTML file: open the page and play. No accounts, no installers, no tracking on gameplay screens.</p>
     <p>The catalog mixes beloved classics (Chess, Go, Sudoku, Solitaire, Mahjong) with original strategy designs (Agora, Bisque, Aresia, Convergence) and engineering-grade simulations (Floodline, Bonneville Spillway Operator, Eclipse Predictor, Tower). Ads appear only on this catalog page — never during play — so sessions stay uninterrupted.</p>
-    <p>New here? Start with <a href="Wordform.html" style="color:#94c3e8">Wordform</a> or <a href="Drift.html" style="color:#94c3e8">Drift</a> for a two-minute daily puzzle, explore the <a href="guides/" style="color:#94c3e8">guides</a> for strategy and science write-ups, or jump straight into <a href="Floodline.html" style="color:#94c3e8">Floodline</a> if you want to see what engineer-built physics feels like in a game.</p>
+    <p>New here? Start with <a href="/wordform" style="color:#94c3e8">Wordform</a> or <a href="/drift" style="color:#94c3e8">Drift</a> for a two-minute daily puzzle, explore the <a href="guides/" style="color:#94c3e8">guides</a> for strategy and science write-ups, or jump straight into <a href="/floodline" style="color:#94c3e8">Floodline</a> if you want to see what engineer-built physics feels like in a game.</p>
   </article>`;
 
 const guidesStrip = guides.length
@@ -168,8 +172,8 @@ ${guides.map(g => `      <a href="${g.file}">${esc(g.title)}</a>`).join('\n')}
 // Aug 12 2026 eclipse to the Aug 2 2027 eclipse once 2026 has passed.
 const eclipseStrip = `  <div class="eclipse-strip" id="eclipse-strip" style="display:none">
     <b>🌒 TOTAL SOLAR ECLIPSE</b> — <span id="eclipse-when"></span>
-    <a href="EclipsePredictor.html">Watch the path in 3D</a> ·
-    <a href="guides/eclipse-2026.html">Viewing guide</a>
+    <a href="/eclipsepredictor">Watch the path in 3D</a> ·
+    <a href="/guides/eclipse-2026">Viewing guide</a>
   </div>
   <script>
   (function () {
@@ -195,7 +199,7 @@ const dailyGames = games.filter(g => g.daily);
 const dailyStrip = dailyGames.length
   ? `  <div class="daily-strip">
     <b>TODAY'S DAILY PUZZLES</b> —
-    ${dailyGames.map(g => `<a href="${g.sourceHtml}#daily">${esc(g.title)}</a>`).join(' · ')}
+    ${dailyGames.map(g => `<a href="${gameUrl(g)}#daily">${esc(g.title)}</a>`).join(' · ')}
     <span style="color:#5a6874;font-size:0.85em"> · add to home screen for quick access</span>
   </div>`
   : '';
@@ -209,10 +213,10 @@ const playHtml = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Play ${count} free strategy and puzzle games in your browser — Solitaire, Sudoku, Mahjong, Wordform, 2048, Minesweeper, Chess, Go, plus original designs and physics sims. Single-file HTML, ad-supported.">
 <meta name="keywords" content="free online games, solitaire, sudoku, mahjong, 2048, minesweeper, chess, go, browser games">
-<link rel="canonical" href="${BASE}/play.html">
+<link rel="canonical" href="${BASE}/play">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Board Gaming Hub">
-<meta property="og:url" content="${BASE}/play.html">
+<meta property="og:url" content="${BASE}/play">
 <meta property="og:title" content="Play ${count} free in-browser puzzle &amp; strategy games">
 <meta property="og:description" content="Solitaire, Sudoku, Mahjong, Wordform, 2048, Chess, Go, plus original designs and physics sims. Free, ad-supported, no signup.">
 <meta name="twitter:card" content="summary">
@@ -230,12 +234,12 @@ ${sharedCss}
   </header>
 
   <nav class="hub">
-    <a href="index.html">Clean version</a>
+    <a href="/">Clean version</a>
     <a href="guides/">Guides</a>
-    <a href="apps.html">Android apps</a>
-    <a href="about.html">About</a>
-    <a href="contact.html">Contact</a>
-    <a href="privacy.html">Privacy</a>
+    <a href="/apps">Android apps</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+    <a href="/privacy">Privacy</a>
   </nav>
 
 ${hubEditorial}
@@ -256,17 +260,17 @@ ${adUnit('margin:32px 0')}
     This page is supported by Google AdSense advertisements. Ads help keep the games free.
     Advertisers do not influence game design or content. Cookies are used by Google and its partners
     to serve ads based on your prior visits to this and other sites — see the
-    <a href="privacy.html">privacy notice</a> for opt-out details.
+    <a href="/privacy">privacy notice</a> for opt-out details.
   </p>
 
   <footer>
     <p style="margin-bottom:10px;font-size:0.95em;">Enjoying the games? <a href="https://buymeacoffee.com/mf4633" style="color:#f0c060;" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
     <p style="color:#7090a0;margin-bottom:10px;font-size:0.95em;">Engineering tools by the same author at <a href="https://pe-calc.com/" style="color:#a8c0d8;">pe-calc.com</a> · Stormwater design SaaS at <a href="https://hydrocomplete.com/" style="color:#a8c0d8;">hydrocomplete.com</a></p>
-    <a href="index.html">Clean version</a> ·
-    <a href="apps.html">Android apps</a> ·
-    <a href="about.html">About</a> ·
-    <a href="contact.html">Contact</a> ·
-    <a href="privacy.html">Privacy</a> ·
+    <a href="/">Clean version</a> ·
+    <a href="/apps">Android apps</a> ·
+    <a href="/about">About</a> ·
+    <a href="/contact">Contact</a> ·
+    <a href="/privacy">Privacy</a> ·
     <a href="https://github.com/mf4633/board-gaming">github.com/mf4633/board-gaming</a>
   </footer>
 </div>
@@ -308,11 +312,11 @@ ${sharedCss.replace(/header \.free-tag[^}]+\}/g, '').replace(/\.ad-slot[^}]+\}/g
   </header>
 
   <nav class="hub">
-    <a href="play.html">Ad-supported catalog</a>
+    <a href="/play">Ad-supported catalog</a>
     <a href="guides/">Guides</a>
-    <a href="apps.html">Android apps</a>
-    <a href="about.html">About</a>
-    <a href="contact.html">Contact</a>
+    <a href="/apps">Android apps</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
   </nav>
 
 ${hubEditorial}
@@ -324,8 +328,8 @@ ${categories.map(c => indexSection(c)).join('\n')}
 
   <footer>
     <p style="margin-bottom:10px;font-size:0.95em;">Enjoying the games? <a href="https://buymeacoffee.com/mf4633" style="color:#f0c060;" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
-    <a href="play.html">Ad-supported catalog</a> ·
-    <a href="apps.html">Android apps</a> ·
+    <a href="/play">Ad-supported catalog</a> ·
+    <a href="/apps">Android apps</a> ·
     <a href="https://github.com/mf4633/board-gaming">github.com/mf4633/board-gaming</a>
   </footer>
 </div>
@@ -345,7 +349,7 @@ const sitemapUrls = [
   sitemapEntry(`${BASE}/play`, 0.95, 'weekly'),
   sitemapEntry(`${BASE}/guides/`, 0.85, 'weekly'),
   ...guides.map(g => sitemapEntry(`${BASE}/guides/${g.slug}`, 0.8, 'monthly')),
-  ...games.map(g => sitemapEntry(`${BASE}/${g.slug}`, g.priority || 0.8)),
+  ...games.map(g => sitemapEntry(`${BASE}${gameUrl(g)}`, g.priority || 0.8)),
   sitemapEntry(`${BASE}/about`, 0.6, 'yearly'),
   sitemapEntry(`${BASE}/contact`, 0.5, 'yearly'),
   sitemapEntry(`${BASE}/apps`, 0.7, 'monthly'),
@@ -359,12 +363,13 @@ ${sitemapUrls.join('\n')}
 `;
 
 function navGameLine(g) {
-  const slug = g.sourceHtml.replace('.html', '');
+  const slug = g.slug;
+  const url = gameUrl(g);
   const keys = (g.searchKeys || []).map(k => `'${k.replace(/'/g, "\\'")}'`).join(',');
   const name = g.title.replace(/'/g, "\\'");
   const desc = (g.description || '').replace(/'/g, "\\'");
   const daily = g.daily ? ', daily:true' : '';
-  return `    { slug:'${slug}', name:'${name}', cat:'${g.category}', desc:'${desc}', keys:[${keys}]${daily} },`;
+  return `    { slug:'${slug}', url:'${url}', name:'${name}', cat:'${g.category}', desc:'${desc}', keys:[${keys}]${daily} },`;
 }
 
 const navGamesBlock = games.map(navGameLine).join('\n');

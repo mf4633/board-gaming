@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0c1016">
 <title>Apoapsis — Free 3D Rocket & Orbital Flight Sim | Board Gaming Hub</title>
 <meta name="description" content="Real Tsiolkovsky physics, 3D orbital mechanics, Mun landings, maneuver nodes. Free in-browser KSP-style rocket and spaceflight simulator. Single HTML file.">
-<link rel="canonical" href="https://boardgaminghub.com/Apoapsis.html">
+<link rel="canonical" href="https://boardgaminghub.com/apoapsis">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://boardgaminghub.com/Apoapsis.html">
+<meta property="og:url" content="https://boardgaminghub.com/apoapsis">
 <meta property="og:title" content="Apoapsis — Free 3D Rocket Sim">
 <meta property="og:description" content="Real Tsiolkovsky physics, 3D orbital mechanics, Mun landings — free in-browser rocket simulator.">
 <meta property="og:image" content="https://boardgaminghub.com/og/apoapsis.png">
@@ -19,7 +19,7 @@
 <script type="application/ld+json">
 { "@context": "https://schema.org", "@type": "VideoGame", "name": "Apoapsis",
   "description": "3D rocket and orbital mechanics simulator with Tsiolkovsky physics, patched-conic SOI transitions, and Mun landings.",
-  "url": "https://boardgaminghub.com/Apoapsis.html", "genre": "Simulation",
+  "url": "https://boardgaminghub.com/apoapsis", "genre": "Simulation",
   "applicationCategory": "Game", "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
@@ -169,7 +169,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 .map-legend { position: absolute; bottom: 30px; right: 10px; background: rgba(10,20,40,0.7); border: 1px solid #1A2A40; padding: 6px 10px; font-size: 0.65em; color: #8098B0; border-radius: 4px; z-index: 11; font-family: 'Courier New', monospace; }
 .map-legend span.sw { display: inline-block; width: 18px; height: 2px; vertical-align: middle; margin-right: 4px; }
 </style>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Simulations","item":"https://boardgaminghub.com/#sims"},{"@type":"ListItem","position":3,"name":"Apoapsis","item":"https://boardgaminghub.com/Apoapsis.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Simulations","item":"https://boardgaminghub.com/#sims"},{"@type":"ListItem","position":3,"name":"Apoapsis","item":"https://boardgaminghub.com/apoapsis"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is apoapsis?","acceptedAnswer":{"@type":"Answer","text":"The highest point of an orbit — opposite of periapsis (lowest point). On Earth it's \"apogee\"; for the Sun it's \"aphelion\". The game is named after this orbital concept."}},{"@type":"Question","name":"Is the physics realistic?","acceptedAnswer":{"@type":"Answer","text":"Yes — full Newtonian gravity (no patched-conics simplification), realistic engine ISP/thrust specs, and atmospheric drag with altitude-dependent density. Trajectory matches what Kerbal Space Program calls \"Realism Overhaul\" closely."}},{"@type":"Question","name":"What's a good gravity-turn altitude?","acceptedAnswer":{"@type":"Answer","text":"Begin pitching over at ~5 km, target ~45° pitch by 20 km. Earlier pitch wastes fuel on horizontal velocity at sea level (high drag); later pitch wastes fuel fighting gravity."}},{"@type":"Question","name":"Can I land on the Moon?","acceptedAnswer":{"@type":"Answer","text":"Single-stage to orbit and a circumlunar flyby are both achievable with the default rocket. A surface-landing mission requires a custom multi-stage build."}}]}</script>
 </head>
 <body>
@@ -179,22 +179,22 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
     <button class="nav-toggle" onclick="document.querySelector('#gameNav .nav-menu').classList.toggle('open')">&#9776;</button>
   </div>
   <div class="nav-menu">
-    <a href="Agora.html">Agora</a>
-    <a href="Apoapsis.html" class="current">Apoapsis</a>
-    <a href="Aresia.html">Aresia</a>
-    <a href="Backgammon.html">Backgammon</a>
-    <a href="Bisque.html">Bisque</a>
-    <a href="Chess.html">Chess</a>
-    <a href="Convergence.html">Convergence</a>
-    <a href="Go.html">Go</a>
-    <a href="Mancala.html">Mancala</a>
-    <a href="Odyssey.html">Odyssey</a>
-    <a href="Othello.html" class="">Othello</a>
-    <a href="PenteGrammai.html">Pente Grammai</a>
-    <a href="Senet.html">Senet</a>
-    <a href="Tidelands.html">Tidelands</a>
-    <a href="Tower.html">Tower</a>
-    <a href="Ur.html">Ur</a>
+    <a href="/agora">Agora</a>
+    <a href="/apoapsis" class="current">Apoapsis</a>
+    <a href="/aresia">Aresia</a>
+    <a href="/backgammon">Backgammon</a>
+    <a href="/bisque">Bisque</a>
+    <a href="/chess">Chess</a>
+    <a href="/convergence">Convergence</a>
+    <a href="/go">Go</a>
+    <a href="/mancala">Mancala</a>
+    <a href="/odyssey">Odyssey</a>
+    <a href="/othello" class="">Othello</a>
+    <a href="/pentegrammai">Pente Grammai</a>
+    <a href="/senet">Senet</a>
+    <a href="/tidelands">Tidelands</a>
+    <a href="/tower">Tower</a>
+    <a href="/ur">Ur</a>
   </div>
 </div>
 
@@ -3272,10 +3272,10 @@ maybeShowTutorial();
 
   <h3>Related games</h3>
   <ul>
-    <li><a href="BiosphereBlue.html">BiosphereBlue</a> — planet-scale geosim.</li>
-    <li><a href="BonnevilleSpillwayOperator.html">BonnevilleSpillwayOperator</a> — dam operator sim.</li>
-    <li><a href="Doctrine.html">Doctrine</a> — geopolitical sim.</li>
-    <li><a href="Floodline.html">Floodline</a> — flood defense sim.</li>
+    <li><a href="/biosphereblue">BiosphereBlue</a> — planet-scale geosim.</li>
+    <li><a href="/bonnevillespillwayoperator">BonnevilleSpillwayOperator</a> — dam operator sim.</li>
+    <li><a href="/doctrine">Doctrine</a> — geopolitical sim.</li>
+    <li><a href="/floodline">Floodline</a> — flood defense sim.</li>
   </ul>
 </section>
 

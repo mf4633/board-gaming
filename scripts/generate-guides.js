@@ -82,8 +82,8 @@ ${relatedHtml}
   <footer>
     <p style="margin-bottom:10px;">Enjoying the games? <a href="https://buymeacoffee.com/mf4633" style="color:#f0c060;" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
     <a href="/">Home</a> ·
-    <a href="/play.html">Play</a> ·
-    <a href="/about.html">About</a> ·
+    <a href="/play">Play</a> ·
+    <a href="/about">About</a> ·
     <a href="/guides/">All guides</a>
   </footer>
 </div>
@@ -114,7 +114,7 @@ const pages = [
     title: 'Wordform Tips &amp; Daily Strategy',
     description: 'Opening words, color feedback, daily vs random mode, and how to share your grid without spoilers.',
     body: `
-    <p><a href="/Wordform.html">Wordform</a> is a free daily five-letter word puzzle: six guesses, color-coded feedback, one shared secret word per calendar day. It is an original design on Board Gaming Hub — not a clone with ads bolted on — and it runs entirely in your browser with no account required.</p>
+    <p><a href="/wordform">Wordform</a> is a free daily five-letter word puzzle: six guesses, color-coded feedback, one shared secret word per calendar day. It is an original design on Board Gaming Hub — not a clone with ads bolted on — and it runs entirely in your browser with no account required.</p>
 
     <h2>How the feedback works</h2>
     <p>After each guess, every letter tile changes color:</p>
@@ -142,7 +142,7 @@ const pages = [
     <h2>When you are stuck</h2>
     <p>If three guesses leave you with only one green vowel, switch to a structural word: try common endings (<em>-IGHT</em>, <em>-OUND</em>, <em>-ATCH</em>) or consonant-heavy frames like <em>TH</em> and <em>CH</em>. On guess five, prioritize ruling out remaining consonants over clever vocabulary — elimination wins more dailies than rare words.</p>
 
-    <p><a class="play-cta" href="/Wordform.html">Play Wordform now</a></p>
+    <p><a class="play-cta" href="/wordform">Play Wordform now</a></p>
 `,
   },
   {
@@ -151,7 +151,7 @@ const pages = [
     title: 'Drift Word Ladder Guide',
     description: 'How word ladders work, daily puzzle tips, and shortest-path strategy for Drift.',
     body: `
-    <p><a href="/Drift.html">Drift</a> is a daily word-ladder puzzle: transform a four-letter start word into a four-letter target word by changing one letter per step, with every intermediate string required to be valid English. The format was invented by Lewis Carroll in 1877 (he called them &ldquo;doublets&rdquo;). Drift adds a daily shared puzzle, optional hints, and a theme that often reveals how start and target words relate.</p>
+    <p><a href="/drift">Drift</a> is a daily word-ladder puzzle: transform a four-letter start word into a four-letter target word by changing one letter per step, with every intermediate string required to be valid English. The format was invented by Lewis Carroll in 1877 (he called them &ldquo;doublets&rdquo;). Drift adds a daily shared puzzle, optional hints, and a theme that often reveals how start and target words relate.</p>
 
     <h2>Rules in one minute</h2>
     <ul>
@@ -182,7 +182,7 @@ const pages = [
       <b>Pair with Wordform:</b> Both dailies reset at local midnight. Many players run Wordform first (five letters, elimination logic) then Drift (pathfinding logic) as a ten-minute morning routine.
     </div>
 
-    <p><a class="play-cta" href="/Drift.html">Play Drift now</a></p>
+    <p><a class="play-cta" href="/drift">Play Drift now</a></p>
 `,
   },
   {
@@ -191,7 +191,7 @@ const pages = [
     title: 'Sudoku Tips for Beginners',
     description: 'Scanning, pencil marks, X-Wing, and how difficulty levels work on the free browser grid.',
     body: `
-    <p><a href="/Sudoku.html">Sudoku</a> on Board Gaming Hub is a full 9×9 grid with four difficulty presets — Easy, Medium, Hard, and Expert — plus pencil marks and undo. No account, no timer pressure unless you bring your own. This guide covers the techniques that take you from first fill to confident Expert grids.</p>
+    <p><a href="/sudoku">Sudoku</a> on Board Gaming Hub is a full 9×9 grid with four difficulty presets — Easy, Medium, Hard, and Expert — plus pencil marks and undo. No account, no timer pressure unless you bring your own. This guide covers the techniques that take you from first fill to confident Expert grids.</p>
 
     <h2>The one rule</h2>
     <p>Each row, column, and 3×3 box must contain digits 1–9 exactly once. Every technique is just a consequence of that constraint plus the givens already on the board.</p>
@@ -220,7 +220,7 @@ const pages = [
       <li><b>Expert</b> — advanced eliminations; expect 30–45 minutes.</li>
     </ul>
 
-    <p><a class="play-cta" href="/Sudoku.html">Play Sudoku now</a></p>
+    <p><a class="play-cta" href="/sudoku">Play Sudoku now</a></p>
 `,
   },
   {
@@ -244,7 +244,7 @@ const pages = [
     })();
     </script>
 
-    <p>Two major total solar eclipses cross populated land masses in 2026 and 2027. The <a href="/EclipsePredictor.html">Eclipse Predictor</a> on Board Gaming Hub renders every eclipse from 1900–2200 on a rotatable 3D globe, using astronomy-engine ephemeris calculations accurate to sub-arcsecond precision. This guide summarizes what each eclipse offers observers and how to explore paths interactively.</p>
+    <p>Two major total solar eclipses cross populated land masses in 2026 and 2027. The <a href="/eclipsepredictor">Eclipse Predictor</a> on Board Gaming Hub renders every eclipse from 1900–2200 on a rotatable 3D globe, using astronomy-engine ephemeris calculations accurate to sub-arcsecond precision. This guide summarizes what each eclipse offers observers and how to explore paths interactively.</p>
 
     <h2>August 12, 2026 — Arctic and Spain</h2>
     <p>The 2026 total eclipse begins in the Arctic, crosses Greenland and Iceland, and ends at sunset over northern Spain. Maximum totality reaches roughly two minutes depending on location. Cloud climatology favors Iceland and offshore vessels over inland Europe, but Spain offers easier travel infrastructure for casual eclipse chasers.</p>
@@ -252,7 +252,7 @@ const pages = [
 
     <h2>August 2, 2027 — the long totality eclipse</h2>
     <p>The 2027 eclipse is the headline event: totality lasts over six minutes at maximum, crossing Spain, Morocco, Algeria, Libya, Egypt, and Saudi Arabia. Dry desert climates along the center line dramatically improve clear-sky odds compared to mid-latitude maritime regions.</p>
-    <p>Deep links into the tool: <a href="/EclipsePredictor.html?date=2026-08-12">August 12, 2026</a> and <a href="/EclipsePredictor.html?year=2027">2027 season overview</a>.</p>
+    <p>Deep links into the tool: <a href="/eclipsepredictor?date=2026-08-12">August 12, 2026</a> and <a href="/eclipsepredictor?year=2027">2027 season overview</a>.</p>
 
     <h2>Using the 3D globe predictor</h2>
     <ol>
@@ -267,7 +267,7 @@ const pages = [
 
     <h2>The August 12 checklist</h2>
     <ul>
-      <li><b>Pick your spot with the predictor.</b> Open the <a href="/EclipsePredictor.html">3D globe</a>, select the Aug 12 2026 eclipse, and check whether your location sits inside the path limits — being 20 km outside the edge means no totality at all.</li>
+      <li><b>Pick your spot with the predictor.</b> Open the <a href="/eclipsepredictor">3D globe</a>, select the Aug 12 2026 eclipse, and check whether your location sits inside the path limits — being 20 km outside the edge means no totality at all.</li>
       <li><b>Spain sees it at low sun, near sunset.</b> Scout a site with a clear western horizon; a hill or coastline beats a valley.</li>
       <li><b>Glasses now, not in August.</b> ISO 12312-2 filters sell out in the final weeks before every eclipse.</li>
       <li><b>Have a weather fallback.</b> Decide in advance which direction you can drive if the forecast sours — the corridor across Spain is wide enough to relocate within a morning.</li>
@@ -277,7 +277,7 @@ const pages = [
       <b>Accuracy note:</b> The predictor is an educational astronomy visualization, not a surveying instrument. Verify contact times against NASA or IOTA publications before committing expedition logistics.
     </div>
 
-    <p><a class="play-cta" href="/EclipsePredictor.html">Open Eclipse Predictor</a></p>
+    <p><a class="play-cta" href="/eclipsepredictor">Open Eclipse Predictor</a></p>
 `,
   },
   {
@@ -286,7 +286,7 @@ const pages = [
     title: 'Floodline Scenarios Explained',
     description: 'The real California and United States flood events behind Floodline\'s simulation scenarios.',
     body: `
-    <p><a href="/Floodline.html">Floodline</a> is a flood-defense simulation built by a licensed water-resources engineer. You place levees, channels, pumps, and sandbags to keep town damage below a scenario threshold while storms raise river stages and saturate soils. The browser demo includes a training sandbox and Cedar Rapids 2008; the full release on <a href="https://hydroengineer.itch.io/floodline">itch.io</a> adds the complete historical campaign described below.</p>
+    <p><a href="/floodline">Floodline</a> is a flood-defense simulation built by a licensed water-resources engineer. You place levees, channels, pumps, and sandbags to keep town damage below a scenario threshold while storms raise river stages and saturate soils. The browser demo includes a training sandbox and Cedar Rapids 2008; the full release on <a href="https://hydroengineer.itch.io/floodline">itch.io</a> adds the complete historical campaign described below.</p>
 
     <h2>Why scenarios matter</h2>
     <p>Each scenario ships with a storm hydrograph, terrain derived from real valley geometry, budget constraints, and win conditions tied to damage percentage. Parameters are simplified for play but grounded in post-event reports from agencies such as California DWR, USACE, and USGS multi-hazard studies.</p>
@@ -315,7 +315,7 @@ const pages = [
     <h2>Is it an engineering tool?</h2>
     <p>No. Floodline uses first-order hydrology appropriate for gameplay: routing, storage, and simplified gate curves. It is faithful in shape to real events, not a replacement for HEC-RAS or dam safety modeling. Treat it as an interactive way to understand why flood managers obsess over freeboard, spillway capacity, and forecast lead time.</p>
 
-    <p><a class="play-cta" href="/Floodline.html">Play Floodline demo</a> &nbsp; <a class="play-cta" href="https://hydroengineer.itch.io/floodline">Full game on itch.io</a></p>
+    <p><a class="play-cta" href="/floodline">Play Floodline demo</a> &nbsp; <a class="play-cta" href="https://hydroengineer.itch.io/floodline">Full game on itch.io</a></p>
 `,
   },
   {
@@ -324,7 +324,7 @@ const pages = [
     title: 'Bonneville Dam Operator Guide',
     description: 'TDG limits, salmon passage, spillway vs turbines, and career mode strategy.',
     body: `
-    <p><a href="/BonnevilleSpillwayOperator.html">Bonneville Spillway Operator</a> puts you in charge of a Columbia River dam stylized after the real Bonneville complex. Balance electrical generation, spillway releases, fish ladder operations, navigation lockages, and total dissolved gas (TDG) limits — all while inflow swings with season and weather. The browser build is a demo; the full career campaign is on <a href="https://hydroengineer.itch.io/bonneville-spillway-operator">itch.io</a>.</p>
+    <p><a href="/bonnevillespillwayoperator">Bonneville Spillway Operator</a> puts you in charge of a Columbia River dam stylized after the real Bonneville complex. Balance electrical generation, spillway releases, fish ladder operations, navigation lockages, and total dissolved gas (TDG) limits — all while inflow swings with season and weather. The browser build is a demo; the full career campaign is on <a href="https://hydroengineer.itch.io/bonneville-spillway-operator">itch.io</a>.</p>
 
     <h2>What you are optimizing</h2>
     <ul>
@@ -359,7 +359,7 @@ const pages = [
       <b>Real-world note:</b> Capacities and tradeoffs follow public USACE data for Bonneville, simplified for play. This is a game, not a license to operate a federal dam.
     </div>
 
-    <p><a class="play-cta" href="/BonnevilleSpillwayOperator.html">Play demo</a> &nbsp; <a class="play-cta" href="https://hydroengineer.itch.io/bonneville-spillway-operator">Full game</a></p>
+    <p><a class="play-cta" href="/bonnevillespillwayoperator">Play demo</a> &nbsp; <a class="play-cta" href="https://hydroengineer.itch.io/bonneville-spillway-operator">Full game</a></p>
 `,
   },
   {
@@ -368,7 +368,7 @@ const pages = [
     title: 'Play Chess Free in Your Browser',
     description: 'Rules refresher, special moves, and practical tips for the Board Gaming Hub chess board.',
     body: `
-    <p>Board Gaming Hub hosts a full-featured <a href="/Chess.html">chess board</a> in a single HTML page — no download, no account, no ads on the board itself. Play against a friend on the same device or practice openings solo. This guide is a compact rules refresher plus practical tips for browser play.</p>
+    <p>Board Gaming Hub hosts a full-featured <a href="/chess">chess board</a> in a single HTML page — no download, no account, no ads on the board itself. Play against a friend on the same device or practice openings solo. This guide is a compact rules refresher plus practical tips for browser play.</p>
 
     <h2>How each piece moves</h2>
     <ul>
@@ -400,10 +400,10 @@ const pages = [
     <p>On mobile, use the built-in move list to review the game — small screens make blindfold calculation harder. If you undo by mistake, use the move list to step back mentally and replay from a stable position. For serious practice, set a timer externally; the hub board does not enforce clocks so casual play stays frictionless.</p>
 
     <div class="callout">
-      <b>Also try:</b> <a href="/Go.html">Go</a> for territorial strategy, <a href="/Backgammon.html">Backgammon</a> for dice-driven racing, and <a href="/Wordform.html">Wordform</a> for a daily puzzle warm-up before a chess session.
+      <b>Also try:</b> <a href="/go">Go</a> for territorial strategy, <a href="/backgammon">Backgammon</a> for dice-driven racing, and <a href="/wordform">Wordform</a> for a daily puzzle warm-up before a chess session.
     </div>
 
-    <p><a class="play-cta" href="/Chess.html">Play chess now</a></p>
+    <p><a class="play-cta" href="/chess">Play chess now</a></p>
 `,
   },
   {
@@ -412,7 +412,7 @@ const pages = [
     title: 'How to Play Klondike Solitaire (and Win More Often)',
     description: 'Klondike rules, draw-1 vs draw-3, foundations and tableau, and the stock-cycling strategy that wins more deals.',
     body: `
-    <p><a href="/Solitaire.html">Solitaire</a> on Board Gaming Hub is classic Klondike: a single 52-card deck, seven tableau columns, four foundations, and a stock you cycle through the waste. It runs in one HTML page with unlimited undo, smart-click auto-moves, and a toggle for <b>Draw 1</b> or <b>Draw 3</b>. This guide covers the rules and the habits that turn losses into wins.</p>
+    <p><a href="/solitaire">Solitaire</a> on Board Gaming Hub is classic Klondike: a single 52-card deck, seven tableau columns, four foundations, and a stock you cycle through the waste. It runs in one HTML page with unlimited undo, smart-click auto-moves, and a toggle for <b>Draw 1</b> or <b>Draw 3</b>. This guide covers the rules and the habits that turn losses into wins.</p>
 
     <h2>The layout</h2>
     <p>The deal puts 28 cards into seven columns — one card in the first column, two in the second, up to seven in the last — and only the bottom card of each column starts face-up. The remaining 24 cards form the <b>stock</b>; the <b>waste</b> and the four <b>foundations</b> begin empty.</p>
@@ -441,9 +441,9 @@ const pages = [
     <h2>Use smart-click and auto-complete</h2>
     <p>Click any card to auto-move it to its best legal destination — foundation first, then the most useful tableau column. Once every card is face-up, use <b>AUTO-COMPLETE</b> to finish the deal in a single tap instead of clicking each card home.</p>
 
-    <p>Prefer a puzzle with no luck at all? Try <a href="/Sudoku.html">Sudoku</a> or its companion <a href="/guides/sudoku-tips">Sudoku tips guide</a>. For a similar solo pace with tiles instead of cards, see <a href="/Mahjong.html">Mahjong Solitaire</a>.</p>
+    <p>Prefer a puzzle with no luck at all? Try <a href="/sudoku">Sudoku</a> or its companion <a href="/guides/sudoku-tips">Sudoku tips guide</a>. For a similar solo pace with tiles instead of cards, see <a href="/mahjong">Mahjong Solitaire</a>.</p>
 
-    <p><a class="play-cta" href="/Solitaire.html">Play Solitaire now</a></p>
+    <p><a class="play-cta" href="/solitaire">Play Solitaire now</a></p>
 `,
   },
   {
@@ -452,7 +452,7 @@ const pages = [
     title: '2048 Strategy: How to Reach 2048 (and Beyond)',
     description: 'Corner strategy, anchoring your biggest tile, building a monotonic chain, and how to push past the 2048 tile.',
     body: `
-    <p><a href="/2048.html">2048</a> is a slide-and-merge puzzle on a 4×4 grid. Every move slides all tiles one direction; equal tiles that collide merge into their sum, and a new <b>2</b> or <b>4</b> spawns in a random empty cell (weighted about 90/10 toward the 2). You win when a tile reaches <b>2048</b> — then you can keep going for 4096 and higher. Reaching 2048 is not luck; it is one disciplined pattern.</p>
+    <p><a href="/2048">2048</a> is a slide-and-merge puzzle on a 4×4 grid. Every move slides all tiles one direction; equal tiles that collide merge into their sum, and a new <b>2</b> or <b>4</b> spawns in a random empty cell (weighted about 90/10 toward the 2). You win when a tile reaches <b>2048</b> — then you can keep going for 4096 and higher. Reaching 2048 is not luck; it is one disciplined pattern.</p>
 
     <h2>The one rule that wins: anchor a corner</h2>
     <p>Pick a corner — bottom-right is a common choice — and keep your largest tile pinned there for the entire game. In practice this means using only two or three of the four directions and almost never pressing the fourth. If your big tile lives in the bottom-right, drive with <b>Down</b> and <b>Right</b>, use <b>Left</b> sparingly, and treat <b>Up</b> as forbidden except in emergencies.</p>
@@ -475,9 +475,9 @@ const pages = [
     <h2>Past 2048</h2>
     <p>The win tile is only the halfway point of a good board. To chase 4096 and 8192, the same rules apply with tighter margins — a full board with a broken chain is a dead end. Keep at least one empty cell as breathing room and never let the anchor drift.</p>
 
-    <p>Like number puzzles? <a href="/Minesweeper.html">Minesweeper</a> and <a href="/Sudoku.html">Sudoku</a> scratch the same solo-logic itch — the <a href="/guides/minesweeper-strategy">Minesweeper strategy guide</a> is a good next read.</p>
+    <p>Like number puzzles? <a href="/minesweeper">Minesweeper</a> and <a href="/sudoku">Sudoku</a> scratch the same solo-logic itch — the <a href="/guides/minesweeper-strategy">Minesweeper strategy guide</a> is a good next read.</p>
 
-    <p><a class="play-cta" href="/2048.html">Play 2048 now</a></p>
+    <p><a class="play-cta" href="/2048">Play 2048 now</a></p>
 `,
   },
   {
@@ -486,7 +486,7 @@ const pages = [
     title: 'Minesweeper Strategy for Beginners',
     description: 'First-click safety, reading the numbers, the 1-2-1 and 1-2-2-1 patterns, flagging vs chording, and the three difficulty grids.',
     body: `
-    <p><a href="/Minesweeper.html">Minesweeper</a> is a pure-logic puzzle: clear every safe cell without detonating a hidden mine. Each revealed number tells you exactly how many of its eight neighbors are mines. On Board Gaming Hub the board offers three classic sizes and right-click flagging (long-press on touch). This guide takes you from random clicking to reading the board like an expert.</p>
+    <p><a href="/minesweeper">Minesweeper</a> is a pure-logic puzzle: clear every safe cell without detonating a hidden mine. Each revealed number tells you exactly how many of its eight neighbors are mines. On Board Gaming Hub the board offers three classic sizes and right-click flagging (long-press on touch). This guide takes you from random clicking to reading the board like an expert.</p>
 
     <h2>The first click is always safe</h2>
     <p>Your opening click can never hit a mine — the board places mines only after you click, avoiding your cell and its neighbors. So always open with a click in the middle of a large area to trigger the biggest possible cascade of zeros and hand yourself a wall of numbers to work from.</p>
@@ -523,9 +523,9 @@ const pages = [
       <li><b>Expert</b> — 30×16 grid, 99 mines (about 21%). Speed, patterns, and clean flagging all count.</li>
     </ul>
 
-    <p>Enjoy deduction with no luck at all? <a href="/Sudoku.html">Sudoku</a> is the natural companion — see the <a href="/guides/sudoku-tips">Sudoku tips guide</a>.</p>
+    <p>Enjoy deduction with no luck at all? <a href="/sudoku">Sudoku</a> is the natural companion — see the <a href="/guides/sudoku-tips">Sudoku tips guide</a>.</p>
 
-    <p><a class="play-cta" href="/Minesweeper.html">Play Minesweeper now</a></p>
+    <p><a class="play-cta" href="/minesweeper">Play Minesweeper now</a></p>
 `,
   },
   {
@@ -534,7 +534,7 @@ const pages = [
     title: 'Backgammon Rules &amp; Opening Strategy',
     description: 'Board setup, hitting and the bar, bearing off, blocking points, and a simple opening plan for the dice-race classic.',
     body: `
-    <p><a href="/Backgammon.html">Backgammon</a> is a two-player race on a 24-point board — one of the oldest games in the world. Each side has 15 checkers; you roll two dice, race your checkers home, and bear them all off before your opponent does. The Board Gaming Hub build is single-player versus an AI and focuses on the movement game: this version has <b>no doubling cube</b>, so you can learn the core race without stakes-play complications.</p>
+    <p><a href="/backgammon">Backgammon</a> is a two-player race on a 24-point board — one of the oldest games in the world. Each side has 15 checkers; you roll two dice, race your checkers home, and bear them all off before your opponent does. The Board Gaming Hub build is single-player versus an AI and focuses on the movement game: this version has <b>no doubling cube</b>, so you can learn the core race without stakes-play complications.</p>
 
     <h2>Board setup and direction</h2>
     <p>The 24 points split into four quadrants. Each player moves their checkers in the opposite direction toward their own <b>home board</b> (the final quadrant), then bears them off. The standard starting position places checkers on the 24, 13, 8, and 6 points relative to each player. You always move toward your home; you can never move backward.</p>
@@ -564,9 +564,9 @@ const pages = [
       <li><b>Avoid leaving blots</b> where the opponent can hit you back onto the bar — one bad hit can swing the race.</li>
     </ol>
 
-    <p>Prefer perfect-information strategy with no dice? Try <a href="/Chess.html">Chess</a> (see <a href="/guides/free-browser-chess">the free browser chess guide</a>) or the territorial classic <a href="/Go.html">Go</a>.</p>
+    <p>Prefer perfect-information strategy with no dice? Try <a href="/chess">Chess</a> (see <a href="/guides/free-browser-chess">the free browser chess guide</a>) or the territorial classic <a href="/go">Go</a>.</p>
 
-    <p><a class="play-cta" href="/Backgammon.html">Play Backgammon now</a></p>
+    <p><a class="play-cta" href="/backgammon">Play Backgammon now</a></p>
 `,
   },
   {
@@ -575,7 +575,7 @@ const pages = [
     title: 'Go Rules for Beginners (Baduk / Weiqi)',
     description: 'Liberties, capture, ko, territory vs area scoring, the pass-pass endgame, and dead-stone marking on 9, 13, and 19 boards.',
     body: `
-    <p><a href="/Go.html">Go</a> — known as Baduk in Korea and Weiqi in China — is the ancient game of territory and influence. Two players place black and white stones on the intersections of a grid, competing to surround more of the board. The Board Gaming Hub build is single-player versus an AI and offers three board sizes: <b>9×9</b> for a quick game, <b>13×13</b> for a middle ground, and the full <b>19×19</b>. The rules are short; the depth is famous.</p>
+    <p><a href="/go">Go</a> — known as Baduk in Korea and Weiqi in China — is the ancient game of territory and influence. Two players place black and white stones on the intersections of a grid, competing to surround more of the board. The Board Gaming Hub build is single-player versus an AI and offers three board sizes: <b>9×9</b> for a quick game, <b>13×13</b> for a middle ground, and the full <b>19×19</b>. The rules are short; the depth is famous.</p>
 
     <h2>Placing stones</h2>
     <p>Black plays first. Stones go on the <b>intersections</b> of the grid lines, not the squares, and once placed a stone never moves — it can only be captured. Same-color stones connected horizontally or vertically (never diagonally) form a single <b>group</b> that lives or dies together.</p>
@@ -606,9 +606,9 @@ const pages = [
       <li><b>Learn on 9×9.</b> A small board teaches life, death, and capture in minutes before you scale up to 19×19.</li>
     </ol>
 
-    <p>Want another two-player abstract? <a href="/Chess.html">Chess</a> and <a href="/Othello.html">Othello</a> are close cousins in the strategy shelf.</p>
+    <p>Want another two-player abstract? <a href="/chess">Chess</a> and <a href="/othello">Othello</a> are close cousins in the strategy shelf.</p>
 
-    <p><a class="play-cta" href="/Go.html">Play Go now</a></p>
+    <p><a class="play-cta" href="/go">Play Go now</a></p>
 `,
   },
   {
@@ -617,7 +617,7 @@ const pages = [
     title: 'How to Play Mahjong Solitaire',
     description: 'Free vs blocked tiles, exact-glyph matching, the 72-tile Bamboo and Characters set, and top-down planning with shuffle and undo.',
     body: `
-    <p><a href="/Mahjong.html">Mahjong Solitaire</a> is a single-player tile-matching game — not the four-player gambling game of the same name. You clear a layered layout of tiles by matching identical pairs until the board is empty. The Board Gaming Hub build uses a compact <b>72-tile set</b> drawn from two mahjong suits: <b>Bamboo</b> and <b>Characters</b>, nine faces each, four copies of every face. It runs in one HTML page with hint, undo, and shuffle.</p>
+    <p><a href="/mahjong">Mahjong Solitaire</a> is a single-player tile-matching game — not the four-player gambling game of the same name. You clear a layered layout of tiles by matching identical pairs until the board is empty. The Board Gaming Hub build uses a compact <b>72-tile set</b> drawn from two mahjong suits: <b>Bamboo</b> and <b>Characters</b>, nine faces each, four copies of every face. It runs in one HTML page with hint, undo, and shuffle.</p>
 
     <h2>Free vs blocked tiles</h2>
     <p>You can only remove a tile that is <b>free</b>. A tile is free when two conditions are both true:</p>
@@ -645,9 +645,9 @@ const pages = [
     <h2>Hint, undo, and shuffle</h2>
     <p>Use <b>HINT</b> to highlight a legal pair when you are stuck, and <b>UNDO</b> to step back after a match that locked the board. If no legal moves remain among the free tiles, <b>SHUFFLE</b> reassigns the faces on the remaining tiles so the game can continue. A clean solve uses shuffle sparingly — treat it as a rescue, not a strategy.</p>
 
-    <p>For another relaxed solo game with a similar pace, try <a href="/Solitaire.html">Klondike Solitaire</a> — the <a href="/guides/solitaire-klondike">Klondike guide</a> covers its strategy. Prefer numbers? <a href="/2048.html">2048</a> is a quick palate cleanser.</p>
+    <p>For another relaxed solo game with a similar pace, try <a href="/solitaire">Klondike Solitaire</a> — the <a href="/guides/solitaire-klondike">Klondike guide</a> covers its strategy. Prefer numbers? <a href="/2048">2048</a> is a quick palate cleanser.</p>
 
-    <p><a class="play-cta" href="/Mahjong.html">Play Mahjong Solitaire now</a></p>
+    <p><a class="play-cta" href="/mahjong">Play Mahjong Solitaire now</a></p>
 `,
   },
   {
@@ -656,7 +656,7 @@ const pages = [
     title: 'Othello (Reversi) Rules &amp; Winning Strategy',
     description: 'How to play Othello / Reversi, why corners win games, and the mobility and edge tactics that beat the computer.',
     body: `
-    <p><a href="/Othello.html">Othello</a> — also known as Reversi — is a two-player disc-flipping game on an 8×8 board. It takes a minute to learn and years to master: the rules are trivial, but the strategy is deep enough that top play looks almost paradoxical. This guide covers the rules and the handful of ideas that will beat a casual opponent or the browser AI.</p>
+    <p><a href="/othello">Othello</a> — also known as Reversi — is a two-player disc-flipping game on an 8×8 board. It takes a minute to learn and years to master: the rules are trivial, but the strategy is deep enough that top play looks almost paradoxical. This guide covers the rules and the handful of ideas that will beat a casual opponent or the browser AI.</p>
 
     <h2>The rules in a minute</h2>
     <ul>
@@ -688,9 +688,9 @@ const pages = [
     </div>
 
     <h2>Also try</h2>
-    <p>If you like the pure-abstract tension of Othello, <a href="/Go.html">Go</a> (see the <a href="/guides/go-rules-beginners">beginner&rsquo;s guide</a>) rewards the same territorial thinking on a bigger canvas, and <a href="/Chess.html">Chess</a> scratches the tactical itch.</p>
+    <p>If you like the pure-abstract tension of Othello, <a href="/go">Go</a> (see the <a href="/guides/go-rules-beginners">beginner&rsquo;s guide</a>) rewards the same territorial thinking on a bigger canvas, and <a href="/chess">Chess</a> scratches the tactical itch.</p>
 
-    <p><a class="play-cta" href="/Othello.html">Play Othello now</a></p>
+    <p><a class="play-cta" href="/othello">Play Othello now</a></p>
 `,
   },
   {
@@ -699,7 +699,7 @@ const pages = [
     title: 'The Royal Game of Ur — Rules, History &amp; Strategy',
     description: 'How to play the 4,500-year-old Mesopotamian race game: the board, the rosettes, capturing, and how to actually win.',
     body: `
-    <p>The <a href="/Ur.html">Royal Game of Ur</a> is one of the oldest board games in the world — playable boards were buried in the Royal Tombs of Ur (modern Iraq) around 2600 BCE, and the rules survive on a Babylonian clay tablet translated by the British Museum&rsquo;s Irving Finkel. It is a two-player race game: get all seven of your pieces around the track and off the board before your opponent. Fast to learn, genuinely tense to play.</p>
+    <p>The <a href="/ur">Royal Game of Ur</a> is one of the oldest board games in the world — playable boards were buried in the Royal Tombs of Ur (modern Iraq) around 2600 BCE, and the rules survive on a Babylonian clay tablet translated by the British Museum&rsquo;s Irving Finkel. It is a two-player race game: get all seven of your pieces around the track and off the board before your opponent. Fast to learn, genuinely tense to play.</p>
 
     <h2>The board and the path</h2>
     <p>The board has 20 squares in an unmistakable shape: two 3×4 blocks joined by a 1×2 bridge. Each player runs their own private column at the start and end, and both share the central lane in the middle:</p>
@@ -736,10 +736,10 @@ const pages = [
     </ol>
 
     <div class="callout">
-      <b>Also from the ancient world:</b> try <a href="/Senet.html">Senet</a>, the Egyptian racing game entombed with pharaohs, and <a href="/PenteGrammai.html">Pente Grammai</a>, the Greek &ldquo;game of five lines.&rdquo; All three are short to learn and deep to play.
+      <b>Also from the ancient world:</b> try <a href="/senet">Senet</a>, the Egyptian racing game entombed with pharaohs, and <a href="/pentegrammai">Pente Grammai</a>, the Greek &ldquo;game of five lines.&rdquo; All three are short to learn and deep to play.
     </div>
 
-    <p><a class="play-cta" href="/Ur.html">Play the Royal Game of Ur now</a></p>
+    <p><a class="play-cta" href="/ur">Play the Royal Game of Ur now</a></p>
 `,
   },
   {
@@ -748,7 +748,7 @@ const pages = [
     title: 'Senet — Rules of the Ancient Egyptian Game',
     description: 'How to play Senet: throwing sticks, the special houses, sending pieces back, and bearing off to win.',
     body: `
-    <p><a href="/Senet.html">Senet</a> is the oldest board game we can name — Egyptians were playing it before 3000 BCE, and boards turn up in tombs including Tutankhamun&rsquo;s. The full ancient rules were lost, but game historians (notably Timothy Kendall and R.C. Bell) reconstructed a playable set from tomb paintings and surviving boards. It is a race: move all your pieces along a 30-square track and off the board before your opponent.</p>
+    <p><a href="/senet">Senet</a> is the oldest board game we can name — Egyptians were playing it before 3000 BCE, and boards turn up in tombs including Tutankhamun&rsquo;s. The full ancient rules were lost, but game historians (notably Timothy Kendall and R.C. Bell) reconstructed a playable set from tomb paintings and surviving boards. It is a race: move all your pieces along a 30-square track and off the board before your opponent.</p>
 
     <h2>The board and setup</h2>
     <p>Senet is 30 squares — three rows of ten — travelled in a boustrophedon (&ldquo;as the ox plows&rdquo;) S-shape: left-to-right along the top row, right-to-left along the middle, left-to-right along the bottom. Each player starts with five pieces on the first ten squares, interleaved so the two colors alternate.</p>
@@ -787,10 +787,10 @@ const pages = [
     </ol>
 
     <div class="callout">
-      <b>More from the ancient world:</b> <a href="/Ur.html">The Royal Game of Ur</a> (see the <a href="/guides/royal-game-of-ur">Ur guide</a>) is Senet&rsquo;s Mesopotamian cousin, and <a href="/PenteGrammai.html">Pente Grammai</a> is the Greek &ldquo;game of five lines.&rdquo;
+      <b>More from the ancient world:</b> <a href="/ur">The Royal Game of Ur</a> (see the <a href="/guides/royal-game-of-ur">Ur guide</a>) is Senet&rsquo;s Mesopotamian cousin, and <a href="/pentegrammai">Pente Grammai</a> is the Greek &ldquo;game of five lines.&rdquo;
     </div>
 
-    <p><a class="play-cta" href="/Senet.html">Play Senet now</a></p>
+    <p><a class="play-cta" href="/senet">Play Senet now</a></p>
 `,
   },
   {
@@ -799,7 +799,7 @@ const pages = [
     title: 'Pente Grammai — the Ancient Greek Game of Five Lines',
     description: 'Rules and strategy for Pente Grammai, the Greek race game of five lines: movement, the sacred line, capturing, and bearing off.',
     body: `
-    <p><a href="/PenteGrammai.html">Pente Grammai</a> — literally &ldquo;five lines&rdquo; — is an ancient Greek race game mentioned by writers from Alcaeus to Sophocles and depicted on Greek vases (most famously Achilles and Ajax at their game). The exact rules did not survive, so this is a plausible reconstruction: race your five pieces along the lines and bear them all off before your opponent.</p>
+    <p><a href="/pentegrammai">Pente Grammai</a> — literally &ldquo;five lines&rdquo; — is an ancient Greek race game mentioned by writers from Alcaeus to Sophocles and depicted on Greek vases (most famously Achilles and Ajax at their game). The exact rules did not survive, so this is a plausible reconstruction: race your five pieces along the lines and bear them all off before your opponent.</p>
 
     <h2>The board</h2>
     <p>The board is five parallel lines (with later versions adding a divided grid). Each player has five pieces. The central line is the <b>sacred line</b> (&ldquo;the sacred line&rdquo; was a Greek proverb for a last resort — &ldquo;to move the piece from the sacred line&rdquo; meant making a desperate final play).</p>
@@ -828,10 +828,10 @@ const pages = [
     </ol>
 
     <div class="callout">
-      <b>The ancient-games trilogy:</b> pair this with <a href="/Senet.html">Senet</a> (Egypt, see the <a href="/guides/senet-rules">Senet guide</a>) and <a href="/Ur.html">the Royal Game of Ur</a> (Mesopotamia) — three short-to-learn race games separated by a thousand years and a few hundred miles.
+      <b>The ancient-games trilogy:</b> pair this with <a href="/senet">Senet</a> (Egypt, see the <a href="/guides/senet-rules">Senet guide</a>) and <a href="/ur">the Royal Game of Ur</a> (Mesopotamia) — three short-to-learn race games separated by a thousand years and a few hundred miles.
     </div>
 
-    <p><a class="play-cta" href="/PenteGrammai.html">Play Pente Grammai now</a></p>
+    <p><a class="play-cta" href="/pentegrammai">Play Pente Grammai now</a></p>
 `,
   },
 ];
@@ -892,8 +892,8 @@ const guidesIndex = `<!DOCTYPE html>
   </div>
   <nav class="hub">
     <a href="/">Home</a>
-    <a href="/play.html">Play</a>
-    <a href="/about.html">About</a>
+    <a href="/play">Play</a>
+    <a href="/about">About</a>
   </nav>
 </div>
 <script src="/analytics.js"></script>

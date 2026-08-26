@@ -7,11 +7,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Wordform: free daily 5-letter word guessing puzzle. Six guesses, color-coded letter feedback, share your result. No signup, single-page browser game.">
 <meta name="keywords" content="wordform, word game, daily word puzzle, 5 letter word game, word guessing game">
-<link rel="canonical" href="https://boardgaminghub.com/Wordform.html">
+<link rel="canonical" href="https://boardgaminghub.com/wordform">
 <link rel="manifest" href="/wordform.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://boardgaminghub.com/Wordform.html">
+<meta property="og:url" content="https://boardgaminghub.com/wordform">
 <meta property="og:title" content="Wordform — Free Daily Word Puzzle">
 <meta property="og:description" content="Six guesses, five letters, one daily word. Free, in-browser, single-file HTML.">
 <meta property="og:image" content="https://boardgaminghub.com/og/wordform.png">
@@ -22,11 +22,11 @@
 <script type="application/ld+json">
 { "@context": "https://schema.org", "@type": "VideoGame", "name": "Wordform",
   "description": "Guess the 5-letter daily word in six tries, with color-coded letter feedback.",
-  "url": "https://boardgaminghub.com/Wordform.html", "genre": "Word Puzzle",
+  "url": "https://boardgaminghub.com/wordform", "genre": "Word Puzzle",
   "applicationCategory": "Game", "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Wordform","item":"https://boardgaminghub.com/Wordform.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Wordform","item":"https://boardgaminghub.com/wordform"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How does Wordform work?","acceptedAnswer":{"@type":"Answer","text":"Six guesses to find a 5-letter secret word. After each guess, every letter colors green (correct position), yellow (in word, wrong position), or gray (not in word)."}},{"@type":"Question","name":"What's the best opening word?","acceptedAnswer":{"@type":"Answer","text":"High-coverage words testing common vowels and frequent consonants — ARISE, AUDIO, STARE, CRANE are popular. Maximize information from the first guess; specific opening matters less than disciplined narrowing afterward."}},{"@type":"Question","name":"Is the same word for everyone?","acceptedAnswer":{"@type":"Answer","text":"Yes — Wordform serves the same daily word to every player, so guess-score sharing works without spoilers."}},{"@type":"Question","name":"What if I run out of ideas?","acceptedAnswer":{"@type":"Answer","text":"Open with high-coverage words (ARISE, ROUTE, CRANE, SLATE) to surface as many letters as possible, then use remaining guesses to pin position."}}]}</script>
 <style>
   * { box-sizing: border-box; }
@@ -111,7 +111,7 @@
 <div id="wrap">
   <h1>WORDFORM</h1>
   <div class="tag">5 LETTERS · 6 GUESSES</div>
-  <div class="daily-sibling">Also play today's <a href="Drift.html">Drift</a> · word ladder, one letter per step</div>
+  <div class="daily-sibling">Also play today's <a href="/drift">Drift</a> · word ladder, one letter per step</div>
   <div class="controls">
     <button id="dailyBtn" class="active">DAILY</button>
     <button id="randomBtn">RANDOM</button>
@@ -122,7 +122,7 @@
   <div class="stats">STREAK <span id="streak">0</span> · WINS <span id="wins">0</span> · PLAYED <span id="played">0</span></div>
   <div id="shareToast"><span id="shareToastText"></span><button type="button" id="shareToastBtn">Share result</button></div>
   <div id="kb"></div>
-  <nav><a href="index.html">All games</a> · <a href="Sudoku.html">Sudoku</a> · <a href="2048.html">2048</a></nav>
+  <nav><a href="/">All games</a> · <a href="/sudoku">Sudoku</a> · <a href="/2048">2048</a></nav>
 
   <div class="info">
     <h2>How to play Wordform</h2>
@@ -256,7 +256,7 @@
     if (mode === 'daily' && done) promptShare(won);
   }
   function msg(t) { $('msg').textContent = t; }
-  const SHARE_URL = 'https://boardgaminghub.com/Wordform.html';
+  const SHARE_URL = 'https://boardgaminghub.com/wordform';
   function shareGrid() {
     if (!guesses.length) return '';
     const won = done && guesses[guesses.length-1].word === target;
@@ -319,10 +319,10 @@
 
   <h3>Related games</h3>
   <ul>
-    <li><a href="Drift.html">Drift</a> — daily word ladder.</li>
-    <li><a href="Solitaire.html">Solitaire</a> — solo card classic.</li>
-    <li><a href="Sudoku.html">Sudoku</a> — daily logic puzzle.</li>
-    <li><a href="Chess.html">Chess</a> — two-player strategy.</li>
+    <li><a href="/drift">Drift</a> — daily word ladder.</li>
+    <li><a href="/solitaire">Solitaire</a> — solo card classic.</li>
+    <li><a href="/sudoku">Sudoku</a> — daily logic puzzle.</li>
+    <li><a href="/chess">Chess</a> — two-player strategy.</li>
   </ul>
 </section>
 

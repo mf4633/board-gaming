@@ -7,20 +7,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Play Minesweeper free online. Classic Beginner, Intermediate, and Expert grids. Right-click to flag, left-click to reveal. No signup, no downloads, mobile-friendly.">
 <meta name="keywords" content="minesweeper, play minesweeper, free minesweeper online, classic minesweeper, mine puzzle">
-<link rel="canonical" href="https://boardgaminghub.com/Minesweeper.html">
+<link rel="canonical" href="https://boardgaminghub.com/minesweeper">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://boardgaminghub.com/Minesweeper.html">
+<meta property="og:url" content="https://boardgaminghub.com/minesweeper">
 <meta property="og:title" content="Minesweeper — Free Online Classic">
 <meta property="og:description" content="The classic logic puzzle: clear the field without detonating any mines. Free, in-browser, single-file HTML.">
 <meta name="twitter:card" content="summary">
 <script type="application/ld+json">
 { "@context": "https://schema.org", "@type": "VideoGame", "name": "Minesweeper",
   "description": "Reveal cells without detonating any mines. Number clues show how many mines surround each cell.",
-  "url": "https://boardgaminghub.com/Minesweeper.html", "genre": "Puzzle",
+  "url": "https://boardgaminghub.com/minesweeper", "genre": "Puzzle",
   "applicationCategory": "Game", "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Minesweeper","item":"https://boardgaminghub.com/Minesweeper.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Minesweeper","item":"https://boardgaminghub.com/minesweeper"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What do the numbers in Minesweeper mean?","acceptedAnswer":{"@type":"Answer","text":"A number on a revealed cell shows how many mines lie among the 8 cells immediately surrounding it. A blank revealed cell has 0 adjacent mines (and the game auto-cascades, opening neighbors). A 1 means exactly one of the 8 neighbors is a mine; a 2 means exactly two; and so on up to 8 (rare)."}},{"@type":"Question","name":"What's the difference between Beginner, Intermediate, and Expert?","acceptedAnswer":{"@type":"Answer","text":"Beginner is 9×9 with 10 mines (~12% density). Intermediate is 16×16 with 40 mines (~16%). Expert is 30×16 with 99 mines (~21%). Higher density makes deductions harder and more likely to require a 50/50 guess."}},{"@type":"Question","name":"What is a chord click?","acceptedAnswer":{"@type":"Answer","text":"A chord (left+right click together, or middle-click) on a revealed numbered cell automatically opens all unflagged neighbors — but only if the number of flagged neighbors equals the number on the cell. Speeds up clearing significantly once you've flagged the obvious mines around a number."}},{"@type":"Question","name":"Can every Minesweeper game be solved without guessing?","acceptedAnswer":{"@type":"Answer","text":"No. Standard Minesweeper allows positions where the only safe cell can't be deduced from the visible numbers — a forced 50/50 guess. Some implementations (\"no-guess\" Minesweeper) use only solvable boards; the classic version does not. Approximately 20–30% of Expert games contain at least one unforced guess."}},{"@type":"Question","name":"What's the best Minesweeper strategy?","acceptedAnswer":{"@type":"Answer","text":"Open corners and edges first — they have fewer neighbors so numbers there are higher-information. Flag mines as you identify them so chord-click works. When stuck, look at numbers along the borders of unrevealed regions for forced deductions. Save guesses for when no logic remains, and prefer cells far from numbered constraints (lower local mine density)."}}]}</script>
 <style>
   * { box-sizing: border-box; }
@@ -103,7 +103,7 @@
   </div>
   <div id="boardWrap"><div id="board"></div></div>
   <div id="msg"></div>
-  <nav><a href="index.html">All games</a> · <a href="Sudoku.html">Sudoku</a> · <a href="2048.html">2048</a></nav>
+  <nav><a href="/">All games</a> · <a href="/sudoku">Sudoku</a> · <a href="/2048">2048</a></nav>
 
   <div class="info">
     <h2>How to play Minesweeper</h2>
@@ -282,10 +282,10 @@
 
   <h3>Related games</h3>
   <ul>
-    <li><a href="Sudoku.html">Sudoku</a> — pure-logic puzzle, also no luck if well-formed.</li>
-    <li><a href="2048.html">2048</a> — solo number puzzle.</li>
-    <li><a href="Solitaire.html">Solitaire</a> — solo card game.</li>
-    <li><a href="Chess.html">Chess</a> — two-player strategic logic.</li>
+    <li><a href="/sudoku">Sudoku</a> — pure-logic puzzle, also no luck if well-formed.</li>
+    <li><a href="/2048">2048</a> — solo number puzzle.</li>
+    <li><a href="/solitaire">Solitaire</a> — solo card game.</li>
+    <li><a href="/chess">Chess</a> — two-player strategic logic.</li>
   </ul>
 </section>
 
