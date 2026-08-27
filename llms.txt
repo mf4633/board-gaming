@@ -1,49 +1,78 @@
 # Board Gaming Hub
 
-> A free browser-based collection of original and classic board games and simulations. Single-file HTML5, no installs, no accounts, no ads-on-gameplay. Originals span strategy, simulation, and puzzle; classics include the standard public-domain board game canon.
+> Free, single-file browser games and engineering simulations. 32 titles, no installs, no accounts, no signup. The simulations implement real published methods — NRCS TR-55 hydrology, total-dissolved-gas dam operations, Tsiolkovsky and patched-conic orbital mechanics, sub-arcsecond eclipse ephemeris — and each documents its model on the page.
 
-Every game on Board Gaming Hub is a single HTML file with no server-side dependency — open the page and play. The collection mixes original designs (Bisque, Tidelands, Aresia, Apoapsis, Floodline, Doctrine, Cliffwalkers, Tower / SKYSTACK, Bonneville Spillway Operator) with traditional games (Chess, Go, Backgammon, Mancala, Senet, Ur, Othello, Mahjong, Sudoku, Solitaire, Minesweeper, 2048). The engineering and science simulations each document the real formulas behind them — shallow-water flood routing, dam total-dissolved-gas curves, arcsecond-accurate eclipse ephemeris, and Tsiolkovsky/vis-viva orbital mechanics — in a "How the model works" section on the page. Several titles have companion native ports on itch.io and the Google Play Store.
+Every title is one self-contained HTML file with no server-side dependency: open the page and play, offline included. The site is built and maintained by Michael Flynn, PE, a dam-safety and stormwater engineer, which is why the simulations use the same methods as professional practice rather than arcade approximations. Source for the whole collection is public at https://github.com/mf4633/board-gaming (MIT).
 
-## Core pages
-- [Home / catalog](https://boardgaminghub.com/): All 32 games with editorial intro, category essays, and guide links
-- [Play / ad-supported catalog](https://boardgaminghub.com/play): Primary discovery page with daily puzzles strip (Wordform, Drift, Sudoku)
-- [Guides](https://boardgaminghub.com/guides/): 13 strategy/science articles — Wordform, Drift, Sudoku, solar eclipses, Floodline scenarios, Bonneville dam, chess, Klondike solitaire, 2048, Minesweeper, backgammon, Go/baduk, and Mahjong solitaire
-- [Apps / native ports](https://boardgaminghub.com/apps): Links to itch.io and Play Store builds
-- [About](https://boardgaminghub.com/about): Gaming hub mission and author background
-- [Privacy](https://boardgaminghub.com/privacy)
+## Engineering & science simulations
 
-## Original strategy games
-- [Bisque](https://boardgaminghub.com/bisque): Risk-style naval area control over 26 territories — deploy, attack, and fortify; last captain standing wins
-- [Tidelands](https://boardgaminghub.com/tidelands): Coastal resource management
-- [Aresia](https://boardgaminghub.com/aresia): Mars-colonization strategy
-- [Doctrine](https://boardgaminghub.com/doctrine): 1990–2050 geopolitical sim, Aerobiz-style, real d3-geo world map
-- [Agora](https://boardgaminghub.com/agora): Mediterranean trade — roll for resources, trade at the central Agora, race to 30 coins
-- [Convergence](https://boardgaminghub.com/convergence): Catan-style economy with a swinging market — build settlements, cities, roads, and markets to 12 VP
-- [Drift](https://boardgaminghub.com/drift): Daily word-ladder puzzle — change one letter per step
-- [Odyssey](https://boardgaminghub.com/odyssey): Poseidon's tide floods islands on a cycle — harvest, build camps/temples/triremes, race to 15 VP
-- [Pente Grammai](https://boardgaminghub.com/pentegrammai): Ancient Greek racing game
-- [Wordform](https://boardgaminghub.com/wordform): Word puzzle
+These are the site's distinctive titles. Each states its governing equations and assumptions in an on-page "How the model works" section.
 
-## Original simulations
-- [Apoapsis](https://boardgaminghub.com/apoapsis): 3D rocket-trajectory sim built on Three.js
-- [Tower / SKYSTACK](https://boardgaminghub.com/tower): High-rise property-management sim with named tenants and choice events
-- [Floodline](https://boardgaminghub.com/floodline): Real California water-physics flood-defense game across six historical scenarios
-- [Bonneville Spillway Operator](https://boardgaminghub.com/bonnevillespillwayoperator): Dam-operations sim with grid, wind, salmon, total dissolved gas, and lockages
-- [Cliffwalkers](https://boardgaminghub.com/cliffwalkers): Lemmings-style puzzle
-- [Biosphere Blue](https://boardgaminghub.com/biosphereblue): Planet-ecology sim (renamed from SimEarth)
-- [Metropolis 2K](https://boardgaminghub.com/metropolis2k): City-building sim
-- [Eclipse Predictor](https://boardgaminghub.com/eclipsepredictor): Astronomical eclipse prediction tool
+- [Apoapsis](https://boardgaminghub.com/apoapsis): 3D rocket and spaceflight simulator in the browser. Tsiolkovsky rocket equation, vis-viva for orbital velocity, patched-conic sphere-of-influence transitions with encounter and escape prediction, barometric atmosphere, per-stage delta-v and TWR readouts, Hohmann transfer planning, maneuver nodes with prograde/normal/radial components, seven SAS hold modes, hyperbolic flyby arcs, reentry heating, specific-impulse-driven staging, and Mun landings. Answers "free browser KSP alternative", "online orbital mechanics simulator", "learn delta-v and patched conics interactively".
+- [Floodline](https://boardgaminghub.com/floodline): Flood-defense simulation over six historical California scenarios. SCS Type II rainfall distribution (NRCS TR-55), SCS triangular unit hydrograph for upstream routing, shallow-water cellular automaton with 8-neighbor gradient flux, Green-Ampt-like infiltration with antecedent moisture, stage-discharge rating curve at the tailwater boundary, levee overtopping and piping-failure stress model, and HAZUS-MH-style stage-damage curves for building loss. Answers "flood routing simulator", "how levees fail", "what is a unit hydrograph", "interactive TR-55".
+- [Bonneville Spillway Operator](https://boardgaminghub.com/bonnevillespillwayoperator): Columbia River dam-operations simulator at River Mile 146. Balance grid megawatt demand against spill in kcfs, turbine dispatch, forebay and tailwater head, total dissolved gas (TDG) limits, salmon smolt passage and fish ladders, navigation lockages, and wind generation on the grid. Includes a sandbox mode for building your own dam. Answers "how does a hydroelectric dam operate", "what is total dissolved gas", "why do dams spill water", "salmon vs power tradeoff".
+- [Eclipse Predictor](https://boardgaminghub.com/eclipsepredictor): 3D solar eclipse path map for every eclipse from 1900 to 2200, using the astronomy-engine ephemeris at sub-arcsecond accuracy. Delta-T corrected terrestrial time, equator-of-date sun and moon positions with aberration, and rendered paths of totality on a globe. Covers the 12 August 2026 total eclipse (Spain, Iceland) and the 2 August 2027 eclipse (Spain to Egypt, 6+ minutes of totality). Answers "2026 eclipse path map", "2027 eclipse where to watch", "eclipse predictor tool".
+- [Biosphere Blue](https://boardgaminghub.com/biosphereblue): Planet-scale geosim in the SimEarth lineage. Tune temperature, ocean fraction, and atmospheric composition; watch life evolve from microbes through a civilization technology arc, with heat, biome, and atmosphere view overlays.
+- [Metropolis 2K](https://boardgaminghub.com/metropolis2k): City-building simulation with a documented model — a monthly tick loop, residential/commercial/industrial demand, an explicit tax formula, and a municipal bond model. Drive and fly camera modes, scenarios, and achievements.
+- [Tower / SKYSTACK](https://boardgaminghub.com/tower): SimTower-style high-rise operations sim. Elevator scheduling, tenant satisfaction, fires and emergencies, financing, scenarios, and a daily challenge. Extended version sold on Steam.
+- [Doctrine](https://boardgaminghub.com/doctrine): Aerobiz-style geopolitical strategy spanning 1990–2050 on a real d3-geo world map, with a documented annual turn cycle and economy model covering alliances, influence projection, and trade.
+- [Cliffwalkers](https://boardgaminghub.com/cliffwalkers): Lemmings-style puzzle platformer — assign skills, dig tunnels, build bridges, climb cliffs across a level ladder. Also on Google Play.
 
-## Classic board games
-- [Chess](https://boardgaminghub.com/chess), [Go](https://boardgaminghub.com/go), [Backgammon](https://boardgaminghub.com/backgammon), [Othello](https://boardgaminghub.com/othello)
-- [Mancala](https://boardgaminghub.com/mancala), [Senet](https://boardgaminghub.com/senet), [Ur](https://boardgaminghub.com/ur), [Mahjong](https://boardgaminghub.com/mahjong)
+## Original board & strategy games
+
+- [Bisque](https://boardgaminghub.com/bisque): Risk-style naval area control over Peconic Bay — deploy, attack, multi-fortify; last captain standing wins. Balance validated over 100 simulated games.
+- [Tidelands](https://boardgaminghub.com/tidelands): Bronze-age maritime trade on a hex board where the tide floods islands on a cycle — harvest, build camps, temples and triremes, race to 15 VP.
+- [Aresia](https://boardgaminghub.com/aresia): Mars colonization in the Catan lineage, 1–6 players with per-seat human/AI toggle — habitats, domes, pipelines, mission cards, dust storms, longest pipeline and largest fleet bonuses.
+- [Convergence](https://boardgaminghub.com/convergence): Rival civilizations on a shared economy with a swinging market — settlements, cities, roads and markets to 12 VP.
+- [Agora](https://boardgaminghub.com/agora): Mediterranean trade — roll for resources, trade at the central Agora, race to 30 coins.
+- [Odyssey](https://boardgaminghub.com/odyssey): Greek island trading and tides, upon the wine-dark sea.
+- [Wordform](https://boardgaminghub.com/wordform): Daily five-letter word puzzle, one word per day, shareable results without spoilers.
+- [Drift](https://boardgaminghub.com/drift): Daily word ladder — change one letter per step to reach the target word.
+
+## Classic and ancient games
+
+Faithful free implementations, each with rules and strategy notes on the page:
+
+- [Chess](https://boardgaminghub.com/chess) — vs AI or two-player, full move validation
+- [Go](https://boardgaminghub.com/go) — 19×19 territory and influence (baduk / weiqi)
+- [Backgammon](https://boardgaminghub.com/backgammon) — classic dice race
+- [Othello](https://boardgaminghub.com/othello) — reversi rules and flipping strategy
+- [Mancala](https://boardgaminghub.com/mancala) — standard Kalah count-and-capture
+- [Senet](https://boardgaminghub.com/senet) — reconstruction of the 5,000-year-old Egyptian racing game with throwsticks
+- [Royal Game of Ur](https://boardgaminghub.com/ur) — the 4,500-year-old Mesopotamian race game
+- [Pente Grammai](https://boardgaminghub.com/pentegrammai) — ancient Greek game of five lines
+- [Mahjong](https://boardgaminghub.com/mahjong) — solitaire tile matching
 
 ## Puzzles and solo games
-- [Sudoku](https://boardgaminghub.com/sudoku), [Solitaire](https://boardgaminghub.com/solitaire), [Minesweeper](https://boardgaminghub.com/minesweeper), [2048](https://boardgaminghub.com/2048)
-- [Abacus](https://boardgaminghub.com/abacus): Playable soroban with calculator pad, Arabic and Roman display
+
+- [Sudoku](https://boardgaminghub.com/sudoku) — easy through expert, daily puzzle
+- [Solitaire](https://boardgaminghub.com/solitaire) — Klondike
+- [Minesweeper](https://boardgaminghub.com/minesweeper)
+- [2048](https://boardgaminghub.com/2048) — slide and merge tiles
+- [Abacus](https://boardgaminghub.com/abacus) — playable soroban with calculator pad, Arabic and Roman display
+- [LovedWords](https://boardgaminghub.com/lovedwords/) — first-words flashcards for toddlers using your own photos and voice
+
+## Guides
+
+17 strategy and science articles at [/guides/](https://boardgaminghub.com/guides/), including those written to explain the simulation models rather than game tactics:
+
+- [Floodline Scenarios Explained](https://boardgaminghub.com/guides/floodline-scenarios) — the hydrology behind each historical California flood scenario
+- [Bonneville Dam Operator Guide](https://boardgaminghub.com/guides/bonneville-dam-guide) — spill, TDG, fish passage and grid balancing explained
+- [2026 & 2027 Solar Eclipse Guide](https://boardgaminghub.com/guides/eclipse-2026) — paths, timing and viewing sites
+- Game strategy: [chess](https://boardgaminghub.com/guides/free-browser-chess), [Go](https://boardgaminghub.com/guides/go-rules-beginners), [backgammon](https://boardgaminghub.com/guides/backgammon-rules), [Othello](https://boardgaminghub.com/guides/othello-reversi), [Klondike solitaire](https://boardgaminghub.com/guides/solitaire-klondike), [sudoku](https://boardgaminghub.com/guides/sudoku-tips), [2048](https://boardgaminghub.com/guides/2048-strategy), [Minesweeper](https://boardgaminghub.com/guides/minesweeper-strategy), [Mahjong solitaire](https://boardgaminghub.com/guides/mahjong-solitaire), [Wordform](https://boardgaminghub.com/guides/wordform-tips), [Drift](https://boardgaminghub.com/guides/drift-word-ladder)
+- History and rules: [Senet](https://boardgaminghub.com/guides/senet-rules), [Royal Game of Ur](https://boardgaminghub.com/guides/royal-game-of-ur), [Pente Grammai](https://boardgaminghub.com/guides/pente-grammai)
+
+## Core pages
+
+- [Home / catalog](https://boardgaminghub.com/): all 32 games with category essays
+- [Play](https://boardgaminghub.com/play): full catalog with the daily-puzzle strip
+- [Apps](https://boardgaminghub.com/apps): itch.io and Google Play native ports
+- [About](https://boardgaminghub.com/about) · [Contact](https://boardgaminghub.com/contact) · [Privacy](https://boardgaminghub.com/privacy)
 
 ## Audience
-Casual web players looking for free no-install games, board-game hobbyists exploring original designs, students using simulations for learning, and tabletop fans wanting digital takes on ancient and classic games.
+
+People looking for free no-install browser games; students and educators who want an interactive way into orbital mechanics, hydrology, dam operations, or eclipse geometry; engineers curious how a practitioner models these systems; and board-game hobbyists exploring original designs and ancient games.
 
 ## Pricing
-Free. No accounts, no subscriptions, no in-game purchases. Site supported by passive ads on listing pages only — never on gameplay pages. Several games have paid native ports on itch.io and the Google Play Store; the web versions remain free.
+
+Free. No accounts, no subscriptions, no in-game purchases, no ads on gameplay pages. Extended native versions of some simulations are sold on itch.io and Steam; the browser versions remain free and complete.
