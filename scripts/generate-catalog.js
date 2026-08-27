@@ -100,6 +100,7 @@ const sharedCss = `  * { box-sizing: border-box; }
   .demo-badge a { color: #94c3e8; }
   .daily-badge { display: inline-block; margin-left: 8px; font-size: 0.65em; color: #a0d0a8; letter-spacing: 2px; vertical-align: middle; font-weight: normal; }
   .ad-slot { position: relative; width: 100%; margin: 24px 0; min-height: 90px; display: block; background: #11161e; border: 1px dashed #2a3540; border-radius: 4px; padding: 6px; overflow: hidden; }
+  .ad-slot--pending { display: none; }
   .ad-slot::before { content: 'Advertisement'; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); color: #5a6874; font-size: 0.65em; letter-spacing: 3px; pointer-events: none; }
   .ad-slot ins.adsbygoogle { display: block !important; width: 100% !important; min-height: 90px; }
   footer { margin-top: 60px; text-align: center; color: #5a6874; font-size: 0.78em; letter-spacing: 2px; line-height: 1.8; }
