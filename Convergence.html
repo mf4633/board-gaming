@@ -421,6 +421,19 @@
   </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Board Games","item":"https://boardgaminghub.com/#board"},{"@type":"ListItem","position":3,"name":"Convergence","item":"https://boardgaminghub.com/convergence"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I win Convergence?","acceptedAnswer":{"@type":"Answer","text":"Be the first to reach 12 victory points. Settlements are worth 1 VP, cities 2, and markets 1, plus 2 VP for the Longest Road (5+ segments) and 2 VP for a Portfolio of 20 or more coins."}},{"@type":"Question","name":"How does the market work?","acceptedAnswer":{"@type":"Answer","text":"You buy and sell resources at live market prices, and every trade nudges that price up or down. Building Market structures lowers your trading fees. A roll of 7 triggers a Market Event — a BOOM that spikes the priciest resource or a BUST that halves it."}},{"@type":"Question","name":"How do I collect resources?","acceptedAnswer":{"@type":"Answer","text":"Roll the dice each turn; every hex whose number matches produces its resource for adjacent settlements, and cities collect double. Spend those resources to build settlements, cities, roads, and markets."}},{"@type":"Question","name":"How long is a session?","acceptedAnswer":{"@type":"Answer","text":"A 2-player game runs roughly 30–60 minutes, whether against the built-in AI or a second human player."}}]}</script>
+<style>
+/* ===== MOBILE OVERFLOW FIX ===== */
+/* .main-area was a nowrap flex row: 520px board + 300px market = 844px. */
+@media (max-width: 820px) {
+  /* vertices are positioned by JS in the board's natural 520px coordinate space,
+     so the board cannot reflow — let it scroll inside the page instead. */
+  .main-area { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .main-area { flex-wrap: wrap; max-width: 100%; }
+  .main-area > * { min-width: 0; }
+  #board { max-width: 100%; }
+  #market-panel { width: 100%; }
+}
+</style>
 </head>
 <body>
 <h1>CONVERGENCE</h1>

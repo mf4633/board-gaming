@@ -115,6 +115,22 @@
   #help:hover { background: #1f6feb; color: #fff; }
   .scroll-hint { color: #6e7681; font-size: 11px; margin-top: 8px; }
 </style>
+<style>
+/* ===== MOBILE OVERFLOW FIX ===== */
+/* The game layer is absolutely positioned, so it contributes no flow height and the
+   SEO article was drawn straight through the city. Start the article below one
+   viewport and give it its own opaque stacking context. */
+body > .seo-content { position: relative; z-index: 30 !important; margin-top: 100vh !important; background: #0c1016; padding-top: 24px; }
+
+/* #topbar is an absolutely positioned nowrap flex row; its buttons ran to 1879px. */
+/* #topbar is a nowrap flex row whose buttons overran the page at every width. */
+#topbar { flex-wrap: wrap; row-gap: 2px; height: auto; }
+
+@media (max-width: 820px) {
+  #topbar { overflow-x: auto; }
+  #speedbar { flex-wrap: wrap; }
+}
+</style>
 </head>
 <body>
 <canvas id="cv"></canvas>

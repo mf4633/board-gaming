@@ -103,6 +103,16 @@
     .card .center { font-size: 1.1em; bottom: 2px; right: 4px; }
   }
 </style>
+<style>
+/* ===== MOBILE OVERFLOW FIX ===== */
+/* Cards are placed in the board's own coordinate space, so shrinking the grid
+   scatters them. Keep the board at its natural size and let it scroll inside
+   the page instead of dragging the whole document sideways. */
+@media (max-width: 820px) {
+  #board { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #wrap { overflow-x: hidden; }
+}
+</style>
 </head>
 <body>
 <div id="wrap">
