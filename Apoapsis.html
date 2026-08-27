@@ -26,7 +26,10 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E0; height: 100vh; overflow: hidden; user-select: none; display: flex; flex-direction: column; }
+body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E0; min-height: 100vh; overflow-x: hidden; user-select: none; }
+/* The game owns exactly one viewport; the article below it scrolls normally.
+   --apo-chrome is the height of the site header nav.js injects, measured at runtime. */
+#gameHost { display: flex; flex-direction: column; height: calc(100vh - var(--apo-chrome, 0px)); height: calc(100dvh - var(--apo-chrome, 0px)); min-height: 460px; position: relative; overflow: hidden; }
 
 #gameNav { display: block; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: #0A0A1A; border-bottom: 1px solid #1A2A40; font-family: Georgia, serif; }
 #gameNav .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 18px; max-width: 1200px; margin: 0 auto; position: relative; }
@@ -80,8 +83,8 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 #threeContainer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
 .hud { position: absolute; font-size: 0.95em; pointer-events: none; z-index: 10; padding: 8px 12px; background: rgba(5,10,25,0.55); border: 1px solid rgba(64,128,208,0.35); border-radius: 6px; line-height: 1.55; color: #C0D0E0; backdrop-filter: blur(2px); }
 .hud-tl { top: 44px; left: 8px; min-width: 140px; }
-.hud-tr { top: 44px; right: 8px; text-align: right; min-width: 140px; }
-.hud-bl { bottom: 20px; left: 8px; min-width: 140px; }
+.hud-tr { top: 78px; right: 8px; text-align: right; min-width: 140px; }
+.hud-bl { bottom: 20px; left: 56px; min-width: 140px; }
 .hud-br { bottom: 28px; right: 210px; text-align: right; min-width: 140px; }
 .hud b { color: #4090E0; font-size: 0.85em; letter-spacing: 1px; }
 .hud .val { color: #40E090; font-weight: bold; }
@@ -97,7 +100,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 .throttle-fill { position: absolute; bottom: 2px; left: 2px; right: 2px; background: linear-gradient(to top, #D06020 0%, #E0A040 40%, #40E080 100%); border-radius: 0 0 4px 4px; transition: height 0.1s; }
 .throttle-bar::before { content: 'THR'; position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: #6090C0; letter-spacing: 2px; font-family: 'Courier New', monospace; font-weight: bold; }
 
-.controls-hint { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 0.65em; color: #3A5070; pointer-events: none; z-index: 10; }
+.controls-hint { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: #93B4D8; background: rgba(6,10,22,0.72); padding: 4px 12px; border-radius: 4px; pointer-events: none; z-index: 10; }
 
 .g-vignette { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 5; border-radius: 0; transition: box-shadow 0.1s; }
 
@@ -168,9 +171,95 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 .man-info b { color: #FFD040; }
 .map-legend { position: absolute; bottom: 30px; right: 10px; background: rgba(10,20,40,0.7); border: 1px solid #1A2A40; padding: 6px 10px; font-size: 0.65em; color: #8098B0; border-radius: 4px; z-index: 11; font-family: 'Courier New', monospace; }
 .map-legend span.sw { display: inline-block; width: 18px; height: 2px; vertical-align: middle; margin-right: 4px; }
+
+/* ===== APOAPSIS RESPONSIVE + TOUCH ===== */
+/* The legacy per-game bar is fixed at z-9999 and covers the site header nav.js
+   injects, which carries the same links plus search. One header is enough. */
+#gameNav { display: none; }
+
+.builder-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; padding: 4px 8px; }
+.btn { min-height: 40px; }
+
+@media (max-width: 820px) {
+  #builderScreen { flex-direction: column; }
+  .preview-area { order: 1; flex: 1 1 auto; min-height: 0; justify-content: flex-start; padding-top: 4px; }
+  /* the bar is a child of .preview-area, so it needs its own order to sit above the canvas */
+  .builder-bar { order: -1; position: static; }   /* base rule is absolute, which ignores order */
+  #previewCanvas { height: 26vh; max-height: 100%; width: auto; flex: 0 1 auto; min-height: 0; }
+  .catalog { order: 2; width: 100%; max-height: 27vh; border-right: none; border-top: 1px solid #1A2A40; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 6px; align-content: start; }
+  .catalog h3 { grid-column: 1 / -1; margin: 6px 0 0; }
+  .cat-part { margin: 0; font-size: 0.72em; }
+  .stage-panel { order: 3; width: 100%; max-height: 22vh; border-left: none; border-top: 1px solid #1A2A40; }
+  .builder-bar { gap: 4px; padding: 6px; border-bottom: 1px solid #1A2A40; }
+  .builder-bar .btn { flex: 1 1 28%; margin: 0; padding: 8px 4px; font-size: 0.78em; }
+  .builder-bar .btn.launch { flex: 1 1 100%; order: -1; font-size: 1em; padding: 12px; }
+  .preview-info { font-size: 0.68em; margin-top: 4px; }
+}
+
+/* On-screen flight controls. Shown only for coarse pointers so a touchscreen
+   laptop keeps the keyboard layout it already works with. */
+.touch-controls { display: none; position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+body.touch .touch-controls { display: block; }
+body.touch .controls-hint { display: none; }
+.touch-controls > div { pointer-events: auto; }
+.tc-btn { border-radius: 8px; border: 1px solid #4080D0; background: rgba(10,20,40,0.86); color: #B0C8E0; font-family: 'Courier New', monospace; font-size: 0.62em; font-weight: bold; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+.tc-btn:active, .tc-btn.active { background: #1A3860; color: #FFD040; border-color: #FFD040; }
+.tc-pad { position: absolute; bottom: 12px; left: 10px; display: grid; grid-template-columns: repeat(3, 48px); grid-template-rows: repeat(3, 44px); gap: 4px; }
+.tc-pad .tc-btn { width: 48px; height: 44px; }
+.tc-actions { position: absolute; top: 8px; left: 10px; display: flex; gap: 4px; }
+.tc-actions .tc-btn { min-width: 58px; height: 38px; }
+.tc-sas { position: absolute; bottom: 12px; right: 10px; display: grid; grid-template-columns: 58px 58px; gap: 4px; }
+.tc-sas .tc-btn { height: 38px; }
+
+/* Touch phones: reserve a control band at the bottom and lift every HUD element
+   clear of it, so nothing is drawn underneath a button. */
+@media (max-width: 820px) {
+  body.touch { --tc-band: 150px; }
+  body.touch .touch-controls::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: var(--tc-band); background: linear-gradient(to top, rgba(6,10,22,0.92), rgba(6,10,22,0)); pointer-events: none; }
+  body.touch .tc-pad { bottom: 10px; left: 8px; }
+  body.touch .tc-sas { bottom: 10px; right: 8px; }
+  body.touch .tc-actions { top: 6px; left: 8px; }
+
+  /* the full 10-row SAS list is desktop-only; PRO/RET/HOLD/BURN cover it on touch */
+  body.touch .sas-panel { display: none !important; }   /* JS sets an inline display */
+  body.touch .view-toggle { display: none; }   /* MAP is a touch button already */
+
+  body.touch .hud { font-size: 0.6em; }
+  body.touch .hud-tl { top: 48px; left: 8px; }
+  body.touch .hud-tr { top: 100px; right: 8px; }
+  body.touch .hud-bl { bottom: calc(var(--tc-band) + 6px); left: 34px; }
+  body.touch .hud-br { bottom: calc(var(--tc-band) + 6px); right: 8px; text-align: right; }
+  body.touch .throttle-bar { bottom: calc(var(--tc-band) + 6px); left: 8px; height: 120px; width: 18px; }
+  body.touch .navball { width: 96px; height: 96px; bottom: auto; top: 284px; right: 8px; }
+  body.touch .navball canvas { width: 96px; height: 96px; }
+  body.touch .sound-toggle { font-size: 0.62em; padding: 3px 6px; }
+  body.touch .man-panel { bottom: calc(var(--tc-band) + 6px); }
+
+  /* the site search box costs a fifth of a phone screen on a page that is a game */
+  body.touch .bgh-head .bgh-search, body.touch .bgh-head form { display: none; }
+}
+
+
+/* onboarding: one action first, reference material behind a disclosure */
+.tutorial-box .tut-lead { font-family: Georgia, serif; font-size: 0.95em; color: #B0C8E0; margin-bottom: 14px; }
+.tut-steps { border-left: 2px solid #4080D0; padding-left: 12px; margin: 0 0 14px; }
+.tut-steps p { margin: 6px 0; color: #B0C8E0; }
+.tut-steps b { color: #FFD040; }
+.tut-touch { display: none; }
+body.touch .tut-touch { display: block; }
+.tut-more { margin: 6px 0; }
+.tut-more summary { cursor: pointer; color: #4080D0; font-family: Georgia, serif; font-size: 0.9em; padding: 4px 0; }
+.tut-more summary:hover { color: #FFD040; }
+.tut-more p { margin: 5px 0; }
+.tut-go { margin-top: 14px; border-color: #40D080; color: #40D080; font-weight: bold; font-size: 1em; padding: 10px 22px; }
+.help-btn { position: absolute; top: 44px; left: 8px; z-index: 16; background: rgba(10,20,40,0.8); border: 1px solid #4080D0; color: #93B4D8; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-family: Georgia, serif; font-size: 0.95em; }
+.help-btn:hover { color: #FFD040; border-color: #FFD040; }
+body.touch .help-btn { top: 52px; left: auto; right: 8px; }
+@media (max-width: 820px) { .tutorial-box { padding: 18px 16px; max-height: 82vh; overflow-y: auto; } }
+
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Simulations","item":"https://boardgaminghub.com/#sims"},{"@type":"ListItem","position":3,"name":"Apoapsis","item":"https://boardgaminghub.com/apoapsis"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is apoapsis?","acceptedAnswer":{"@type":"Answer","text":"The highest point of an orbit — opposite of periapsis (lowest point). On Earth it's \"apogee\"; for the Sun it's \"aphelion\". The game is named after this orbital concept."}},{"@type":"Question","name":"Is the physics realistic?","acceptedAnswer":{"@type":"Answer","text":"Yes — full Newtonian gravity (no patched-conics simplification), realistic engine ISP/thrust specs, and atmospheric drag with altitude-dependent density. Trajectory matches what Kerbal Space Program calls \"Realism Overhaul\" closely."}},{"@type":"Question","name":"What's a good gravity-turn altitude?","acceptedAnswer":{"@type":"Answer","text":"Begin pitching over at ~5 km, target ~45° pitch by 20 km. Earlier pitch wastes fuel on horizontal velocity at sea level (high drag); later pitch wastes fuel fighting gravity."}},{"@type":"Question","name":"Can I land on the Moon?","acceptedAnswer":{"@type":"Answer","text":"Single-stage to orbit and a circumlunar flyby are both achievable with the default rocket. A surface-landing mission requires a custom multi-stage build."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is apoapsis?","acceptedAnswer":{"@type":"Answer","text":"The highest point of an orbit — opposite of periapsis (lowest point). On Earth it's \"apogee\"; for the Sun it's \"aphelion\". The game is named after this orbital concept."}},{"@type":"Question","name":"Is the physics realistic?","acceptedAnswer":{"@type":"Answer","text":"Yes — Newtonian point-mass gravity within each sphere of influence, patched-conic transitions between bodies, realistic engine ISP/thrust specs, and altitude-dependent atmospheric drag. Moon orbits and SOI sizes are scaled for playable transfer times, not 1:1 real-world."}},{"@type":"Question","name":"What's a good gravity-turn altitude?","acceptedAnswer":{"@type":"Answer","text":"Begin pitching over at ~5 km, target ~45° pitch by 20 km. Earlier pitch wastes fuel on horizontal velocity at sea level (high drag); later pitch wastes fuel fighting gravity."}},{"@type":"Question","name":"Can I land on the Moon?","acceptedAnswer":{"@type":"Answer","text":"Single-stage to orbit and a circumlunar flyby are both achievable with the default rocket. A surface-landing mission requires a custom multi-stage build."}}]}</script>
 </head>
 <body>
 <div id="gameNav">
@@ -200,22 +289,32 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
 
 <div class="tutorial-overlay" id="tutorialOverlay">
   <div class="tutorial-box">
-    <h2>&#x1F680; Welcome to Apoapsis</h2>
-    <p>Build a rocket, fly it to orbit, and chase the contracts. Real orbital mechanics, real Tsiolkovsky physics, two moons to visit.</p>
-    <h3>Builder</h3>
-    <p>Click parts on the left to stack them. <kbd>S0</kbd>/<kbd>S1</kbd>/... buttons assign stages. Stage with the highest number fires first. Use the <b>MunShip</b> preset if you want a ready-to-fly design.</p>
-    <h3>Flight &mdash; the 10 keys you need</h3>
-    <p><kbd>W</kbd>/<kbd>S</kbd> throttle &nbsp; <kbd>A</kbd>/<kbd>D</kbd> pitch &nbsp; <kbd>Q</kbd>/<kbd>E</kbd> yaw &nbsp; <kbd>Space</kbd> stage</p>
-    <p><kbd>0</kbd>-<kbd>9</kbd> SAS modes (prograde, retrograde, target, etc.)</p>
-    <p><kbd>L</kbd> autopilot (ascent on Earth &mdash; moon landing once in Mun/Minmus SOI)</p>
-    <p><kbd>M</kbd> map view &nbsp; <kbd>N</kbd> maneuver node &nbsp; <kbd>,</kbd>/<kbd>.</kbd> time warp</p>
-    <p><kbd>G</kbd> deploy chute &nbsp; <kbd>Shift</kbd>+WASDQE = RCS translate (precision docking)</p>
-    <h3>First mission</h3>
-    <p>Load MunShip, press LAUNCH, then hit <kbd>L</kbd> to let the autopilot put you in orbit. On the maneuver panel click <b>&rarr; Mun</b>, warp (.) until the burn window, hit <kbd>8</kbd> for SAS MANEUVER, then <kbd>W</kbd> to throttle up.</p>
-    <button class="btn" onclick="dismissTutorial()" style="border-color:#40D080;color:#40D080;font-weight:bold;">Got it &mdash; start flying</button>
+    <h2>&#x1F680; Apoapsis</h2>
+    <p class="tut-lead">A rocket sim with the real equations underneath &mdash; Tsiolkovsky, vis-viva, patched conics. Your first goal: <b>reach orbit</b>.</p>
+    <div class="tut-steps">
+      <p><b>1.</b> A ready-to-fly rocket is already loaded. Press <b>LAUNCH</b>.</p>
+      <p><b>2.</b> Hold <kbd>W</kbd> to throttle up. Steer with <kbd>A</kbd>/<kbd>D</kbd>.</p>
+      <p><b>3.</b> Or press <kbd>L</kbd> and let the autopilot fly the ascent for you.</p>
+      <p class="tut-touch">On a phone, use the on-screen buttons &mdash; <b>THR+</b> to climb, <b>AUTO</b> to autopilot.</p>
+    </div>
+    <details class="tut-more">
+      <summary>All controls</summary>
+      <p><kbd>W</kbd>/<kbd>S</kbd> throttle &nbsp; <kbd>A</kbd>/<kbd>D</kbd> pitch &nbsp; <kbd>Q</kbd>/<kbd>E</kbd> yaw &nbsp; <kbd>Space</kbd> stage</p>
+      <p><kbd>0</kbd>-<kbd>9</kbd> SAS modes (prograde, retrograde, maneuver, target&hellip;)</p>
+      <p><kbd>L</kbd> autopilot &mdash; ascent on Earth, landing once in Mun/Minmus SOI</p>
+      <p><kbd>M</kbd> map &nbsp; <kbd>N</kbd> maneuver node &nbsp; <kbd>,</kbd>/<kbd>.</kbd> time warp &nbsp; <kbd>G</kbd> chute</p>
+      <p><kbd>Shift</kbd>+WASDQE = RCS translate (precision docking) &nbsp; <kbd>X</kbd> abort</p>
+      <p>Builder: click catalog parts to stack them; <kbd>S0</kbd>/<kbd>S1</kbd> assign stages, highest number fires first.</p>
+    </details>
+    <details class="tut-more">
+      <summary>Getting to the Mun</summary>
+      <p>From a stable orbit, open the maneuver panel and click <b>&rarr; Mun</b>. Warp with <kbd>.</kbd> to the burn window, press <kbd>8</kbd> for SAS MANEUVER, then throttle up with <kbd>W</kbd>.</p>
+    </details>
+    <button class="btn tut-go" onclick="dismissTutorial()">Start flying</button>
   </div>
 </div>
 
+<div id="gameHost">
 <div id="builderScreen" class="screen active">
   <div class="catalog" id="catalog"></div>
   <div class="preview-area">
@@ -277,7 +376,35 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
   </div>
   <div class="map-hud" id="mapInfoTL" style="top:78px;left:8px;color:#B0C8E0;display:none;"></div>
   <div class="map-legend" id="mapLegend" style="display:none;"><b style="color:#4080D0;">MAP LEGEND</b><br><span class="sw" style="background:#40D080;"></span>Orbit<br><span class="sw" style="background:#D04040;"></span>Periapsis<br><span class="sw" style="background:#40C0FF;"></span>Apoapsis<br><span class="sw" style="background:#FFD040;"></span>Ship<br><br>Drag: rotate &nbsp; Wheel: zoom</div>
+  <button class="help-btn" onclick="showTutorial()" title="Controls and help" type="button">?</button>
   <div class="controls-hint">W/S Throttle &nbsp; A/D Pitch &nbsp; Q/E Yaw &nbsp; Shift+move=RCS &nbsp; SPACE Stage &nbsp; 0-9 SAS &nbsp; M Map &nbsp; N Node &nbsp; G Chute &nbsp; X Abort &nbsp; L Autopilot &nbsp; ,/. Warp &nbsp; Drag/Scroll=Camera &nbsp; ESC Quit</div>
+<div class="touch-controls" id="touchControls">
+  <div class="tc-actions">
+    <button class="tc-btn" data-action="stage" type="button">STAGE</button>
+    <button class="tc-btn" data-action="autopilot" type="button">AUTO</button>
+    <button class="tc-btn" data-action="map" type="button">MAP</button>
+    <button class="tc-btn" data-action="chute" type="button">CHUTE</button>
+  </div>
+  <div class="tc-pad">
+    <span></span>
+    <button class="tc-btn" data-key="w" type="button">THR+</button>
+    <span></span>
+    <button class="tc-btn" data-key="a" type="button">PCH-</button>
+    <button class="tc-btn" data-key="s" type="button">THR-</button>
+    <button class="tc-btn" data-key="d" type="button">PCH+</button>
+    <button class="tc-btn" data-key="q" type="button">YAW-</button>
+    <span></span>
+    <button class="tc-btn" data-key="e" type="button">YAW+</button>
+  </div>
+  <div class="tc-sas">
+    <button class="tc-btn" data-action="sas-prograde" type="button">PRO</button>
+    <button class="tc-btn" data-action="sas-retrograde" type="button">RET</button>
+    <button class="tc-btn" data-action="sas-stability" type="button">HOLD</button>
+    <button class="tc-btn" data-action="sas-maneuver" type="button">BURN</button>
+    <button class="tc-btn" data-action="warp-down" type="button">WARP-</button>
+    <button class="tc-btn" data-action="warp-up" type="button">WARP+</button>
+  </div>
+</div>
   <div class="result-overlay" id="resultOverlay">
     <div class="result-box" id="resultBox">
       <h2 id="resultTitle">Orbit Achieved!</h2>
@@ -286,6 +413,7 @@ body { font-family: 'Courier New', monospace; background: #0A0A1A; color: #B0C8E
     </div>
   </div>
 </div>
+</div><!-- /#gameHost -->
 
 <script src="/three.r128.min.js"></script>
 <script>
@@ -2611,20 +2739,20 @@ function planMinmusTransfer() { planBodyTransfer('minmus'); }
 
 function planBodyTransfer(targetKey) {
   if (!sim || sim.parent !== 'earth') { showToast('Only plannable from Earth orbit'); return; }
-  var parent = BODIES.earth, target = BODIES[targetKey];
-  if (!target || target.parent !== 'earth') { showToast('Invalid target'); return; }
+  var parent = BODIES.earth, targetBody = BODIES[targetKey];
+  if (!targetBody || targetBody.parent !== 'earth') { showToast('Invalid targetBody'); return; }
   var kep = keplerianFromState(sim.pos, sim.vel, parent.mu);
   if (!kep || !kep.bound) { showToast('Need bound Earth orbit first'); return; }
   if (kep.e > 0.15) { showToast('Circularize first (ecc too high)'); return; }
   var r1 = sim.pos.length();
-  var r2 = target.orbitR;
+  var r2 = targetBody.orbitR;
   var a_t = (r1 + r2) / 2;
   var v_t = Math.sqrt(parent.mu * (2/r1 - 1/a_t));
   var v_now = sim.vel.length();
   var dv_pro = v_t - v_now;
   dv_pro = Math.max(-3000, Math.min(3000, dv_pro));
-  // Plane-change component if target is inclined (approximate: add normal dv)
-  var inc = target.inclination || 0;
+  // Plane-change component if targetBody is inclined (approximate: add normal dv)
+  var inc = targetBody.inclination || 0;
   var dv_norm = inc ? Math.round(v_t * Math.sin(inc) * 0.8) : 0;
   dv_norm = Math.max(-1500, Math.min(1500, dv_norm));
   var T_transfer = Math.PI * Math.sqrt(a_t*a_t*a_t / parent.mu);
@@ -2632,8 +2760,8 @@ function planBodyTransfer(targetKey) {
   var omegaShip = Math.sqrt(parent.mu / (r1*r1*r1));
   var signProgade = (sim.vel.x * -Math.sin(shipAngle) + sim.vel.z * Math.cos(shipAngle)) > 0 ? 1 : -1;
   omegaShip *= signProgade;
-  var omegaTarget = 2*Math.PI / target.period;
-  var rhs = (target.phase + omegaTarget*(sim.t + T_transfer)) - (shipAngle + Math.PI);
+  var omegaTarget = 2*Math.PI / targetBody.period;
+  var rhs = (targetBody.phase + omegaTarget*(sim.t + T_transfer)) - (shipAngle + Math.PI);
   var denom = omegaShip - omegaTarget;
   var dt_wait = -rhs / denom;
   var synodic = 2*Math.PI / Math.abs(denom);
@@ -2648,7 +2776,7 @@ function planBodyTransfer(targetKey) {
   document.getElementById('manPro').value = Math.round(dv_pro);
   document.getElementById('manNorm').value = dv_norm;
   updateManeuverUI();
-  var bName = target.name;
+  var bName = targetBody.name;
   showToast('Hohmann to ' + bName + ': &Delta;v ' + Math.round(dv_pro) + (dv_norm ? ' pro, ' + dv_norm + ' norm' : '') + ', T+ ' + Math.round(dt_wait) + 's');
 }
 
@@ -3189,10 +3317,49 @@ var SAS_KYS_HANDLED = ['0','1','2','3','4','5','6','7','8','9'];
 });
 document.addEventListener('keyup', function(e) { keys[e.key.toLowerCase()] = false; });
 
+/* ===== TOUCH CONTROLS =====
+   Buttons drive the same keys[] map the keyboard writes, so flight logic is untouched. */
+function initTouchControls() {
+  var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  if (!coarse) return;
+  document.body.classList.add('touch');
+  var panel = document.getElementById('touchControls');
+  if (!panel) return;
+  Array.prototype.forEach.call(panel.querySelectorAll('[data-key]'), function(btn) {
+    var k = btn.getAttribute('data-key');
+    var down = function(e) { e.preventDefault(); keys[k] = true; btn.classList.add('active'); };
+    var up = function() { keys[k] = false; btn.classList.remove('active'); };
+    btn.addEventListener('touchstart', down, { passive: false });
+    btn.addEventListener('touchend', up);
+    btn.addEventListener('touchcancel', up);
+    btn.addEventListener('mousedown', down);
+    btn.addEventListener('mouseup', up);
+    btn.addEventListener('mouseleave', up);
+  });
+  Array.prototype.forEach.call(panel.querySelectorAll('[data-action]'), function(btn) {
+    var act = btn.getAttribute('data-action');
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (gameState !== 'flight' || !sim) return;
+      if (act === 'stage') doStage(sim);
+      else if (act === 'autopilot') toggleAutopilot();
+      else if (act === 'map') setView(viewMode === 'flight' ? 'map' : 'flight');
+      else if (act === 'chute') deployChute();
+      else if (act === 'warp-up') { var cap = canRail(sim) ? 10000 : 10; timeWarp = Math.min(cap, timeWarp * 2); showToast('Warp: <b>' + timeWarp + 'x</b>'); }
+      else if (act === 'warp-down') { timeWarp = Math.max(1, timeWarp / 2); showToast('Warp: <b>' + timeWarp + 'x</b>'); }
+      else if (act.indexOf('sas-') === 0) setSAS(act.slice(4));
+    });
+  });
+}
+
+
 /* ===== HELPERS ===== */
 function fmtAlt(m) { if (!isFinite(m)) return '---'; if (Math.abs(m) >= 1e6) return (m/1000).toFixed(0) + ' km'; if (Math.abs(m) >= 1000) return (m/1000).toFixed(1) + ' km'; return Math.round(m) + ' m'; }
 function fmtTime(s) { var m = Math.floor(s / 60), sec = Math.floor(s % 60); return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec; }
 
+function showTutorial() {
+  document.getElementById('tutorialOverlay').classList.add('show');
+}
 function dismissTutorial() {
   document.getElementById('tutorialOverlay').classList.remove('show');
   try { localStorage.setItem('apoapsis_tutorial_seen', '1'); } catch(e) {}
@@ -3205,21 +3372,34 @@ function maybeShowTutorial() {
   } catch(e) {}
 }
 
+/* nav.js injects the site header after load, so measure it instead of hard-coding. */
+function sizeGameHost() {
+  var head = document.querySelector('.bgh-head');
+  var h = head ? Math.round(head.getBoundingClientRect().height) : 0;
+  document.documentElement.style.setProperty('--apo-chrome', h + 'px');
+}
+window.addEventListener('resize', sizeGameHost);
+window.addEventListener('load', sizeGameHost);
+setTimeout(sizeGameHost, 60);
+setTimeout(sizeGameHost, 400);
+
 /* ===== INIT ===== */
+sizeGameHost();
+initTouchControls();
 renderCatalog();
 loadPreset('orbital');
 maybeShowTutorial();
 </script>
 <section class="seo-content">
   <h2>About Apoapsis</h2>
-  <p>Apoapsis is a 3D rocket-flight simulation. Plan an ascent profile, manage staging, and reach a stable orbit around Earth — or beyond. Real Newtonian gravity (no patched conics simplification), realistic engine specifications, and atmospheric drag matter to your trajectory.</p>
+  <p>Apoapsis is a 3D rocket-flight simulation. Plan an ascent profile, manage staging, and reach a stable orbit around Earth — or beyond. Newtonian gravity within each sphere of influence, patched-conic SOI transitions, realistic engine specifications, and atmospheric drag all shape your trajectory.</p>
 
   <h3>How to play</h3>
   <p>Configure your rocket: payload, stages, fuel mass. Throttle up, gravity-turn during ascent, stage at appropriate altitudes, circularize at apoapsis to lock in orbit. Three.js renders the trajectory in 3D; orbit parameters update live.</p>
 
   <h3>Frequently asked questions</h3>
   <details><summary>What is apoapsis?</summary><p>The highest point of an orbit — opposite of periapsis (lowest point). On Earth it's "apogee"; for the Sun it's "aphelion". The game is named after this orbital concept.</p></details>
-  <details><summary>Is the physics realistic?</summary><p>Yes — full Newtonian gravity (no patched-conics simplification), realistic engine ISP/thrust specs, and atmospheric drag with altitude-dependent density. Trajectory matches what Kerbal Space Program calls "Realism Overhaul" closely.</p></details>
+  <details><summary>Is the physics realistic?</summary><p>Yes — Newtonian point-mass gravity within each sphere of influence, patched-conic transitions between bodies, realistic engine ISP/thrust specs, and altitude-dependent atmospheric drag. Moon orbits and SOI sizes are scaled for playable transfer times, not 1:1 real-world.</p></details>
   <details><summary>What's a good gravity-turn altitude?</summary><p>Begin pitching over at ~5 km, target ~45° pitch by 20 km. Earlier pitch wastes fuel on horizontal velocity at sea level (high drag); later pitch wastes fuel fighting gravity.</p></details>
   <details><summary>Can I land on the Moon?</summary><p>Single-stage to orbit and a circumlunar flyby are both achievable with the default rocket. A surface-landing mission requires a custom multi-stage build.</p></details>
 
