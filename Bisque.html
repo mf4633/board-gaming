@@ -425,6 +425,12 @@ body {
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Board Games","item":"https://boardgaminghub.com/#board"},{"@type":"ListItem","position":3,"name":"Bisque","item":"https://boardgaminghub.com/bisque"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is Bisque a real-time game?","acceptedAnswer":{"@type":"Answer","text":"No — it's turn-based. Each captain takes a full turn in sequence: deploy new traps, haul (attack) adjacent territories, then fortify, before passing to the next player."}},{"@type":"Question","name":"How do I win Bisque?","acceptedAnswer":{"@type":"Answer","text":"Eliminate every rival captain. A captain is knocked out when they lose their last territory, and the last captain standing wins. In 1-player mode you win by removing all AI rivals and lose if you are eliminated."}},{"@type":"Question","name":"How does combat work?","acceptedAnswer":{"@type":"Answer","text":"Combat is dice-based, Risk-style. Select one of your territories holding at least 2 traps, then attack an adjacent enemy or neutral territory; both sides roll and remove traps. Reduce a defender to 0 traps to conquer it and move traps in. Owning every territory in a region grants a deploy bonus."}},{"@type":"Question","name":"How long is a typical game?","acceptedAnswer":{"@type":"Answer","text":"Most games run 15–30 minutes, supporting 2 to 4 captains across the bay's 26 territories."}}]}</script>
+<style>
+/* The legacy per-game nav predates the site-wide header nav.js injects. It sits at
+   z-index 9999 and clips or covers that header, which carries the same game menu
+   plus search. One header is enough. */
+#gameNav { display: none !important; }
+</style>
 </head>
 <body>
 <div id="gameNav">
