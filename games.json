@@ -379,6 +379,30 @@
       "ogImage": "/og/lovedwords.png"
     },
     {
+      "slug": "tictactoe",
+      "title": "Tic-Tac-Toe",
+      "sourceHtml": "TicTacToe.html",
+      "category": "puzzles",
+      "featured": false,
+      "daily": false,
+      "priority": 0.85,
+      "description": "Noughts and crosses with a genuinely unbeatable AI",
+      "searchKeys": [
+        "tic tac toe",
+        "tictactoe",
+        "noughts and crosses",
+        "xo",
+        "minimax",
+        "unbeatable"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": false,
+      "ogImage": "/og/tictactoe.png"
+    },
+    {
       "slug": "agora",
       "title": "Agora",
       "sourceHtml": "Agora.html",
@@ -695,6 +719,29 @@
       "ogImage": "/og/ur.png"
     },
     {
+      "slug": "ultimatetictactoe",
+      "title": "Ultimate Tic-Tac-Toe",
+      "sourceHtml": "UltimateTicTacToe.html",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.85,
+      "description": "Nine nested boards; your move picks your opponent’s board",
+      "searchKeys": [
+        "ultimate tic tac toe",
+        "super tic tac toe",
+        "meta tic tac toe",
+        "nested",
+        "strategy"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": false,
+      "ogImage": "/og/ultimatetictactoe.png"
+    },
+    {
       "slug": "apoapsis",
       "title": "Apoapsis",
       "sourceHtml": "Apoapsis.html",
@@ -926,6 +973,32 @@
       "hasSteam": true,
       "admob": true,
       "ogImage": "/og/tower.png"
+    },
+    {
+      "slug": "hellcat",
+      "title": "Hellcat",
+      "sourceHtml": "Hellcat.html",
+      "category": "sims",
+      "featured": false,
+      "daily": false,
+      "priority": 0.85,
+      "description": "WWII carrier flight sim with real aerodynamics",
+      "searchKeys": [
+        "flight simulator",
+        "hellcat",
+        "f6f",
+        "wwii",
+        "aircraft carrier",
+        "aviation",
+        "plane",
+        "flying"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": false,
+      "ogImage": "/og/hellcat.png"
     }
   ]
 }

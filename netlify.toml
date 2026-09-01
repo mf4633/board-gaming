@@ -283,6 +283,21 @@
   from = "/tower"
   to = "/Tower.html"
   status = 200
+
+[[redirects]]
+  from = "/tictactoe"
+  to = "/TicTacToe.html"
+  status = 200
+
+[[redirects]]
+  from = "/ultimatetictactoe"
+  to = "/UltimateTicTacToe.html"
+  status = 200
+
+[[redirects]]
+  from = "/hellcat"
+  to = "/Hellcat.html"
+  status = 200
 # ─── Headers ───────────────────────────────────────────────────────────────
 # Version-pinned vendor libraries and generated OG cards never change under the
 # same name, so they can be cached hard. HTML keeps must-revalidate (default).
@@ -347,3 +362,30 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Content-Security-Policy = "frame-ancestors 'self'"
     Permissions-Policy = "geolocation=(), microphone=(), camera=(), interest-cohort=()"
+
+# ─── LovedWords ────────────────────────────────────────────────────────────
+# MUST stay after the /* block: on overlapping matches Netlify lets the later
+# rule win. The site-wide policy above disables camera and microphone, which
+# are exactly the two APIs this app is built on (getUserMedia for the photo,
+# MediaRecorder for the voice) — without this override both silently fail and
+# the app is decorative. Same-origin only; nothing else on the site asks for
+# either permission.
+[[headers]]
+  for = "/lovedwords/*"
+  [headers.values]
+    Permissions-Policy = "geolocation=(), microphone=(self), camera=(self), interest-cohort=()"
+
+# A stale service worker can keep an installed user on an old build for days.
+[[headers]]
+  for = "/lovedwords/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Netlify serves .webmanifest as application/octet-stream, which Chrome flags
+# and which can block the install prompt.
+[[headers]]
+  for = "/lovedwords/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json; charset=utf-8"
+    Cache-Control = "public, max-age=3600"
+

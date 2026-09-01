@@ -103,6 +103,24 @@
     .mode-btn.active { background: #6B4E37; color: #D8C8B0; cursor: default; }
     .mode-btn:hover:not(.active) { background: #3A2A1C; color: #D4A860; }
 
+    .ai-config { display: flex; flex-direction: column; align-items: center; gap: 7px; margin-bottom: 14px; }
+    .ai-row { display: flex; align-items: center; gap: 10px; }
+    .ai-label {
+      font-size: 0.72em; letter-spacing: 2px; text-transform: uppercase;
+      color: #8B7355; width: 74px; text-align: right; font-family: 'Georgia', serif;
+    }
+    .ai-config .mode-selector { margin-bottom: 0; }
+    .ai-config .mode-btn { padding: 5px 13px; font-size: 0.85em; }
+    .ai-desc {
+      max-width: 460px; text-align: center; font-size: 0.82em; line-height: 1.4;
+      color: #8B7355; font-style: italic; min-height: 2.3em; padding: 0 12px;
+    }
+    @media (max-width: 560px) {
+      .ai-row { flex-direction: column; gap: 3px; }
+      .ai-label { width: auto; text-align: center; }
+      .ai-config .mode-btn { padding: 5px 10px; font-size: 0.8em; }
+    }
+
     .game-info { text-align: center; margin-bottom: 10px; }
     #turn-indicator { font-size: 1.15em; font-weight: bold; margin-bottom: 6px; }
     #message { font-size: 1em; color: #D4A860; min-height: 1.4em; margin-bottom: 8px; }
@@ -401,6 +419,34 @@
   <button class="mode-btn" id="btn-2p" onclick="setMode(2)">2 Players</button>
 </div>
 
+<div class="ai-config" id="ai-config">
+  <div class="ai-row">
+    <span class="ai-label">Opponent</span>
+    <div class="mode-selector">
+      <button class="mode-btn" id="lvl-novice" onclick="setLevel('novice')">Novice</button>
+      <button class="mode-btn" id="lvl-club" onclick="setLevel('club')">Club</button>
+      <button class="mode-btn active" id="lvl-expert" onclick="setLevel('expert')">Expert</button>
+      <button class="mode-btn" id="lvl-master" onclick="setLevel('master')">Master</button>
+    </div>
+  </div>
+  <div class="ai-row">
+    <span class="ai-label">Style</span>
+    <div class="mode-selector">
+      <button class="mode-btn" id="sty-aggressive" onclick="setStyle('aggressive')">Aggressive</button>
+      <button class="mode-btn active" id="sty-positional" onclick="setStyle('positional')">Positional</button>
+      <button class="mode-btn" id="sty-defensive" onclick="setStyle('defensive')">Defensive</button>
+    </div>
+  </div>
+  <div class="ai-row">
+    <span class="ai-label">Play as</span>
+    <div class="mode-selector">
+      <button class="mode-btn active" id="side-w" onclick="setSide('w')">White</button>
+      <button class="mode-btn" id="side-b" onclick="setSide('b')">Black</button>
+    </div>
+  </div>
+  <div class="ai-desc" id="ai-desc"></div>
+</div>
+
 <div class="game-info">
   <div id="turn-indicator">White's Turn</div>
   <div id="message"></div>
@@ -425,7 +471,7 @@
   </div>
 
   <div class="side-panel">
-    <h3>White (P1)</h3>
+    <h3 id="label-white">White (P1)</h3>
     <div class="captured-area" id="captured-black"></div>
   </div>
 </div>
@@ -546,6 +592,10 @@
   var turn; /* 'w' or 'b' */
   var phase; /* 'play', 'gameover' */
   var mode; /* 1 or 2 */
+  var aiLevel; /* key into AI_LEVELS */
+  var aiStyle; /* key into AI_STYLES */
+  var aiColor; /* side the engine plays in 1-player mode */
+  var humanColor; /* side you play in 1-player mode */
   var selectedSq; /* {r, c} or null */
   var validMoves; /* array of {r, c, special} for selected piece */
   var capturedWhite; /* pieces captured from white */
@@ -615,8 +665,64 @@
     mode = m;
     document.getElementById('btn-1p').className = m === 1 ? 'mode-btn active' : 'mode-btn';
     document.getElementById('btn-2p').className = m === 2 ? 'mode-btn active' : 'mode-btn';
-    document.getElementById('label-black').textContent = m === 1 ? 'Black (AI)' : 'Black (P2)';
+    document.getElementById('ai-config').style.display = m === 1 ? 'flex' : 'none';
+    /* 2-player is always shown from White's side */
+    createBoard();
+    createCoords();
     resetGame();
+  }
+
+  /* Strength and style can be switched mid-game -- they only affect the next
+     search, so no reset is needed. Changing sides does need a new game. */
+  function setLevel(key) {
+    if (!AI_LEVELS[key]) return;
+    aiLevel = key;
+    syncAiButtons();
+    if (phase === 'play') render();
+  }
+
+  function setStyle(key) {
+    if (!AI_STYLES[key]) return;
+    aiStyle = key;
+    syncAiButtons();
+    if (phase === 'play') render();
+  }
+
+  function setSide(color) {
+    if (color !== W && color !== B) return;
+    humanColor = color;
+    aiColor = opponent(color);
+    syncAiButtons();
+    createBoard();
+    createCoords();
+    resetGame();
+  }
+
+  function syncAiButtons() {
+    var k;
+    for (k in AI_LEVELS) {
+      if (!AI_LEVELS.hasOwnProperty(k)) continue;
+      document.getElementById('lvl-' + k).className = k === aiLevel ? 'mode-btn active' : 'mode-btn';
+    }
+    for (k in AI_STYLES) {
+      if (!AI_STYLES.hasOwnProperty(k)) continue;
+      document.getElementById('sty-' + k).className = k === aiStyle ? 'mode-btn active' : 'mode-btn';
+    }
+    document.getElementById('side-w').className = humanColor === W ? 'mode-btn active' : 'mode-btn';
+    document.getElementById('side-b').className = humanColor === B ? 'mode-btn active' : 'mode-btn';
+    document.getElementById('ai-desc').textContent =
+      AI_LEVELS[aiLevel].desc + ' ' + AI_STYLES[aiStyle].desc;
+  }
+
+  /* You always sit at the bottom of the board. */
+  function boardFlipped() {
+    return mode === 1 && humanColor === B;
+  }
+
+  function panelLabel(color) {
+    var name = color === W ? 'White' : 'Black';
+    if (mode === 2) return name + (color === W ? ' (P1)' : ' (P2)');
+    return name + (color === aiColor ? ' (' + AI_LEVELS[aiLevel].label + ')' : ' (You)');
   }
 
   /* ===== UTILITY ===== */
@@ -1105,7 +1211,190 @@
 
   /* ===== AI (Minimax with Alpha-Beta) ===== */
 
+  /* Four strength tiers. depth is the nominal search depth; timeMs is a hard
+     wall-clock budget so a deep search degrades gracefully instead of freezing
+     the tab. Iterative deepening keeps the best move from the last depth that
+     actually completed. */
+  var AI_LEVELS = {
+    novice: { label: 'Novice', depth: 1, blunder: 0.35, quiesce: false, timeMs: 400,
+              desc: 'Looks one move ahead and blunders often. Good for learning the rules.' },
+    club:   { label: 'Club',   depth: 2, blunder: 0.08, quiesce: false, timeMs: 900,
+              desc: 'Sees simple two-move tactics. Occasionally hangs a piece.' },
+    expert: { label: 'Expert', depth: 3, blunder: 0,    quiesce: false, timeMs: 2000,
+              desc: 'Three-ply search with move ordering. Punishes loose pieces.' },
+    master: { label: 'Master', depth: 5, blunder: 0,    quiesce: true,  timeMs: 3000,
+              desc: 'Iterative deepening plus a captures-only quiescence search, so it will not stop counting mid-trade.' }
+  };
+
+  /* Three eval personalities. Every weight scales a positional term in
+     evaluateBoard, so the same search produces genuinely different play rather
+     than a relabelled difficulty slider. Material is never scaled, so no
+     personality will trade a rook for a pawn to chase a king. */
+  var AI_STYLES = {
+    aggressive: { label: 'Aggressive', mobility: 1.0, kingAttack: 3.2, kingSafety: 0.3,
+                  structure: 0.4, pst: 0.9, castled: 12, advance: 4,
+                  desc: 'Throws pieces at your king and trades structure for initiative.' },
+    positional: { label: 'Positional', mobility: 2.2, kingAttack: 0.7, kingSafety: 1.0,
+                  structure: 1.6, pst: 1.0, castled: 30, advance: 0,
+                  desc: 'Values space, mobility and healthy pawns. The classical engine.' },
+    defensive:  { label: 'Defensive',  mobility: 0.8, kingAttack: 0.2, kingSafety: 2.6,
+                  structure: 1.3, pst: 1.0, castled: 48, advance: -3,
+                  desc: 'Castles early, keeps a pawn shield, refuses to loosen its position.' }
+  };
+
+  var AI_KNIGHT_DIRS = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+  var AI_KING_DIRS = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+  var AI_DIAG_DIRS = [[-1,-1],[-1,1],[1,-1],[1,1]];
+  var AI_ORTHO_DIRS = [[-1,0],[1,0],[0,-1],[0,1]];
+
+  /* Search bookkeeping, kept module-level so minimax's signature stays stable. */
+  var searchDeadline = 0;
+  var searchQuiesce = false;
+  var searchNodes = 0;
+  var searchAborted = false;
+  var searchRootDepth = 3;
+
+  function outOfTime() {
+    if (searchAborted) return true;
+    if ((++searchNodes & 511) === 0 && Date.now() > searchDeadline) searchAborted = true;
+    return searchAborted;
+  }
+
+  /* Pseudo-legal move count. Deliberately skips the check-legality filter --
+     it runs at every leaf, and getLegalMoves copies the board once per move. */
+  function pseudoMobility(b, color) {
+    var count = 0, r, c, i, d, nr, nc, p, dirs;
+    for (r = 0; r < 8; r++) {
+      for (c = 0; c < 8; c++) {
+        p = b[r][c];
+        if (!p || p.color !== color) continue;
+        if (p.type === PAWN) {
+          nr = color === W ? r - 1 : r + 1;
+          if (nr >= 0 && nr < 8) {
+            if (!b[nr][c]) count++;
+            if (c > 0 && b[nr][c - 1] && b[nr][c - 1].color !== color) count++;
+            if (c < 7 && b[nr][c + 1] && b[nr][c + 1].color !== color) count++;
+          }
+        } else if (p.type === KNIGHT || p.type === KING) {
+          dirs = p.type === KNIGHT ? AI_KNIGHT_DIRS : AI_KING_DIRS;
+          for (i = 0; i < dirs.length; i++) {
+            nr = r + dirs[i][0]; nc = c + dirs[i][1];
+            if (nr < 0 || nr > 7 || nc < 0 || nc > 7) continue;
+            if (!b[nr][nc] || b[nr][nc].color !== color) count++;
+          }
+        } else {
+          if (p.type === BISHOP) dirs = AI_DIAG_DIRS;
+          else if (p.type === ROOK) dirs = AI_ORTHO_DIRS;
+          else dirs = AI_KING_DIRS;
+          for (i = 0; i < dirs.length; i++) {
+            for (d = 1; d < 8; d++) {
+              nr = r + dirs[i][0] * d; nc = c + dirs[i][1] * d;
+              if (nr < 0 || nr > 7 || nc < 0 || nc > 7) break;
+              if (!b[nr][nc]) { count++; continue; }
+              if (b[nr][nc].color !== color) count++;
+              break;
+            }
+          }
+        }
+      }
+    }
+    return count;
+  }
+
+  /* Heavy pieces closing on the enemy king. Chebyshev proximity, no ray casts. */
+  function kingPressure(b, color) {
+    var target = findKing(b, opponent(color));
+    if (!target) return 0;
+    var score = 0, r, c, p, dist;
+    for (r = 0; r < 8; r++) {
+      for (c = 0; c < 8; c++) {
+        p = b[r][c];
+        if (!p || p.color !== color) continue;
+        if (p.type === PAWN || p.type === KING) continue;
+        dist = Math.max(Math.abs(r - target.r), Math.abs(c - target.c));
+        if (dist <= 4) score += (5 - dist) * (p.type === QUEEN ? 4 : 2);
+      }
+    }
+    return score;
+  }
+
+  /* Pawn shield in front of the king, penalty for an open file beside it. */
+  function kingShelter(b, color) {
+    var k = findKing(b, color);
+    if (!k) return 0;
+    var fwd = color === W ? -1 : 1;
+    var score = 0, c, rr, shielded, r2;
+    for (c = k.c - 1; c <= k.c + 1; c++) {
+      if (c < 0 || c > 7) continue;
+      shielded = false;
+      for (rr = 1; rr <= 2; rr++) {
+        r2 = k.r + fwd * rr;
+        if (r2 < 0 || r2 > 7) break;
+        if (b[r2][c] && b[r2][c].type === PAWN && b[r2][c].color === color) {
+          score += rr === 1 ? 14 : 7;
+          shielded = true;
+          break;
+        }
+      }
+      if (!shielded) score -= 12;
+    }
+    return score;
+  }
+
+  /* Doubled / isolated / passed pawns, plus the bishop pair. */
+  function pawnStructure(b, color) {
+    var files = [0,0,0,0,0,0,0,0];
+    var rows = [[],[],[],[],[],[],[],[]];
+    var bishops = 0, r, c, p, f, score = 0, i, hasNeighbour, passed, rr, adjF;
+    for (r = 0; r < 8; r++) {
+      for (c = 0; c < 8; c++) {
+        p = b[r][c];
+        if (!p || p.color !== color) continue;
+        if (p.type === BISHOP) bishops++;
+        if (p.type !== PAWN) continue;
+        files[c]++;
+        rows[c].push(r);
+      }
+    }
+    for (f = 0; f < 8; f++) {
+      if (files[f] > 1) score -= 14 * (files[f] - 1);
+      if (files[f] === 0) continue;
+      hasNeighbour = (f > 0 && files[f - 1] > 0) || (f < 7 && files[f + 1] > 0);
+      if (!hasNeighbour) score -= 16;
+      for (i = 0; i < rows[f].length; i++) {
+        r = rows[f][i];
+        passed = true;
+        for (adjF = f - 1; adjF <= f + 1 && passed; adjF++) {
+          if (adjF < 0 || adjF > 7) continue;
+          for (rr = 0; rr < 8; rr++) {
+            if (!b[rr][adjF] || b[rr][adjF].type !== PAWN) continue;
+            if (b[rr][adjF].color === color) continue;
+            if (color === W ? rr < r : rr > r) { passed = false; break; }
+          }
+        }
+        if (passed) score += (color === W ? (7 - r) : r) * 8;
+      }
+    }
+    if (bishops >= 2) score += 30;
+    return score;
+  }
+
+  /* Non-pawn material sitting in the opposing half of the board. */
+  function advancement(b, color) {
+    var count = 0, r, c, p;
+    for (r = 0; r < 8; r++) {
+      for (c = 0; c < 8; c++) {
+        p = b[r][c];
+        if (!p || p.color !== color || p.type === PAWN || p.type === KING) continue;
+        if (color === W ? r <= 3 : r >= 4) count++;
+      }
+    }
+    return count;
+  }
+
+  /* Always scored from White's point of view. */
   function evaluateBoard(b, cRights, castledState) {
+    var w = AI_STYLES[aiStyle] || AI_STYLES.positional;
     var score = 0;
     for (var r = 0; r < 8; r++) {
       for (var c = 0; c < 8; c++) {
@@ -1115,17 +1404,23 @@
         var pstIdx;
         if (piece.color === W) {
           pstIdx = r * 8 + c;
-          score += val + (PST[piece.type] ? PST[piece.type][pstIdx] : 0);
+          score += val + (PST[piece.type] ? PST[piece.type][pstIdx] * w.pst : 0);
         } else {
           pstIdx = (7 - r) * 8 + c;
-          score -= val + (PST[piece.type] ? PST[piece.type][pstIdx] : 0);
+          score -= val + (PST[piece.type] ? PST[piece.type][pstIdx] * w.pst : 0);
         }
       }
     }
 
+    if (w.mobility) score += (pseudoMobility(b, W) - pseudoMobility(b, B)) * w.mobility;
+    if (w.kingAttack) score += (kingPressure(b, W) - kingPressure(b, B)) * w.kingAttack;
+    if (w.kingSafety) score += (kingShelter(b, W) - kingShelter(b, B)) * w.kingSafety;
+    if (w.structure) score += (pawnStructure(b, W) - pawnStructure(b, B)) * w.structure;
+    if (w.advance) score += (advancement(b, W) - advancement(b, B)) * w.advance;
+
     /* Bonus for castled king */
-    if (castledState && castledState.w) score += 30;
-    if (castledState && castledState.b) score -= 30;
+    if (castledState && castledState.w) score += w.castled;
+    if (castledState && castledState.b) score -= w.castled;
 
     return score;
   }
@@ -1187,8 +1482,66 @@
     return { board: nb, castleRights: newCR, enPassant: newEP, castled: newCastled };
   }
 
+  /* MVV-LVA: most valuable victim, least valuable attacker. */
+  function orderMoves(b, moves) {
+    for (var i = 0; i < moves.length; i++) {
+      var victim = b[moves[i].toR][moves[i].toC];
+      var attacker = b[moves[i].fromR][moves[i].fromC];
+      var s = 0;
+      if (victim) s = PIECE_VALUES[victim.type] * 10 - (attacker ? PIECE_VALUES[attacker.type] : 0);
+      if (moves[i].special === 'promote') s += 8000;
+      if (moves[i].special === 'enpassant') s += 900;
+      if (moves[i].special === 'castleK' || moves[i].special === 'castleQ') s += 60;
+      moves[i].order = s;
+    }
+    moves.sort(function (a, bm) { return bm.order - a.order; });
+    return moves;
+  }
+
+  /* Captures-only extension so the engine never evaluates a half-finished trade. */
+  function quiescence(b, alpha, beta, isMaximizing, cRights, epTarget, castledState, qdepth) {
+    var stand = evaluateBoard(b, cRights, castledState);
+    if (qdepth <= 0 || outOfTime()) return stand;
+
+    if (isMaximizing) {
+      if (stand >= beta) return beta;
+      if (stand > alpha) alpha = stand;
+    } else {
+      if (stand <= alpha) return alpha;
+      if (stand < beta) beta = stand;
+    }
+
+    var color = isMaximizing ? W : B;
+    var all = getAllLegalMoves(b, color, cRights, epTarget);
+    var caps = [];
+    for (var i = 0; i < all.length; i++) {
+      if (b[all[i].toR][all[i].toC] || all[i].special === 'enpassant' || all[i].special === 'promote') {
+        caps.push(all[i]);
+      }
+    }
+    if (caps.length === 0) return stand;
+    orderMoves(b, caps);
+
+    var result, val;
+    for (i = 0; i < caps.length; i++) {
+      result = aiMakeMove(b, caps[i].fromR, caps[i].fromC, caps[i].toR, caps[i].toC, caps[i].special, color, cRights, castledState);
+      val = quiescence(result.board, alpha, beta, !isMaximizing, result.castleRights, result.enPassant, result.castled, qdepth - 1);
+      if (isMaximizing) {
+        if (val > alpha) alpha = val;
+      } else {
+        if (val < beta) beta = val;
+      }
+      if (beta <= alpha) break;
+    }
+    return isMaximizing ? alpha : beta;
+  }
+
   function minimax(b, depth, alpha, beta, isMaximizing, cRights, epTarget, castledState) {
+    if (outOfTime()) return evaluateBoard(b, cRights, castledState);
     if (depth === 0) {
+      if (searchQuiesce) {
+        return quiescence(b, alpha, beta, isMaximizing, cRights, epTarget, castledState, 4);
+      }
       return evaluateBoard(b, cRights, castledState);
     }
 
@@ -1209,17 +1562,14 @@
 
     if (moves.length === 0) {
       if (isInCheck(b, color)) {
-        return isMaximizing ? -100000 + (3 - depth) : 100000 - (3 - depth);
+        /* Prefer the fastest mate: score by plies from the root, not raw depth. */
+        var ply = searchRootDepth - depth;
+        return isMaximizing ? -100000 + ply : 100000 - ply;
       }
       return 0; /* stalemate */
     }
 
-    /* Move ordering: captures first for better pruning */
-    moves.sort(function(a, bm) {
-      var aCapture = b[a.toR][a.toC] ? 1 : 0;
-      var bCapture = b[bm.toR][bm.toC] ? 1 : 0;
-      return bCapture - aCapture;
-    });
+    orderMoves(b, moves);
 
     var val, result;
 
@@ -1244,57 +1594,108 @@
     }
   }
 
+  /* Novice and Club throw a move away now and then, but never a free rook or
+     queen -- a random blunder that loses on move 4 just reads as broken. */
+  function pickBlunder(moves) {
+    var safe = [];
+    for (var i = 0; i < moves.length; i++) {
+      var mover = board[moves[i].fromR][moves[i].fromC];
+      if (!mover) continue;
+      if (PIECE_VALUES[mover.type] >= PIECE_VALUES[ROOK] && !board[moves[i].toR][moves[i].toC]) {
+        var res = aiMakeMove(board, moves[i].fromR, moves[i].fromC, moves[i].toR, moves[i].toC, moves[i].special, aiColor, castleRights, hasCastled);
+        if (isSquareAttacked(res.board, moves[i].toR, moves[i].toC, opponent(aiColor))) continue;
+      }
+      safe.push(moves[i]);
+    }
+    var pool = safe.length ? safe : moves;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
   function aiBestMove() {
-    var moves = getAllLegalMoves(board, B, castleRights, enPassantTarget);
+    var lvl = AI_LEVELS[aiLevel] || AI_LEVELS.expert;
+    var moves = getAllLegalMoves(board, aiColor, castleRights, enPassantTarget);
     if (moves.length === 0) return null;
 
-    var bestScore = Infinity;
-    var bestMove = null;
-    var result, score, i, j, temp;
-
-    /* Shuffle moves to add variety when scores are equal */
+    /* Shuffle first so equal-scoring moves vary between games */
+    var i, j, temp;
     for (i = moves.length - 1; i > 0; i--) {
       j = Math.floor(Math.random() * (i + 1));
-      temp = moves[i];
-      moves[i] = moves[j];
-      moves[j] = temp;
+      temp = moves[i]; moves[i] = moves[j]; moves[j] = temp;
     }
 
-    /* Move ordering: captures and checks first */
-    moves.sort(function(a, bm) {
-      var aScore = 0, bScore = 0;
-      if (board[a.toR][a.toC]) aScore += PIECE_VALUES[board[a.toR][a.toC].type];
-      if (board[bm.toR][bm.toC]) bScore += PIECE_VALUES[board[bm.toR][bm.toC].type];
-      return bScore - aScore;
-    });
+    if (lvl.blunder > 0 && Math.random() < lvl.blunder) return pickBlunder(moves);
 
-    for (i = 0; i < moves.length; i++) {
-      result = aiMakeMove(board, moves[i].fromR, moves[i].fromC, moves[i].toR, moves[i].toC, moves[i].special, B, castleRights);
-      score = minimax(result.board, 2, -Infinity, Infinity, true, result.castleRights, result.enPassant, result.castled);
-      /* depth 2 + the root move = depth 3 total */
-      if (score < bestScore) {
-        bestScore = score;
-        bestMove = moves[i];
+    var maximizing = aiColor === W;
+    searchDeadline = Date.now() + lvl.timeMs;
+    searchQuiesce = lvl.quiesce;
+    searchNodes = 0;
+    searchAborted = false;
+
+    orderMoves(board, moves);
+    var best = moves[0];
+    var result, score, d, localBest, localScore, alpha, beta, completed;
+
+    for (d = 1; d <= lvl.depth; d++) {
+      searchRootDepth = d;
+      localBest = null;
+      localScore = maximizing ? -Infinity : Infinity;
+      alpha = -Infinity;
+      beta = Infinity;
+      completed = true;
+
+      for (i = 0; i < moves.length; i++) {
+        if (d > 1 && Date.now() > searchDeadline) { completed = false; break; }
+        result = aiMakeMove(board, moves[i].fromR, moves[i].fromC, moves[i].toR, moves[i].toC, moves[i].special, aiColor, castleRights, hasCastled);
+        score = minimax(result.board, d - 1, alpha, beta, !maximizing, result.castleRights, result.enPassant, result.castled);
+        if (searchAborted && d > 1) { completed = false; break; }
+        moves[i].score = score;
+        if (maximizing ? score > localScore : score < localScore) {
+          localScore = score;
+          localBest = moves[i];
+        }
+        /* Share the root window across sibling moves for real pruning */
+        if (maximizing) { if (localScore > alpha) alpha = localScore; }
+        else { if (localScore < beta) beta = localScore; }
       }
+
+      if (!completed || !localBest) break;
+
+      best = localBest;
+      /* Search the previous iteration's best move first next time round */
+      moves.sort(function (a, bm) {
+        var as = a.score === undefined ? (maximizing ? -Infinity : Infinity) : a.score;
+        var bs = bm.score === undefined ? (maximizing ? -Infinity : Infinity) : bm.score;
+        return maximizing ? bs - as : as - bs;
+      });
+
+      if (Date.now() > searchDeadline) break;
     }
 
-    return bestMove;
+    return best;
   }
 
   function scheduleAi() {
     if (phase !== 'play') return;
     if (mode !== 1) return;
-    if (turn !== B) return;
+    if (turn !== aiColor) return;
+
+    /* render() can fire more than once per turn (a style change repaints),
+       so never leave two pending searches queued for the same move. */
+    if (aiTimeout) { clearTimeout(aiTimeout); aiTimeout = null; }
+
+    /* Painted before the search starts blocking the main thread */
+    document.getElementById('turn-indicator').textContent =
+      AI_LEVELS[aiLevel].label + ' is thinking...';
 
     aiTimeout = setTimeout(function() {
       aiTimeout = null;
-      if (phase !== 'play' || turn !== B) return;
+      if (phase !== 'play' || turn !== aiColor) return;
       var move = aiBestMove();
       if (move) {
         makeMove(move.fromR, move.fromC, move.toR, move.toC, move.special);
         render();
       }
-    }, 700);
+    }, 450);
   }
 
   /* ===== GAME OVER ===== */
@@ -1330,8 +1731,13 @@
     var boardEl = document.getElementById('board');
     boardEl.innerHTML = '';
 
-    for (var r = 0; r < 8; r++) {
-      for (var c = 0; c < 8; c++) {
+    var flip = boardFlipped();
+
+    for (var dr = 0; dr < 8; dr++) {
+      for (var dc = 0; dc < 8; dc++) {
+        /* dataset carries the LOGICAL square; DOM order carries the view */
+        var r = flip ? 7 - dr : dr;
+        var c = flip ? 7 - dc : dc;
         var cell = document.createElement('div');
         var isLight = (r + c) % 2 === 0;
         cell.className = 'cell ' + (isLight ? 'light' : 'dark');
@@ -1353,21 +1759,26 @@
     leftEl.innerHTML = '';
     rightEl.innerHTML = '';
 
+    var flip = boardFlipped();
+
     for (var i = 0; i < 8; i++) {
+      var fileLabel = FILES[flip ? 7 - i : i];
+      var rankLabel = flip ? i + 1 : 8 - i;
+
       var ft = document.createElement('span');
-      ft.textContent = FILES[i];
+      ft.textContent = fileLabel;
       topEl.appendChild(ft);
 
       var fb = document.createElement('span');
-      fb.textContent = FILES[i];
+      fb.textContent = fileLabel;
       botEl.appendChild(fb);
 
       var rl = document.createElement('span');
-      rl.textContent = 8 - i;
+      rl.textContent = rankLabel;
       leftEl.appendChild(rl);
 
       var rr = document.createElement('span');
-      rr.textContent = 8 - i;
+      rr.textContent = rankLabel;
       rightEl.appendChild(rr);
     }
   }
@@ -1378,10 +1789,12 @@
     var king = findKing(board, turn);
     var inCheckNow = inCheck;
 
-    for (var r = 0; r < 8; r++) {
-      for (var c = 0; c < 8; c++) {
-        var idx = r * 8 + c;
-        var cell = cells[idx];
+    /* Cells already sit in view order and carry their logical square, so a
+       flipped board needs no coordinate maths here. */
+    for (var ci = 0; ci < cells.length; ci++) {
+        var cell = cells[ci];
+        var r = parseInt(cell.dataset.r, 10);
+        var c = parseInt(cell.dataset.c, 10);
         var isLight = (r + c) % 2 === 0;
         var classes = 'cell ' + (isLight ? 'light' : 'dark');
 
@@ -1430,7 +1843,6 @@
           }
           cell.appendChild(dot);
         }
-      }
     }
 
     /* Turn indicator */
@@ -1440,9 +1852,13 @@
     }
     document.getElementById('turn-indicator').textContent = turnText;
 
-    /* Captured pieces */
-    renderCaptured('captured-white', capturedWhite);
-    renderCaptured('captured-black', capturedBlack);
+    /* Panels. Each panel shows the pieces THAT side has captured, and the top
+       panel is always the opponent, so both swap when the board is flipped. */
+    var topColor = boardFlipped() ? W : B;
+    document.getElementById('label-black').textContent = panelLabel(topColor);
+    document.getElementById('label-white').textContent = panelLabel(opponent(topColor));
+    renderCaptured('captured-white', topColor === B ? capturedWhite : capturedBlack);
+    renderCaptured('captured-black', topColor === B ? capturedBlack : capturedWhite);
 
     /* Schedule AI */
     scheduleAi();
@@ -1469,7 +1885,7 @@
 
   function onCellClick(e) {
     if (phase !== 'play') return;
-    if (mode === 1 && turn === B) return; /* AI's turn */
+    if (mode === 1 && turn === aiColor) return; /* engine's turn */
 
     var cell = e.currentTarget;
     var r = parseInt(cell.dataset.r);
@@ -1534,6 +1950,11 @@
   /* ===== INIT ===== */
 
   mode = 1;
+  aiLevel = 'expert';
+  aiStyle = 'positional';
+  humanColor = W;
+  aiColor = B;
+  syncAiButtons();
   createBoard();
   createCoords();
   resetGame();
@@ -1541,6 +1962,9 @@
   /* Expose to global scope for button onclick handlers */
   window.resetGame = resetGame;
   window.setMode = setMode;
+  window.setLevel = setLevel;
+  window.setStyle = setStyle;
+  window.setSide = setSide;
 
 })();
 </script>
@@ -1601,6 +2025,27 @@
     <summary>What's the 50-move rule?</summary>
     <p>If 50 consecutive moves go by with no capture and no pawn move, either side may claim a draw. The counter resets on every capture or pawn push.</p>
   </details>
+
+  <h3>Choosing an opponent</h3>
+  <p>The engine has four strength tiers and three playing styles, and they combine freely &mdash; twelve distinct opponents in all. Strength controls how far ahead it looks; style controls what it wants.</p>
+  <table class="ref-table">
+    <thead><tr><th>Opponent</th><th>Search</th><th>What it feels like</th></tr></thead>
+    <tbody>
+      <tr><td>Novice</td><td>1 ply</td><td>Takes what it can see this move and misses everything else. It will not hang a rook or queen outright, so games stay winnable rather than absurd.</td></tr>
+      <tr><td>Club</td><td>2 ply</td><td>Sees a capture and the recapture. Loses pieces to two-move tactics like forks and skewers.</td></tr>
+      <tr><td>Expert</td><td>3 ply</td><td>Punishes undefended pieces and simple tactics. Will not walk into a discovered attack.</td></tr>
+      <tr><td>Master</td><td>iterative deepening + quiescence</td><td>Deepens until its time budget runs out and extends every capture sequence to the end, so it cannot be tricked by an exchange that only looks good at the search horizon.</td></tr>
+    </tbody>
+  </table>
+  <table class="ref-table">
+    <thead><tr><th>Style</th><th>Priorities</th><th>How to beat it</th></tr></thead>
+    <tbody>
+      <tr><td>Aggressive</td><td>Piece activity near your king, material in your half of the board. Barely values its own pawn shield.</td><td>Trade off its attackers and open a file toward its own exposed king.</td></tr>
+      <tr><td>Positional</td><td>Mobility, healthy pawns, the bishop pair, central squares. The classical engine.</td><td>Create a locked structure where its extra mobility has nothing to attack.</td></tr>
+      <tr><td>Defensive</td><td>King safety above almost everything: castles early, keeps pawns in front of its king, keeps pieces home.</td><td>It concedes space. Take the centre, build up slowly, and open a second front.</td></tr>
+    </tbody>
+  </table>
+  <p>Strength and style can be changed in the middle of a game &mdash; they only affect the next move the engine searches. Switching sides starts a new game and flips the board so you always sit at the bottom.</p>
 
   <h3>Related games</h3>
   <ul>

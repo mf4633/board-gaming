@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#141a20">
+<title>Tic-Tac-Toe — Free Online, Unbeatable AI | Board Gaming Hub</title>
+<meta name="description" content="Play Tic-Tac-Toe online free. Three difficulty levels including a perfect, unbeatable minimax AI, plus two-player local. No signup, mobile-friendly.">
+<link rel="canonical" href="https://boardgaminghub.com/tictactoe">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://boardgaminghub.com/tictactoe">
+<meta property="og:title" content="Tic-Tac-Toe — Free Online, Unbeatable AI">
+<meta property="og:description" content="Three difficulties including a perfect minimax AI you cannot beat. Two-player local too.">
+<meta property="og:image" content="https://boardgaminghub.com/og/tictactoe.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://boardgaminghub.com/og/tictactoe.png">
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "VideoGame", "name": "Tic-Tac-Toe",
+  "description": "Noughts and crosses on a 3x3 grid, against a perfect minimax AI or a friend.",
+  "url": "https://boardgaminghub.com/tictactoe", "genre": "Puzzle",
+  "applicationCategory": "Game", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+  { "@type": "ListItem", "position": 1, "name": "Board Gaming Hub", "item": "https://boardgaminghub.com/" },
+  { "@type": "ListItem", "position": 2, "name": "Puzzles", "item": "https://boardgaminghub.com/play" },
+  { "@type": "ListItem", "position": 3, "name": "Tic-Tac-Toe", "item": "https://boardgaminghub.com/tictactoe" } ] }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "Can you always win at tic-tac-toe?",
+    "acceptedAnswer": { "@type": "Answer", "text": "No. Tic-tac-toe is a solved game and perfect play by both sides always ends in a draw. You can only win if your opponent makes a mistake, which is why the Perfect difficulty here can never be beaten." } },
+  { "@type": "Question", "name": "What is the best first move in tic-tac-toe?",
+    "acceptedAnswer": { "@type": "Answer", "text": "The centre. It sits on four of the eight winning lines, more than any other square. Corners sit on three each and edges on only two. Against imperfect opponents the corner actually sets more traps, but the centre is the safest." } },
+  { "@type": "Question", "name": "How does the unbeatable tic-tac-toe AI work?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Minimax. It searches every legal continuation to the end of the game, scores wins, draws and losses, and assumes you will always play your best reply. With only 255,168 possible games the whole tree fits comfortably in a browser, so it never needs a heuristic or a depth limit." } },
+  { "@type": "Question", "name": "How many possible tic-tac-toe games are there?",
+    "acceptedAnswer": { "@type": "Answer", "text": "255,168 distinct games, from 26,830 distinct board positions reachable in legal play. Counting only the final positions, X wins 91 ways, O wins 44 ways, and 3 are draws once symmetry is removed." } } ] }
+</script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⭕</text></svg>">
+<script>
+(function() {
+  var ua = navigator.userAgent;
+  var isPhone = /iPhone|iPad|iPod|Android/i.test(ua) || window.innerWidth < 768;
+  if (isPhone) {
+    var meta = document.querySelector('meta[name="viewport"]');
+    if (meta) {
+      var targetWidth = 520;
+      var scale = window.innerWidth / targetWidth;
+      meta.setAttribute('content', 'width=' + targetWidth + ', initial-scale=' + scale + ', maximum-scale=3.0, user-scalable=yes');
+    }
+  }
+})();
+</script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: #141a20;
+  background-image:
+    radial-gradient(ellipse at 50% -10%, #22303c 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 110%, #1b242c 0%, transparent 55%);
+  color: #d8d0c0;
+  min-height: 100vh;
+  padding: 24px 16px 60px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2.1em; letter-spacing: 10px; font-weight: normal;
+  color: #f0d89c; margin-bottom: 2px; text-indent: 10px;
+}
+.subtitle { color: #7d93a3; font-style: italic; font-size: 0.95em; margin-bottom: 20px; }
+
+.mode-selector { display: inline-flex; border-radius: 6px; overflow: hidden; border: 2px solid #4a6172; margin: 0 6px 12px; }
+.mode-btn {
+  padding: 6px 16px; font-size: 0.92em; font-family: Georgia, serif;
+  cursor: pointer; border: none; background: #1b242c; color: #7d93a3;
+  transition: background .2s, color .2s;
+}
+.mode-btn:not(:last-child) { border-right: 1px solid #4a6172; }
+.mode-btn.active { background: #33566b; color: #eaf2f7; cursor: default; }
+.mode-btn:hover:not(.active) { background: #24313b; color: #d4a860; }
+
+.config-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.config-label { font-size: .72em; letter-spacing: 2px; text-transform: uppercase; color: #6f8496; }
+.hint { max-width: 460px; margin: 6px auto 16px; font-size: .84em; font-style: italic; color: #6f8496; min-height: 2.2em; line-height: 1.4; }
+
+.status { font-size: 1.15em; color: #eaf2f7; min-height: 1.5em; margin-bottom: 4px; letter-spacing: 1px; }
+.status.win { color: #7fd6a0; }
+.status.lose { color: #e08b8b; }
+.status.draw { color: #d4a860; }
+
+.scoreboard {
+  display: flex; justify-content: center; gap: 0; margin: 0 auto 18px;
+  border: 1px solid #2c3b47; border-radius: 8px; overflow: hidden; width: max-content;
+  background: #1a232b;
+}
+.score-cell { padding: 7px 20px; min-width: 84px; }
+.score-cell + .score-cell { border-left: 1px solid #2c3b47; }
+.score-cell .who { font-size: .66em; letter-spacing: 2px; text-transform: uppercase; color: #6f8496; display: block; }
+.score-cell .n { font-size: 1.35em; color: #f0d89c; }
+
+.board {
+  display: grid; grid-template-columns: repeat(3, 96px); grid-template-rows: repeat(3, 96px);
+  gap: 8px; margin: 0 auto 18px; width: max-content;
+  padding: 12px; border-radius: 12px;
+  background: linear-gradient(160deg, #22303c, #18212a);
+  box-shadow: 0 14px 36px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
+  border: 1px solid #35485a;
+}
+
+.sq {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3.1em; line-height: 1; font-family: Georgia, serif;
+  background: #16202a; border: 1px solid #2c3b47; border-radius: 8px;
+  cursor: pointer; user-select: none;
+  transition: background .15s, transform .08s, box-shadow .15s;
+}
+.sq:hover:not(.taken) { background: #1e2c38; box-shadow: inset 0 0 0 1px #4a6172; }
+.sq:active:not(.taken) { transform: scale(.97); }
+.sq.taken { cursor: default; }
+.sq.x { color: #7ec4e8; text-shadow: 0 0 14px rgba(126,196,232,.35); }
+.sq.o { color: #e8a87e; text-shadow: 0 0 14px rgba(232,168,126,.35); }
+.sq.win { background: #2a4436; border-color: #4e8a63; }
+.sq.ghost { color: #3c4c59; }
+
+.buttons { margin-top: 4px; }
+button.action {
+  padding: 8px 22px; font-size: .95em; font-family: Georgia, serif; cursor: pointer;
+  background: #33566b; color: #eaf2f7; border: 1px solid #4a6172; border-radius: 6px;
+  transition: background .2s;
+}
+button.action:hover { background: #3f6a84; }
+
+@media (max-width: 560px) {
+  .board { grid-template-columns: repeat(3, 88px); grid-template-rows: repeat(3, 88px); }
+  h1 { font-size: 1.7em; letter-spacing: 6px; }
+}
+</style>
+</head>
+<body>
+
+<h1>TIC-TAC-TOE</h1>
+<div class="subtitle">Noughts and crosses — a solved game, and a good place to see why</div>
+
+<div class="config-row">
+  <div class="mode-selector">
+    <button class="mode-btn active" id="btn-1p" onclick="setMode(1)">1 Player</button>
+    <button class="mode-btn" id="btn-2p" onclick="setMode(2)">2 Players</button>
+  </div>
+</div>
+
+<div class="config-row" id="ai-config">
+  <span class="config-label">Opponent</span>
+  <div class="mode-selector">
+    <button class="mode-btn" id="lvl-easy" onclick="setLevel('easy')">Easy</button>
+    <button class="mode-btn active" id="lvl-medium" onclick="setLevel('medium')">Medium</button>
+    <button class="mode-btn" id="lvl-perfect" onclick="setLevel('perfect')">Perfect</button>
+  </div>
+  <span class="config-label">You are</span>
+  <div class="mode-selector">
+    <button class="mode-btn active" id="side-x" onclick="setSide('X')">X</button>
+    <button class="mode-btn" id="side-o" onclick="setSide('O')">O</button>
+  </div>
+</div>
+
+<div class="hint" id="hint"></div>
+
+<div class="status" id="status">X to move</div>
+
+<div class="scoreboard">
+  <div class="score-cell"><span class="who" id="score-label-x">You</span><span class="n" id="score-x">0</span></div>
+  <div class="score-cell"><span class="who">Draws</span><span class="n" id="score-d">0</span></div>
+  <div class="score-cell"><span class="who" id="score-label-o">AI</span><span class="n" id="score-o">0</span></div>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="buttons">
+  <button class="action" onclick="newGame()">New Game</button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var LINES = [
+    [0,1,2],[3,4,5],[6,7,8],   /* rows */
+    [0,3,6],[1,4,7],[2,5,8],   /* columns */
+    [0,4,8],[2,4,6]            /* diagonals */
+  ];
+
+  var LEVELS = {
+    easy:    { label: 'Easy',    hint: 'Plays at random. It will take a win if it stumbles into one, but it does not look for them.' },
+    medium:  { label: 'Medium',  hint: 'Takes an immediate win and blocks an immediate threat, but plans no further. It can be beaten with a double-threat fork.' },
+    perfect: { label: 'Perfect', hint: 'Full minimax to the end of the game. It cannot be beaten — the best you can do is draw, which is the point.' }
+  };
+
+  var cells;          /* 9 entries: 'X', 'O' or null */
+  var turn;           /* 'X' or 'O' */
+  var over;           /* true once won or drawn */
+  var mode = 1;       /* 1 = vs AI, 2 = local two-player */
+  var level = 'medium';
+  var human = 'X';    /* which mark you play in 1-player */
+  var ai = 'O';
+  var scores = { X: 0, O: 0, D: 0 };
+  var aiTimer = null;
+
+  /* ===== rules ===== */
+
+  function winnerOf(b) {
+    for (var i = 0; i < LINES.length; i++) {
+      var L = LINES[i];
+      if (b[L[0]] && b[L[0]] === b[L[1]] && b[L[1]] === b[L[2]]) {
+        return { mark: b[L[0]], line: L };
+      }
+    }
+    return null;
+  }
+
+  function isFull(b) {
+    for (var i = 0; i < 9; i++) if (!b[i]) return false;
+    return true;
+  }
+
+  function empties(b) {
+    var out = [];
+    for (var i = 0; i < 9; i++) if (!b[i]) out.push(i);
+    return out;
+  }
+
+  function other(m) { return m === 'X' ? 'O' : 'X'; }
+
+  /* ===== the engine =====
+     Tic-tac-toe has only 255,168 legal games, so minimax can search the whole
+     tree with no depth limit and no heuristic. Scores are offset by the number
+     of moves used, which makes it win as fast as possible and lose as slowly as
+     possible -- without that, a won position looks the same at move 5 as at
+     move 9 and the AI dawdles. */
+  function minimax(b, me, toMove, depth) {
+    var w = winnerOf(b);
+    if (w) return w.mark === me ? 10 - depth : depth - 10;
+    if (isFull(b)) return 0;
+
+    var open = empties(b);
+    var best = toMove === me ? -Infinity : Infinity;
+
+    for (var i = 0; i < open.length; i++) {
+      b[open[i]] = toMove;
+      var score = minimax(b, me, other(toMove), depth + 1);
+      b[open[i]] = null;
+      if (toMove === me) { if (score > best) best = score; }
+      else { if (score < best) best = score; }
+    }
+    return best;
+  }
+
+  function perfectMove(b, me) {
+    var open = empties(b);
+    var best = -Infinity, choices = [];
+    for (var i = 0; i < open.length; i++) {
+      b[open[i]] = me;
+      var s = minimax(b, me, other(me), 1);
+      b[open[i]] = null;
+      if (s > best) { best = s; choices = [open[i]]; }
+      else if (s === best) { choices.push(open[i]); }
+    }
+    /* Several moves are often equally perfect; varying keeps games interesting */
+    return choices[Math.floor(Math.random() * choices.length)];
+  }
+
+  /* One-ply: take a win, else block a loss, else prefer centre > corner > edge. */
+  function greedyMove(b, me) {
+    var open = empties(b), i;
+    for (i = 0; i < open.length; i++) {
+      b[open[i]] = me;
+      var win = winnerOf(b);
+      b[open[i]] = null;
+      if (win) return open[i];
+    }
+    var them = other(me);
+    for (i = 0; i < open.length; i++) {
+      b[open[i]] = them;
+      var block = winnerOf(b);
+      b[open[i]] = null;
+      if (block) return open[i];
+    }
+    var pref = [4, 0, 2, 6, 8, 1, 3, 5, 7];
+    for (i = 0; i < pref.length; i++) if (!b[pref[i]]) return pref[i];
+    return open[0];
+  }
+
+  function randomMove(b) {
+    var open = empties(b);
+    return open[Math.floor(Math.random() * open.length)];
+  }
+
+  function chooseMove(b, me) {
+    if (level === 'perfect') return perfectMove(b, me);
+    if (level === 'medium') return greedyMove(b, me);
+    return randomMove(b);
+  }
+
+  /* ===== rendering ===== */
+
+  function buildBoard() {
+    var el = document.getElementById('board');
+    el.innerHTML = '';
+    for (var i = 0; i < 9; i++) {
+      var sq = document.createElement('div');
+      sq.className = 'sq';
+      sq.dataset.i = i;
+      sq.addEventListener('click', onCellClick);
+      el.appendChild(sq);
+    }
+  }
+
+  function render() {
+    var el = document.getElementById('board');
+    var w = winnerOf(cells);
+    for (var i = 0; i < 9; i++) {
+      var sq = el.children[i];
+      var v = cells[i];
+      var cls = 'sq';
+      if (v) cls += ' taken ' + v.toLowerCase();
+      if (w && w.line.indexOf(i) !== -1) cls += ' win';
+      sq.className = cls;
+      sq.textContent = v || '';
+    }
+
+    var status = document.getElementById('status');
+    if (w) {
+      var youWon = mode === 1 && w.mark === human;
+      status.textContent = mode === 2
+        ? w.mark + ' wins'
+        : (youWon ? 'You win' : LEVELS[level].label + ' wins');
+      status.className = 'status ' + (mode === 2 ? 'win' : (youWon ? 'win' : 'lose'));
+    } else if (isFull(cells)) {
+      status.textContent = 'Draw';
+      status.className = 'status draw';
+    } else if (mode === 1 && turn === ai) {
+      status.textContent = LEVELS[level].label + ' is thinking...';
+      status.className = 'status';
+    } else {
+      status.textContent = turn + ' to move';
+      status.className = 'status';
+    }
+
+    document.getElementById('score-x').textContent = scores.X;
+    document.getElementById('score-o').textContent = scores.O;
+    document.getElementById('score-d').textContent = scores.D;
+    document.getElementById('score-label-x').textContent =
+      mode === 2 ? 'X' : (human === 'X' ? 'You' : LEVELS[level].label);
+    document.getElementById('score-label-o').textContent =
+      mode === 2 ? 'O' : (human === 'O' ? 'You' : LEVELS[level].label);
+  }
+
+  /* ===== flow ===== */
+
+  function finishIfDone() {
+    var w = winnerOf(cells);
+    if (w) {
+      over = true;
+      scores[w.mark]++;
+      return true;
+    }
+    if (isFull(cells)) {
+      over = true;
+      scores.D++;
+      return true;
+    }
+    return false;
+  }
+
+  function place(i, mark) {
+    cells[i] = mark;
+    if (!finishIfDone()) turn = other(mark);
+    render();
+    if (!over) scheduleAi();
+  }
+
+  function scheduleAi() {
+    if (mode !== 1 || over || turn !== ai) return;
+    if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; }
+    aiTimer = setTimeout(function () {
+      aiTimer = null;
+      if (mode !== 1 || over || turn !== ai) return;
+      place(chooseMove(cells.slice(), ai), ai);
+    }, 320);
+  }
+
+  function onCellClick(e) {
+    if (over) return;
+    if (mode === 1 && turn === ai) return;
+    var i = parseInt(e.currentTarget.dataset.i, 10);
+    if (cells[i]) return;
+    place(i, turn);
+  }
+
+  function newGame() {
+    if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; }
+    cells = [null, null, null, null, null, null, null, null, null];
+    turn = 'X';
+    over = false;
+    render();
+    scheduleAi();
+  }
+
+  /* ===== controls ===== */
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('btn-1p').className = m === 1 ? 'mode-btn active' : 'mode-btn';
+    document.getElementById('btn-2p').className = m === 2 ? 'mode-btn active' : 'mode-btn';
+    document.getElementById('ai-config').style.display = m === 1 ? 'flex' : 'none';
+    scores = { X: 0, O: 0, D: 0 };
+    syncHint();
+    newGame();
+  }
+
+  function setLevel(k) {
+    if (!LEVELS[k]) return;
+    level = k;
+    syncButtons();
+    syncHint();
+    render();
+  }
+
+  function setSide(mark) {
+    human = mark;
+    ai = other(mark);
+    syncButtons();
+    scores = { X: 0, O: 0, D: 0 };
+    newGame();
+  }
+
+  function syncButtons() {
+    for (var k in LEVELS) {
+      if (!LEVELS.hasOwnProperty(k)) continue;
+      document.getElementById('lvl-' + k).className = k === level ? 'mode-btn active' : 'mode-btn';
+    }
+    document.getElementById('side-x').className = human === 'X' ? 'mode-btn active' : 'mode-btn';
+    document.getElementById('side-o').className = human === 'O' ? 'mode-btn active' : 'mode-btn';
+  }
+
+  function syncHint() {
+    document.getElementById('hint').textContent = mode === 1 ? LEVELS[level].hint : '';
+  }
+
+  /* ===== init ===== */
+
+  buildBoard();
+  syncButtons();
+  syncHint();
+  newGame();
+
+  window.newGame = newGame;
+  window.setMode = setMode;
+  window.setLevel = setLevel;
+  window.setSide = setSide;
+})();
+</script>
+
+<section class="seo-content">
+  <h2>Tic-Tac-Toe</h2>
+  <p>Tic-tac-toe — noughts and crosses outside North America — is the smallest game most people ever learn, and the first one most programmers solve. Two players alternate marking squares on a 3&times;3 grid; the first to complete a row, column or diagonal wins. If the grid fills with no line, the game is a draw.</p>
+
+  <h3>How to play</h3>
+  <ul>
+    <li>X always moves first.</li>
+    <li>Click any empty square to place your mark.</li>
+    <li>Three in a row — horizontally, vertically or diagonally — wins.</li>
+    <li>Nine marks with no line is a draw, which is what perfect play produces.</li>
+  </ul>
+
+  <h3>The three opponents</h3>
+  <table class="ref-table">
+    <thead><tr><th>Level</th><th>How it decides</th><th>Can you beat it?</th></tr></thead>
+    <tbody>
+      <tr><td>Easy</td><td>Uniformly random from the empty squares.</td><td>Almost always.</td></tr>
+      <tr><td>Medium</td><td>One ply: takes an immediate win, blocks an immediate threat, otherwise prefers centre, then corners, then edges.</td><td>Yes — build a fork, a move that creates two threats at once, and it can only block one.</td></tr>
+      <tr><td>Perfect</td><td>Minimax over the entire game tree, no depth limit, no heuristic. Wins are scored higher the sooner they arrive, so it never dawdles in a won position.</td><td>No. The best result available to you is a draw.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Why perfect play is always a draw</h3>
+  <p>Tic-tac-toe is <em>solved</em>: the value of the starting position is known, and it is a draw. There are 255,168 legal games and only 26,830 reachable positions, small enough that a browser can search every one of them in a few milliseconds. That is exactly what the Perfect setting does — it is not estimating, it is reading the answer off the bottom of the tree.</p>
+  <p>The practical consequence is that against a perfect opponent your goal changes. You are not trying to win; you are trying not to lose, which means recognising forks before they are built rather than after.</p>
+
+  <h3>The strategy that actually matters: forks</h3>
+  <p>A <strong>fork</strong> is a move that creates two winning threats simultaneously. Your opponent can block one, and you take the other. Every win in tic-tac-toe between competent players comes from a fork, so the whole game reduces to creating one or preventing one.</p>
+  <table class="ref-table">
+    <thead><tr><th>Square</th><th>Winning lines through it</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Centre</td><td class="num">4</td><td>Both diagonals, the middle row and the middle column. The single strongest square.</td></tr>
+      <tr><td>Corner</td><td class="num">3</td><td>A row, a column and one diagonal. Best opening against a weak opponent — it sets more fork traps than the centre.</td></tr>
+      <tr><td>Edge</td><td class="num">2</td><td>A row and a column only. Rarely the right move outside a forced block.</td></tr>
+    </tbody>
+  </table>
+  <p>If you open in a corner and your opponent replies anywhere other than the centre, you almost always have a forced win. If you open in the centre, your opponent must reply in a corner; an edge reply loses.</p>
+
+  <h3>Frequently asked questions</h3>
+  <details>
+    <summary>Can you always win at tic-tac-toe?</summary>
+    <p>No. The game is solved and perfect play by both sides is a draw. You can only win when your opponent errs — which is why the Perfect opponent here is genuinely unbeatable, not just hard.</p>
+  </details>
+  <details>
+    <summary>What is the best first move?</summary>
+    <p>The centre is the safest: it lies on four of the eight winning lines, versus three for a corner and two for an edge. Against imperfect opponents a corner opening actually wins more often, because it creates more fork opportunities that a one-ply opponent cannot see coming.</p>
+  </details>
+  <details>
+    <summary>How does the unbeatable AI work?</summary>
+    <p>Minimax. It plays every legal continuation to the end, scores each terminal position as a win, draw or loss, and assumes you will always choose your best reply. Because the tree is tiny it needs no evaluation function and no depth cutoff — it simply knows.</p>
+  </details>
+  <details>
+    <summary>How many possible tic-tac-toe games are there?</summary>
+    <p>255,168 distinct games, reaching 26,830 distinct positions. Of the terminal positions, 91 are X wins, 44 are O wins and the rest are draws — the asymmetry is entirely the first-move advantage.</p>
+  </details>
+  <details>
+    <summary>Why is the game so much harder on a bigger board?</summary>
+    <p>It stops being solvable by brute force. Try <a href="/ultimatetictactoe">Ultimate Tic-Tac-Toe</a>, which nests nine of these grids inside a tenth and adds one rule: your move dictates which board your opponent must play in. The state space explodes and the game becomes genuinely strategic.</p>
+  </details>
+
+  <h3>Related games</h3>
+  <ul>
+    <li><a href="/ultimatetictactoe">Ultimate Tic-Tac-Toe</a> — the same rules nested nine deep, and nowhere near solved.</li>
+    <li><a href="/pentegrammai">Pente Grammai</a> — an ancient line game with capture.</li>
+    <li><a href="/othello">Othello</a> — flanking and flipping on 8&times;8.</li>
+    <li><a href="/chess">Chess</a> — where minimax needs a heuristic because the tree never ends.</li>
+  </ul>
+</section>
+
+<section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
+  <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>
+  <p style="color:#8098a8;font-size:0.9em;margin-bottom:18px;line-height:1.5;">Sign in with GitHub to share strategies, ask questions, or report a bug.</p>
+  <div class="giscus"></div>
+</section>
+<script src="https://giscus.app/client.js"
+  data-repo="mf4633/board-gaming"
+  data-repo-id="R_kgDOKyyThA"
+  data-category="Announcements"
+  data-category-id="DIC_kwDOKyyThM4C75Cz"
+  data-mapping="pathname"
+  data-strict="0"
+  data-reactions-enabled="1"
+  data-emit-metadata="0"
+  data-input-position="bottom"
+  data-theme="dark"
+  data-lang="en"
+  crossorigin="anonymous"
+  async></script>
+<script src="/nav.js" defer></script>
+</body>
+</html>

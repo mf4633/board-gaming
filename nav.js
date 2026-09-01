@@ -18,6 +18,7 @@
     { slug:'minesweeper', url:'/minesweeper', name:'Minesweeper', cat:'puzzles', desc:'Find the mines', keys:['mines','grid','flag','classic'] },
     { slug:'abacus', url:'/abacus', name:'Abacus', cat:'puzzles', desc:'Soroban calculator with Arabic & Roman numerals', keys:['abacus','soroban','calculator','math','roman'] },
     { slug:'lovedwords', url:'/lovedwords/', name:'LovedWords', cat:'puzzles', desc:'First-words flashcards with your photos & voice', keys:['flashcards','toddler','first words','learning','baby','photos'] },
+    { slug:'tictactoe', url:'/tictactoe', name:'Tic-Tac-Toe', cat:'puzzles', desc:'Noughts and crosses with a genuinely unbeatable AI', keys:['tic tac toe','tictactoe','noughts and crosses','xo','minimax','unbeatable'] },
     { slug:'agora', url:'/agora', name:'Agora', cat:'board', desc:'The Mediterranean Trade', keys:['ancient','greek','trade','strategy','original'] },
     { slug:'aresia', url:'/aresia', name:'Aresia', cat:'board', desc:'Colonize the Red Frontier', keys:['mars','colony','strategy','original'] },
     { slug:'backgammon', url:'/backgammon', name:'Backgammon', cat:'board', desc:'Classic dice & race', keys:['dice','race','classic'] },
@@ -31,6 +32,7 @@
     { slug:'senet', url:'/senet', name:'Senet', cat:'board', desc:'Ancient Egyptian racing game', keys:['egyptian','ancient','classic','race'] },
     { slug:'tidelands', url:'/tidelands', name:'Tidelands', cat:'board', desc:'Bronze-age maritime trade', keys:['ancient','bronze','sea','original','trade'] },
     { slug:'ur', url:'/ur', name:'Ur', cat:'board', desc:'The Royal Game of Ur', keys:['mesopotamian','royal','ancient','race','classic'] },
+    { slug:'ultimatetictactoe', url:'/ultimatetictactoe', name:'Ultimate Tic-Tac-Toe', cat:'board', desc:'Nine nested boards; your move picks your opponent’s board', keys:['ultimate tic tac toe','super tic tac toe','meta tic tac toe','nested','strategy'] },
     { slug:'apoapsis', url:'/apoapsis', name:'Apoapsis', cat:'sims', desc:'3D rocket flight sim', keys:['rocket','space','3d','simulation','orbital'] },
     { slug:'biosphereblue', url:'/biosphereblue', name:'Biosphere Blue', cat:'sims', desc:'Planet-scale geosim', keys:['planet','climate','geosim','simulation','earth'] },
     { slug:'bonnevillespillwayoperator', url:'/bonnevillespillwayoperator', name:'Bonneville Spillway', cat:'sims', desc:'Columbia River dam operator', keys:['dam','spillway','river','engineering','simulation','hydraulic'] },
@@ -40,6 +42,7 @@
     { slug:'floodline', url:'/floodline', name:'Floodline', cat:'sims', desc:'California flood defense', keys:['flood','defense','engineering','simulation','water'] },
     { slug:'metropolis2k', url:'/metropolis2k', name:'Metropolis 2K', cat:'sims', desc:'City-building sim with districts & bonds', keys:['city','building','simulation','tycoon','urban'] },
     { slug:'tower', url:'/tower', name:'Tower', cat:'sims', desc:'High-rise operations (SKYSTACK)', keys:['tower','building','simulation','tycoon','skyscraper'] },
+    { slug:'hellcat', url:'/hellcat', name:'Hellcat', cat:'sims', desc:'WWII carrier flight sim with real aerodynamics', keys:['flight simulator','hellcat','f6f','wwii','aircraft carrier','aviation','plane','flying'] },
     // END GAMES
   ];
 

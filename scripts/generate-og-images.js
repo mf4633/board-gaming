@@ -39,6 +39,9 @@ const CARDS = [
   { file: 'senet', title: 'SENET', sub: 'Ancient Egyptian racing game', accent: '#d4a574', bg: '#161008' },
   { file: 'tidelands', title: 'TIDELANDS', sub: 'Bronze-age maritime trade', accent: '#70c0b0', bg: '#08141a' },
   { file: 'ur', title: 'ROYAL GAME OF UR', sub: 'The 4,500-year-old race game', accent: '#c0a0d0', bg: '#120c18' },
+  { file: 'tictactoe', title: 'TIC-TAC-TOE', sub: 'Three levels — the last one is unbeatable', accent: '#7ec4e8', bg: '#141a20' },
+  { file: 'ultimatetictactoe', title: 'ULTIMATE TIC-TAC-TOE', sub: 'Nine boards inside a tenth', accent: '#d4a860', bg: '#141a20' },
+  { file: 'hellcat', title: 'HELLCAT', sub: 'WWII carrier flight sim — real aerodynamics', accent: '#8fe6b0', bg: '#0a1018' },
 ];
 
 function xmlEsc(s) {

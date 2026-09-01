@@ -680,13 +680,123 @@
   @media (min-width: 720px) {
     .picker .pick { aspect-ratio: 1.6; }
   }
-</style>
 
-<meta property="og:image" content="https://boardgaminghub.com/og/lovedwords.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://boardgaminghub.com/og/lovedwords.png">
+  /* ==========================================================
+     Review screen (language decks)
+     ========================================================== */
+  #review-screen {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    padding: calc(env(safe-area-inset-top) + 14px) 16px
+             calc(env(safe-area-inset-bottom) + 16px);
+    gap: 12px;
+  }
+  #review-screen.hidden { display: none; }
+  #review-pill {
+    align-self: center;
+    background: var(--surface); color: var(--ink-soft);
+    padding: 6px 16px; border-radius: 999px;
+    font-size: 13px; font-weight: 700;
+    box-shadow: var(--shadow-sm);
+  }
+  #review-area { flex: 1; display: flex; align-items: center; justify-content: center; }
+
+  .rcard {
+    width: 100%; max-width: 460px; min-height: 46vh;
+    background: var(--surface); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 14px; padding: 28px 22px; text-align: center;
+    cursor: pointer;
+    animation: cardIn var(--t-spring);
+  }
+  @keyframes cardIn {
+    from { transform: scale(.94) translateY(12px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .rcard .r-emoji { font-size: 72px; line-height: 1; }
+  .rcard .r-photo {
+    width: 140px; height: 140px; border-radius: 24px;
+    background-size: cover; background-position: center;
+  }
+  .rcard .r-term {
+    font-size: 34px; font-weight: 800; letter-spacing: -0.02em;
+    color: var(--ink); word-break: break-word;
+  }
+  .rcard .r-hint { font-size: 13px; color: var(--ink-faint); font-weight: 600; }
+  .rcard .r-divider { width: 48px; height: 2px; background: var(--surface-2); border-radius: 2px; }
+  .rcard .r-meaning {
+    font-size: 24px; font-weight: 700; color: var(--accent);
+    word-break: break-word;
+  }
+  .rcard .r-speak {
+    margin-top: 2px; font-size: 13px; font-weight: 700;
+    color: var(--ink-soft); background: var(--surface-2);
+    padding: 8px 16px; border-radius: 999px;
+  }
+
+  #review-grades { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  #review-grades.hidden { display: none; }
+  #review-grades button {
+    padding: 14px 4px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 800;
+    background: var(--surface); color: var(--ink);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--t-fast), background var(--t-fast);
+  }
+  #review-grades button:active { transform: scale(0.94); }
+  #review-grades button[data-g="again"] { color: var(--warn); }
+  #review-grades button[data-g="easy"]  { color: var(--good); }
+  #review-grades button .iv {
+    display: block; font-size: 11px; font-weight: 600;
+    color: var(--ink-faint); margin-top: 3px;
+  }
+
+  .review-empty {
+    text-align: center; color: var(--ink-soft);
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 20px;
+  }
+  .review-empty .big { font-size: 56px; }
+  .review-empty h2 { margin: 0; font-size: 22px; color: var(--ink); }
+  .review-empty p { margin: 0; font-size: 15px; max-width: 300px; }
+
+  /* ==========================================================
+     Language picker
+     ========================================================== */
+  .lang-select {
+    appearance: none; -webkit-appearance: none;
+    background: var(--surface-2);
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 15px; font-weight: 600;
+    color: var(--ink);
+    min-width: 150px; max-width: 60%;
+    cursor: pointer;
+    transition: border-color var(--t-fast), background var(--t-fast);
+  }
+  .lang-select:focus-visible { outline: none; border-color: var(--accent); }
+  .lang-select option { background: var(--surface); color: var(--ink); }
+
+  /* ==========================================================
+     RTL — Arabic, Urdu, Hebrew, Farsi
+     The deck itself stays LTR-swipe (a photo deck has no reading
+     order), but chrome, text and the arrows mirror.
+     ========================================================== */
+  [dir="rtl"] .nav-arrow.left  { left: auto; right: 10px; }
+  [dir="rtl"] .nav-arrow.right { right: auto; left: 10px; }
+  [dir="rtl"] .nav-arrow.left::before  { content: "›"; }
+  [dir="rtl"] .nav-arrow.right::before { content: "‹"; }
+  [dir="rtl"] .nav-arrow.left, [dir="rtl"] .nav-arrow.right { font-size: 0; }
+  [dir="rtl"] .nav-arrow::before { font-size: 34px; line-height: 1; }
+  [dir="rtl"] #gate-btn { right: auto; left: 14px; }
+  [dir="rtl"] .closex   { right: auto; left: 14px; }
+  [dir="rtl"] .setting-label, [dir="rtl"] .modal-head,
+  [dir="rtl"] .onboard-page { text-align: right; }
+  [dir="rtl"] .onboard-page { align-items: center; text-align: center; }
+</style>
 </head>
 <body>
 
@@ -696,7 +806,7 @@
 <div id="splash">
   <img src="icons/icon-192.png" alt="" />
   <div class="name">LovedWords</div>
-  <div class="tag">Your voice. Their first words.</div>
+  <div class="tag" data-i18n="splash.tag">Your voice. Their first words.</div>
 </div>
 
 <!-- ============================================================ -->
@@ -706,22 +816,22 @@
   <div class="onboard-pages" id="onboard-pages">
     <div class="onboard-page">
       <div class="onboard-art">💛</div>
-      <h2>Welcome to LovedWords</h2>
-      <p>Personal flashcards for your little one — with the faces and voices they love.</p>
+      <h2 data-i18n="onb1.title">Welcome to LovedWords</h2>
+      <p data-i18n="onb1.body">Personal flashcards for your little one — with the faces and voices they love.</p>
     </div>
     <div class="onboard-page">
       <div class="onboard-art">📸</div>
-      <h2>Snap, say, swipe</h2>
-      <p>Take a photo of grandma. Record yourself saying her name. Hand the phone to your child and watch them swipe through people they recognize.</p>
+      <h2 data-i18n="onb2.title">Snap, say, swipe</h2>
+      <p data-i18n="onb2.body">Take a photo of grandma. Record yourself saying her name. Hand the phone to your child and watch them swipe through people they recognize.</p>
     </div>
     <div class="onboard-page">
       <div class="onboard-art">🔒</div>
-      <h2>Private &amp; ad-free</h2>
-      <p>Everything stays on this device. No accounts. No tracking. No ads. Free, forever.</p>
+      <h2 data-i18n="onb3.title">Private &amp; ad-free</h2>
+      <p data-i18n="onb3.body">Everything stays on this device. No accounts. No tracking. No ads. Free, forever.</p>
     </div>
   </div>
   <div class="onboard-foot">
-    <button class="btn secondary" id="onboard-skip" style="width: auto; padding: 10px 18px; font-size: 13px;">Skip</button>
+    <button class="btn secondary" id="onboard-skip" data-i18n="onb.skip" style="width: auto; padding: 10px 18px; font-size: 13px;">Skip</button>
     <div class="onboard-dots" id="onboard-dots">
       <div class="onboard-dot active"></div>
       <div class="onboard-dot"></div>
@@ -742,6 +852,16 @@
   </div>
   <div id="deck-progress"></div>
 </div>
+
+<!-- ============================================================ -->
+<!-- Review screen (language decks)                                -->
+<!-- ============================================================ -->
+<div id="review-screen" class="hidden">
+  <div id="review-pill"></div>
+  <div id="review-area"></div>
+  <div id="review-grades"></div>
+</div>
+
 <button id="gate-btn" aria-label="Parent settings">⚙</button>
 
 <!-- ============================================================ -->
@@ -750,8 +870,8 @@
 <div id="gate-scrim" class="scrim">
   <div class="modal">
     <div class="modal-head">
-      <h2>Quick check</h2>
-      <p>To keep little hands out of settings.</p>
+      <h2 data-i18n="gate.title">Quick check</h2>
+      <p data-i18n="gate.body">To keep little hands out of settings.</p>
     </div>
     <div class="modal-body">
       <div class="gate-math" id="gate-math"></div>
@@ -771,49 +891,56 @@
       <button class="closex" id="admin-close">✕</button>
     </div>
     <div class="tabs" role="tablist">
-      <button class="tab active" data-tab="cards">Cards</button>
-      <button class="tab" data-tab="decks">Decks</button>
-      <button class="tab" data-tab="settings">Settings</button>
+      <button class="tab active" data-tab="cards" data-i18n="tab.cards">Cards</button>
+      <button class="tab" data-tab="decks" data-i18n="tab.decks">Decks</button>
+      <button class="tab" data-tab="settings" data-i18n="tab.settings">Settings</button>
     </div>
     <div class="tab-body" id="tab-cards">
       <div id="card-list"></div>
-      <button class="btn accent" id="add-card-btn" style="margin-top: 14px;">+ Add card</button>
+      <button class="btn accent" id="add-card-btn" data-i18n="btn.addCard" style="margin-top: 14px;">+ Add card</button>
     </div>
     <div class="tab-body" id="tab-decks" hidden>
       <div id="deck-list"></div>
-      <button class="btn accent" id="add-deck-btn" style="margin-top: 14px;">+ New deck</button>
+      <button class="btn accent" id="add-deck-btn" data-i18n="btn.newDeck" style="margin-top: 14px;">+ New deck</button>
     </div>
     <div class="tab-body" id="tab-settings" hidden>
       <div class="setting-row">
         <div class="setting-label">
-          <div class="name">Theme</div>
-          <div class="desc">Choose a look. Night theme is easy on eyes for bedtime.</div>
+          <div class="name" data-i18n="set.language">Language</div>
+          <div class="desc" data-i18n="set.languageDesc">Changes the app's words. Your own cards and recordings are never touched.</div>
+        </div>
+        <select id="language-select" class="lang-select"></select>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name" data-i18n="set.theme">Theme</div>
+          <div class="desc" data-i18n="set.themeDesc">Choose a look. Night theme is easy on eyes for bedtime.</div>
         </div>
         <div class="swatches" id="theme-swatches"></div>
       </div>
       <div class="setting-row">
         <div class="setting-label">
-          <div class="name">Auto-play voice</div>
-          <div class="desc">Play voice automatically when a card appears.</div>
+          <div class="name" data-i18n="set.autoplay">Auto-play voice</div>
+          <div class="desc" data-i18n="set.autoplayDesc">Play voice automatically when a card appears.</div>
         </div>
         <div class="toggle" id="autoplay-toggle"></div>
       </div>
       <div class="setting-row">
         <div class="setting-label">
-          <div class="name">Haptic feedback</div>
-          <div class="desc">Subtle vibrations on tap and swipe.</div>
+          <div class="name" data-i18n="set.haptics">Haptic feedback</div>
+          <div class="desc" data-i18n="set.hapticsDesc">Subtle vibrations on tap and swipe.</div>
         </div>
         <div class="toggle" id="haptics-toggle"></div>
       </div>
       <div class="setting-row">
         <div class="setting-label">
-          <div class="name">Parent gate difficulty</div>
-          <div class="desc">Bigger numbers keep older kids out too.</div>
+          <div class="name" data-i18n="set.gate">Parent gate difficulty</div>
+          <div class="desc" data-i18n="set.gateDesc">Bigger numbers keep older kids out too.</div>
         </div>
         <div class="segm" id="gate-difficulty">
-          <button data-v="easy">Easy</button>
-          <button data-v="medium" class="active">Medium</button>
-          <button data-v="hard">Hard</button>
+          <button data-v="easy" data-i18n="set.easy">Easy</button>
+          <button data-v="medium" class="active" data-i18n="set.medium">Medium</button>
+          <button data-v="hard" data-i18n="set.hard">Hard</button>
         </div>
       </div>
       <div class="setting-row">
@@ -864,6 +991,8 @@
       <input type="file" id="file-library" accept="image/*" />
 
       <input type="text" id="card-name" placeholder="What is this? (e.g. Grandma)" maxlength="40" />
+      <!-- language decks only; shown by paintEditUi() -->
+      <input type="text" id="card-meaning" data-i18n-ph="card.meaningPh" placeholder="Meaning / translation" maxlength="60" style="display:none;" />
 
       <div class="recorder">
         <div class="rec-btn" id="rec-btn">●</div>
@@ -900,6 +1029,30 @@
           <div class="name">Color</div>
         </div>
         <div class="swatches" id="deck-color-swatches"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          <div class="name" data-i18n="set.deckMode">Deck type</div>
+        </div>
+        <div class="segm" id="deck-mode">
+          <button data-v="firstWords" data-i18n="mode.firstWords">First words</button>
+          <button data-v="language" data-i18n="mode.language">Language learning</button>
+        </div>
+      </div>
+      <div id="deck-lang-rows" style="display:none;">
+        <div class="setting-row">
+          <div class="setting-label">
+            <div class="name" data-i18n="deck.termLang">Word language</div>
+          </div>
+          <select id="deck-term-lang" class="lang-select"></select>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <div class="name" data-i18n="deck.transLang">Meaning language</div>
+          </div>
+          <select id="deck-trans-lang" class="lang-select"></select>
+        </div>
+        <button class="btn secondary" id="deck-seed-btn" data-i18n="btn.seed" style="margin-top:10px;">Add 20 starter words</button>
       </div>
     </div>
     <div class="modal-foot">
@@ -963,17 +1116,599 @@ const APP = {
 };
 
 /* ============================================================
+ * i18n
+ * ------------------------------------------------------------
+ * Every user-facing string lives here. The DOM carries
+ * data-i18n / data-i18n-ph attributes; applyLocale() walks them.
+ *
+ * _name  = endonym, shown in the language picker
+ * _tts   = BCP-47 tag handed to SpeechSynthesis voice matching
+ * _rtl   = right-to-left script
+ * starters = the 8 seed words, translated. These are the
+ *   product for a first-words deck, so they are hand-set per
+ *   language rather than machine-mapped from English.
+ * ============================================================ */
+const I18N = {
+  en: {
+    _name: "English", _tts: "en-US",
+    "splash.tag": "Your voice. Their first words.",
+    "onb1.title": "Welcome to LovedWords",
+    "onb1.body": "Personal flashcards for your little one — with the faces and voices they love.",
+    "onb2.title": "Snap, say, swipe",
+    "onb2.body": "Take a photo of grandma. Record yourself saying her name. Hand the phone to your child and watch them swipe through people they recognize.",
+    "onb3.title": "Private & ad-free",
+    "onb3.body": "Everything stays on this device. No accounts. No tracking. No ads. Free, forever.",
+    "onb.skip": "Skip", "onb.next": "Next", "onb.start": "Start",
+    "gate.title": "Quick check", "gate.body": "To keep little hands out of settings.",
+    "tab.cards": "Cards", "tab.decks": "Decks", "tab.settings": "Settings",
+    "btn.addCard": "+ Add card", "btn.newDeck": "+ New deck",
+    "set.theme": "Theme", "set.themeDesc": "Choose a look. Night theme is easy on eyes for bedtime.",
+    "set.autoplay": "Auto-play voice", "set.autoplayDesc": "Play voice automatically when a card appears.",
+    "set.haptics": "Haptic feedback", "set.hapticsDesc": "Subtle vibrations on tap and swipe.",
+    "set.gate": "Parent gate difficulty", "set.gateDesc": "Bigger numbers keep older kids out too.",
+    "set.easy": "Easy", "set.medium": "Medium", "set.hard": "Hard",
+    "set.language": "Language", "set.languageDesc": "Changes the app's words. Your own cards and recordings are never touched.",
+    "welcome.body": "Add your first card. A photo of grandma, your dog, or anyone your little one loves — and your voice saying their name.",
+    "welcome.add": "+ Add a card",
+    "toast.bootFail": "Could not start. Refresh?",
+    starters: ["Mama", "Dada", "Baby", "Dog", "Cat", "Ball", "Bottle", "Apple"],
+  },
+  es: {
+    _name: "Español", _tts: "es-ES",
+    "splash.tag": "Tu voz. Sus primeras palabras.",
+    "onb1.title": "Bienvenido a LovedWords",
+    "onb1.body": "Tarjetas personales para tu pequeño: con las caras y las voces que quiere.",
+    "onb2.title": "Foto, voz, desliza",
+    "onb2.body": "Haz una foto de la abuela. Graba tu voz diciendo su nombre. Dale el teléfono a tu hijo y míralo pasar caras que reconoce.",
+    "onb3.title": "Privado y sin anuncios",
+    "onb3.body": "Todo se queda en este dispositivo. Sin cuentas. Sin rastreo. Sin anuncios. Gratis, para siempre.",
+    "onb.skip": "Saltar", "onb.next": "Siguiente", "onb.start": "Empezar",
+    "gate.title": "Comprobación rápida", "gate.body": "Para mantener las manitas fuera de los ajustes.",
+    "tab.cards": "Tarjetas", "tab.decks": "Mazos", "tab.settings": "Ajustes",
+    "btn.addCard": "+ Añadir tarjeta", "btn.newDeck": "+ Nuevo mazo",
+    "set.theme": "Tema", "set.themeDesc": "Elige un aspecto. El tema noche descansa la vista antes de dormir.",
+    "set.autoplay": "Voz automática", "set.autoplayDesc": "Reproduce la voz al aparecer la tarjeta.",
+    "set.haptics": "Vibración", "set.hapticsDesc": "Vibraciones suaves al tocar y deslizar.",
+    "set.gate": "Dificultad del control parental", "set.gateDesc": "Números más grandes también frenan a los mayores.",
+    "set.easy": "Fácil", "set.medium": "Media", "set.hard": "Difícil",
+    "set.language": "Idioma", "set.languageDesc": "Cambia las palabras de la app. Tus tarjetas y grabaciones no se tocan.",
+    "welcome.body": "Añade tu primera tarjeta. Una foto de la abuela, del perro o de quien tu pequeño quiera, y tu voz diciendo su nombre.",
+    "welcome.add": "+ Añadir una tarjeta",
+    "toast.bootFail": "No se pudo iniciar. ¿Recargar?",
+    starters: ["Mamá", "Papá", "Bebé", "Perro", "Gato", "Pelota", "Biberón", "Manzana"],
+  },
+  pt: {
+    _name: "Português", _tts: "pt-BR",
+    "splash.tag": "Sua voz. As primeiras palavras dele.",
+    "onb1.title": "Bem-vindo ao LovedWords",
+    "onb1.body": "Cartões personalizados para o seu pequeno — com os rostos e as vozes que ele ama.",
+    "onb2.title": "Foto, voz, deslize",
+    "onb2.body": "Tire uma foto da vovó. Grave você dizendo o nome dela. Entregue o telefone e veja seu filho passar por pessoas que reconhece.",
+    "onb3.title": "Privado e sem anúncios",
+    "onb3.body": "Tudo fica neste aparelho. Sem contas. Sem rastreamento. Sem anúncios. Grátis, para sempre.",
+    "onb.skip": "Pular", "onb.next": "Próximo", "onb.start": "Começar",
+    "gate.title": "Verificação rápida", "gate.body": "Para manter mãozinhas longe dos ajustes.",
+    "tab.cards": "Cartões", "tab.decks": "Baralhos", "tab.settings": "Ajustes",
+    "btn.addCard": "+ Adicionar cartão", "btn.newDeck": "+ Novo baralho",
+    "set.theme": "Tema", "set.themeDesc": "Escolha um visual. O tema noite descansa os olhos na hora de dormir.",
+    "set.autoplay": "Voz automática", "set.autoplayDesc": "Toca a voz quando o cartão aparece.",
+    "set.haptics": "Vibração", "set.hapticsDesc": "Vibrações suaves ao tocar e deslizar.",
+    "set.gate": "Dificuldade do controle parental", "set.gateDesc": "Números maiores seguram até os mais velhos.",
+    "set.easy": "Fácil", "set.medium": "Média", "set.hard": "Difícil",
+    "set.language": "Idioma", "set.languageDesc": "Muda as palavras do app. Seus cartões e gravações não são alterados.",
+    "welcome.body": "Adicione seu primeiro cartão. Uma foto da vovó, do cachorro ou de quem seu pequeno ama — e sua voz dizendo o nome.",
+    "welcome.add": "+ Adicionar um cartão",
+    "toast.bootFail": "Não foi possível iniciar. Recarregar?",
+    starters: ["Mamãe", "Papai", "Bebê", "Cachorro", "Gato", "Bola", "Mamadeira", "Maçã"],
+  },
+  fr: {
+    _name: "Français", _tts: "fr-FR",
+    "splash.tag": "Ta voix. Ses premiers mots.",
+    "onb1.title": "Bienvenue sur LovedWords",
+    "onb1.body": "Des cartes personnelles pour votre tout-petit — avec les visages et les voix qu'il aime.",
+    "onb2.title": "Photo, voix, glisse",
+    "onb2.body": "Prenez une photo de mamie. Enregistrez-vous en disant son nom. Donnez le téléphone à votre enfant et regardez-le faire défiler des visages qu'il reconnaît.",
+    "onb3.title": "Privé et sans publicité",
+    "onb3.body": "Tout reste sur cet appareil. Aucun compte. Aucun suivi. Aucune publicité. Gratuit, pour toujours.",
+    "onb.skip": "Passer", "onb.next": "Suivant", "onb.start": "Commencer",
+    "gate.title": "Petite vérification", "gate.body": "Pour garder les petites mains hors des réglages.",
+    "tab.cards": "Cartes", "tab.decks": "Paquets", "tab.settings": "Réglages",
+    "btn.addCard": "+ Ajouter une carte", "btn.newDeck": "+ Nouveau paquet",
+    "set.theme": "Thème", "set.themeDesc": "Choisissez une ambiance. Le thème nuit repose les yeux au coucher.",
+    "set.autoplay": "Voix automatique", "set.autoplayDesc": "Joue la voix dès qu'une carte apparaît.",
+    "set.haptics": "Retour haptique", "set.hapticsDesc": "Vibrations légères au toucher et au glissement.",
+    "set.gate": "Difficulté du contrôle parental", "set.gateDesc": "Des nombres plus grands arrêtent aussi les plus grands.",
+    "set.easy": "Facile", "set.medium": "Moyen", "set.hard": "Difficile",
+    "set.language": "Langue", "set.languageDesc": "Change les mots de l'application. Vos cartes et enregistrements ne sont jamais modifiés.",
+    "welcome.body": "Ajoutez votre première carte. Une photo de mamie, du chien, ou de qui votre enfant aime — et votre voix qui dit son nom.",
+    "welcome.add": "+ Ajouter une carte",
+    "toast.bootFail": "Démarrage impossible. Recharger ?",
+    starters: ["Maman", "Papa", "Bébé", "Chien", "Chat", "Ballon", "Biberon", "Pomme"],
+  },
+  de: {
+    _name: "Deutsch", _tts: "de-DE",
+    "splash.tag": "Deine Stimme. Seine ersten Worte.",
+    "onb1.title": "Willkommen bei LovedWords",
+    "onb1.body": "Persönliche Lernkarten für dein Kind — mit den Gesichtern und Stimmen, die es liebt.",
+    "onb2.title": "Foto, Stimme, Wischen",
+    "onb2.body": "Mach ein Foto von Oma. Nimm dich auf, wie du ihren Namen sagst. Gib dem Kind das Handy und sieh zu, wie es durch bekannte Gesichter wischt.",
+    "onb3.title": "Privat & werbefrei",
+    "onb3.body": "Alles bleibt auf diesem Gerät. Keine Konten. Kein Tracking. Keine Werbung. Für immer kostenlos.",
+    "onb.skip": "Überspringen", "onb.next": "Weiter", "onb.start": "Los geht's",
+    "gate.title": "Kurze Prüfung", "gate.body": "Damit kleine Hände nicht in die Einstellungen kommen.",
+    "tab.cards": "Karten", "tab.decks": "Stapel", "tab.settings": "Einstellungen",
+    "btn.addCard": "+ Karte hinzufügen", "btn.newDeck": "+ Neuer Stapel",
+    "set.theme": "Design", "set.themeDesc": "Wähle einen Look. Das Nachtdesign schont die Augen vor dem Schlafen.",
+    "set.autoplay": "Stimme automatisch", "set.autoplayDesc": "Spielt die Stimme ab, sobald eine Karte erscheint.",
+    "set.haptics": "Vibration", "set.hapticsDesc": "Sanftes Vibrieren beim Tippen und Wischen.",
+    "set.gate": "Schwierigkeit der Elternsperre", "set.gateDesc": "Größere Zahlen halten auch ältere Kinder fern.",
+    "set.easy": "Leicht", "set.medium": "Mittel", "set.hard": "Schwer",
+    "set.language": "Sprache", "set.languageDesc": "Ändert die Wörter der App. Deine Karten und Aufnahmen bleiben unberührt.",
+    "welcome.body": "Füge deine erste Karte hinzu. Ein Foto von Oma, vom Hund oder von wem dein Kind liebt — und deine Stimme, die den Namen sagt.",
+    "welcome.add": "+ Karte hinzufügen",
+    "toast.bootFail": "Start fehlgeschlagen. Neu laden?",
+    starters: ["Mama", "Papa", "Baby", "Hund", "Katze", "Ball", "Fläschchen", "Apfel"],
+  },
+  it: {
+    _name: "Italiano", _tts: "it-IT",
+    "splash.tag": "La tua voce. Le sue prime parole.",
+    "onb1.title": "Benvenuto in LovedWords",
+    "onb1.body": "Schede personali per il tuo piccolo — con i volti e le voci che ama.",
+    "onb2.title": "Foto, voce, scorri",
+    "onb2.body": "Scatta una foto alla nonna. Registra la tua voce che dice il suo nome. Dai il telefono al tuo bambino e guardalo scorrere volti che riconosce.",
+    "onb3.title": "Privato e senza pubblicità",
+    "onb3.body": "Tutto resta su questo dispositivo. Nessun account. Nessun tracciamento. Nessuna pubblicità. Gratis, per sempre.",
+    "onb.skip": "Salta", "onb.next": "Avanti", "onb.start": "Inizia",
+    "gate.title": "Controllo rapido", "gate.body": "Per tenere le manine fuori dalle impostazioni.",
+    "tab.cards": "Schede", "tab.decks": "Mazzi", "tab.settings": "Impostazioni",
+    "btn.addCard": "+ Aggiungi scheda", "btn.newDeck": "+ Nuovo mazzo",
+    "set.theme": "Tema", "set.themeDesc": "Scegli un aspetto. Il tema notte riposa gli occhi prima di dormire.",
+    "set.autoplay": "Voce automatica", "set.autoplayDesc": "Riproduce la voce quando appare la scheda.",
+    "set.haptics": "Vibrazione", "set.hapticsDesc": "Vibrazioni leggere al tocco e allo scorrimento.",
+    "set.gate": "Difficoltà del blocco genitori", "set.gateDesc": "Numeri più grandi fermano anche i più grandicelli.",
+    "set.easy": "Facile", "set.medium": "Media", "set.hard": "Difficile",
+    "set.language": "Lingua", "set.languageDesc": "Cambia le parole dell'app. Le tue schede e registrazioni non vengono toccate.",
+    "welcome.body": "Aggiungi la tua prima scheda. Una foto della nonna, del cane o di chi il tuo piccolo ama — e la tua voce che ne dice il nome.",
+    "welcome.add": "+ Aggiungi una scheda",
+    "toast.bootFail": "Avvio non riuscito. Ricaricare?",
+    starters: ["Mamma", "Papà", "Bimbo", "Cane", "Gatto", "Palla", "Biberon", "Mela"],
+  },
+  hi: {
+    _name: "हिन्दी", _tts: "hi-IN",
+    "splash.tag": "आपकी आवाज़। उनके पहले शब्द।",
+    "onb1.title": "LovedWords में आपका स्वागत है",
+    "onb1.body": "आपके नन्हे के लिए निजी फ़्लैशकार्ड — उन चेहरों और आवाज़ों के साथ जिन्हें वह प्यार करता है।",
+    "onb2.title": "फ़ोटो, आवाज़, स्वाइप",
+    "onb2.body": "दादी की फ़ोटो लें। उनका नाम बोलते हुए अपनी आवाज़ रिकॉर्ड करें। फ़ोन बच्चे को दें और देखें कि वह जाने-पहचाने चेहरों को स्वाइप करता है।",
+    "onb3.title": "निजी और विज्ञापन-मुक्त",
+    "onb3.body": "सब कुछ इसी डिवाइस पर रहता है। कोई खाता नहीं। कोई ट्रैकिंग नहीं। कोई विज्ञापन नहीं। हमेशा के लिए मुफ़्त।",
+    "onb.skip": "छोड़ें", "onb.next": "आगे", "onb.start": "शुरू करें",
+    "gate.title": "एक छोटी जाँच", "gate.body": "ताकि नन्हे हाथ सेटिंग्स तक न पहुँचें।",
+    "tab.cards": "कार्ड", "tab.decks": "सेट", "tab.settings": "सेटिंग्स",
+    "btn.addCard": "+ कार्ड जोड़ें", "btn.newDeck": "+ नया सेट",
+    "set.theme": "थीम", "set.themeDesc": "एक रूप चुनें। रात वाली थीम सोने से पहले आँखों के लिए आरामदेह है।",
+    "set.autoplay": "आवाज़ अपने आप", "set.autoplayDesc": "कार्ड आते ही आवाज़ चलाएँ।",
+    "set.haptics": "कंपन", "set.hapticsDesc": "छूने और स्वाइप करने पर हल्का कंपन।",
+    "set.gate": "अभिभावक लॉक की कठिनाई", "set.gateDesc": "बड़े अंक बड़े बच्चों को भी रोकते हैं।",
+    "set.easy": "आसान", "set.medium": "मध्यम", "set.hard": "कठिन",
+    "set.language": "भाषा", "set.languageDesc": "ऐप के शब्द बदलता है। आपके कार्ड और रिकॉर्डिंग कभी नहीं बदलते।",
+    "welcome.body": "अपना पहला कार्ड जोड़ें। दादी, कुत्ते या किसी अपने की फ़ोटो — और उनका नाम बोलती आपकी आवाज़।",
+    "welcome.add": "+ एक कार्ड जोड़ें",
+    "toast.bootFail": "शुरू नहीं हो सका। फिर से लोड करें?",
+    starters: ["माँ", "पापा", "शिशु", "कुत्ता", "बिल्ली", "गेंद", "बोतल", "सेब"],
+  },
+  ar: {
+    _name: "العربية", _tts: "ar-SA", _rtl: true,
+    "splash.tag": "صوتك. كلماتهم الأولى.",
+    "onb1.title": "مرحبًا بك في LovedWords",
+    "onb1.body": "بطاقات تعليمية خاصة لصغيرك — بالوجوه والأصوات التي يحبها.",
+    "onb2.title": "صوّر، سجّل، مرّر",
+    "onb2.body": "التقط صورة للجدة. سجّل صوتك وأنت تنطق اسمها. أعطِ الهاتف لطفلك وشاهده يمرّر بين وجوه يعرفها.",
+    "onb3.title": "خصوصية وبلا إعلانات",
+    "onb3.body": "كل شيء يبقى على هذا الجهاز. بلا حسابات. بلا تتبّع. بلا إعلانات. مجاني للأبد.",
+    "onb.skip": "تخطٍّ", "onb.next": "التالي", "onb.start": "ابدأ",
+    "gate.title": "تحقّق سريع", "gate.body": "لإبقاء الأيدي الصغيرة بعيدة عن الإعدادات.",
+    "tab.cards": "البطاقات", "tab.decks": "المجموعات", "tab.settings": "الإعدادات",
+    "btn.addCard": "+ إضافة بطاقة", "btn.newDeck": "+ مجموعة جديدة",
+    "set.theme": "المظهر", "set.themeDesc": "اختر شكلًا. المظهر الليلي مريح للعين قبل النوم.",
+    "set.autoplay": "تشغيل الصوت تلقائيًا", "set.autoplayDesc": "يشغّل الصوت عند ظهور البطاقة.",
+    "set.haptics": "الاهتزاز", "set.hapticsDesc": "اهتزاز خفيف عند اللمس والتمرير.",
+    "set.gate": "صعوبة قفل الوالدين", "set.gateDesc": "الأرقام الأكبر توقف الأطفال الأكبر سنًا أيضًا.",
+    "set.easy": "سهل", "set.medium": "متوسط", "set.hard": "صعب",
+    "set.language": "اللغة", "set.languageDesc": "يغيّر كلمات التطبيق. بطاقاتك وتسجيلاتك لا تتغيّر أبدًا.",
+    "welcome.body": "أضف بطاقتك الأولى. صورة للجدة أو للكلب أو لأي شخص يحبه صغيرك — وصوتك وأنت تنطق اسمه.",
+    "welcome.add": "+ أضف بطاقة",
+    "toast.bootFail": "تعذّر البدء. إعادة التحميل؟",
+    starters: ["ماما", "بابا", "بيبي", "كلب", "قطة", "كرة", "رضّاعة", "تفاحة"],
+  },
+  zh: {
+    _name: "中文", _tts: "zh-CN",
+    "splash.tag": "你的声音，他的第一句话。",
+    "onb1.title": "欢迎使用 LovedWords",
+    "onb1.body": "为孩子定制的识字卡——用他熟悉的面孔和声音。",
+    "onb2.title": "拍照、录音、滑动",
+    "onb2.body": "给奶奶拍张照片，录下你念她名字的声音。把手机交给孩子，看他滑过一张张认识的面孔。",
+    "onb3.title": "私密、无广告",
+    "onb3.body": "所有内容都留在这台设备上。无需账号，不做追踪，没有广告。永久免费。",
+    "onb.skip": "跳过", "onb.next": "下一步", "onb.start": "开始",
+    "gate.title": "快速验证", "gate.body": "别让小手点进设置。",
+    "tab.cards": "卡片", "tab.decks": "卡组", "tab.settings": "设置",
+    "btn.addCard": "+ 添加卡片", "btn.newDeck": "+ 新建卡组",
+    "set.theme": "主题", "set.themeDesc": "选择外观。夜间主题在睡前更护眼。",
+    "set.autoplay": "自动播放声音", "set.autoplayDesc": "卡片出现时自动播放声音。",
+    "set.haptics": "触感反馈", "set.hapticsDesc": "点按和滑动时轻微震动。",
+    "set.gate": "家长锁难度", "set.gateDesc": "数字越大，越能拦住大一点的孩子。",
+    "set.easy": "简单", "set.medium": "中等", "set.hard": "困难",
+    "set.language": "语言", "set.languageDesc": "更改应用的文字。你的卡片和录音不受影响。",
+    "welcome.body": "添加第一张卡片。奶奶、小狗，或者孩子喜欢的任何人的照片——再加上你念名字的声音。",
+    "welcome.add": "+ 添加一张卡片",
+    "toast.bootFail": "无法启动，要重新加载吗？",
+    starters: ["妈妈", "爸爸", "宝宝", "狗", "猫", "球", "奶瓶", "苹果"],
+  },
+  ja: {
+    _name: "日本語", _tts: "ja-JP",
+    "splash.tag": "あなたの声で、はじめのことば。",
+    "onb1.title": "LovedWords へようこそ",
+    "onb1.body": "お子さまのためのフラッシュカード。大好きな顔と声で。",
+    "onb2.title": "撮る、話す、めくる",
+    "onb2.body": "おばあちゃんの写真を撮って、名前を呼ぶ声を録音。スマホを渡せば、知っている顔を次々めくって楽しめます。",
+    "onb3.title": "プライベート・広告なし",
+    "onb3.body": "すべてこの端末の中だけ。アカウント不要、追跡なし、広告なし。ずっと無料です。",
+    "onb.skip": "スキップ", "onb.next": "次へ", "onb.start": "はじめる",
+    "gate.title": "かんたん確認", "gate.body": "小さな手が設定に触れないように。",
+    "tab.cards": "カード", "tab.decks": "デッキ", "tab.settings": "設定",
+    "btn.addCard": "+ カードを追加", "btn.newDeck": "+ 新しいデッキ",
+    "set.theme": "テーマ", "set.themeDesc": "見た目を選べます。ナイトテーマは寝る前の目にやさしい。",
+    "set.autoplay": "音声の自動再生", "set.autoplayDesc": "カードが表示されたら音声を再生します。",
+    "set.haptics": "振動", "set.hapticsDesc": "タップやスワイプでやさしく振動します。",
+    "set.gate": "ペアレンタルロックの難易度", "set.gateDesc": "数字を大きくすると年上の子も止められます。",
+    "set.easy": "やさしい", "set.medium": "ふつう", "set.hard": "むずかしい",
+    "set.language": "言語", "set.languageDesc": "アプリの文字を変えます。カードと録音はそのままです。",
+    "welcome.body": "最初のカードを追加しましょう。おばあちゃん、犬、お子さまの大好きな人の写真と、名前を呼ぶあなたの声を。",
+    "welcome.add": "+ カードを追加",
+    "toast.bootFail": "起動できません。再読み込みしますか？",
+    starters: ["ママ", "パパ", "あかちゃん", "いぬ", "ねこ", "ボール", "ほにゅうびん", "りんご"],
+  },
+  ru: {
+    _name: "Русский", _tts: "ru-RU",
+    "splash.tag": "Твой голос. Их первые слова.",
+    "onb1.title": "Добро пожаловать в LovedWords",
+    "onb1.body": "Личные карточки для малыша — с лицами и голосами, которые он любит.",
+    "onb2.title": "Снимок, голос, свайп",
+    "onb2.body": "Сфотографируйте бабушку. Запишите, как вы произносите её имя. Дайте телефон ребёнку и смотрите, как он листает знакомые лица.",
+    "onb3.title": "Приватно и без рекламы",
+    "onb3.body": "Всё остаётся на этом устройстве. Без аккаунтов. Без слежки. Без рекламы. Бесплатно навсегда.",
+    "onb.skip": "Пропустить", "onb.next": "Далее", "onb.start": "Начать",
+    "gate.title": "Быстрая проверка", "gate.body": "Чтобы маленькие руки не лезли в настройки.",
+    "tab.cards": "Карточки", "tab.decks": "Наборы", "tab.settings": "Настройки",
+    "btn.addCard": "+ Добавить карточку", "btn.newDeck": "+ Новый набор",
+    "set.theme": "Тема", "set.themeDesc": "Выберите оформление. Ночная тема бережёт глаза перед сном.",
+    "set.autoplay": "Автовоспроизведение", "set.autoplayDesc": "Проигрывать голос при появлении карточки.",
+    "set.haptics": "Вибрация", "set.hapticsDesc": "Лёгкая вибрация при касании и свайпе.",
+    "set.gate": "Сложность родительского замка", "set.gateDesc": "Большие числа остановят и детей постарше.",
+    "set.easy": "Легко", "set.medium": "Средне", "set.hard": "Сложно",
+    "set.language": "Язык", "set.languageDesc": "Меняет слова приложения. Ваши карточки и записи не затрагиваются.",
+    "welcome.body": "Добавьте первую карточку. Фото бабушки, собаки или того, кого любит малыш, — и ваш голос с именем.",
+    "welcome.add": "+ Добавить карточку",
+    "toast.bootFail": "Не удалось запустить. Обновить?",
+    starters: ["Мама", "Папа", "Малыш", "Собака", "Кошка", "Мяч", "Бутылочка", "Яблоко"],
+  },
+  id: {
+    _name: "Bahasa Indonesia", _tts: "id-ID",
+    "splash.tag": "Suaramu. Kata pertamanya.",
+    "onb1.title": "Selamat datang di LovedWords",
+    "onb1.body": "Kartu belajar pribadi untuk si kecil — dengan wajah dan suara yang ia sayangi.",
+    "onb2.title": "Foto, suara, geser",
+    "onb2.body": "Foto nenek. Rekam suaramu menyebut namanya. Berikan ponsel pada anakmu dan lihat ia menggeser wajah-wajah yang ia kenal.",
+    "onb3.title": "Privat & tanpa iklan",
+    "onb3.body": "Semua tersimpan di perangkat ini. Tanpa akun. Tanpa pelacakan. Tanpa iklan. Gratis selamanya.",
+    "onb.skip": "Lewati", "onb.next": "Lanjut", "onb.start": "Mulai",
+    "gate.title": "Cek sebentar", "gate.body": "Agar tangan kecil tidak masuk ke pengaturan.",
+    "tab.cards": "Kartu", "tab.decks": "Set", "tab.settings": "Pengaturan",
+    "btn.addCard": "+ Tambah kartu", "btn.newDeck": "+ Set baru",
+    "set.theme": "Tema", "set.themeDesc": "Pilih tampilan. Tema malam lebih nyaman di mata menjelang tidur.",
+    "set.autoplay": "Putar suara otomatis", "set.autoplayDesc": "Memutar suara saat kartu muncul.",
+    "set.haptics": "Getaran", "set.hapticsDesc": "Getaran halus saat menyentuh dan menggeser.",
+    "set.gate": "Tingkat kunci orang tua", "set.gateDesc": "Angka lebih besar menahan anak yang lebih besar juga.",
+    "set.easy": "Mudah", "set.medium": "Sedang", "set.hard": "Sulit",
+    "set.language": "Bahasa", "set.languageDesc": "Mengubah kata-kata aplikasi. Kartu dan rekamanmu tidak diubah.",
+    "welcome.body": "Tambahkan kartu pertamamu. Foto nenek, anjing, atau siapa pun yang disayangi si kecil — dan suaramu menyebut namanya.",
+    "welcome.add": "+ Tambah kartu",
+    "toast.bootFail": "Tidak bisa dimulai. Muat ulang?",
+    starters: ["Mama", "Papa", "Bayi", "Anjing", "Kucing", "Bola", "Botol", "Apel"],
+  },
+  tr: {
+    _name: "Türkçe", _tts: "tr-TR",
+    "splash.tag": "Senin sesin. Onun ilk sözleri.",
+    "onb1.title": "LovedWords'e hoş geldiniz",
+    "onb1.body": "Küçüğünüz için kişisel kartlar — sevdiği yüzler ve seslerle.",
+    "onb2.title": "Çek, söyle, kaydır",
+    "onb2.body": "Anneannenin fotoğrafını çekin. Adını söylerken kendinizi kaydedin. Telefonu çocuğunuza verin, tanıdığı yüzleri kaydırışını izleyin.",
+    "onb3.title": "Gizli ve reklamsız",
+    "onb3.body": "Her şey bu cihazda kalır. Hesap yok. Takip yok. Reklam yok. Sonsuza dek ücretsiz.",
+    "onb.skip": "Atla", "onb.next": "İleri", "onb.start": "Başla",
+    "gate.title": "Kısa kontrol", "gate.body": "Küçük eller ayarlara girmesin diye.",
+    "tab.cards": "Kartlar", "tab.decks": "Desteler", "tab.settings": "Ayarlar",
+    "btn.addCard": "+ Kart ekle", "btn.newDeck": "+ Yeni deste",
+    "set.theme": "Tema", "set.themeDesc": "Bir görünüm seçin. Gece teması uyku öncesi gözü yormaz.",
+    "set.autoplay": "Sesi otomatik oynat", "set.autoplayDesc": "Kart göründüğünde sesi çalar.",
+    "set.haptics": "Titreşim", "set.hapticsDesc": "Dokunma ve kaydırmada hafif titreşim.",
+    "set.gate": "Ebeveyn kilidi zorluğu", "set.gateDesc": "Büyük sayılar büyük çocukları da durdurur.",
+    "set.easy": "Kolay", "set.medium": "Orta", "set.hard": "Zor",
+    "set.language": "Dil", "set.languageDesc": "Uygulamanın kelimelerini değiştirir. Kartlarınıza ve kayıtlarınıza dokunulmaz.",
+    "welcome.body": "İlk kartınızı ekleyin. Anneannenin, köpeğin ya da küçüğünüzün sevdiği birinin fotoğrafı — ve adını söyleyen sesiniz.",
+    "welcome.add": "+ Kart ekle",
+    "toast.bootFail": "Başlatılamadı. Yenilensin mi?",
+    starters: ["Anne", "Baba", "Bebek", "Köpek", "Kedi", "Top", "Biberon", "Elma"],
+  },
+};
+
+/* Name of the auto-created starter deck, per locale. Kept beside I18N
+ * rather than inside it because it is written into the database as user
+ * data — renaming a locale string must never rename someone's deck. */
+const FIRST_DECK_NAME = {
+  en: "First Words", es: "Primeras palabras", pt: "Primeiras palavras",
+  fr: "Premiers mots", de: "Erste Wörter", it: "Prime parole",
+  hi: "पहले शब्द", ar: "الكلمات الأولى", zh: "最初的词",
+  ja: "はじめのことば", ru: "Первые слова", id: "Kata pertama",
+  tr: "İlk kelimeler",
+};
+function firstWordsDeckName() {
+  return FIRST_DECK_NAME[LOCALE] || FIRST_DECK_NAME.en;
+}
+
+const DEFAULT_LOCALE = "en";
+let LOCALE = DEFAULT_LOCALE;
+
+/** Best-effort match of the device language to a locale we ship. */
+function detectLocale() {
+  for (const tag of navigator.languages || [navigator.language || "en"]) {
+    if (!tag) continue;
+    const base = tag.toLowerCase().split("-")[0];
+    if (I18N[base]) return base;
+  }
+  return DEFAULT_LOCALE;
+}
+
+/** Translate. Falls back to English, then to the key itself. */
+function t(key) {
+  const pack = I18N[LOCALE] || I18N[DEFAULT_LOCALE];
+  return pack[key] ?? I18N[DEFAULT_LOCALE][key] ?? key;
+}
+
+function localeMeta(loc = LOCALE) {
+  return I18N[loc] || I18N[DEFAULT_LOCALE];
+}
+
+/** Walk the DOM and fill every data-i18n / data-i18n-ph / data-i18n-aria node. */
+function applyLocale(loc) {
+  if (loc && I18N[loc]) LOCALE = loc;
+  const meta = localeMeta();
+  const rtl = !!meta._rtl;
+
+  document.documentElement.lang = LOCALE;
+  document.documentElement.dir = rtl ? "rtl" : "ltr";
+
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-ph]").forEach((el) => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
+  document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
+    el.setAttribute("aria-label", t(el.dataset.i18nAria));
+  });
+}
+
+/* ============================================================
+ * Phase 2 — language-learning mode
+ * ------------------------------------------------------------
+ * EXTRA_VOCAB extends each locale's 8 first-words to 20 common
+ * words. Because every locale carries the same 20 concepts in
+ * the same order, ANY pair of the 13 languages yields a ready
+ * translation deck for free — index i in one language means the
+ * same thing as index i in another.
+ * ============================================================ */
+const VOCAB_EMOJI = [
+  "👩", "👨", "👶", "🐶", "🐱", "⚽", "🍼", "🍎",
+  "💧", "🍞", "🥛", "🏠", "📖", "🌳", "☀️", "🌙", "👋", "🙏", "✅", "❌",
+];
+
+const EXTRA_VOCAB = {
+  en: ["Water", "Bread", "Milk", "House", "Book", "Tree", "Sun", "Moon", "Hello", "Thank you", "Yes", "No"],
+  es: ["Agua", "Pan", "Leche", "Casa", "Libro", "Árbol", "Sol", "Luna", "Hola", "Gracias", "Sí", "No"],
+  pt: ["Água", "Pão", "Leite", "Casa", "Livro", "Árvore", "Sol", "Lua", "Olá", "Obrigado", "Sim", "Não"],
+  fr: ["Eau", "Pain", "Lait", "Maison", "Livre", "Arbre", "Soleil", "Lune", "Bonjour", "Merci", "Oui", "Non"],
+  de: ["Wasser", "Brot", "Milch", "Haus", "Buch", "Baum", "Sonne", "Mond", "Hallo", "Danke", "Ja", "Nein"],
+  it: ["Acqua", "Pane", "Latte", "Casa", "Libro", "Albero", "Sole", "Luna", "Ciao", "Grazie", "Sì", "No"],
+  hi: ["पानी", "रोटी", "दूध", "घर", "किताब", "पेड़", "सूरज", "चाँद", "नमस्ते", "धन्यवाद", "हाँ", "नहीं"],
+  ar: ["ماء", "خبز", "حليب", "بيت", "كتاب", "شجرة", "شمس", "قمر", "مرحبا", "شكرا", "نعم", "لا"],
+  zh: ["水", "面包", "牛奶", "房子", "书", "树", "太阳", "月亮", "你好", "谢谢", "是", "不"],
+  ja: ["みず", "パン", "ぎゅうにゅう", "いえ", "ほん", "き", "たいよう", "つき", "こんにちは", "ありがとう", "はい", "いいえ"],
+  ru: ["Вода", "Хлеб", "Молоко", "Дом", "Книга", "Дерево", "Солнце", "Луна", "Привет", "Спасибо", "Да", "Нет"],
+  id: ["Air", "Roti", "Susu", "Rumah", "Buku", "Pohon", "Matahari", "Bulan", "Halo", "Terima kasih", "Ya", "Tidak"],
+  tr: ["Su", "Ekmek", "Süt", "Ev", "Kitap", "Ağaç", "Güneş", "Ay", "Merhaba", "Teşekkürler", "Evet", "Hayır"],
+};
+
+/** All 20 concepts for a locale, in the shared canonical order. */
+function vocabFor(loc) {
+  const base = (I18N[loc] || I18N[DEFAULT_LOCALE]).starters;
+  const extra = EXTRA_VOCAB[loc] || EXTRA_VOCAB[DEFAULT_LOCALE];
+  return [...base, ...extra];
+}
+
+/* Phase-2 UI strings, merged into I18N below. Kept separate so the
+ * language-learning vocabulary can be revised without touching the
+ * strings the toddler app already ships. */
+const I18N_L2 = {
+  en: {
+    "set.deckMode": "Deck type", "mode.firstWords": "First words", "mode.language": "Language learning",
+    "deck.termLang": "Word language", "deck.transLang": "Meaning language",
+    "card.meaningPh": "Meaning / translation",
+    "review.reveal": "Tap to reveal", "review.again": "Again", "review.hard": "Hard",
+    "review.good": "Good", "review.easy": "Easy",
+    "review.done": "All caught up", "review.doneBody": "Nothing is due right now. Come back later.",
+    "review.ahead": "Review ahead", "review.empty": "This deck has no cards yet.",
+    "review.due": "due", "btn.seed": "Add 20 starter words", "toast.seeded": "Starter words added", "toast.nameDeck": "Name your deck",
+  },
+  es: {
+    "set.deckMode": "Tipo de mazo", "mode.firstWords": "Primeras palabras", "mode.language": "Aprender idioma",
+    "deck.termLang": "Idioma de la palabra", "deck.transLang": "Idioma del significado",
+    "card.meaningPh": "Significado / traducción",
+    "review.reveal": "Toca para ver", "review.again": "Otra vez", "review.hard": "Difícil",
+    "review.good": "Bien", "review.easy": "Fácil",
+    "review.done": "Todo al día", "review.doneBody": "No hay nada pendiente ahora. Vuelve más tarde.",
+    "review.ahead": "Repasar igualmente", "review.empty": "Este mazo aún no tiene tarjetas.",
+    "review.due": "pendientes", "btn.seed": "Añadir 20 palabras", "toast.seeded": "Palabras añadidas", "toast.nameDeck": "Ponle nombre al mazo",
+  },
+  pt: {
+    "set.deckMode": "Tipo de baralho", "mode.firstWords": "Primeiras palavras", "mode.language": "Aprender idioma",
+    "deck.termLang": "Idioma da palavra", "deck.transLang": "Idioma do significado",
+    "card.meaningPh": "Significado / tradução",
+    "review.reveal": "Toque para ver", "review.again": "De novo", "review.hard": "Difícil",
+    "review.good": "Bom", "review.easy": "Fácil",
+    "review.done": "Tudo em dia", "review.doneBody": "Nada pendente agora. Volte mais tarde.",
+    "review.ahead": "Revisar mesmo assim", "review.empty": "Este baralho ainda não tem cartões.",
+    "review.due": "pendentes", "btn.seed": "Adicionar 20 palavras", "toast.seeded": "Palavras adicionadas", "toast.nameDeck": "Dê um nome ao baralho",
+  },
+  fr: {
+    "set.deckMode": "Type de paquet", "mode.firstWords": "Premiers mots", "mode.language": "Apprentissage",
+    "deck.termLang": "Langue du mot", "deck.transLang": "Langue du sens",
+    "card.meaningPh": "Sens / traduction",
+    "review.reveal": "Toucher pour voir", "review.again": "À revoir", "review.hard": "Difficile",
+    "review.good": "Bien", "review.easy": "Facile",
+    "review.done": "Tout est à jour", "review.doneBody": "Rien à réviser pour l'instant. Revenez plus tard.",
+    "review.ahead": "Réviser quand même", "review.empty": "Ce paquet n'a pas encore de cartes.",
+    "review.due": "à revoir", "btn.seed": "Ajouter 20 mots", "toast.seeded": "Mots ajoutés", "toast.nameDeck": "Nommez votre paquet",
+  },
+  de: {
+    "set.deckMode": "Stapeltyp", "mode.firstWords": "Erste Wörter", "mode.language": "Sprache lernen",
+    "deck.termLang": "Sprache des Wortes", "deck.transLang": "Sprache der Bedeutung",
+    "card.meaningPh": "Bedeutung / Übersetzung",
+    "review.reveal": "Tippen zum Aufdecken", "review.again": "Nochmal", "review.hard": "Schwer",
+    "review.good": "Gut", "review.easy": "Leicht",
+    "review.done": "Alles erledigt", "review.doneBody": "Gerade ist nichts fällig. Schau später wieder vorbei.",
+    "review.ahead": "Trotzdem üben", "review.empty": "Dieser Stapel hat noch keine Karten.",
+    "review.due": "fällig", "btn.seed": "20 Wörter hinzufügen", "toast.seeded": "Wörter hinzugefügt", "toast.nameDeck": "Gib dem Stapel einen Namen",
+  },
+  it: {
+    "set.deckMode": "Tipo di mazzo", "mode.firstWords": "Prime parole", "mode.language": "Imparare la lingua",
+    "deck.termLang": "Lingua della parola", "deck.transLang": "Lingua del significato",
+    "card.meaningPh": "Significato / traduzione",
+    "review.reveal": "Tocca per scoprire", "review.again": "Di nuovo", "review.hard": "Difficile",
+    "review.good": "Bene", "review.easy": "Facile",
+    "review.done": "Tutto in pari", "review.doneBody": "Non c'è nulla da ripassare ora. Torna più tardi.",
+    "review.ahead": "Ripassa lo stesso", "review.empty": "Questo mazzo non ha ancora schede.",
+    "review.due": "da ripassare", "btn.seed": "Aggiungi 20 parole", "toast.seeded": "Parole aggiunte", "toast.nameDeck": "Dai un nome al mazzo",
+  },
+  hi: {
+    "set.deckMode": "सेट का प्रकार", "mode.firstWords": "पहले शब्द", "mode.language": "भाषा सीखना",
+    "deck.termLang": "शब्द की भाषा", "deck.transLang": "अर्थ की भाषा",
+    "card.meaningPh": "अर्थ / अनुवाद",
+    "review.reveal": "देखने के लिए टैप करें", "review.again": "फिर से", "review.hard": "कठिन",
+    "review.good": "अच्छा", "review.easy": "आसान",
+    "review.done": "सब पूरा", "review.doneBody": "अभी कुछ बाकी नहीं है। बाद में आएँ।",
+    "review.ahead": "फिर भी दोहराएँ", "review.empty": "इस सेट में अभी कोई कार्ड नहीं है।",
+    "review.due": "बाकी", "btn.seed": "20 शब्द जोड़ें", "toast.seeded": "शब्द जोड़े गए", "toast.nameDeck": "सेट को नाम दें",
+  },
+  ar: {
+    "set.deckMode": "نوع المجموعة", "mode.firstWords": "الكلمات الأولى", "mode.language": "تعلّم لغة",
+    "deck.termLang": "لغة الكلمة", "deck.transLang": "لغة المعنى",
+    "card.meaningPh": "المعنى / الترجمة",
+    "review.reveal": "اضغط للكشف", "review.again": "مرة أخرى", "review.hard": "صعب",
+    "review.good": "جيد", "review.easy": "سهل",
+    "review.done": "كل شيء مكتمل", "review.doneBody": "لا يوجد شيء مستحق الآن. عد لاحقًا.",
+    "review.ahead": "راجع على أي حال", "review.empty": "لا توجد بطاقات في هذه المجموعة بعد.",
+    "review.due": "مستحقة", "btn.seed": "أضف 20 كلمة", "toast.seeded": "تمت إضافة الكلمات", "toast.nameDeck": "أعطِ المجموعة اسمًا",
+  },
+  zh: {
+    "set.deckMode": "卡组类型", "mode.firstWords": "最初的词", "mode.language": "学习语言",
+    "deck.termLang": "单词语言", "deck.transLang": "释义语言",
+    "card.meaningPh": "释义 / 翻译",
+    "review.reveal": "点按查看", "review.again": "重来", "review.hard": "困难",
+    "review.good": "良好", "review.easy": "简单",
+    "review.done": "全部完成", "review.doneBody": "现在没有要复习的内容，稍后再来。",
+    "review.ahead": "提前复习", "review.empty": "这个卡组还没有卡片。",
+    "review.due": "待复习", "btn.seed": "添加 20 个词", "toast.seeded": "已添加词语", "toast.nameDeck": "给卡组起个名字",
+  },
+  ja: {
+    "set.deckMode": "デッキの種類", "mode.firstWords": "はじめのことば", "mode.language": "外国語の学習",
+    "deck.termLang": "たんごの言語", "deck.transLang": "意味の言語",
+    "card.meaningPh": "意味 / 翻訳",
+    "review.reveal": "タップして表示", "review.again": "もう一度", "review.hard": "むずかしい",
+    "review.good": "ふつう", "review.easy": "かんたん",
+    "review.done": "すべて完了", "review.doneBody": "今は復習するものがありません。またあとで。",
+    "review.ahead": "先に復習する", "review.empty": "このデッキにはまだカードがありません。",
+    "review.due": "残り", "btn.seed": "20語を追加", "toast.seeded": "単語を追加しました", "toast.nameDeck": "デッキに名前をつけてください",
+  },
+  ru: {
+    "set.deckMode": "Тип набора", "mode.firstWords": "Первые слова", "mode.language": "Изучение языка",
+    "deck.termLang": "Язык слова", "deck.transLang": "Язык значения",
+    "card.meaningPh": "Значение / перевод",
+    "review.reveal": "Нажмите, чтобы увидеть", "review.again": "Ещё раз", "review.hard": "Трудно",
+    "review.good": "Хорошо", "review.easy": "Легко",
+    "review.done": "Всё повторено", "review.doneBody": "Сейчас нечего повторять. Загляните позже.",
+    "review.ahead": "Повторить заранее", "review.empty": "В этом наборе пока нет карточек.",
+    "review.due": "к повторению", "btn.seed": "Добавить 20 слов", "toast.seeded": "Слова добавлены", "toast.nameDeck": "Назовите набор",
+  },
+  id: {
+    "set.deckMode": "Jenis set", "mode.firstWords": "Kata pertama", "mode.language": "Belajar bahasa",
+    "deck.termLang": "Bahasa kata", "deck.transLang": "Bahasa arti",
+    "card.meaningPh": "Arti / terjemahan",
+    "review.reveal": "Ketuk untuk melihat", "review.again": "Ulangi", "review.hard": "Sulit",
+    "review.good": "Bagus", "review.easy": "Mudah",
+    "review.done": "Semua selesai", "review.doneBody": "Tidak ada yang perlu diulang sekarang. Kembali nanti.",
+    "review.ahead": "Ulang lebih awal", "review.empty": "Set ini belum punya kartu.",
+    "review.due": "perlu diulang", "btn.seed": "Tambah 20 kata", "toast.seeded": "Kata ditambahkan", "toast.nameDeck": "Beri nama set",
+  },
+  tr: {
+    "set.deckMode": "Deste türü", "mode.firstWords": "İlk kelimeler", "mode.language": "Dil öğrenme",
+    "deck.termLang": "Kelimenin dili", "deck.transLang": "Anlamın dili",
+    "card.meaningPh": "Anlam / çeviri",
+    "review.reveal": "Görmek için dokun", "review.again": "Tekrar", "review.hard": "Zor",
+    "review.good": "İyi", "review.easy": "Kolay",
+    "review.done": "Hepsi tamam", "review.doneBody": "Şu an tekrar edilecek bir şey yok. Sonra uğrayın.",
+    "review.ahead": "Yine de çalış", "review.empty": "Bu destede henüz kart yok.",
+    "review.due": "bekliyor", "btn.seed": "20 kelime ekle", "toast.seeded": "Kelimeler eklendi", "toast.nameDeck": "Desteye bir ad verin",
+  },
+};
+
+// Fold phase-2 strings into the main packs so t() needs no special case.
+for (const loc of Object.keys(I18N_L2)) {
+  Object.assign(I18N[loc], I18N_L2[loc]);
+}
+
+/* ============================================================
  * IndexedDB
  * ============================================================ */
 const DB_NAME = "lovedwords";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 let db;
 
+/* Schema
+ * ------
+ * deck: { id, name, color, order, createdAt,
+ *         mode: "firstWords" | "language",   // v3
+ *         lang: BCP-47 | null,               // v3, language of `card.name`
+ *         transLang: BCP-47 | null }         // v3, language of `card.meaning`
+ *
+ * card: { id, deckId, name, emoji, imageBlob, audioBlob,
+ *         order, playCount, lastPlayed, createdAt,
+ *         lang: BCP-47 | null,   // v3, null = inherit from deck
+ *         meaning: string | null,// v3, "language" mode only
+ *         srs: {due,ease,reps,lapses} | null } // v3, "language" mode only
+ *
+ * A firstWords deck never reads meaning/srs, so the toddler UI is
+ * untouched by the L2 fields sitting dormant beside it.
+ */
 function openDb() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = (e) => {
       const d = e.target.result;
+      const tx = e.target.transaction;
+      const oldV = e.oldVersion;
+
       if (!d.objectStoreNames.contains("cards")) {
         const s = d.createObjectStore("cards", { keyPath: "id", autoIncrement: true });
         s.createIndex("deckId", "deckId", { unique: false });
@@ -985,10 +1720,100 @@ function openDb() {
       if (!d.objectStoreNames.contains("meta")) {
         d.createObjectStore("meta", { keyPath: "key" });
       }
+
+      // v2 -> v3: backfill language/mode on existing rows so old installs
+      // keep working. Runs inside the versionchange transaction.
+      if (oldV >= 1 && oldV < 3) {
+        const deckStore = tx.objectStore("decks");
+        deckStore.openCursor().onsuccess = (ev) => {
+          const cur = ev.target.result;
+          if (!cur) return;
+          const v = cur.value;
+          if (v.mode === undefined) v.mode = "firstWords";
+          if (v.lang === undefined) v.lang = null;
+          if (v.transLang === undefined) v.transLang = null;
+          cur.update(v);
+          cur.continue();
+        };
+        const cardStore = tx.objectStore("cards");
+        cardStore.openCursor().onsuccess = (ev) => {
+          const cur = ev.target.result;
+          if (!cur) return;
+          const v = cur.value;
+          // null = inherit the deck's language, so an app-language change
+          // carries untagged legacy cards along with it.
+          if (v.lang === undefined) v.lang = null;
+          if (v.meaning === undefined) v.meaning = null;
+          if (v.srs === undefined) v.srs = null;
+          cur.update(v);
+          cur.continue();
+        };
+      }
     };
     req.onsuccess = () => { db = req.result; resolve(db); };
     req.onerror = () => reject(req.error);
   });
+}
+
+/** The language a card should be spoken in: card > deck > app locale. */
+function cardLang(card, deck) {
+  return card?.lang || deck?.lang || localeMeta()._tts;
+}
+
+/* ============================================================
+ * Spaced repetition (SM-2, simplified)
+ * ------------------------------------------------------------
+ * Deliberately not full Anki. Four grades, an ease factor floored
+ * at 1.3, and day-scale intervals. "again" reschedules inside the
+ * current session (one minute out) rather than the next day, so a
+ * word you just failed comes back before you put the phone down.
+ * Pure functions — no DB, no DOM — so they can be tested directly.
+ * ============================================================ */
+const SRS_DAY = 86400000;
+const SRS_GRADES = ["again", "hard", "good", "easy"];
+
+function freshSrs() {
+  return { due: 0, ease: 2.5, reps: 0, lapses: 0, interval: 0 };
+}
+
+function scheduleSrs(srs, grade, now = Date.now()) {
+  const s = srs ? { ...srs } : freshSrs();
+  if (typeof s.ease !== "number" || !isFinite(s.ease)) s.ease = 2.5;
+
+  if (grade === "again") {
+    s.reps = 0;
+    s.lapses = (s.lapses || 0) + 1;
+    s.ease = Math.max(1.3, s.ease - 0.2);
+    s.interval = 0;
+    s.due = now + 60000; // back within this session
+    return s;
+  }
+
+  if (grade === "hard") s.ease = Math.max(1.3, s.ease - 0.15);
+  else if (grade === "easy") s.ease = Math.min(3.5, s.ease + 0.15);
+
+  s.reps = (s.reps || 0) + 1;
+
+  let iv;
+  if (s.reps === 1) iv = grade === "easy" ? 3 : 1;
+  else if (s.reps === 2) iv = grade === "easy" ? 6 : 3;
+  else {
+    const mult = grade === "hard" ? 1.2 : s.ease;
+    iv = Math.round(Math.max(1, s.interval || 1) * mult);
+  }
+  s.interval = Math.max(1, iv);
+  s.due = now + s.interval * SRS_DAY;
+  return s;
+}
+
+/** A card with no SRS record has never been studied, so it is due. */
+function isDue(card, now = Date.now()) {
+  if (!card || !card.srs) return true;
+  return (card.srs.due ?? 0) <= now;
+}
+
+function dueCards(cards, now = Date.now()) {
+  return cards.filter((c) => isDue(c, now));
 }
 
 const dbStore = (name, mode = "readonly") => db.transaction(name, mode).objectStore(name);
@@ -1032,6 +1857,7 @@ const settings = {
   gateDifficulty: "medium",
   currentDeckId: null,
   seenOnboarding: false,
+  language: null, // null = follow the device; otherwise an I18N key
 };
 async function loadSettings() {
   for (const k of Object.keys(settings)) {
@@ -1052,9 +1878,43 @@ function buzz(pattern) {
   if (!("vibrate" in navigator)) return;
   navigator.vibrate(pattern);
 }
-function speak(text) {
+/* Voice list loads asynchronously on most engines, and is empty on the
+ * first synchronous call. Cache it and refresh on voiceschanged. */
+let _voices = [];
+function refreshVoices() {
   if (!("speechSynthesis" in window)) return;
+  _voices = speechSynthesis.getVoices() || [];
+}
+if ("speechSynthesis" in window) {
+  refreshVoices();
+  speechSynthesis.addEventListener?.("voiceschanged", refreshVoices);
+}
+
+/** Exact tag → same-language other-region → none (device default). */
+function pickVoice(tag) {
+  if (!_voices.length) refreshVoices();
+  const want = String(tag || "en-US").toLowerCase().replace("_", "-");
+  const base = want.split("-")[0];
+  const norm = (v) => v.lang.toLowerCase().replace("_", "-");
+  return (
+    _voices.find((v) => norm(v) === want) ||
+    _voices.find((v) => norm(v).split("-")[0] === base) ||
+    null
+  );
+}
+
+/** Does this device have any voice that can pronounce this language? */
+function hasVoiceFor(tag) {
+  return !!pickVoice(tag);
+}
+
+function speak(text, langTag) {
+  if (!("speechSynthesis" in window)) return;
+  const tag = langTag || localeMeta()._tts;
   const u = new SpeechSynthesisUtterance(text);
+  u.lang = tag;
+  const v = pickVoice(tag);
+  if (v) u.voice = v;
   u.rate = 0.85; u.pitch = 1.1;
   speechSynthesis.cancel();
   speechSynthesis.speak(u);
@@ -1063,10 +1923,11 @@ function speak(text) {
 /* ============================================================
  * Theme application
  * ============================================================ */
-function applyTheme(t) {
-  document.documentElement.setAttribute("data-theme", t);
+// NB: parameter is `th`, not `t` — `t` is the global translator.
+function applyTheme(th) {
+  document.documentElement.setAttribute("data-theme", th);
   const tc = { soft: "#fff7f3", forest: "#f4f7f2", ocean: "#f1f6fb", night: "#1a1424" };
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", tc[t] || "#fff7f3");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", tc[th] || "#fff7f3");
 }
 
 /* ============================================================
@@ -1076,14 +1937,18 @@ async function seedIfFirstRun() {
   const seeded = await getMeta("seeded_v2");
   if (seeded) return;
 
+  const meta = localeMeta();
   const decks = await getAll("decks");
   let firstDeckId;
   if (decks.length === 0) {
     firstDeckId = await put("decks", {
-      name: "First Words",
+      name: firstWordsDeckName(),
       color: APP.deckColors[0],
       order: 0,
       createdAt: Date.now(),
+      mode: "firstWords",
+      lang: meta._tts,
+      transLang: null,
     });
     settings.currentDeckId = firstDeckId;
     await saveSetting("currentDeckId", firstDeckId);
@@ -1091,19 +1956,24 @@ async function seedIfFirstRun() {
     firstDeckId = settings.currentDeckId || decks[0].id;
   }
 
-  const starters = APP.startersByDeck["First Words"];
-  for (let i = 0; i < starters.length; i++) {
-    const s = starters[i];
+  // Seed in the user's language, not English. The emoji carry across
+  // languages; only the words are swapped.
+  const emoji = APP.startersByDeck["First Words"].map((s) => s.emoji);
+  const words = meta.starters || I18N[DEFAULT_LOCALE].starters;
+  for (let i = 0; i < words.length; i++) {
     await put("cards", {
       deckId: firstDeckId,
-      name: s.name,
-      emoji: s.emoji,
+      name: words[i],
+      emoji: emoji[i] || "💛",
       imageBlob: null,
       audioBlob: null,
       order: i,
       playCount: 0,
       lastPlayed: 0,
       createdAt: Date.now() + i,
+      lang: meta._tts,
+      meaning: null,
+      srs: null,
     });
   }
   await setMeta("seeded_v2", true);
@@ -1150,7 +2020,7 @@ async function loadDeck() {
   let decks = await getAll("decks");
   if (decks.length === 0) {
     // edge: no decks (user wiped). create default.
-    const id = await put("decks", { name: "First Words", color: APP.deckColors[0], order: 0, createdAt: Date.now() });
+    const id = await put("decks", { name: firstWordsDeckName(), color: APP.deckColors[0], order: 0, createdAt: Date.now(), mode: "firstWords", lang: localeMeta()._tts, transLang: null });
     settings.currentDeckId = id;
     await saveSetting("currentDeckId", id);
     decks = await getAll("decks");
@@ -1164,8 +2034,12 @@ async function loadDeck() {
   currentIdx = Math.min(currentIdx, Math.max(0, deckCards.length - 1));
   if (currentIdx < 0) currentIdx = 0;
   deckPill.textContent = currentDeck.name;
-  renderCard();
-  renderProgress();
+  if (showScreenForDeck()) {
+    startReview();
+  } else {
+    renderCard();
+    renderProgress();
+  }
 }
 
 function renderProgress() {
@@ -1194,8 +2068,8 @@ function renderCard() {
     w.innerHTML = `
       <img src="icons/icon-192.png" alt="">
       <h1>LovedWords</h1>
-      <p>Add your first card. A photo of grandma, your dog, or anyone your little one loves — and your voice saying their name.</p>
-      <button class="btn accent" id="welcome-add">+ Add a card</button>
+      <p>${escapeHtml(t("welcome.body"))}</p>
+      <button class="btn accent" id="welcome-add">${escapeHtml(t("welcome.add"))}</button>
     `;
     deckArea.appendChild(w);
     document.getElementById("welcome-add").addEventListener("click", openGate);
@@ -1264,7 +2138,7 @@ function playCurrent() {
       liveUrls.delete(url);
     };
   } else {
-    speak(c.name);
+    speak(c.name, cardLang(c, currentDeck));
   }
   bumpStats();
 }
@@ -1334,6 +2208,205 @@ function attachCardGestures(el) {
   el.addEventListener("mousedown",  onStart);
   window.addEventListener("mousemove", onMove);
   window.addEventListener("mouseup",   onEnd);
+}
+
+/* ============================================================
+ * Review session (language decks)
+ * ============================================================ */
+const reviewScreen = document.getElementById("review-screen");
+const reviewPill   = document.getElementById("review-pill");
+const reviewArea   = document.getElementById("review-area");
+const reviewGrades = document.getElementById("review-grades");
+
+let reviewQueue = [];   // card ids still to answer this session
+let reviewCard = null;
+let reviewRevealed = false;
+let reviewAhead = false; // user chose to study past the due cut-off
+
+function fmtInterval(s) {
+  if (!s.interval) return "1m";
+  if (s.interval < 30) return s.interval + "d";
+  if (s.interval < 365) return Math.round(s.interval / 30) + "mo";
+  return (s.interval / 365).toFixed(1).replace(/\.0$/, "") + "y";
+}
+
+function buildReviewQueue() {
+  const pool = reviewAhead ? deckCards.slice() : dueCards(deckCards);
+  // Shuffle so the same order does not become its own memory cue.
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  reviewQueue = pool.map((c) => c.id);
+}
+
+function startReview() {
+  reviewAhead = false;
+  buildReviewQueue();
+  nextReviewCard();
+}
+
+function nextReviewCard() {
+  reviewRevealed = false;
+  const id = reviewQueue.shift();
+  reviewCard = id == null ? null : deckCards.find((c) => c.id === id) || null;
+  renderReview();
+}
+
+function renderReview() {
+  revokeAllUrls(); // photos here mint object URLs on every render
+  reviewArea.innerHTML = "";
+  reviewPill.textContent = currentDeck ? currentDeck.name : "";
+
+  if (deckCards.length === 0) {
+    reviewGrades.classList.add("hidden");
+    const e = document.createElement("div");
+    e.className = "review-empty";
+    e.innerHTML = `<div class="big">📚</div><p></p>`;
+    e.querySelector("p").textContent = t("review.empty");
+    reviewArea.appendChild(e);
+    return;
+  }
+
+  if (!reviewCard) {
+    reviewGrades.classList.add("hidden");
+    const e = document.createElement("div");
+    e.className = "review-empty";
+    e.innerHTML = `<div class="big">🎉</div><h2></h2><p></p>`;
+    e.querySelector("h2").textContent = t("review.done");
+    e.querySelector("p").textContent = t("review.doneBody");
+    const btn = document.createElement("button");
+    btn.className = "btn secondary";
+    btn.style.width = "auto";
+    btn.style.padding = "10px 20px";
+    btn.textContent = t("review.ahead");
+    btn.addEventListener("click", () => {
+      reviewAhead = true;
+      buildReviewQueue();
+      nextReviewCard();
+    });
+    e.appendChild(btn);
+    reviewArea.appendChild(e);
+    return;
+  }
+
+  const remaining = reviewQueue.length + 1;
+  reviewPill.textContent = `${currentDeck.name} · ${remaining} ${t("review.due")}`;
+
+  const c = reviewCard;
+  const el = document.createElement("div");
+  el.className = "rcard";
+
+  if (c.imageBlob) {
+    const p = document.createElement("div");
+    p.className = "r-photo";
+    p.style.backgroundImage = `url(${makeUrl(c.imageBlob)})`;
+    el.appendChild(p);
+  } else if (c.emoji) {
+    const p = document.createElement("div");
+    p.className = "r-emoji";
+    p.textContent = c.emoji;
+    el.appendChild(p);
+  }
+
+  const term = document.createElement("div");
+  term.className = "r-term";
+  term.textContent = c.name;
+  term.lang = cardLang(c, currentDeck);
+  el.appendChild(term);
+
+  if (!reviewRevealed) {
+    const hint = document.createElement("div");
+    hint.className = "r-hint";
+    hint.textContent = t("review.reveal");
+    el.appendChild(hint);
+    reviewGrades.classList.add("hidden");
+    el.addEventListener("click", () => { revealReview(); });
+  } else {
+    const div = document.createElement("div");
+    div.className = "r-divider";
+    el.appendChild(div);
+    const m = document.createElement("div");
+    m.className = "r-meaning";
+    m.textContent = c.meaning || "—";
+    if (currentDeck?.transLang) m.lang = currentDeck.transLang;
+    el.appendChild(m);
+
+    const sp = document.createElement("div");
+    sp.className = "r-speak";
+    sp.textContent = "🔊";
+    el.appendChild(sp);
+    el.addEventListener("click", () => playReviewAudio(c));
+
+    renderGrades(c);
+  }
+
+  reviewArea.appendChild(el);
+}
+
+function playReviewAudio(c) {
+  buzz(8);
+  if (c.audioBlob) {
+    const url = makeUrl(c.audioBlob);
+    const audio = new Audio(url);
+    audio.play().catch(() => {});
+    audio.onended = () => { URL.revokeObjectURL(url); liveUrls.delete(url); };
+  } else {
+    speak(c.name, cardLang(c, currentDeck));
+  }
+}
+
+function revealReview() {
+  reviewRevealed = true;
+  renderReview();
+  playReviewAudio(reviewCard);
+}
+
+function renderGrades(c) {
+  reviewGrades.innerHTML = "";
+  reviewGrades.classList.remove("hidden");
+  for (const g of SRS_GRADES) {
+    const b = document.createElement("button");
+    b.dataset.g = g;
+    const preview = scheduleSrs(c.srs, g);
+    b.innerHTML = `<span class="lbl"></span><span class="iv"></span>`;
+    b.querySelector(".lbl").textContent = t("review." + g);
+    b.querySelector(".iv").textContent = fmtInterval(preview);
+    b.addEventListener("click", () => gradeReview(g));
+    reviewGrades.appendChild(b);
+  }
+}
+
+async function gradeReview(grade) {
+  if (!reviewCard) return;
+  buzz(grade === "again" ? 25 : 12);
+  const c = reviewCard;
+  c.srs = scheduleSrs(c.srs, grade);
+  c.playCount = (c.playCount || 0) + 1;
+  c.lastPlayed = Date.now();
+  await put("cards", c);
+
+  // A failed card comes back at the end of this same session.
+  if (grade === "again") reviewQueue.push(c.id);
+
+  nextReviewCard();
+}
+
+/** Route between the toddler kiosk and the review screen. */
+function showScreenForDeck() {
+  const isLang = currentDeck?.mode === "language";
+  const deckScreen = document.getElementById("deck-screen");
+  // Never reveal a screen while onboarding is still up.
+  const booting = document.getElementById("onboard").classList.contains("open")
+    || !document.getElementById("splash").classList.contains("gone");
+  deckScreen.classList.toggle("hidden", isLang || booting);
+  reviewScreen.classList.toggle("hidden", !isLang || booting);
+  return isLang;
+}
+
+/** Called once the splash/onboarding is out of the way. */
+function revealApp() {
+  if (showScreenForDeck()) startReview();
 }
 
 /* ============================================================
@@ -1450,7 +2523,10 @@ async function renderCardList() {
     nameDiv.textContent = c.name + (c.audioBlob ? "  🎙" : "");
     const meta = document.createElement("div");
     meta.className = "meta";
-    meta.textContent = `Played ${c.playCount || 0} · ${c.lastPlayed ? timeAgo(c.lastPlayed) : "never"}`;
+    // Language decks: the pairing matters more than the play count.
+    meta.textContent = currentDeck?.mode === "language"
+      ? (c.meaning || "—")
+      : `Played ${c.playCount || 0} · ${c.lastPlayed ? timeAgo(c.lastPlayed) : "never"}`;
     wrap.append(nameDiv, meta);
 
     const editBtn = document.createElement("button");
@@ -1551,14 +2627,133 @@ function paintDeckColors() {
   });
 }
 
+/** Reverse of I18N[key]._tts — find the locale that owns a BCP-47 tag. */
+function localeKeyForTts(tag) {
+  if (!tag) return null;
+  const want = String(tag).toLowerCase();
+  const hit = Object.keys(I18N).find((k) => I18N[k]._tts.toLowerCase() === want);
+  if (hit) return hit;
+  const base = want.split("-")[0];
+  return I18N[base] ? base : null;
+}
+
+const deckModeSegm  = document.getElementById("deck-mode");
+const deckLangRows  = document.getElementById("deck-lang-rows");
+const deckTermLang  = document.getElementById("deck-term-lang");
+const deckTransLang = document.getElementById("deck-trans-lang");
+
+function fillLangSelect(sel, selectedTts, excludeTts) {
+  sel.innerHTML = "";
+  Object.keys(I18N)
+    .map((k) => ({ k, name: I18N[k]._name, tts: I18N[k]._tts }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .forEach(({ name, tts }) => {
+      if (excludeTts && tts === excludeTts) return; // can't translate a language into itself
+      const o = document.createElement("option");
+      o.value = tts;
+      o.textContent = name;
+      sel.appendChild(o);
+    });
+  if (selectedTts && [...sel.options].some((o) => o.value === selectedTts)) {
+    sel.value = selectedTts;
+  }
+}
+
+function paintDeckMode() {
+  const mode = editingDeck.mode || "firstWords";
+  deckModeSegm.querySelectorAll("button").forEach((b) => {
+    b.classList.toggle("active", b.dataset.v === mode);
+  });
+  deckLangRows.style.display = mode === "language" ? "block" : "none";
+  if (mode === "language") {
+    if (!editingDeck.lang) editingDeck.lang = localeMeta()._tts;
+    fillLangSelect(deckTermLang, editingDeck.lang, null);
+    editingDeck.lang = deckTermLang.value;
+    if (editingDeck.transLang === editingDeck.lang) editingDeck.transLang = null;
+    fillLangSelect(deckTransLang, editingDeck.transLang, editingDeck.lang);
+    editingDeck.transLang = deckTransLang.value;
+  }
+}
+
+deckModeSegm.querySelectorAll("button").forEach((b) => {
+  b.addEventListener("click", () => {
+    editingDeck.mode = b.dataset.v;
+    paintDeckMode();
+  });
+});
+deckTermLang.addEventListener("change", () => {
+  editingDeck.lang = deckTermLang.value;
+  paintDeckMode();
+});
+deckTransLang.addEventListener("change", () => {
+  editingDeck.transLang = deckTransLang.value;
+});
+
 function openDeckEdit(deck) {
-  editingDeck = deck ? { ...deck } : { name: "", color: APP.deckColors[0] };
+  editingDeck = deck
+    ? { ...deck }
+    : { name: "", color: APP.deckColors[0], mode: "firstWords", lang: null, transLang: null };
   deckEditTitle.textContent = deck ? "Edit deck" : "New deck";
   deckNameInput.value = editingDeck.name || "";
   paintDeckColors();
+  paintDeckMode();
   deckDeleteRow.style.display = deck ? "flex" : "none";
   openScrim(deckEditScrim);
 }
+
+/* Seed a language deck from the shared 20-concept vocabulary. Index i
+ * means the same thing in every locale, so any pair works. */
+document.getElementById("deck-seed-btn").addEventListener("click", async () => {
+  if (!editingDeck) return;
+  const name = deckNameInput.value.trim();
+  if (!name) { toast(t("toast.nameDeck")); return; }
+  editingDeck.name = name;
+  editingDeck.mode = "language";
+  editingDeck.lang = deckTermLang.value;
+  editingDeck.transLang = deckTransLang.value;
+
+  // The deck needs an id before cards can point at it.
+  if (editingDeck.id == null) {
+    const decks = await getAll("decks");
+    editingDeck.order = decks.length;
+    editingDeck.createdAt = Date.now();
+    editingDeck.id = await put("decks", editingDeck);
+    settings.currentDeckId = editingDeck.id;
+    await saveSetting("currentDeckId", editingDeck.id);
+  } else {
+    await put("decks", editingDeck);
+  }
+
+  const termLoc = localeKeyForTts(editingDeck.lang) || DEFAULT_LOCALE;
+  const transLoc = localeKeyForTts(editingDeck.transLang) || DEFAULT_LOCALE;
+  const terms = vocabFor(termLoc);
+  const means = vocabFor(transLoc);
+
+  const existing = await getCardsForDeck(editingDeck.id);
+  const have = new Set(existing.map((c) => (c.name || "").toLowerCase()));
+  let order = existing.length;
+  let added = 0;
+  for (let i = 0; i < terms.length; i++) {
+    if (have.has(terms[i].toLowerCase())) continue;
+    await put("cards", {
+      deckId: editingDeck.id,
+      name: terms[i],
+      meaning: means[i],
+      emoji: VOCAB_EMOJI[i] || "💛",
+      imageBlob: null, audioBlob: null,
+      order: order++, playCount: 0, lastPlayed: 0,
+      createdAt: Date.now() + i,
+      lang: editingDeck.lang,
+      srs: null,
+    });
+    added++;
+  }
+  closeScrim(deckEditScrim);
+  editingDeck = null;
+  await loadDeck();
+  await renderDeckList();
+  toast(`${t("toast.seeded")} (${added})`);
+});
 
 document.getElementById("deck-edit-cancel").addEventListener("click", () => {
   closeScrim(deckEditScrim);
@@ -1567,8 +2762,17 @@ document.getElementById("deck-edit-cancel").addEventListener("click", () => {
 
 document.getElementById("deck-edit-save").addEventListener("click", async () => {
   const name = deckNameInput.value.trim();
-  if (!name) { toast("Name your deck"); return; }
+  if (!name) { toast(t("toast.nameDeck")); return; }
   editingDeck.name = name;
+  editingDeck.mode = editingDeck.mode || "firstWords";
+  if (editingDeck.mode === "language") {
+    editingDeck.lang = deckTermLang.value;
+    editingDeck.transLang = deckTransLang.value;
+  } else {
+    // Keep the term language (it drives TTS) but drop the pairing.
+    editingDeck.lang = editingDeck.lang || localeMeta()._tts;
+    editingDeck.transLang = null;
+  }
   if (editingDeck.id == null) {
     const decks = await getAll("decks");
     editingDeck.order = decks.length;
@@ -1614,6 +2818,7 @@ const editScrim = document.getElementById("edit-scrim");
 const editTitle = document.getElementById("edit-title");
 const previewPhoto = document.getElementById("preview-photo");
 const cardNameInput = document.getElementById("card-name");
+const cardMeaningInput = document.getElementById("card-meaning");
 const fileCamera = document.getElementById("file-camera");
 const fileLibrary = document.getElementById("file-library");
 const editDeleteRow = document.getElementById("edit-delete-row");
@@ -1627,6 +2832,7 @@ function freshDraft() {
   return {
     deckId: settings.currentDeckId,
     name: "", imageBlob: null, audioBlob: null, emoji: null,
+    meaning: null, lang: null, srs: null,
   };
 }
 
@@ -1650,6 +2856,10 @@ function openEditExisting(c) {
 
 function paintEditUi() {
   cardNameInput.value = editing.name || "";
+  // The meaning field only exists for language decks.
+  const isLang = currentDeck?.mode === "language";
+  cardMeaningInput.style.display = isLang ? "block" : "none";
+  cardMeaningInput.value = editing.meaning || "";
   if (editing.imageBlob) {
     previewPhoto.style.backgroundImage = `url(${URL.createObjectURL(editing.imageBlob)})`;
     previewPhoto.textContent = "";
@@ -1725,7 +2935,7 @@ recBtn.addEventListener("click", async () => {
     mediaRecorder.onstop = () => {
       const blob = new Blob(recChunks, { type: mediaRecorder.mimeType || "audio/webm" });
       editing.audioBlob = blob;
-      recStream.getTracks().forEach((t) => t.stop());
+      recStream.getTracks().forEach((tr) => tr.stop());
       recBtn.classList.remove("recording");
       clearTimeout(recTimer);
       paintEditUi();
@@ -1767,6 +2977,12 @@ document.getElementById("edit-save").addEventListener("click", async () => {
   const name = cardNameInput.value.trim();
   if (!name) { toast("Name this card"); return; }
   editing.name = name;
+  if (currentDeck?.mode === "language") {
+    editing.meaning = cardMeaningInput.value.trim() || null;
+    // Tag the card with the deck's term language so TTS is right even
+    // if the card is later moved or the app language changes.
+    if (!editing.lang) editing.lang = currentDeck.lang || localeMeta()._tts;
+  }
   if (editing.id == null) {
     const cards = await getCardsForDeck(editing.deckId);
     editing.order = cards.length;
@@ -1799,17 +3015,46 @@ document.getElementById("edit-delete").addEventListener("click", async () => {
  * Settings tab
  * ============================================================ */
 async function renderSettings() {
+  // language picker — endonyms, sorted so the list reads naturally
+  // to whoever is looking at it regardless of current app language
+  const ls = document.getElementById("language-select");
+  if (ls && !ls.dataset.built) {
+    const entries = Object.keys(I18N)
+      .map((k) => ({ k, name: I18N[k]._name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    for (const { k, name } of entries) {
+      const o = document.createElement("option");
+      o.value = k;
+      o.textContent = name;
+      ls.appendChild(o);
+    }
+    ls.dataset.built = "1";
+    ls.addEventListener("change", async () => {
+      await saveSetting("language", ls.value);
+      applyLocale(ls.value);
+      renderOnboard();
+      // Re-render whichever screen is actually showing.
+      if (currentDeck?.mode === "language") renderReview();
+      else renderCard();
+      await renderCardList();
+      await renderDeckList();
+      renderSettings();
+    });
+  }
+  if (ls) ls.value = LOCALE;
+
   // theme swatches
   const tw = document.getElementById("theme-swatches");
   tw.innerHTML = "";
-  APP.themes.forEach((t) => {
+  // NB: parameter is `th`, not `t` — `t` is the global translator.
+  APP.themes.forEach((th) => {
     const b = document.createElement("button");
-    b.style.background = APP.themeSwatches[t];
-    if (t === settings.theme) b.classList.add("active");
-    b.title = t;
+    b.style.background = APP.themeSwatches[th];
+    if (th === settings.theme) b.classList.add("active");
+    b.title = th;
     b.addEventListener("click", async () => {
-      await saveSetting("theme", t);
-      applyTheme(t);
+      await saveSetting("theme", th);
+      applyTheme(th);
       renderSettings();
     });
     tw.appendChild(b);
@@ -1897,6 +3142,9 @@ document.getElementById("import-file").addEventListener("change", async (e) => {
       c.deckId = idMap.get(c.deckId) || settings.currentDeckId;
       c.imageBlob = c.imageBlob ? await dataUrlToBlob(c.imageBlob) : null;
       c.audioBlob = c.audioBlob ? await dataUrlToBlob(c.audioBlob) : null;
+      // Review schedules are personal — the recipient starts fresh rather
+      // than inheriting when the sender happened to be due.
+      c.srs = null;
       await put("cards", c);
     }
     await loadDeck();
@@ -1983,9 +3231,11 @@ const onboardSkip = document.getElementById("onboard-skip");
 let onboardIdx = 0;
 
 function renderOnboard() {
-  onboardPages.style.transform = `translateX(-${onboardIdx * 100}%)`;
+  // In RTL the flex row runs the other way, so the slide sign flips.
+  const sign = localeMeta()._rtl ? 1 : -1;
+  onboardPages.style.transform = `translateX(${sign * onboardIdx * 100}%)`;
   onboardDots.forEach((d, i) => d.classList.toggle("active", i === onboardIdx));
-  onboardNext.textContent = onboardIdx === 2 ? "Get started" : "Next";
+  onboardNext.textContent = onboardIdx === 2 ? t("onb.start") : t("onb.next");
 }
 
 onboardNext.addEventListener("click", async () => {
@@ -1995,13 +3245,13 @@ onboardNext.addEventListener("click", async () => {
   } else {
     await saveSetting("seenOnboarding", true);
     onboardEl.classList.remove("open");
-    document.getElementById("deck-screen").classList.remove("hidden");
+    revealApp();
   }
 });
 onboardSkip.addEventListener("click", async () => {
   await saveSetting("seenOnboarding", true);
   onboardEl.classList.remove("open");
-  document.getElementById("deck-screen").classList.remove("hidden");
+  revealApp();
 });
 
 /* ============================================================
@@ -2011,6 +3261,9 @@ onboardSkip.addEventListener("click", async () => {
   try {
     await openDb();
     await loadSettings();
+    // Locale must land before seeding — the starter deck is written to
+    // the database in whatever language is active at first run.
+    applyLocale(settings.language || detectLocale());
     applyTheme(settings.theme || "soft");
     await seedIfFirstRun();
     await loadDeck();
@@ -2022,12 +3275,12 @@ onboardSkip.addEventListener("click", async () => {
         onboardEl.classList.add("open");
         renderOnboard();
       } else {
-        document.getElementById("deck-screen").classList.remove("hidden");
+        revealApp();
       }
     }, 700);
   } catch (err) {
     console.error("boot failed", err);
-    toast("Could not start. Refresh?");
+    toast(t("toast.bootFail"));
   }
 })();
 
@@ -2035,6 +3288,18 @@ onboardSkip.addEventListener("click", async () => {
 window.addEventListener("keydown", (e) => {
   if (document.querySelector(".scrim.open")) return;
   if (document.getElementById("onboard").classList.contains("open")) return;
+  // Review screen has its own interaction model — space reveals/grades.
+  if (!reviewScreen.classList.contains("hidden")) {
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      if (!reviewRevealed) revealReview();
+    } else if (reviewRevealed && ["1", "2", "3", "4"].includes(e.key)) {
+      gradeReview(SRS_GRADES[Number(e.key) - 1]);
+    } else if (e.key === "g" || e.key === "G") {
+      openGate();
+    }
+    return;
+  }
   if (e.key === "ArrowRight") next();
   else if (e.key === "ArrowLeft") prev();
   else if (e.key === " ") { e.preventDefault(); playCurrent(); }
@@ -2045,6 +3310,20 @@ window.addEventListener("keydown", (e) => {
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && "speechSynthesis" in window) speechSynthesis.cancel();
 });
+
+/* ============================================================
+ * Service worker — offline shell
+ * Registration is entirely optional: if it fails (file://, no
+ * HTTPS, unsupported browser) the app still runs, it just won't
+ * open without a connection.
+ * ============================================================ */
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch((err) => {
+      console.warn("service worker registration failed", err);
+    });
+  });
+}
 </script>
 <script src="/nav.js" defer></script>
 </body>
