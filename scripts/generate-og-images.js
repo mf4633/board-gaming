@@ -7,6 +7,7 @@ const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'og');
 
 const CARDS = [
+  { file: 'home', title: 'BOARD GAMING HUB', sub: '35 free browser games — no signup, no install', accent: '#f0c060', bg: '#0c1016' },
   { file: 'wordform', title: 'WORDFORM', sub: 'Daily 5-letter word puzzle', accent: '#d4a050', bg: '#1a1410' },
   { file: 'chess', title: 'CHESS', sub: 'Free online — vs AI or 2-player', accent: '#f0d89c', bg: '#1a1410' },
   { file: 'sudoku', title: 'SUDOKU', sub: 'Easy to expert — no signup', accent: '#94c3e8', bg: '#0c1016' },
