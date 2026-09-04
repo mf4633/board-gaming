@@ -918,7 +918,7 @@
         "water"
       ],
       "demo": true,
-      "storeUrl": "https://hydroengineer.itch.io/floodline",
+      "storeUrl": "https://hydroengineer.itch.io/floodlines",
       "appId": "com.hydroengineer.floodline",
       "platforms": [
         "android",
@@ -1037,4 +1037,4 @@
       "addedOn": "2026-09-04"
     }
   ]
-}
+}
