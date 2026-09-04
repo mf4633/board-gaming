@@ -484,7 +484,7 @@ const pages = [
     slug: 'minesweeper-strategy',
     file: 'minesweeper-strategy.html',
     title: 'Minesweeper Strategy for Beginners',
-    description: 'First-click safety, reading the numbers, the 1-2-1 and 1-2-2-1 patterns, flagging vs chording, and the three difficulty grids.',
+    description: 'First-click safety, reading the numbers, the 1-2-1 and 1-2-2-1 patterns, flagging vs chording, the three difficulty grids, and the 2.0 modes: no-guess, daily, hex and knight.',
     body: `
     <p><a href="/minesweeper">Minesweeper</a> is a pure-logic puzzle: clear every safe cell without detonating a hidden mine. Each revealed number tells you exactly how many of its eight neighbors are mines. On Board Gaming Hub the board offers three classic sizes and right-click flagging (long-press on touch). This guide takes you from random clicking to reading the board like an expert.</p>
 
@@ -513,8 +513,19 @@ const pages = [
     <p>Flag a cell (right-click or long-press) once you have proven it is a mine — flags are your notes, not guesses. Once a number is fully flagged you can <b>chord</b> it: left+right click together (or middle-click) on the number auto-reveals all of its remaining unflagged neighbors at once. Chording is the single biggest speed boost on larger boards, but it only fires when the flag count matches the number, so keep your flags honest.</p>
 
     <div class="callout">
-      <b>When logic runs out:</b> some positions force a genuine 50/50 guess — classic Minesweeper is not always deducible. Guess in the corner or lowest-probability cell, and save the guess for when no forced move remains.
+      <b>When logic runs out:</b> some positions force a genuine 50/50 guess — classic Minesweeper is not always deducible. Guess in the corner or lowest-probability cell, and save the guess for when no forced move remains. If you would rather never face that coin flip, switch on <b>No-Guess</b> on the game page: every board is checked by a solver before you see it, so a deduction always exists. <b>Guess Alert</b> does the opposite job in classic mode — it tells you the moment no safe deduction remains, so you stop searching and guess deliberately.
     </div>
+
+    <h2>Minesweeper 2.0: the new modes</h2>
+    <ul>
+      <li><b>No-Guess</b> — boards are generated with a constraint solver in the loop and reshuffled until logic alone clears them. Roughly one random Expert board in six is deducible from the opening; No-Guess makes it six in six.</li>
+      <li><b>Daily challenge</b> — one seeded 16×16 no-guess board per UTC day, identical for everyone. First attempt counts toward your streak; the share line gives your time and 3BV without spoiling the layout.</li>
+      <li><b>Hex</b> — six neighbours instead of eight, so numbers top out at 6 and the edge patterns above change shape.</li>
+      <li><b>Knight</b> — each number counts mines a knight's move away, not adjacent cells. Every pattern you know is rewired; treat it as a fresh puzzle.</li>
+      <li><b>Share Board</b> — after your first click the board is fixed. The link carries seed, size, variant and start cell, so a friend races the identical board.</li>
+      <li><b>Hint</b> — highlights a provable safe cell, a provable mine, or a flag you got wrong, for a 10-second penalty.</li>
+      <li><b>3BV</b> — the minimum number of clicks a board needs (one per opening plus one per isolated number). 3BV per second is how speed players compare runs across boards of different difficulty.</li>
+    </ul>
 
     <h2>The three difficulties</h2>
     <ul>

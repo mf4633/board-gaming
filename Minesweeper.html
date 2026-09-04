@@ -3,269 +3,682 @@
 <head>
 <meta charset="UTF-8">
 <meta name="theme-color" content="#0c1016">
-<title>Minesweeper — Free Online Classic Mine Puzzle | Board Gaming Hub</title>
+<title>Minesweeper 2.0 — No-Guess Mode, Daily Challenge, Hex & Knight Boards | Board Gaming Hub</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Play Minesweeper free online. Classic Beginner, Intermediate, and Expert grids. Right-click to flag, left-click to reveal. No signup, no downloads, mobile-friendly.">
-<meta name="keywords" content="minesweeper, play minesweeper, free minesweeper online, classic minesweeper, mine puzzle">
+<meta name="description" content="Play Minesweeper free online — classic Beginner to Expert, plus no-guess boards that never force a 50/50, a daily challenge everyone shares, hex and knight's-move variants, shareable seeds, hints and 3BV stats. No signup, mobile-friendly.">
+<meta name="keywords" content="minesweeper, no guess minesweeper, daily minesweeper, hex minesweeper, play minesweeper online, free minesweeper, minesweeper 3bv">
 <link rel="canonical" href="https://boardgaminghub.com/minesweeper">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://boardgaminghub.com/minesweeper">
-<meta property="og:title" content="Minesweeper — Free Online Classic">
-<meta property="og:description" content="The classic logic puzzle: clear the field without detonating any mines. Free, in-browser, single-file HTML.">
+<meta property="og:title" content="Minesweeper 2.0 — No-Guess, Daily Challenge, Hex &amp; Knight">
+<meta property="og:description" content="Classic Minesweeper plus boards that never force a guess, a shared daily challenge, hex and knight's-move variants, seed sharing and solver-powered hints. Free, in-browser, single-file HTML.">
 <meta property="og:image" content="https://boardgaminghub.com/og/minesweeper.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://boardgaminghub.com/og/minesweeper.png">
 <script type="application/ld+json">
-{ "@context": "https://schema.org", "@type": "VideoGame", "name": "Minesweeper",
-  "description": "Reveal cells without detonating any mines. Number clues show how many mines surround each cell.",
+{ "@context": "https://schema.org", "@type": "VideoGame", "name": "Minesweeper 2.0",
+  "description": "Reveal cells without detonating any mines. Classic grids plus no-guess boards, a daily challenge, hex and knight's-move variants, shareable seeds and solver hints.",
   "url": "https://boardgaminghub.com/minesweeper", "genre": "Puzzle",
   "applicationCategory": "Game", "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Minesweeper","item":"https://boardgaminghub.com/minesweeper"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What do the numbers in Minesweeper mean?","acceptedAnswer":{"@type":"Answer","text":"A number on a revealed cell shows how many mines lie among the 8 cells immediately surrounding it. A blank revealed cell has 0 adjacent mines (and the game auto-cascades, opening neighbors). A 1 means exactly one of the 8 neighbors is a mine; a 2 means exactly two; and so on up to 8 (rare)."}},{"@type":"Question","name":"What's the difference between Beginner, Intermediate, and Expert?","acceptedAnswer":{"@type":"Answer","text":"Beginner is 9×9 with 10 mines (~12% density). Intermediate is 16×16 with 40 mines (~16%). Expert is 30×16 with 99 mines (~21%). Higher density makes deductions harder and more likely to require a 50/50 guess."}},{"@type":"Question","name":"What is a chord click?","acceptedAnswer":{"@type":"Answer","text":"A chord (left+right click together, or middle-click) on a revealed numbered cell automatically opens all unflagged neighbors — but only if the number of flagged neighbors equals the number on the cell. Speeds up clearing significantly once you've flagged the obvious mines around a number."}},{"@type":"Question","name":"Can every Minesweeper game be solved without guessing?","acceptedAnswer":{"@type":"Answer","text":"No. Standard Minesweeper allows positions where the only safe cell can't be deduced from the visible numbers — a forced 50/50 guess. Some implementations (\"no-guess\" Minesweeper) use only solvable boards; the classic version does not. Approximately 20–30% of Expert games contain at least one unforced guess."}},{"@type":"Question","name":"What's the best Minesweeper strategy?","acceptedAnswer":{"@type":"Answer","text":"Open corners and edges first — they have fewer neighbors so numbers there are higher-information. Flag mines as you identify them so chord-click works. When stuck, look at numbers along the borders of unrevealed regions for forced deductions. Save guesses for when no logic remains, and prefer cells far from numbered constraints (lower local mine density)."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What do the numbers in Minesweeper mean?","acceptedAnswer":{"@type":"Answer","text":"A number on a revealed cell shows how many mines lie among the cells immediately surrounding it — 8 neighbors on a square grid, 6 on a hex grid, and the 8 knight's-move cells in the Knight variant. A blank revealed cell has 0 adjacent mines and the game auto-opens its neighbors."}},{"@type":"Question","name":"What is no-guess Minesweeper?","acceptedAnswer":{"@type":"Answer","text":"A no-guess board is generated so that it can be cleared by logic alone from the opened start cell, with no forced 50/50. This page runs a constraint solver over every candidate board and reshuffles the unresolved mines until the solver can clear the whole grid, so a stuck position always has a deduction available."}},{"@type":"Question","name":"How does the Minesweeper daily challenge work?","acceptedAnswer":{"@type":"Answer","text":"Every UTC day there is one seeded 16×16, 40-mine, no-guess board that is identical for everyone. Your first attempt is the one that counts toward your streak; you can replay it for practice. The share button copies a spoiler-free result line with your time, 3BV and streak."}},{"@type":"Question","name":"What is 3BV in Minesweeper?","acceptedAnswer":{"@type":"Answer","text":"3BV (Bechtel's Board Benchmark Value) is the minimum number of left-clicks needed to clear a board: one per open region plus one per numbered cell that does not touch an open region. 3BV per second is the speed measure the Minesweeper community uses because it corrects for easy versus hard boards."}},{"@type":"Question","name":"What's the difference between Beginner, Intermediate, and Expert?","acceptedAnswer":{"@type":"Answer","text":"Beginner is 9×9 with 10 mines (~12% density). Intermediate is 16×16 with 40 mines (~16%). Expert is 30×16 with 99 mines (~21%). Higher density makes deductions harder and, in classic mode, more likely to require a 50/50 guess."}},{"@type":"Question","name":"What is a chord click?","acceptedAnswer":{"@type":"Answer","text":"A chord (left+right click together, middle-click, or simply clicking a revealed number) automatically opens all unflagged neighbors — but only if the number of flagged neighbors equals the number on the cell."}},{"@type":"Question","name":"Can every Minesweeper game be solved without guessing?","acceptedAnswer":{"@type":"Answer","text":"Not in classic mode: only about one in six random Expert boards can be cleared by pure logic from the first opening. Switch on No-Guess and every board is guaranteed solvable; the optional guess alert tells you in classic mode when no safe deduction remains."}}]}</script>
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0;
-    background:
-      radial-gradient(ellipse at top, #1a1410 0%, #0a0604 70%) fixed;
+    background: radial-gradient(ellipse at top, #1a1410 0%, #0a0604 70%) fixed;
     color: #e8d8b8; font-family: Georgia, "Times New Roman", serif; }
-  #wrap { max-width: 760px; margin: 0 auto; padding: 28px 12px 60px; text-align: center; }
+  #wrap { max-width: 780px; margin: 0 auto; padding: 28px 12px 60px; text-align: center; overflow-x: hidden; }
   h1 { font-size: 2.2em; letter-spacing: 10px; margin: 0 0 6px;
     background: linear-gradient(180deg, #ffe8a8 0%, #d4a050 50%, #905028 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
     text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
-  .tag { color: #a09078; letter-spacing: 4px; font-size: 0.82em; margin-bottom: 18px; font-style: italic; }
-  .controls { margin: 14px 0; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-  button { background: linear-gradient(180deg, #3a2818, #1f1408); color: #f0d89c; border: 1px solid #5a4028; border-radius: 4px; padding: 8px 14px; font-family: inherit; letter-spacing: 2px; font-size: 0.82em; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,220,150,0.2), 0 2px 4px rgba(0,0,0,0.4); }
+  h1 small { font-size: 0.45em; letter-spacing: 4px; vertical-align: super; }
+  .tag { color: #a09078; letter-spacing: 4px; font-size: 0.82em; margin-bottom: 14px; font-style: italic; }
+  .controls { margin: 8px 0; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .controls .lab { color: #7a6848; font-size: 0.68em; letter-spacing: 3px; margin-right: 2px; }
+  button { background: linear-gradient(180deg, #3a2818, #1f1408); color: #f0d89c; border: 1px solid #5a4028; border-radius: 4px; padding: 7px 12px; font-family: inherit; letter-spacing: 2px; font-size: 0.78em; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,220,150,0.2), 0 2px 4px rgba(0,0,0,0.4); }
   button:hover { background: linear-gradient(180deg, #4a3624, #2a1c10); border-color: #7a5838; }
   button.active { background: linear-gradient(180deg, #f0d89c, #b08838); color: #1a1008; border-color: #b07810; }
-  .stats { display: flex; gap: 12px; justify-content: center; margin: 12px 0; }
-  .stat { background: linear-gradient(180deg, #2a1c10, #1a1008); border: 1px solid #4a3820; border-radius: 6px; padding: 6px 14px; min-width: 80px; box-shadow: inset 0 1px 0 rgba(255,220,150,0.15), 0 2px 4px rgba(0,0,0,0.4); }
-  .stat .lab { color: #8a7858; font-size: 0.7em; letter-spacing: 3px; }
-  .stat .val { color: #ffd896; font-size: 1.2em; font-weight: bold; text-shadow: 0 1px 0 #000;
-    font-family: "Courier New", monospace; }
-  #boardWrap { overflow: auto; padding: 12px; }
-  /* Brass-plate board */
-  #board { display: inline-grid; gap: 2px; padding: 8px;
-    background:
-      radial-gradient(ellipse at 25% 25%, rgba(255,220,150,0.18), transparent 60%),
-      linear-gradient(135deg, #5a3a18 0%, #3a2410 50%, #5a3a18 100%);
-    border: 2px solid;
-    border-image: linear-gradient(135deg, #f0d89c, #905028, #f0d89c) 1;
-    border-radius: 4px; user-select: none;
-    box-shadow: 0 0 0 1px #2a1808, 0 4px 14px rgba(0,0,0,0.7); }
-  /* Unrevealed: brass studs */
-  .cell { width: 26px; height: 26px;
-    background:
-      radial-gradient(circle at 30% 30%, rgba(255,220,150,0.5), transparent 60%),
-      linear-gradient(135deg, #b08038 0%, #6a4818 100%);
-    border: 1px solid #2a1808;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: bold; cursor: pointer; font-size: 0.9em; color: #fff;
+  button:disabled { opacity: 0.45; cursor: default; }
+  button.daily { border-color: #b07810; }
+  button.small { padding: 5px 9px; font-size: 0.72em; }
+  #customBox { display: none; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; margin: 6px 0; font-size: 0.78em; letter-spacing: 2px; color: #a09078; }
+  #customBox input { width: 58px; background: #1a1008; color: #f0d89c; border: 1px solid #5a4028; border-radius: 4px; padding: 5px 6px; font-family: inherit; font-size: 1em; text-align: center; }
+  .stats { display: flex; gap: 10px; justify-content: center; margin: 12px 0 6px; flex-wrap: wrap; }
+  .stat { background: linear-gradient(180deg, #2a1c10, #1a1008); border: 1px solid #4a3820; border-radius: 6px; padding: 6px 12px; min-width: 74px; box-shadow: inset 0 1px 0 rgba(255,220,150,0.15), 0 2px 4px rgba(0,0,0,0.4); }
+  .stat .lab { color: #8a7858; font-size: 0.66em; letter-spacing: 3px; }
+  .stat .val { color: #ffd896; font-size: 1.15em; font-weight: bold; text-shadow: 0 1px 0 #000; font-family: "Courier New", monospace; }
+  #modeLine { color: #a09078; font-size: 0.72em; letter-spacing: 3px; margin: 4px 0 8px; }
+  #boardWrap { overflow: auto; padding: 10px 4px; max-width: 100%; -webkit-overflow-scrolling: touch; }
+  #board { position: relative; display: inline-block; padding: 0; margin: 8px; box-sizing: content-box; user-select: none; -webkit-user-select: none; touch-action: manipulation;
+    background: radial-gradient(ellipse at 25% 25%, rgba(255,220,150,0.18), transparent 60%), linear-gradient(135deg, #5a3a18 0%, #3a2410 50%, #5a3a18 100%);
+    outline: 2px solid #c89a50; outline-offset: 6px; border-radius: 3px;
+    box-shadow: 0 0 0 8px #3a2410, 0 0 0 9px #2a1808, 0 6px 18px rgba(0,0,0,0.7); }
+  .cell { position: absolute; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; color: #fff; line-height: 1;
+    background: radial-gradient(circle at 30% 30%, rgba(255,220,150,0.5), transparent 60%), linear-gradient(135deg, #b08038 0%, #6a4818 100%);
+    border: 1px solid #2a1808; border-radius: 2px;
     box-shadow: inset 0 1px 0 rgba(255,220,150,0.45), inset 0 -1px 0 rgba(0,0,0,0.4); }
-  /* Revealed: dark recessed copper */
-  .cell.r {
-    background: linear-gradient(180deg, #1a1208, #2a1c10);
-    border-color: #0a0604; cursor: default;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); color: #e8d8b8; }
-  .cell.r.m {
-    background: radial-gradient(circle at 35% 30%, #ff80a0, #c02038 50%, #600818);
-    color: #fff; box-shadow: inset 0 1px 0 rgba(255,180,180,0.5), 0 0 12px rgba(220,40,60,0.6); }
-  .cell.f {
-    background: radial-gradient(circle at 30% 30%, #ffd060, #d4801c 60%, #8a4810);
-    color: #fff; border-color: #4a2008;
-    box-shadow: inset 0 1px 0 rgba(255,220,120,0.5), 0 0 8px rgba(255,180,60,0.5); }
-  .n1 { color: #80b8ff; } .n2 { color: #80e0a0; } .n3 { color: #ff8090; }
-  .n4 { color: #d090ff; } .n5 { color: #ffa860; } .n6 { color: #60d8d8; }
-  .n7 { color: #e8e0c0; } .n8 { color: #a89878; }
-  #msg { margin-top: 14px; min-height: 1.2em; color: #f0d89c; letter-spacing: 3px; font-size: 0.95em; }
+  #board.hex .cell { clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); border: none; border-radius: 0; box-shadow: none;
+    background: radial-gradient(circle at 35% 30%, rgba(255,220,150,0.45), transparent 60%), linear-gradient(135deg, #b08038 0%, #6a4818 100%); }
+  .cell.r { background: linear-gradient(180deg, #1a1208, #2a1c10); border-color: #0a0604; cursor: default; box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); color: #e8d8b8; }
+  #board.hex .cell.r { background: linear-gradient(180deg, #221708, #33220f); }
+  .cell.r.m { background: radial-gradient(circle at 35% 30%, #ff80a0, #c02038 50%, #600818); color: #fff; box-shadow: inset 0 1px 0 rgba(255,180,180,0.5), 0 0 12px rgba(220,40,60,0.6); }
+  .cell.r.m.boom { background: radial-gradient(circle at 35% 30%, #fff0a0, #ff4020 45%, #800000); }
+  .cell.f { background: radial-gradient(circle at 30% 30%, #ffd060, #d4801c 60%, #8a4810); color: #fff; border-color: #4a2008; box-shadow: inset 0 1px 0 rgba(255,220,120,0.5), 0 0 8px rgba(255,180,60,0.5); }
+  .cell.f.wrong { background: radial-gradient(circle at 30% 30%, #907060, #503030 60%, #301818); color: #ffb0b0; }
+  .cell.start { box-shadow: inset 0 0 0 2px rgba(240,216,156,0.7); }
+  .cell.hint { animation: hintPulse 0.9s ease-in-out infinite alternate; z-index: 2; }
+  @keyframes hintPulse { from { box-shadow: 0 0 0 2px #f0d89c, 0 0 10px #ffd060; } to { box-shadow: 0 0 0 3px #fff4c0, 0 0 22px #ffd060; } }
+  #board.hex .cell.hint { animation: hintPulseHex 0.9s ease-in-out infinite alternate; }
+  @keyframes hintPulseHex { from { filter: brightness(1.4); } to { filter: brightness(2); } }
+  .n1 { color: #80b8ff; } .n2 { color: #80e0a0; } .n3 { color: #ff8090; } .n4 { color: #d090ff; } .n5 { color: #ffa860; } .n6 { color: #60d8d8; } .n7 { color: #e8e0c0; } .n8 { color: #a89878; }
+  #msg { margin-top: 10px; min-height: 1.3em; color: #f0d89c; letter-spacing: 3px; font-size: 0.9em; padding: 0 6px; }
+  #alert { min-height: 1.2em; color: #ffa860; letter-spacing: 2px; font-size: 0.8em; margin-top: 4px; }
+  #post { margin-top: 10px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  #statsPanel { display: none; margin: 16px auto 0; max-width: 640px; background: linear-gradient(180deg, #1e140a, #140c06); border: 1px solid #4a3820; border-radius: 6px; padding: 10px 12px; text-align: left; font-size: 0.8em; }
+  .srow { display: grid; grid-template-columns: 2.4fr 0.8fr 1.1fr 0.7fr 0.8fr 0.8fr; gap: 6px; padding: 4px 0; border-bottom: 1px solid #2a1c10; color: #e8d8b8; }
+  .srow.head, .srow.foot { color: #d4a050; letter-spacing: 2px; font-size: 0.85em; }
+  .srow.foot { border-bottom: none; border-top: 1px solid #4a3820; margin-top: 2px; }
+  .kbd { color: #8a7858; font-size: 0.72em; letter-spacing: 2px; margin-top: 12px; }
   nav { margin-top: 22px; font-size: 0.82em; letter-spacing: 2px; }
   nav a { color: #a09078; text-decoration: none; margin: 0 10px; }
   nav a:hover { color: #f0d89c; }
   .info { color: #8a7858; font-size: 0.82em; line-height: 1.6; margin-top: 30px; text-align: left; padding: 0 6px; }
   .info h2 { color: #d4a050; font-size: 0.95em; letter-spacing: 4px; text-transform: uppercase; margin: 18px 0 8px; }
   .info strong { color: #f0d89c; }
+  @media (max-width: 480px) { h1 { font-size: 1.7em; letter-spacing: 6px; } button { padding: 6px 9px; font-size: 0.72em; letter-spacing: 1px; } .stat { min-width: 64px; padding: 5px 8px; } .srow { grid-template-columns: 2fr 0.7fr 1fr 0.7fr 0.8fr 0.7fr; font-size: 0.9em; } }
 </style>
 </head>
 <body>
 <div id="wrap">
-  <h1>MINESWEEPER</h1>
-  <div class="tag">FIND THE MINES</div>
+  <h1>MINESWEEPER <small>2.0</small></h1>
+  <div class="tag">FIND THE MINES — NO-GUESS · DAILY · HEX · KNIGHT</div>
   <div class="controls">
-    <button data-d="b" class="active">BEGINNER 9×9</button>
-    <button data-d="i">INTERMEDIATE 16×16</button>
-    <button data-d="e">EXPERT 30×16</button>
-    <button id="newgame">NEW</button>
+    <button data-size="b" class="daily-locked">BEGINNER 9×9</button>
+    <button data-size="i" class="daily-locked">INTERMEDIATE 16×16</button>
+    <button data-size="e" class="daily-locked">EXPERT 30×16</button>
+    <button data-size="c" class="daily-locked">CUSTOM</button>
+    <button id="dailyBtn" class="daily" title="One seeded no-guess board per day, same for everyone">★ DAILY</button>
+  </div>
+  <div id="customBox">
+    <span>W</span><input id="cw" type="number" min="5" max="60"> <span>H</span><input id="ch" type="number" min="5" max="40"> <span>MINES</span><input id="cm" type="number" min="1"> <button id="customGo" class="small">SET</button>
+  </div>
+  <div class="controls">
+    <span class="lab">BOARD</span>
+    <button data-variant="square" class="daily-locked" title="Classic 8-neighbour grid">▦ SQUARE</button>
+    <button data-variant="hex" class="daily-locked" title="Hexagonal cells, 6 neighbours">⬡ HEX</button>
+    <button data-variant="knight" class="daily-locked" title="Numbers count mines a knight's move away">♞ KNIGHT</button>
+    <span class="lab">RULES</span>
+    <button id="noGuess" class="daily-locked" title="Every board is solvable by logic alone — no forced 50/50">NO-GUESS</button>
+    <button id="guessAlert" title="In classic mode, warn when no safe deduction exists">GUESS ALERT</button>
   </div>
   <div class="stats">
     <div class="stat"><div class="lab">MINES</div><div class="val" id="mines">10</div></div>
     <div class="stat"><div class="lab">TIME</div><div class="val" id="time">0</div></div>
     <div class="stat"><div class="lab">BEST</div><div class="val" id="best">—</div></div>
+    <div class="stat" title="Minimum clicks needed to clear this board"><div class="lab">3BV</div><div class="val" id="bv">—</div></div>
+  </div>
+  <div id="modeLine"></div>
+  <div class="controls">
+    <button id="newgame">NEW</button>
+    <button id="hintBtn" title="Solver-powered hint, +10 s penalty">HINT</button>
+    <button id="flagMode" title="Tap to flag instead of reveal (touch)">⚑ FLAG MODE</button>
+    <button id="shareBtn" title="Copy a link to this exact board">SHARE BOARD</button>
+    <button id="statsBtn">STATS</button>
+    <button id="zoomOut" class="small" title="Smaller cells">−</button><button id="zoomFit" class="small" title="Fit to screen">FIT</button><button id="zoomIn" class="small" title="Larger cells">+</button>
   </div>
   <div id="boardWrap"><div id="board"></div></div>
   <div id="msg"></div>
-  <nav><a href="/">All games</a> · <a href="/sudoku">Sudoku</a> · <a href="/2048">2048</a></nav>
+  <div id="alert"></div>
+  <div id="post"></div>
+  <div id="statsPanel"><div id="statsBody"></div></div>
+  <div class="kbd">N NEW · H HINT · F FLAG MODE · CLICK A NUMBER TO CHORD · LONG-PRESS TO FLAG</div>
+  <nav><a href="/">All games</a> · <a href="/sudoku">Sudoku</a> · <a href="/2048">2048</a> · <a href="/guides/minesweeper-strategy">Strategy guide</a></nav>
 
   <div class="info">
     <h2>How to play Minesweeper</h2>
-    <p><strong>Left-click</strong> a cell to reveal it. <strong>Right-click</strong> (or long-press on touch) to flag a suspected mine. Numbers show how many mines touch that cell, including diagonals. Reveal every safe cell to win — touch a mine and the field explodes.</p>
+    <p><strong>Left-click</strong> a cell to reveal it. <strong>Right-click</strong> (or long-press on touch, or switch on <strong>Flag Mode</strong>) to flag a suspected mine. Numbers show how many mines touch that cell. Reveal every safe cell to win — touch a mine and the field explodes. The first click is always safe and opens an area.</p>
+    <h2>What's new in 2.0</h2>
+    <p><strong>No-Guess</strong> boards are generated with a solver in the loop, so logic alone always clears them. The <strong>Daily</strong> is one seeded no-guess board per day, identical for everyone, with streaks and a spoiler-free share line. <strong>Hex</strong> cells have six neighbours; <strong>Knight</strong> numbers count mines a knight's move away, which rewires every pattern you know. <strong>Share Board</strong> copies a link to the exact board you are on, so a friend can race your time. <strong>Hint</strong> highlights a provable move (or a wrong flag) for a 10-second penalty, and <strong>Guess Alert</strong> warns you in classic mode when only a guess remains. <strong>3BV</strong> is the minimum-click score used for speed comparisons.</p>
     <h2>Tips</h2>
-    <p>The first click is always safe and opens an empty area. When the count of flags around a revealed number equals that number, you can <strong>chord-click</strong> (left+right or middle-click) to auto-reveal its remaining neighbors. Look for forced moves: a "1" with only one unrevealed neighbor means that neighbor is the mine.</p>
+    <p>When the flags around a revealed number equal that number, click the number to <strong>chord</strong> and open its remaining neighbours. A "1" with a single unrevealed neighbour marks that neighbour as a mine. In classic mode about one Expert board in six is solvable without any guess; the other five will eventually put you in a 50/50 — that is what No-Guess mode removes.</p>
   </div>
 </div>
+<script id="msw-engine">
+/* Minesweeper 2.0 engine — pure, DOM-free. Variants, seeded generation, no-guess solver, 3BV. */
+const MSW = (() => {
+  // ---------- deterministic RNG ----------
+  function hashStr(str) { // cyrb53 folded to 32 bits
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (let i = 0; i < str.length; i++) { const ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507); h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507); h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return ((h2 >>> 0) ^ (h1 >>> 0)) >>> 0;
+  }
+  function mulberry32(a) { a >>>= 0; return () => {
+    a = (a + 0x6D2B79F5) >>> 0; let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  const randomSeed = () => (Math.random() * 4294967296) >>> 0;
+
+  // ---------- variants: a variant is just a neighbourhood + a layout ----------
+  const VARIANTS = {
+    square: { label: 'SQUARE', icon: '▦', layout: 'square', maxN: 8,
+      neighbors(r, c, w, h) { const o = [];
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+          if (!dr && !dc) continue; const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < h && nc >= 0 && nc < w) o.push(nr * w + nc); } return o; } },
+    hex: { label: 'HEX', icon: '⬡', layout: 'hex', maxN: 6,
+      neighbors(r, c, w, h) { // odd-r offset, pointy-top, odd rows shifted right
+        const odd = r & 1, d = odd ? [[-1,0],[-1,1],[0,-1],[0,1],[1,0],[1,1]] : [[-1,-1],[-1,0],[0,-1],[0,1],[1,-1],[1,0]];
+        const o = []; for (const [dr, dc] of d) { const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < h && nc >= 0 && nc < w) o.push(nr * w + nc); } return o; } },
+    knight: { label: 'KNIGHT', icon: '♞', layout: 'square', maxN: 8,
+      neighbors(r, c, w, h) { const o = [];
+        for (const [dr, dc] of [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]) {
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < h && nc >= 0 && nc < w) o.push(nr * w + nc); } return o; } },
+  };
+  const SIZES = { b: { w: 9, h: 9, m: 10, label: 'BEGINNER' }, i: { w: 16, h: 16, m: 40, label: 'INTERMEDIATE' }, e: { w: 30, h: 16, m: 99, label: 'EXPERT' } };
+
+  function buildNbr(variant, w, h) {
+    const V = VARIANTS[variant], nbr = new Array(w * h);
+    for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) nbr[r * w + c] = V.neighbors(r, c, w, h);
+    return nbr;
+  }
+
+  // ---------- board ----------
+  function countNumbers(mine, nbr) {
+    const N = mine.length, num = new Uint8Array(N);
+    for (let i = 0; i < N; i++) { if (mine[i]) continue; let n = 0; for (const j of nbr[i]) n += mine[j]; num[i] = n; }
+    return num;
+  }
+  function placeMines(rng, N, M, forbidden) {
+    const mine = new Uint8Array(N); const pool = [];
+    for (let i = 0; i < N; i++) if (!forbidden[i]) pool.push(i);
+    if (M > pool.length) M = pool.length;
+    for (let k = 0; k < M; k++) { const j = k + Math.floor(rng() * (pool.length - k)); const t = pool[k]; pool[k] = pool[j]; pool[j] = t; mine[pool[k]] = 1; }
+    return mine;
+  }
+  function cascade(idx, nbr, num, mine, revealed) { // flood open; returns newly revealed
+    const out = []; const stack = [idx];
+    while (stack.length) { const i = stack.pop(); if (revealed[i] || mine[i]) continue;
+      revealed[i] = 1; out.push(i); if (num[i] === 0) for (const j of nbr[i]) if (!revealed[j]) stack.push(j); }
+    return out;
+  }
+
+  // ---------- solver ----------
+  // deduce(): one round of logic from `revealed` (0/1) and `known` mines (0/1). Returns {safe:[], mine:[]} or null.
+  const ENUM_BUDGET = 40000, GLOBAL_LIMIT = 24;
+  function deduce(board, revealed, known, remainingMines) {
+    const { nbr, num, N } = board;
+    const cons = [], cellCons = new Map();
+    for (let i = 0; i < N; i++) { if (!revealed[i] || num[i] === 0) continue;
+      let k = num[i]; const U = [];
+      for (const j of nbr[i]) { if (known[j]) k--; else if (!revealed[j]) U.push(j); }
+      if (!U.length) continue;
+      const ci = cons.length; cons.push({ cells: U, k });
+      for (const j of U) { let a = cellCons.get(j); if (!a) cellCons.set(j, a = []); a.push(ci); }
+    }
+    const safe = new Set(), mine = new Set();
+    // pass 1: saturated / exhausted constraints
+    for (const c of cons) { if (c.k === 0) c.cells.forEach(j => safe.add(j)); else if (c.k === c.cells.length) c.cells.forEach(j => mine.add(j)); }
+    if (safe.size || mine.size) return { safe: [...safe], mine: [...mine] };
+    // pass 2: subset rule  (A within B  ->  B minus A holds kB-kA mines)
+    const sets = cons.map(c => new Set(c.cells));
+    for (let a = 0; a < cons.length; a++) { const seen = new Set();
+      for (const j of cons[a].cells) for (const b of cellCons.get(j)) { if (b === a || seen.has(b)) continue; seen.add(b);
+        if (cons[a].cells.length >= cons[b].cells.length) continue;
+        let sub = true; for (const x of cons[a].cells) if (!sets[b].has(x)) { sub = false; break; } if (!sub) continue;
+        const diff = cons[b].cells.filter(x => !sets[a].has(x)), dk = cons[b].k - cons[a].k;
+        if (dk === 0) diff.forEach(x => safe.add(x)); else if (dk === diff.length) diff.forEach(x => mine.add(x)); } }
+    if (safe.size || mine.size) return { safe: [...safe], mine: [...mine] };
+    // global trivia
+    let unknown = 0; for (let i = 0; i < N; i++) if (!revealed[i] && !known[i]) unknown++;
+    if (remainingMines != null) {
+      if (remainingMines === 0 && unknown) { for (let i = 0; i < N; i++) if (!revealed[i] && !known[i]) safe.add(i); return { safe: [...safe], mine: [] }; }
+      if (remainingMines === unknown && unknown) { for (let i = 0; i < N; i++) if (!revealed[i] && !known[i]) mine.add(i); return { safe: [], mine: [...mine] }; }
+    }
+    if (!cons.length) return null;
+    // pass 3: enumerate connected frontier components (exact, budgeted)
+    const parent = cons.map((_, i) => i); const find = x => parent[x] === x ? x : (parent[x] = find(parent[x]));
+    for (const [, list] of cellCons) for (let i = 1; i < list.length; i++) { const a = find(list[0]), b = find(list[i]); if (a !== b) parent[a] = b; }
+    const comps = new Map(); cons.forEach((c, i) => { const r = find(i); if (!comps.has(r)) comps.set(r, []); comps.get(r).push(i); });
+    if (remainingMines != null && unknown <= GLOBAL_LIMIT) { // endgame: everything, with exact count
+      const cells = []; for (let i = 0; i < N; i++) if (!revealed[i] && !known[i]) cells.push(i);
+      const res = enumerate(cells, cons, remainingMines, ENUM_BUDGET * 4);
+      if (res && res.sols) { cells.forEach((j, l) => { if (res.cnt[l] === 0) safe.add(j); else if (res.cnt[l] === res.sols) mine.add(j); });
+        if (safe.size || mine.size) return { safe: [...safe], mine: [...mine] }; }
+      return null;
+    }
+    for (const [, list] of comps) {
+      const cells = [...new Set(list.flatMap(ci => cons[ci].cells))];
+      const res = enumerate(cells, list.map(ci => cons[ci]), null, ENUM_BUDGET);
+      if (!res || !res.sols) continue;
+      cells.forEach((j, l) => { if (res.cnt[l] === 0) safe.add(j); else if (res.cnt[l] === res.sols) mine.add(j); });
+    }
+    if (safe.size || mine.size) return { safe: [...safe], mine: [...mine] };
+    return null;
+  }
+  function enumerate(cells, cons, globalK, budget) {
+    const n = cells.length, idx = new Map(cells.map((j, l) => [j, l]));
+    const cellCons = cells.map(() => []);
+    const consK = cons.map(c => c.k), consU = cons.map(c => c.cells.length);
+    cons.forEach((c, ci) => c.cells.forEach(j => { const l = idx.get(j); if (l != null) cellCons[l].push(ci); }));
+    const order = [], seen = new Uint8Array(n);
+    for (const c of cons) for (const j of c.cells) { const l = idx.get(j); if (l != null && !seen[l]) { seen[l] = 1; order.push(l); } }
+    for (let l = 0; l < n; l++) if (!seen[l]) order.push(l);
+    const cnt = new Uint32Array(n), assign = new Uint8Array(n); let sols = 0, nodes = 0, used = 0;
+    const rec = pos => {
+      if (++nodes > budget) throw 0;
+      if (pos === n) { if (globalK != null && used !== globalK) return; sols++; for (let l = 0; l < n; l++) cnt[l] += assign[l]; return; }
+      const l = order[pos];
+      for (let v = 0; v <= 1; v++) { let ok = true;
+        for (const ci of cellCons[l]) { consK[ci] -= v; consU[ci]--; if (consK[ci] < 0 || consK[ci] > consU[ci]) ok = false; }
+        used += v; if (globalK != null && (used > globalK || used + (n - pos - 1) < globalK)) ok = false;
+        if (ok) { assign[l] = v; rec(pos + 1); }
+        used -= v; for (const ci of cellCons[l]) { consK[ci] += v; consU[ci]++; } }
+    };
+    try { rec(0); } catch (e) { return null; }
+    return { sols, cnt };
+  }
+  // fixpoint of deductions without revealing (what a hint sees): returns {safe:Set, mine:Set}
+  function analyse(board, revealed) {
+    const known = new Uint8Array(board.N); const safe = new Set(), mine = new Set();
+    let remaining = board.M;
+    for (let guard = 0; guard < 200; guard++) {
+      const d = deduce(board, revealed, known, remaining); if (!d) break; let progress = false;
+      for (const j of d.mine) if (!known[j]) { known[j] = 1; mine.add(j); remaining--; progress = true; }
+      for (const j of d.safe) if (!safe.has(j)) { safe.add(j); progress = true; }
+      if (!progress || !d.mine.length) break; // safe cells only: can't go further without opening them
+    }
+    return { safe, mine };
+  }
+  // full logical playthrough from `start`; returns {solved, revealed, known}
+  function solveFrom(board, start) {
+    const { N, nbr, num, mine, M } = board; const revealed = new Uint8Array(N), known = new Uint8Array(N);
+    cascade(start, nbr, num, mine, revealed); let remaining = M, opened = 0;
+    for (let i = 0; i < N; i++) opened += revealed[i];
+    const target = N - M;
+    while (opened < target) {
+      const d = deduce(board, revealed, known, remaining); if (!d) return { solved: false, revealed, known };
+      for (const j of d.mine) if (!known[j]) { known[j] = 1; remaining--; }
+      for (const j of d.safe) if (!revealed[j]) opened += cascade(j, nbr, num, mine, revealed).length;
+    }
+    return { solved: true, revealed, known };
+  }
+
+  // ---------- generation ----------
+  // cfg: {variant, w, h, m, seed, noGuess, start}. Deterministic in cfg. start's neighbourhood is mine-free.
+  function generate(cfg) {
+    const { variant, w, h } = cfg, N = w * h, nbr = buildNbr(variant, w, h);
+    const rng = mulberry32(cfg.seed >>> 0);
+    const start = cfg.start != null ? cfg.start : Math.floor(rng() * N);
+    const forbidden = new Uint8Array(N); forbidden[start] = 1; for (const j of nbr[start]) forbidden[j] = 1;
+    const M = Math.min(cfg.m, N - 1 - nbr[start].length);
+    let mine = placeMines(rng, N, M, forbidden), num = countNumbers(mine, nbr);
+    const board = { variant, w, h, N, M, nbr, mine, num, seed: cfg.seed >>> 0, start, noGuess: !!cfg.noGuess, guaranteed: false, attempts: 0 };
+    if (cfg.noGuess) {
+      for (let attempt = 1; attempt <= 600; attempt++) {
+        board.attempts = attempt;
+        const r = solveFrom(board, start);
+        if (r.solved) { board.guaranteed = true; break; }
+        if (attempt % 60 === 0) { mine = placeMines(rng, N, M, forbidden); }
+        else { // repair: reshuffle only the mines the solver could not resolve; the solved region stays intact
+          const U = []; let mU = 0;
+          for (let i = 0; i < N; i++) if (!r.revealed[i] && !r.known[i] && !forbidden[i]) { U.push(i); mU += mine[i]; }
+          for (const i of U) mine[i] = 0;
+          for (let k = 0; k < mU; k++) { const j = k + Math.floor(rng() * (U.length - k)); const t = U[k]; U[k] = U[j]; U[j] = t; mine[U[k]] = 1; }
+        }
+        num = countNumbers(mine, nbr); board.mine = mine; board.num = num;
+      }
+    }
+    board.bv = threeBV(board);
+    return board;
+  }
+  function threeBV(board) { // openings + numbered cells not touching an opening
+    const { N, nbr, num, mine } = board; const seen = new Uint8Array(N); let bv = 0;
+    for (let i = 0; i < N; i++) { if (mine[i] || num[i] !== 0 || seen[i]) continue; bv++;
+      const st = [i]; while (st.length) { const x = st.pop(); if (seen[x]) continue; seen[x] = 1;
+        if (num[x] === 0) for (const j of nbr[x]) if (!seen[j] && !mine[j]) st.push(j); } }
+    for (let i = 0; i < N; i++) if (!mine[i] && !seen[i]) bv++;
+    return bv;
+  }
+  // daily challenge: UTC day index, epoch 2026-01-01 = day 1
+  function dailyIndex(d = new Date()) { return Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - Date.UTC(2026, 0, 1)) / 86400000) + 1; }
+  function dailyCfg(day) { return { variant: 'square', w: 16, h: 16, m: 40, seed: hashStr('msw-daily-' + day), noGuess: true, start: null, daily: day }; }
+
+  return { hashStr, mulberry32, randomSeed, VARIANTS, SIZES, buildNbr, generate, cascade, deduce, analyse, solveFrom, threeBV, dailyIndex, dailyCfg };
+})();
+</script>
 <script>
 (() => {
-  const cfg = { b: {w:9,h:9,m:10}, i: {w:16,h:16,m:40}, e: {w:30,h:16,m:99} };
-  let diff = 'b', W=9, H=9, M=10, grid, revealed, flagged, started, dead, won, t0, timer, time;
   const $ = id => document.getElementById(id);
+  const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+  const prefs = Object.assign({ variant: 'square', size: 'b', custom: { w: 12, h: 12, m: 24 }, noGuess: false, guessAlert: false, cell: 0 }, LS.get('msw2_prefs', {}));
+  const stats = LS.get('msw2_stats', {});
+  const dailyLog = LS.get('msw2_daily', {});
+  // migrate v1 best times
+  for (const k of ['b', 'i', 'e']) { const v = localStorage.getItem('msw_best_' + k); if (v && !stats['square:' + k + ':c']) stats['square:' + k + ':c'] = { played: 0, won: 0, best: +v, streak: 0, bestBvs: 0 }; }
 
-  function setDiff(d) {
-    diff = d; W = cfg[d].w; H = cfg[d].h; M = cfg[d].m;
-    document.querySelectorAll('[data-d]').forEach(b => b.classList.toggle('active', b.dataset.d === d));
-    newGame();
+  const S = { board: null, cells: [], revealed: null, flagged: null, started: false, dead: false, won: false, time: 0, t0: 0, timer: null,
+    hints: 0, clicks: 0, seed: 0, daily: null, shared: false, flagMode: false, hintCell: -1, cellSize: 26, lastTouch: 0, chordArmed: false };
+
+  function savePrefs() { LS.set('msw2_prefs', prefs); }
+  function cfg() {
+    if (S.daily) return MSW.dailyCfg(S.daily);
+    const sz = prefs.size === 'c' ? prefs.custom : MSW.SIZES[prefs.size];
+    return { variant: prefs.variant, w: sz.w, h: sz.h, m: sz.m, noGuess: prefs.noGuess };
   }
-  function newGame() {
-    grid = Array.from({length: H}, () => Array(W).fill(0));
-    revealed = Array.from({length: H}, () => Array(W).fill(false));
-    flagged = Array.from({length: H}, () => Array(W).fill(false));
-    started = false; dead = false; won = false; time = 0;
-    if (timer) clearInterval(timer);
-    $('mines').textContent = M; $('time').textContent = 0; $('msg').textContent = '';
-    $('best').textContent = (localStorage.getItem('msw_best_'+diff)) || '—';
-    render();
-  }
-  function placeMines(safeR, safeC) {
-    let placed = 0;
-    while (placed < M) {
-      const r = Math.floor(Math.random()*H), c = Math.floor(Math.random()*W);
-      if (grid[r][c] === -1) continue;
-      if (Math.abs(r-safeR) <= 1 && Math.abs(c-safeC) <= 1) continue;
-      grid[r][c] = -1; placed++;
-    }
-    for (let r=0;r<H;r++) for (let c=0;c<W;c++) {
-      if (grid[r][c] === -1) continue;
-      let n = 0;
-      for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
-        const nr=r+dr,nc=c+dc; if (nr<0||nr>=H||nc<0||nc>=W) continue;
-        if (grid[nr][nc] === -1) n++;
-      }
-      grid[r][c] = n;
-    }
-  }
-  function reveal(r, c) {
-    if (r<0||r>=H||c<0||c>=W||revealed[r][c]||flagged[r][c]) return;
-    revealed[r][c] = true;
-    if (grid[r][c] === -1) { dead = true; return; }
-    if (grid[r][c] === 0) {
-      for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) reveal(r+dr, c+dc);
-    }
-  }
-  function chord(r, c) {
-    if (!revealed[r][c] || grid[r][c] <= 0) return;
-    let f = 0;
-    for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
-      const nr=r+dr,nc=c+dc; if (nr<0||nr>=H||nc<0||nc>=W) continue;
-      if (flagged[nr][nc]) f++;
-    }
-    if (f !== grid[r][c]) return;
-    for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) reveal(r+dr, c+dc);
-  }
-  function checkWin() {
-    let safe = 0;
-    for (let r=0;r<H;r++) for (let c=0;c<W;c++) if (grid[r][c] !== -1 && revealed[r][c]) safe++;
-    if (safe === W*H - M) { won = true; clearInterval(timer); $('msg').textContent = 'CLEARED IN ' + time + 's';
-      const k = 'msw_best_'+diff; const cur = +(localStorage.getItem(k) || Infinity);
-      if (time < cur) { localStorage.setItem(k, time); $('best').textContent = time; }
-    }
-  }
-  function render() {
-    const b = $('board');
-    b.style.gridTemplateColumns = `repeat(${W}, 26px)`;
-    b.innerHTML = '';
-    let flags = 0;
-    for (let r=0;r<H;r++) for (let c=0;c<W;c++) {
-      const d = document.createElement('div');
-      d.className = 'cell';
-      if (flagged[r][c]) { d.classList.add('f'); d.textContent = '⚑'; flags++; }
-      else if (revealed[r][c]) {
-        d.classList.add('r');
-        if (grid[r][c] === -1) { d.classList.add('m'); d.textContent = '✱'; }
-        else if (grid[r][c] > 0) { d.textContent = grid[r][c]; d.classList.add('n'+grid[r][c]); }
-      }
-      d.addEventListener('mousedown', e => handle(e, r, c));
-      d.addEventListener('contextmenu', e => { e.preventDefault(); if (e.buttons !== 3) flag(r, c); });
-      let lpt, tsx, tsy;
-      d.addEventListener('touchstart', e => {
-        const tt = e.touches[0]; tsx = tt.clientX; tsy = tt.clientY;
-        lpt = setTimeout(() => { flag(r,c); lpt = null; }, 350);
-      }, {passive:true});
-      d.addEventListener('touchmove', e => {
-        if (!lpt) return;
-        const tt = e.touches[0];
-        if (Math.abs(tt.clientX - tsx) > 10 || Math.abs(tt.clientY - tsy) > 10) {
-          clearTimeout(lpt); lpt = null;
-        }
-      }, {passive:true});
-      d.addEventListener('touchend', e => {
-        if (lpt) { clearTimeout(lpt); lpt = null; reveal0(r,c); e.preventDefault(); }
+  function modeKey(c) { return `${c.variant}:${prefs.size === 'c' && !S.daily ? c.w + 'x' + c.h + 'x' + c.m : (S.daily ? 'daily' : prefs.size)}:${c.noGuess ? 'ng' : 'c'}`; }
+  function modeLabel(c) { const V = MSW.VARIANTS[c.variant]; const sz = S.daily ? 'DAILY' : prefs.size === 'c' ? `${c.w}×${c.h} · ${c.m}` : MSW.SIZES[prefs.size].label; return `${V.icon} ${V.label} · ${sz}${c.noGuess ? ' · NO-GUESS' : ''}`; }
+
+  // ---------- game lifecycle ----------
+  function newGame(opts = {}) {
+    if (S.timer) clearInterval(S.timer); S.timer = null;
+    S.daily = opts.daily || null;
+    const c = cfg();
+    S.seed = opts.seed != null ? opts.seed >>> 0 : MSW.randomSeed();
+    S.shared = !!opts.shared;
+    S.board = null; S.started = false; S.dead = false; S.won = false; S.time = 0; S.hints = 0; S.clicks = 0; S.hintCell = -1;
+    S.revealed = new Uint8Array(c.w * c.h); S.flagged = new Uint8Array(c.w * c.h);
+    buildCells(c);
+    $('mines').textContent = c.m; $('time').textContent = '0';
+    const st = stats[modeKey(c)]; $('best').textContent = st && st.best ? st.best : '—';
+    $('bv').textContent = '—';
+    $('post').innerHTML = ''; $('alert').textContent = ''; $('alert').className = '';
+    $('modeLine').textContent = modeLabel(c) + (S.daily ? ` #${S.daily}` : '');
+    if (opts.seed != null || S.daily) { // seeded: board is fixed, the start cell is opened for you
+      generateBoard(c, opts.start != null ? opts.start : null, () => {
+        MSW.cascade(S.board.start, S.board.nbr, S.board.num, S.board.mine, S.revealed);
+        paint(); $('bv').textContent = S.board.bv;
+        setMsg(S.daily ? `DAILY CHALLENGE #${S.daily} — SAME BOARD FOR EVERYONE` : 'SHARED BOARD — START CELL IS OPEN FOR YOU');
+        if (S.daily && dailyLog[S.daily]) showDailyResult();
       });
-      b.appendChild(d);
+    } else { setMsg(''); paint(); }
+    syncButtons();
+  }
+  function generateBoard(c, start, done) {
+    const big = c.noGuess && c.w * c.h > 200;
+    if (big) setMsg('GENERATING NO-GUESS BOARD…');
+    const run = () => { S.board = MSW.generate({ variant: c.variant, w: c.w, h: c.h, m: c.m, seed: S.seed, noGuess: c.noGuess, start }); done(); };
+    if (big) setTimeout(run, 10); else run();
+  }
+  function startTimer() { S.started = true; S.t0 = Date.now(); S.timer = setInterval(tick, 250); }
+  function tick() { S.time = Math.floor((Date.now() - S.t0) / 1000); $('time').textContent = S.time; }
+  function setMsg(t) { $('msg').textContent = t; }
+
+  // ---------- board DOM ----------
+  function fitCell(c) {
+    if (prefs.cell) return prefs.cell;
+    const avail = Math.min(window.innerWidth, 780) - 44;
+    const hex = MSW.VARIANTS[c.variant].layout === 'hex';
+    return Math.max(16, Math.min(30, Math.floor(avail / (c.w + (hex ? 0.5 : 0)))));
+  }
+  function buildCells(c) {
+    const b = $('board'); b.innerHTML = ''; S.cells = [];
+    const V = MSW.VARIANTS[c.variant], hex = V.layout === 'hex';
+    b.classList.toggle('hex', hex);
+    const cs = S.cellSize = fitCell(c);
+    const cw = cs, ch = hex ? cs * 1.1547 : cs;
+    b.style.width = (hex ? (c.w + 0.5) * cw : c.w * cw) + 'px';
+    b.style.height = (hex ? ((c.h - 1) * 0.75 + 1) * ch : c.h * ch) + 'px';
+    b.style.fontSize = Math.round(cs * 0.55) + 'px';
+    const frag = document.createDocumentFragment();
+    for (let r = 0; r < c.h; r++) for (let col = 0; col < c.w; col++) {
+      const d = document.createElement('div'); d.className = 'cell'; d.dataset.i = r * c.w + col;
+      d.style.left = (col * cw + (hex && (r & 1) ? cw / 2 : 0)) + 'px';
+      d.style.top = (hex ? r * ch * 0.75 : r * ch) + 'px';
+      d.style.width = (cw - (hex ? 1 : 2)) + 'px'; d.style.height = (ch - (hex ? 1 : 2)) + 'px';
+      frag.appendChild(d); S.cells.push(d);
     }
-    $('mines').textContent = M - flags;
+    b.appendChild(frag);
   }
-  function handle(e, r, c) {
-    if (dead || won) return;
-    if (e.button === 2) return;
-    if (e.button === 1 || e.buttons === 3) { chord(r, c); after(); return; }
-    reveal0(r, c);
+  function paint() {
+    const B = S.board; let flags = 0; const c = cfg();
+    for (let i = 0; i < S.cells.length; i++) {
+      const d = S.cells[i]; let cls = 'cell', txt = '';
+      if (S.flagged[i]) { cls += ' f'; txt = '⚑'; flags++; if (S.dead && B && !B.mine[i]) { cls += ' wrong'; txt = '✕'; } }
+      else if (S.revealed[i]) { cls += ' r';
+        if (B.mine[i]) { cls += ' m'; txt = '✱'; if (i === S.boomCell) cls += ' boom'; }
+        else if (B.num[i] > 0) { txt = B.num[i]; cls += ' n' + B.num[i]; }
+        if (B && i === B.start && !S.started) cls += ' start';
+      }
+      if (i === S.hintCell) cls += ' hint';
+      if (d.className !== cls) d.className = cls;
+      if (d.textContent !== String(txt)) d.textContent = txt;
+    }
+    $('mines').textContent = c.m - flags;
   }
-  function reveal0(r, c) {
-    if (dead || won || flagged[r][c]) return;
-    if (!started) { started = true; placeMines(r, c); t0 = Date.now();
-      timer = setInterval(() => { time = Math.floor((Date.now()-t0)/1000); $('time').textContent = time; }, 250); }
-    reveal(r, c); after();
+
+  // ---------- moves ----------
+  function openCell(i) {
+    if (S.dead || S.won || S.flagged[i] || S.revealed[i]) return;
+    const c = cfg();
+    const go = () => {
+      if (!S.started) startTimer();
+      S.clicks++; S.hintCell = -1;
+      const B = S.board;
+      if (B.mine[i]) { S.revealed[i] = 1; S.boomCell = i; return lose(); }
+      MSW.cascade(i, B.nbr, B.num, B.mine, S.revealed);
+      after();
+    };
+    if (!S.board) generateBoard(c, i, () => { $('bv').textContent = S.board.bv; go(); }); else go();
   }
-  function flag(r, c) {
-    if (dead || won || revealed[r][c]) return;
-    flagged[r][c] = !flagged[r][c]; render();
+  function toggleFlag(i) {
+    if (S.dead || S.won || S.revealed[i]) return;
+    S.flagged[i] = S.flagged[i] ? 0 : 1; S.hintCell = -1; paint();
+  }
+  function chordAt(i) {
+    const B = S.board; if (!B || S.dead || S.won || !S.revealed[i] || B.num[i] === 0) return;
+    let f = 0; for (const j of B.nbr[i]) f += S.flagged[j];
+    if (f !== B.num[i]) return;
+    S.clicks++; S.hintCell = -1;
+    for (const j of B.nbr[i]) { if (S.flagged[j] || S.revealed[j]) continue;
+      if (B.mine[j]) { S.revealed[j] = 1; S.boomCell = j; return lose(); }
+      MSW.cascade(j, B.nbr, B.num, B.mine, S.revealed); }
+    after();
   }
   function after() {
-    if (dead) { for (let r=0;r<H;r++) for (let c=0;c<W;c++) if (grid[r][c]===-1) revealed[r][c]=true;
-      clearInterval(timer); $('msg').textContent = 'BOOM — NEW GAME?'; }
-    else checkWin();
-    render();
+    const B = S.board; let opened = 0; for (let i = 0; i < B.N; i++) opened += S.revealed[i];
+    if (opened === B.N - B.M) return win();
+    paint(); guessCheck();
   }
-  document.querySelectorAll('[data-d]').forEach(b => b.onclick = () => setDiff(b.dataset.d));
-  $('newgame').onclick = newGame;
-  document.addEventListener('contextmenu', e => { if (e.target.closest('#board')) e.preventDefault(); });
-  newGame();
+  function lose() {
+    S.dead = true; clearInterval(S.timer); S.timer = null;
+    const B = S.board; for (let i = 0; i < B.N; i++) if (B.mine[i] && !S.flagged[i]) S.revealed[i] = 1;
+    paint(); setMsg('BOOM — ' + (S.daily ? 'THE DAILY BOARD GOT YOU' : 'NEW GAME?'));
+    record(false); postButtons();
+  }
+  function win() {
+    S.won = true; clearInterval(S.timer); S.timer = null;
+    tick(); const B = S.board; const t = Math.max(S.time, 1);
+    for (let i = 0; i < B.N; i++) if (B.mine[i]) S.flagged[i] = 1;
+    paint();
+    const bvs = (B.bv / t).toFixed(2);
+    setMsg(`CLEARED IN ${S.time}s · 3BV ${B.bv} · ${bvs}/s${S.hints ? ` · ${S.hints} HINT${S.hints > 1 ? 'S' : ''}` : ''}`);
+    record(true, bvs); postButtons();
+  }
+  function record(won, bvs) {
+    const c = cfg(), k = modeKey(c);
+    const st = stats[k] || (stats[k] = { played: 0, won: 0, best: 0, streak: 0, bestBvs: 0 });
+    st.played++;
+    if (won) { st.won++; st.streak++; if (!S.hints && (!st.best || Math.max(1, S.time) < st.best)) { st.best = Math.max(1, S.time); $('best').textContent = st.best; } if (+bvs > st.bestBvs) st.bestBvs = +bvs; }
+    else st.streak = 0;
+    LS.set('msw2_stats', stats);
+    if (S.daily && !dailyLog[S.daily]) { dailyLog[S.daily] = { won, time: S.time, hints: S.hints, bv: S.board.bv }; LS.set('msw2_daily', dailyLog); }
+    if (getComputedStyle($('statsPanel')).display !== 'none') renderStats();
+  }
+
+  // ---------- hints, guess alert ----------
+  function hint() {
+    if (S.dead || S.won) return;
+    if (!S.board || !S.started) { setMsg('OPEN A CELL FIRST — THE FIRST CLICK IS ALWAYS SAFE'); return; }
+    const an = MSW.analyse(S.board, S.revealed);
+    const wrongFlag = [...an.safe].find(i => S.flagged[i]);
+    let target = -1, text;
+    if (wrongFlag != null) { target = wrongFlag; text = 'THAT FLAG IS WRONG — THE CELL IS SAFE'; }
+    else { const safe = [...an.safe].filter(i => !S.revealed[i]); const mine = [...an.mine].filter(i => !S.flagged[i]);
+      if (safe.length) { target = safe[0]; text = 'THIS CELL IS SAFE'; }
+      else if (mine.length) { target = mine[0]; text = 'THIS CELL IS A MINE — FLAG IT'; }
+      else { text = 'NO LOGICAL MOVE EXISTS — YOU HAVE TO GUESS'; } }
+    if (target >= 0) { S.hints++; S.t0 -= 10000; tick(); text += ' (+10s)'; }
+    S.hintCell = target; paint(); setMsg(text);
+  }
+  function guessCheck() {
+    const c = cfg();
+    if (!prefs.guessAlert || c.noGuess || !S.board || !S.started || S.dead || S.won) { $('alert').textContent = ''; return; }
+    const an = MSW.analyse(S.board, S.revealed);
+    const safe = [...an.safe].some(i => !S.revealed[i]), mine = [...an.mine].some(i => !S.flagged[i]);
+    $('alert').textContent = (safe || mine) ? '' : '⚠ NO SAFE DEDUCTION — A GUESS IS REQUIRED';
+  }
+
+  // ---------- sharing ----------
+  function boardUrl() {
+    const c = cfg(), B = S.board; if (!B) return null;
+    if (S.daily) return 'https://boardgaminghub.com/minesweeper?daily';
+    const p = new URLSearchParams({ v: c.variant, w: c.w, h: c.h, m: c.m, s: B.seed.toString(36), st: B.start, ng: c.noGuess ? 1 : 0 });
+    return 'https://boardgaminghub.com/minesweeper?' + p.toString();
+  }
+  async function share(text, url) {
+    try { if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) { await navigator.share({ title: 'Minesweeper', text, url }); return 'SHARED'; }
+      await navigator.clipboard.writeText(url ? text + '\n' + url : text); return 'COPIED TO CLIPBOARD'; }
+    catch (e) { return 'COULD NOT COPY — ' + (url || text); }
+  }
+  function postButtons() {
+    const p = $('post'); p.innerHTML = '';
+    const mk = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = fn; p.appendChild(b); return b; };
+    if (S.daily) { mk('SHARE RESULT', async () => setMsg(await share(dailyText(), 'https://boardgaminghub.com/minesweeper?daily'))); mk('REPLAY DAILY', () => startDaily()); }
+    else if (S.board) { mk(S.won ? 'CHALLENGE A FRIEND' : 'SHARE THIS BOARD', async () => {
+      const t = S.won ? `I cleared this Minesweeper board in ${S.time}s (${modeLabel(cfg())}). Beat it:` : `Try this Minesweeper board (${modeLabel(cfg())}):`;
+      setMsg(await share(t, boardUrl())); }); mk('NEW GAME', () => newGame()); }
+  }
+  function dailyText() {
+    const r = dailyLog[S.daily] || { won: S.won, time: S.time, hints: S.hints, bv: S.board.bv };
+    const streak = dailyStreak();
+    return `Minesweeper Daily #${S.daily} ${r.won ? '✅ ' + r.time + 's · 3BV ' + r.bv + (r.hints ? ' · ' + r.hints + ' hint' + (r.hints > 1 ? 's' : '') : ' · no hints') : '💥 boom'}${streak > 1 ? ' · 🔥 ' + streak + '-day streak' : ''}`;
+  }
+  function dailyStreak() {
+    const today = MSW.dailyIndex(); let d = today; if (!dailyLog[d]) d--; let n = 0;
+    while (dailyLog[d] && dailyLog[d].won) { n++; d--; } return n;
+  }
+  function showDailyResult() { const r = dailyLog[S.daily]; setMsg(`YOU ALREADY PLAYED TODAY'S BOARD: ${r.won ? 'CLEARED IN ' + r.time + 's' : 'BOOM'} — REPLAYS DON'T COUNT`); postButtons(); }
+  function startDaily() { prefs.variant = 'square'; newGame({ daily: MSW.dailyIndex(), seed: MSW.dailyCfg(MSW.dailyIndex()).seed }); }
+
+  // ---------- stats panel ----------
+  function renderStats() {
+    const rows = Object.entries(stats).filter(([, s]) => s.played || s.best).sort((a, b) => b[1].played - a[1].played);
+    const label = k => { const [v, sz, ng] = k.split(':'); const V = MSW.VARIANTS[v]; const s = sz === 'daily' ? 'Daily' : MSW.SIZES[sz] ? MSW.SIZES[sz].label.toLowerCase() : sz; return `${V ? V.icon + ' ' + V.label.toLowerCase() : v} · ${s}${ng === 'ng' ? ' · no-guess' : ''}`; };
+    const ds = dailyStreak(), dp = Object.keys(dailyLog).length, dw = Object.values(dailyLog).filter(r => r.won).length;
+    $('statsBody').innerHTML = `<div class="srow head"><span>MODE</span><span>PLAYED</span><span>WON</span><span>BEST</span><span>3BV/s</span><span>STREAK</span></div>` +
+      (rows.length ? rows.map(([k, s]) => `<div class="srow"><span>${label(k)}</span><span>${s.played}</span><span>${s.won}${s.played ? ' (' + Math.round(100 * s.won / s.played) + '%)' : ''}</span><span>${s.best || '—'}</span><span>${s.bestBvs || '—'}</span><span>${s.streak}</span></div>`).join('') : '<div class="srow"><span>No games yet</span></div>') +
+      `<div class="srow foot"><span>DAILY CHALLENGE</span><span>${dp}</span><span>${dw}</span><span></span><span></span><span>${ds} 🔥</span></div>`;
+  }
+
+  // ---------- input ----------
+  const board = $('board');
+  const cellOf = e => { const t = e.target.closest('.cell'); return t ? +t.dataset.i : -1; };
+  board.addEventListener('contextmenu', e => e.preventDefault());
+  board.addEventListener('mousedown', e => {
+    if (Date.now() - S.lastTouch < 700) return; const i = cellOf(e); if (i < 0) return;
+    if (e.buttons === 3 || e.button === 1) { S.chordArmed = true; chordAt(i); e.preventDefault(); return; }
+    if (e.button === 2) { toggleFlag(i); }
+  });
+  board.addEventListener('mouseup', e => {
+    if (Date.now() - S.lastTouch < 700) return; const i = cellOf(e); if (i < 0) return;
+    if (e.button !== 0) { if (!e.buttons) S.chordArmed = false; return; }
+    if (S.chordArmed) { if (!e.buttons) S.chordArmed = false; return; }
+    if (S.revealed[i]) chordAt(i); else if (S.flagMode) toggleFlag(i); else openCell(i);
+  });
+  let lp = null, tsx = 0, tsy = 0, lpFired = false;
+  board.addEventListener('touchstart', e => {
+    const i = cellOf(e); if (i < 0) return; const t = e.touches[0]; tsx = t.clientX; tsy = t.clientY; lpFired = false;
+    lp = setTimeout(() => { lp = null; lpFired = true; if (S.revealed[i]) chordAt(i); else toggleFlag(i); if (navigator.vibrate) navigator.vibrate(30); }, 320);
+  }, { passive: true });
+  board.addEventListener('touchmove', e => { if (!lp) return; const t = e.touches[0]; if (Math.abs(t.clientX - tsx) > 10 || Math.abs(t.clientY - tsy) > 10) { clearTimeout(lp); lp = null; lpFired = true; } }, { passive: true });
+  board.addEventListener('touchend', e => {
+    S.lastTouch = Date.now(); const i = cellOf(e); if (i < 0) return;
+    if (lp) { clearTimeout(lp); lp = null; if (!lpFired) { if (S.revealed[i]) chordAt(i); else if (S.flagMode) toggleFlag(i); else openCell(i); } }
+    e.preventDefault();
+  });
+  board.addEventListener('touchcancel', () => { if (lp) clearTimeout(lp); lp = null; });
+
+  // ---------- controls ----------
+  function syncButtons() {
+    document.querySelectorAll('[data-size]').forEach(b => b.classList.toggle('active', !S.daily && b.dataset.size === prefs.size));
+    document.querySelectorAll('[data-variant]').forEach(b => b.classList.toggle('active', b.dataset.variant === (S.daily ? 'square' : prefs.variant)));
+    $('dailyBtn').classList.toggle('active', !!S.daily);
+    $('noGuess').classList.toggle('active', S.daily ? true : prefs.noGuess);
+    $('guessAlert').classList.toggle('active', prefs.guessAlert);
+    $('flagMode').classList.toggle('active', S.flagMode);
+    $('customBox').style.display = prefs.size === 'c' && !S.daily ? 'flex' : 'none';
+    document.querySelectorAll('.daily-locked').forEach(b => b.disabled = !!S.daily);
+  }
+  document.querySelectorAll('[data-size]').forEach(b => b.onclick = () => { prefs.size = b.dataset.size; savePrefs(); newGame(); });
+  document.querySelectorAll('[data-variant]').forEach(b => b.onclick = () => { prefs.variant = b.dataset.variant; savePrefs(); newGame(); });
+  $('dailyBtn').onclick = startDaily;
+  $('noGuess').onclick = () => { if (S.daily) return; prefs.noGuess = !prefs.noGuess; savePrefs(); newGame(); };
+  $('guessAlert').onclick = () => { prefs.guessAlert = !prefs.guessAlert; savePrefs(); syncButtons(); guessCheck(); };
+  $('flagMode').onclick = () => { S.flagMode = !S.flagMode; syncButtons(); };
+  $('newgame').onclick = () => S.daily ? startDaily() : newGame();
+  $('hintBtn').onclick = hint;
+  $('shareBtn').onclick = async () => {
+    if (!S.board) { setMsg('OPEN A CELL FIRST — THEN THE BOARD IS FIXED AND SHAREABLE'); return; }
+    setMsg(await share(S.daily ? dailyText() : `Try this Minesweeper board (${modeLabel(cfg())}):`, boardUrl()));
+  };
+  $('statsBtn').onclick = () => { const p = $('statsPanel'); const open = getComputedStyle(p).display === 'none'; p.style.display = open ? 'block' : 'none'; if (open) renderStats(); };
+  $('zoomIn').onclick = () => { prefs.cell = Math.min(44, (prefs.cell || S.cellSize) + 4); savePrefs(); rebuild(); };
+  $('zoomOut').onclick = () => { prefs.cell = Math.max(14, (prefs.cell || S.cellSize) - 4); savePrefs(); rebuild(); };
+  $('zoomFit').onclick = () => { prefs.cell = 0; savePrefs(); rebuild(); };
+  function rebuild() { buildCells(cfg()); paint(); }
+  window.addEventListener('resize', () => { if (!prefs.cell) rebuild(); });
+  const applyCustom = () => { const w = Math.max(5, Math.min(60, +$('cw').value || 12)), h = Math.max(5, Math.min(40, +$('ch').value || 12));
+    const m = Math.max(1, Math.min(Math.floor(w * h * 0.45), +$('cm').value || 1)); prefs.custom = { w, h, m }; $('cw').value = w; $('ch').value = h; $('cm').value = m; savePrefs(); newGame(); };
+  $('customGo').onclick = applyCustom;
+  $('cw').value = prefs.custom.w; $('ch').value = prefs.custom.h; $('cm').value = prefs.custom.m;
+  document.addEventListener('keydown', e => { if (e.key === 'n' || e.key === 'N') $('newgame').click(); if (e.key === 'h' || e.key === 'H') hint(); if (e.key === 'f' || e.key === 'F') $('flagMode').click(); });
+
+  // ---------- boot: URL params ----------
+  const q = new URLSearchParams(location.search);
+  if (q.has('daily')) startDaily();
+  else if (q.has('s') && q.has('w') && q.has('h') && q.has('m')) {
+    const v = q.get('v'); if (MSW.VARIANTS[v]) prefs.variant = v;
+    const w = +q.get('w'), h = +q.get('h'), m = +q.get('m');
+    const preset = Object.entries(MSW.SIZES).find(([, s]) => s.w === w && s.h === h && s.m === m);
+    if (preset) prefs.size = preset[0]; else { prefs.size = 'c'; prefs.custom = { w, h, m }; $('cw').value = w; $('ch').value = h; $('cm').value = m; }
+    prefs.noGuess = q.get('ng') === '1';
+    const st = q.has('st') ? +q.get('st') : null;
+    newGame({ seed: parseInt(q.get('s'), 36), start: st != null && st >= 0 && st < w * h ? st : null, shared: true });
+  } else newGame();
+  window.__msw = { S, prefs, stats, newGame, openCell, toggleFlag, chordAt, hint, cfg };
 })();
 </script>
 <script src="/analytics.js"></script>
 <section class="seo-content">
-  <h2>About Minesweeper</h2>
-  <p>Minesweeper is a single-player logic puzzle: uncover every safe cell on a grid without detonating any of the hidden mines. Numbers on revealed cells tell you exactly how many mines lie among the 8 surrounding cells. Originated as a 1980s mainframe game, popularized worldwide when Microsoft bundled it with Windows 3.1 in 1992.</p>
+  <h2>About Minesweeper 2.0</h2>
+  <p>Minesweeper is a single-player logic puzzle: uncover every safe cell on a grid without detonating any of the hidden mines. Numbers on revealed cells tell you exactly how many mines lie among the surrounding cells. It originated as a 1980s mainframe game and went worldwide when Microsoft bundled it with Windows 3.1 in 1992. This version keeps the classic three grids and adds the features the community has asked for ever since: guaranteed no-guess boards, a shared daily challenge, alternative geometries, seed sharing and honest speed metrics.</p>
 
-  <h3>How to play</h3>
-  <p>Left-click to reveal a cell; right-click to flag a suspected mine. The first click is always safe — if it would otherwise hit a mine, the mine is moved. Revealing a 0-cell auto-cascades, opening all neighbors recursively (this is what produces the satisfying flood-open). Numbers 1–8 indicate exactly how many of the 8 neighboring cells contain mines.</p>
+  <h3>No-guess mode: how the boards are built</h3>
+  <p>Classic Minesweeper places mines at random, so many boards end in a coin flip. In No-Guess mode the page runs a constraint solver on every candidate board: single-cell rules first, then the subset rule (if one number's unknown cells are contained in another's, the difference is determined), then exact enumeration of each connected frontier, and finally a global mine-count check in the endgame. Wherever the solver stalls, the mines it could not resolve are reshuffled and the solve is repeated. A board is only handed to you once the solver can clear it from the opened start cell, which means that every time you are stuck there is a deduction available. Generation takes a few milliseconds on Beginner and typically well under a tenth of a second on Expert. Measured over random classic boards, the same solver clears about 84% of Beginner, 72% of Intermediate and 16% of Expert boards without a guess, which is why the mode matters most on the large grid.</p>
 
-  <h3>Number colors (classic Windows palette)</h3>
+  <h3>Daily challenge</h3>
+  <p>Each UTC day produces one 16×16, 40-mine no-guess board from a fixed seed, so everyone plays the same puzzle. The start cell is pre-opened, the timer starts on your first click, and only your first attempt counts toward the streak; replays are for practice. The share line reports your time, the board's 3BV and your streak without giving away any of the layout.</p>
+
+  <h3>Hex and Knight variants</h3>
   <table>
-    <thead><tr><th class="num">Number</th><th>Color</th><th>Adjacent mines</th></tr></thead>
+    <thead><tr><th>Board</th><th>Neighbours counted</th><th>What changes</th></tr></thead>
     <tbody>
-      <tr><td class="num">1</td><td>Blue</td><td>1</td></tr>
-      <tr><td class="num">2</td><td>Green</td><td>2</td></tr>
-      <tr><td class="num">3</td><td>Red</td><td>3</td></tr>
-      <tr><td class="num">4</td><td>Dark blue</td><td>4</td></tr>
-      <tr><td class="num">5</td><td>Maroon</td><td>5</td></tr>
-      <tr><td class="num">6</td><td>Cyan</td><td>6</td></tr>
-      <tr><td class="num">7</td><td>Black</td><td>7</td></tr>
-      <tr><td class="num">8</td><td>Gray</td><td>8 (rare)</td></tr>
+      <tr><td>Square</td><td>8 surrounding cells</td><td>The classic rules and all the familiar 1-2-1 and 1-1 patterns.</td></tr>
+      <tr><td>Hex</td><td>6 adjacent hexagons</td><td>Lower maximum number, fewer diagonal ambiguities, different edge patterns.</td></tr>
+      <tr><td>Knight</td><td>8 cells a knight's move away</td><td>Numbers describe cells that are not adjacent; openings and cascades jump across the board.</td></tr>
     </tbody>
   </table>
+  <p>All three variants share one engine: a variant is nothing more than a neighbourhood function and a layout, and the solver, no-guess generation, hints and 3BV are computed over that neighbourhood. Beginner, Intermediate, Expert and Custom sizes apply to every variant.</p>
 
   <h3>Standard difficulty grids</h3>
   <table>
@@ -274,18 +687,37 @@
       <tr><td>Beginner</td><td>9×9</td><td class="num">10</td><td class="num">12.3%</td></tr>
       <tr><td>Intermediate</td><td>16×16</td><td class="num">40</td><td class="num">15.6%</td></tr>
       <tr><td>Expert</td><td>30×16</td><td class="num">99</td><td class="num">20.6%</td></tr>
+      <tr><td>Custom</td><td>up to 60×40</td><td class="num">any</td><td class="num">up to 45%</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Number colors (classic Windows palette)</h3>
+  <table>
+    <thead><tr><th class="num">Number</th><th>Color</th><th>Adjacent mines</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>Blue</td><td>1</td></tr>
+      <tr><td class="num">2</td><td>Green</td><td>2</td></tr>
+      <tr><td class="num">3</td><td>Red</td><td>3</td></tr>
+      <tr><td class="num">4</td><td>Purple</td><td>4</td></tr>
+      <tr><td class="num">5</td><td>Orange</td><td>5</td></tr>
+      <tr><td class="num">6</td><td>Cyan</td><td>6</td></tr>
+      <tr><td class="num">7</td><td>Ivory</td><td>7</td></tr>
+      <tr><td class="num">8</td><td>Gray</td><td>8 (rare)</td></tr>
     </tbody>
   </table>
 
   <h3>Frequently asked questions</h3>
-  <details><summary>What do the numbers mean?</summary><p>The number on a revealed cell is exactly how many of its 8 surrounding cells contain a mine. A 1 means exactly one neighbor is a mine; a 0 (blank) means none.</p></details>
-  <details><summary>Beginner / Intermediate / Expert sizes?</summary><p>Beginner 9×9 / 10 mines, Intermediate 16×16 / 40 mines, Expert 30×16 / 99 mines.</p></details>
-  <details><summary>What's a chord click?</summary><p>Left+right click together (or middle-click) on a numbered cell auto-opens all unflagged neighbors — but only if the flag count around it equals the number on the cell. Big speedup once you've flagged the obvious mines.</p></details>
-  <details><summary>Can every Minesweeper be solved without guessing?</summary><p>No. The classic version allows positions where the only safe cell can't be deduced from the visible numbers — a forced 50/50 guess. Some variants ("no-guess" Minesweeper) only generate solvable boards.</p></details>
-  <details><summary>Best strategy?</summary><p>Open corners and edges first (fewer neighbors → higher-information numbers). Flag mines as you identify them so chord-click works. Save guesses for when no logic remains, and prefer cells far from numbered constraints.</p></details>
+  <details><summary>What do the numbers mean?</summary><p>The number on a revealed cell is exactly how many of its neighbouring cells contain a mine: 8 neighbours on a square grid, 6 on hex, and the 8 knight's-move cells in the Knight variant. A 0 (blank) means none, and the game opens its neighbours for you.</p></details>
+  <details><summary>What is no-guess Minesweeper?</summary><p>A board generated so that logic alone can clear it from the opened start. This page keeps reshuffling unresolved mines until its solver can finish the board, so you are never forced into a 50/50.</p></details>
+  <details><summary>How does the daily challenge work?</summary><p>One seeded 16×16 no-guess board per UTC day, the same for everyone. Your first attempt counts toward your streak; replays are practice. Share copies a spoiler-free result line.</p></details>
+  <details><summary>What is 3BV?</summary><p>Bechtel's Board Benchmark Value: the minimum number of clicks needed to clear the board, counting one per opening and one per numbered cell not touching an opening. 3BV per second compares speed fairly across boards of different difficulty.</p></details>
+  <details><summary>What's a chord click?</summary><p>Click a revealed number (or left+right together, or middle-click) to open all its unflagged neighbours at once — only when the flags around it equal the number. On touch, tap a number to chord.</p></details>
+  <details><summary>How do I share a board?</summary><p>After your first click the board is fixed. Share Board copies a link containing the seed, size, variant and start cell; whoever opens it gets the identical board with the same start cell already open.</p></details>
+  <details><summary>Can every Minesweeper be solved without guessing?</summary><p>Not in classic mode — roughly one Expert board in six is fully deducible from the first opening. Switch on No-Guess for a guarantee, or Guess Alert to be told the moment a classic board has no safe deduction left.</p></details>
 
   <h3>Related games</h3>
   <ul>
+    <li><a href="/guides/minesweeper-strategy">Minesweeper strategy guide</a> — reading numbers, the patterns worth memorising, flagging versus chording.</li>
     <li><a href="/sudoku">Sudoku</a> — pure-logic puzzle, also no luck if well-formed.</li>
     <li><a href="/2048">2048</a> — solo number puzzle.</li>
     <li><a href="/solitaire">Solitaire</a> — solo card game.</li>
@@ -295,7 +727,7 @@
 
 <section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
   <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>
-  <p style="color:#8098a8;font-size:0.9em;margin-bottom:18px;line-height:1.5;">Sign in with GitHub to share strategies, ask questions, or report a bug.</p>
+  <p style="color:#8098a8;font-size:0.9em;margin-bottom:18px;line-height:1.5;">Sign in with GitHub to share strategies, post your daily time, or report a bug.</p>
   <div class="giscus"></div>
 </section>
 <script src="https://giscus.app/client.js"
