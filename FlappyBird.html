@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0c1016">
+<title>Flappy Bird — Free Online, Daily Challenge &amp; Three Difficulties | Board Gaming Hub</title>
+<meta name="description" content="Play Flappy Bird free in your browser. One-tap flight through the pipes with Easy, Normal and Hard gap sizes, a seeded daily run everyone shares, medals and best-score tracking. No signup, mobile-friendly.">
+<meta name="keywords" content="flappy bird, play flappy bird online, flappy bird free, flappy bird daily, one tap game, browser arcade game">
+<link rel="canonical" href="https://boardgaminghub.com/flappybird">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://boardgaminghub.com/flappybird">
+<meta property="og:title" content="Flappy Bird — Free Online, Daily Challenge">
+<meta property="og:description" content="One tap to flap. Three gap sizes, a seeded daily run that is the same for everyone, medals at 10/20/30/40. Free, in-browser, single-file HTML.">
+<meta property="og:image" content="https://boardgaminghub.com/og/flappybird.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://boardgaminghub.com/og/flappybird.png">
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "VideoGame", "name": "Flappy Bird",
+  "description": "Tap to flap through an endless run of pipes. Three difficulties, a seeded daily challenge, medals and best-score tracking.",
+  "url": "https://boardgaminghub.com/flappybird", "genre": "Arcade",
+  "applicationCategory": "Game", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+  { "@type": "ListItem", "position": 1, "name": "Board Gaming Hub", "item": "https://boardgaminghub.com/" },
+  { "@type": "ListItem", "position": 2, "name": "Puzzles", "item": "https://boardgaminghub.com/play" },
+  { "@type": "ListItem", "position": 3, "name": "Flappy Bird", "item": "https://boardgaminghub.com/flappybird" } ] }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "Why is Flappy Bird so hard?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Because a flap does not add lift, it resets your vertical speed to a fixed upward value. Every tap produces the same 77-pixel climb over 0.28 seconds, so the only thing you control is timing. Miss the timing by a tenth of a second and gravity has already moved the bird 10 pixels, and the pipe gap is only about 150 pixels tall." } },
+  { "@type": "Question", "name": "Is the daily challenge the same for everyone?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Yes. The daily run seeds its random number generator from the UTC date, so the pipe heights come out in the same order for every player that day. Your best run of the day is saved in your browser and the share button copies a spoiler-free result line." } },
+  { "@type": "Question", "name": "What are the medals in Flappy Bird?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Bronze at 10 pipes, silver at 20, gold at 30 and platinum at 40, on any difficulty. They are awarded on the game-over card and stored with your best score." } },
+  { "@type": "Question", "name": "What happened to the original Flappy Bird?",
+    "acceptedAnswer": { "@type": "Answer", "text": "The original was released for mobile in 2013 by Vietnamese developer Dong Nguyen and became one of the most-downloaded games in the world in early 2014. Nguyen removed it from the app stores in February 2014, saying it had become too addictive. This page is an independent free browser homage, not the original app." } },
+  { "@type": "Question", "name": "Does Flappy Bird work on a phone?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Yes. Tap anywhere on the game to flap. The play area scales to your screen, and the whole game is a single HTML file so it loads quickly on mobile data." } } ] }
+</script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐤</text></svg>">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: #0c1016;
+  background-image: radial-gradient(ellipse at 50% -10%, #1a2438 0%, transparent 60%);
+  color: #d8d0c0;
+  min-height: 100vh;
+  padding: 20px 12px 60px;
+  text-align: center;
+}
+h1 { font-size: 2.0em; letter-spacing: 9px; font-weight: normal; color: #f0d89c; margin-bottom: 2px; text-indent: 9px; }
+.subtitle { color: #7d93a3; font-style: italic; font-size: 0.95em; margin-bottom: 16px; }
+
+#stage { position: relative; margin: 0 auto; width: 360px; height: 540px; border: 1px solid #2a3540; border-radius: 6px; overflow: hidden; background: #0b1220; touch-action: manipulation; user-select: none; -webkit-user-select: none; cursor: pointer; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+#game { display: block; width: 100%; height: 100%; }
+.overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 18px; background: rgba(6, 10, 20, 0.62); backdrop-filter: blur(1.5px); }
+.overlay.hidden { display: none; }
+.overlay h2 { font-size: 1.9em; letter-spacing: 7px; color: #f0c060; font-weight: normal; text-shadow: 0 2px 0 #7a4a10, 0 4px 14px rgba(0,0,0,0.6); text-indent: 7px; }
+.overlay p { color: #c8d0d8; font-size: 0.92em; line-height: 1.45; max-width: 300px; }
+.overlay .hint { color: #f0d89c; letter-spacing: 3px; font-size: 0.8em; margin-top: 6px; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+.seg { display: inline-flex; border: 1px solid #4a6172; border-radius: 5px; overflow: hidden; }
+.seg button { background: #16202c; color: #a8b8c8; border: 0; padding: 8px 14px; font-family: inherit; font-size: 0.82em; letter-spacing: 2px; cursor: pointer; border-right: 1px solid #2a3a48; }
+.seg button:last-child { border-right: 0; }
+.seg button.on { background: #3a5570; color: #fff; }
+.seg button:hover { background: #24344a; color: #fff; }
+.btn { background: #f0c060; color: #14100a; border: 0; border-radius: 5px; padding: 10px 22px; font-family: inherit; font-size: 0.95em; letter-spacing: 2px; font-weight: bold; cursor: pointer; box-shadow: 0 3px 0 #9a7020; }
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #9a7020; }
+.btn.ghost { background: #16202c; color: #d8d0c0; box-shadow: 0 3px 0 #0a0e14; border: 1px solid #3a5060; }
+.btn.daily.on { background: #a0d0a8; box-shadow: 0 3px 0 #4a7a50; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.score-big { font-size: 3.2em; color: #fff; text-shadow: 0 3px 0 #202830, 0 6px 16px rgba(0,0,0,0.7); line-height: 1; }
+.medal { display: inline-block; width: 46px; height: 46px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.25); box-shadow: inset 0 -6px 0 rgba(0,0,0,0.25), 0 3px 10px rgba(0,0,0,0.5); }
+.medal.none { background: #2a3540; }
+.medal.bronze { background: #b87333; } .medal.silver { background: #c8ccd4; } .medal.gold { background: #f0c060; } .medal.platinum { background: #9ee6ff; }
+.stat { font-size: 0.8em; color: #8098a8; letter-spacing: 2px; text-transform: uppercase; }
+.stat b { color: #f0d89c; font-size: 1.35em; letter-spacing: 1px; display: block; margin-top: 2px; }
+.newbest { color: #a0d0a8; letter-spacing: 3px; font-size: 0.8em; }
+#hud { margin: 12px auto 0; max-width: 420px; display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; color: #8098a8; font-size: 0.82em; letter-spacing: 1.5px; }
+#hud button { background: none; border: 1px solid #3a5060; color: #a8b8c8; border-radius: 4px; padding: 4px 10px; font-family: inherit; font-size: 0.9em; letter-spacing: 1px; cursor: pointer; }
+#hud button:hover { color: #fff; border-color: #6a8aa0; }
+.keys { color: #5a6874; font-size: 0.78em; margin-top: 10px; letter-spacing: 1px; }
+.keys kbd { background: #16202c; border: 1px solid #2a3a48; border-radius: 3px; padding: 1px 6px; font-family: inherit; color: #a8b8c8; }
+@media (pointer: coarse) { .keys { display: none; } }
+.toast { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: #a0d0a8; color: #0c1610; padding: 6px 14px; border-radius: 4px; font-size: 0.8em; letter-spacing: 2px; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
+.toast.show { opacity: 1; }
+/* wide reference tables scroll inside themselves on narrow phones instead of widening the page */
+.seo-content table { display: block; overflow-x: auto; max-width: 100%; }
+.seo-content table thead, .seo-content table tbody { display: table; width: 100%; }
+</style>
+</head>
+<body>
+<h1>FLAPPY BIRD</h1>
+<div class="subtitle">One tap. Endless pipes. Same rules for everyone on the daily.</div>
+
+<div id="stage" aria-label="Flappy Bird game">
+  <canvas id="game" width="360" height="540" role="img" aria-label="A gold bird flying between green pipes over a night skyline"></canvas>
+
+  <div class="overlay" id="titleOverlay">
+    <h2>FLAPPY BIRD</h2>
+    <p>Tap, click or press <b>Space</b> to flap. Slip through the gaps. Don't touch anything.</p>
+    <div class="seg" id="diffSeg">
+      <button data-diff="easy">EASY</button>
+      <button data-diff="normal" class="on">NORMAL</button>
+      <button data-diff="hard">HARD</button>
+    </div>
+    <div class="row">
+      <button class="btn daily" id="dailyBtn">★ DAILY</button>
+      <button class="btn" id="startBtn">PLAY</button>
+    </div>
+    <div class="stat">Best <b id="titleBest">0</b></div>
+    <div class="hint">TAP ANYWHERE TO START</div>
+  </div>
+
+  <div class="overlay hidden" id="overOverlay">
+    <h2 style="font-size:1.4em;letter-spacing:5px;">GAME OVER</h2>
+    <div class="score-big" id="finalScore">0</div>
+    <div class="medal none" id="medal" title="Medal"></div>
+    <div class="newbest" id="newBest" style="display:none">✦ NEW BEST ✦</div>
+    <div class="row">
+      <div class="stat">Best <b id="overBest">0</b></div>
+      <div class="stat" style="margin-left:14px">Mode <b id="overMode">Normal</b></div>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <button class="btn" id="againBtn">PLAY AGAIN</button>
+      <button class="btn ghost" id="shareBtn">SHARE</button>
+      <button class="btn ghost" id="menuBtn">MENU</button>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="pauseOverlay">
+    <h2 style="font-size:1.3em;letter-spacing:5px;">PAUSED</h2>
+    <p>Tap or press <b>P</b> to resume.</p>
+  </div>
+  <div class="toast" id="toast">COPIED</div>
+</div>
+
+<div id="hud">
+  <span>Best <b id="hudBest" style="color:#f0d89c">0</b></span>
+  <span id="hudMode">Normal</span>
+  <button id="soundBtn" title="Toggle sound">🔊 Sound</button>
+  <button id="pauseBtn" title="Pause">⏸ Pause</button>
+</div>
+<div class="keys"><kbd>Space</kbd> / <kbd>↑</kbd> / <kbd>W</kbd> flap · <kbd>P</kbd> pause · <kbd>R</kbd> restart</div>
+
+<script>
+(function () {
+  'use strict';
+  /* ===== constants ===== */
+  var W = 360, H = 540, GROUND_H = 64;
+  var GRAV = 1900, FLAP_V = -540, VMAX = 820;
+  var PIPE_W = 58, CAP_H = 14, BIRD_X = 88, BIRD_R = 13, HIT_R = 10;
+  var DIFF = {
+    easy:   { label: 'Easy',   gap: 180, speed: 140, spacing: 240, wander: 130 },
+    normal: { label: 'Normal', gap: 150, speed: 160, spacing: 220, wander: 150 },
+    hard:   { label: 'Hard',   gap: 122, speed: 185, spacing: 200, wander: 190 }
+  };
+  var MEDALS = [[40, 'platinum'], [30, 'gold'], [20, 'silver'], [10, 'bronze']];
+
+  /* ===== dom ===== */
+  var $ = function (id) { return document.getElementById(id); };
+  var stage = $('stage'), canvas = $('game'), ctx = canvas.getContext('2d');
+  var titleOv = $('titleOverlay'), overOv = $('overOverlay'), pauseOv = $('pauseOverlay');
+
+  /* ===== storage (never throw) ===== */
+  function lsGet(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  /* ===== state ===== */
+  var diff = lsGet('bgh.flappy.diff', 'normal'); if (!DIFF[diff]) diff = 'normal';
+  var daily = false, dailyDate = '';
+  var state = 'title';               // title | play | dead | pause
+  var pausedFrom = 'play';
+  var bird = { y: H / 2, vy: 0, rot: 0, wing: 0 };
+  var pipes = [], score = 0, dist = 0, anim = 0, flash = 0, deadT = 0, overShown = false, prevGap = H / 2;
+  var rng = Math.random, sound = lsGet('bgh.flappy.sound', '1') === '1';
+
+  function utcDate() { return new Date().toISOString().slice(0, 10); }
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function hashStr(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+  function cfg() { return daily ? DIFF.normal : DIFF[diff]; }
+  function modeLabel() { return daily ? 'Daily ' + dailyDate : cfg().label; }
+  function bestKey() { return daily ? 'bgh.flappy.daily.' + dailyDate : 'bgh.flappy.best.' + diff; }
+  function getBest() { return parseInt(lsGet(bestKey(), '0'), 10) || 0; }
+  function medalFor(s) { for (var i = 0; i < MEDALS.length; i++) if (s >= MEDALS[i][0]) return MEDALS[i][1]; return 'none'; }
+
+  /* ===== audio ===== */
+  var ac = null;
+  function tone(f0, f1, dur, type, vol) {
+    if (!sound) return;
+    try {
+      if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+      if (ac.state === 'suspended') ac.resume();
+      var o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+      o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
+    } catch (e) {}
+  }
+  var sfx = {
+    flap: function () { tone(520, 780, 0.07, 'triangle', 0.18); },
+    point: function () { tone(880, 880, 0.05, 'square', 0.08); setTimeout(function () { tone(1320, 1320, 0.08, 'square', 0.08); }, 55); },
+    hit: function () { tone(220, 60, 0.22, 'sawtooth', 0.25); }
+  };
+
+  /* ===== fixed scenery (deterministic) ===== */
+  var sky = mulberry32(1234), stars = [], buildings = [];
+  for (var i = 0; i < 70; i++) stars.push({ x: sky() * W, y: sky() * (H - GROUND_H) * 0.7, r: 0.6 + sky() * 1.3, p: sky() * 6.28 });
+  var SKY_PERIOD = 720, bx = 0;
+  while (bx < SKY_PERIOD) { var bw = 26 + sky() * 46, bh = 50 + sky() * 130; buildings.push({ x: bx, w: bw, h: bh, win: sky() }); bx += bw + 4 + sky() * 10; }
+
+  /* ===== sizing ===== */
+  function fit() {
+    var de = document.documentElement;
+    var vw = de.clientWidth || window.innerWidth, vh = de.clientHeight || window.innerHeight;
+    var maxW = Math.min(420, vw - 24);
+    var maxH = Math.max(340, vh - 190);
+    var w = maxW, h = w * H / W;
+    if (h > maxH) { h = maxH; w = h * W / H; }
+    stage.style.width = w + 'px'; stage.style.height = h + 'px';
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', fit);
+
+  /* ===== game flow ===== */
+  function reset() {
+    if (daily) { dailyDate = utcDate(); rng = mulberry32(hashStr('flappy-' + dailyDate)); }
+    else rng = mulberry32((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+    bird.y = H / 2; bird.vy = 0; bird.rot = 0; bird.wing = 0;
+    pipes = []; score = 0; flash = 0; deadT = 0; overShown = false; prevGap = H / 2;
+  }
+  function start() {
+    reset(); state = 'play';
+    titleOv.classList.add('hidden'); overOv.classList.add('hidden'); pauseOv.classList.add('hidden');
+    flap(); syncHud();
+  }
+  function flap() { bird.vy = FLAP_V; bird.wing = 0; sfx.flap(); }
+  function currentSpeed() { return cfg().speed * (1 + Math.min(score, 60) * 0.004); }
+  function spawnPipe(x) {
+    var c = cfg(), minY = 60 + c.gap / 2, maxY = H - GROUND_H - 60 - c.gap / 2;
+    var y = prevGap + (rng() * 2 - 1) * c.wander;
+    if (y < minY) y = minY; if (y > maxY) y = maxY;
+    prevGap = y;
+    pipes.push({ x: x, gapY: y, passed: false });
+  }
+  function die(onPipe) {
+    if (state !== 'play') return;
+    state = 'dead'; flash = 0.18; deadT = 0; sfx.hit();
+    if (onPipe) bird.vy = Math.max(bird.vy, 0) * 0.3 - 180;
+    var best = getBest(), isNew = score > best;
+    if (isNew) lsSet(bestKey(), String(score));
+    $('finalScore').textContent = score;
+    $('overBest').textContent = Math.max(best, score);
+    $('overMode').textContent = modeLabel();
+    $('medal').className = 'medal ' + medalFor(score);
+    $('newBest').style.display = isNew && score > 0 ? '' : 'none';
+    syncHud();
+  }
+  function showMenu() {
+    state = 'title'; reset();
+    overOv.classList.add('hidden'); pauseOv.classList.add('hidden'); titleOv.classList.remove('hidden');
+    syncHud();
+  }
+  function togglePause() {
+    if (state === 'play') { pausedFrom = 'play'; state = 'pause'; pauseOv.classList.remove('hidden'); }
+    else if (state === 'pause') { state = pausedFrom; pauseOv.classList.add('hidden'); last = performance.now(); }
+  }
+  function syncHud() {
+    var b = getBest();
+    $('hudBest').textContent = b; $('titleBest').textContent = b;
+    $('hudMode').textContent = modeLabel();
+    $('soundBtn').textContent = sound ? '🔊 Sound' : '🔇 Muted';
+    var segs = $('diffSeg').querySelectorAll('button');
+    for (var i = 0; i < segs.length; i++) segs[i].classList.toggle('on', !daily && segs[i].getAttribute('data-diff') === diff);
+    $('dailyBtn').classList.toggle('on', daily);
+    $('dailyBtn').textContent = daily ? '★ DAILY ' + utcDate().slice(5) + ' ✓' : '★ DAILY';
+  }
+
+  /* ===== update ===== */
+  function update(dt) {
+    var c = cfg();
+    if (state === 'play') {
+      bird.vy = Math.min(VMAX, bird.vy + GRAV * dt);
+      bird.y += bird.vy * dt;
+      if (bird.y < BIRD_R) { bird.y = BIRD_R; bird.vy = 0; }
+      var spd = currentSpeed();
+      dist += spd * dt;
+      for (var i = 0; i < pipes.length; i++) pipes[i].x -= spd * dt;
+      if (!pipes.length) spawnPipe(W + 60);
+      else if (pipes[pipes.length - 1].x < W - c.spacing) spawnPipe(pipes[pipes.length - 1].x + c.spacing);
+      while (pipes.length && pipes[0].x < -PIPE_W - 10) pipes.shift();
+      for (i = 0; i < pipes.length; i++) {
+        var p = pipes[i];
+        if (!p.passed && p.x + PIPE_W < BIRD_X) { p.passed = true; score++; sfx.point(); }
+        if (BIRD_X + HIT_R > p.x && BIRD_X - HIT_R < p.x + PIPE_W) {
+          if (bird.y - HIT_R < p.gapY - c.gap / 2 || bird.y + HIT_R > p.gapY + c.gap / 2) { die(true); break; }
+        }
+      }
+      if (state === 'play' && bird.y + HIT_R >= H - GROUND_H) { bird.y = H - GROUND_H - HIT_R; die(false); }
+    } else if (state === 'dead') {
+      deadT += dt;
+      if (bird.y + BIRD_R < H - GROUND_H) { bird.vy = Math.min(VMAX, bird.vy + GRAV * dt); bird.y += bird.vy * dt; }
+      if (bird.y + BIRD_R >= H - GROUND_H) { bird.y = H - GROUND_H - BIRD_R; bird.vy = 0; }
+      if (deadT > 0.55 && !overShown) { overShown = true; overOv.classList.remove('hidden'); }
+    }
+    var target = state === 'dead' && bird.vy === 0 ? 1.45 : Math.max(-0.45, Math.min(1.45, (bird.vy + 300) / 900 * 1.9 - 0.45));
+    bird.rot += (target - bird.rot) * Math.min(1, 10 * dt);
+    bird.wing += dt * (bird.vy < 0 ? 28 : 11);
+    if (flash > 0) flash -= dt;
+  }
+
+  /* ===== render ===== */
+  function render() {
+    var c = cfg();
+    // sky
+    var g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#070c18'); g.addColorStop(0.55, '#16223a'); g.addColorStop(1, '#2c3a55');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // stars
+    for (var i = 0; i < stars.length; i++) {
+      var s = stars[i], a = 0.45 + 0.45 * Math.sin(anim * 1.7 + s.p);
+      ctx.fillStyle = 'rgba(230,235,255,' + a.toFixed(2) + ')';
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.283); ctx.fill();
+    }
+    // moon
+    ctx.fillStyle = '#f0e6c0'; ctx.beginPath(); ctx.arc(292, 78, 22, 0, 6.283); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.beginPath(); ctx.arc(284, 72, 5, 0, 6.283); ctx.fill();
+    ctx.beginPath(); ctx.arc(300, 88, 3.5, 0, 6.283); ctx.fill();
+    ctx.beginPath(); ctx.arc(296, 68, 2.5, 0, 6.283); ctx.fill();
+    // skyline (parallax)
+    var off = -(dist * 0.2) % SKY_PERIOD;
+    for (var rep = 0; rep < 2; rep++) {
+      for (i = 0; i < buildings.length; i++) {
+        var b = buildings[i], x = b.x + off + rep * SKY_PERIOD, top = H - GROUND_H - b.h;
+        if (x + b.w < 0 || x > W) continue;
+        ctx.fillStyle = '#0d1524'; ctx.fillRect(x, top, b.w, b.h);
+        ctx.fillStyle = 'rgba(240,192,96,0.28)';
+        for (var wy = top + 8; wy < H - GROUND_H - 6; wy += 12)
+          for (var wx = x + 4; wx < x + b.w - 5; wx += 9)
+            if (((wx * 7 + wy * 13 + b.win * 1000) | 0) % 5 === 0) ctx.fillRect(wx, wy, 4, 6);
+      }
+    }
+    // pipes
+    for (i = 0; i < pipes.length; i++) {
+      var p = pipes[i], topH = p.gapY - c.gap / 2, botY = p.gapY + c.gap / 2;
+      drawPipe(p.x, 0, topH, true);
+      drawPipe(p.x, botY, H - GROUND_H - botY, false);
+    }
+    // ground
+    ctx.fillStyle = '#2a3a22'; ctx.fillRect(0, H - GROUND_H, W, GROUND_H);
+    ctx.fillStyle = '#4a6a34'; ctx.fillRect(0, H - GROUND_H, W, 6);
+    ctx.fillStyle = '#221a12'; ctx.fillRect(0, H - GROUND_H + 14, W, GROUND_H - 14);
+    ctx.fillStyle = '#3a5a2c';
+    var goff = -(dist % 24);
+    for (var gx = goff; gx < W; gx += 24) { ctx.beginPath(); ctx.moveTo(gx, H - GROUND_H + 6); ctx.lineTo(gx + 12, H - GROUND_H + 6); ctx.lineTo(gx + 6, H - GROUND_H + 14); ctx.fill(); }
+    // bird
+    var by = state === 'title' ? H / 2 + Math.sin(anim * 3.2) * 7 : bird.y;
+    var rot = state === 'title' ? Math.sin(anim * 3.2 + 1.2) * 0.12 : bird.rot;
+    var wing = state === 'title' ? Math.sin(anim * 9) : Math.sin(bird.wing);
+    ctx.save(); ctx.translate(BIRD_X, by); ctx.rotate(rot);
+    ctx.fillStyle = '#b8862e'; ctx.beginPath(); ctx.arc(0, 0, BIRD_R + 1.5, 0, 6.283); ctx.fill();
+    ctx.fillStyle = '#f0c060'; ctx.beginPath(); ctx.arc(0, 0, BIRD_R, 0, 6.283); ctx.fill();
+    ctx.fillStyle = '#f8d890'; ctx.beginPath(); ctx.arc(-3, -4, BIRD_R * 0.55, 0, 6.283); ctx.fill();
+    ctx.fillStyle = '#d89a34'; ctx.beginPath(); ctx.ellipse(-4, 2 + wing * 2, 8, 4.5, -0.35 * wing, 0, 6.283); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(5, -4, 4.2, 0, 6.283); ctx.fill();
+    ctx.fillStyle = '#101418'; ctx.beginPath(); ctx.arc(6.3, -4, 2, 0, 6.283); ctx.fill();
+    ctx.fillStyle = '#f08030'; ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(18, 3); ctx.lineTo(9, 6); ctx.fill();
+    ctx.restore();
+    // score
+    if (state !== 'title') {
+      ctx.font = 'bold 44px Georgia, serif'; ctx.textAlign = 'center'; ctx.lineWidth = 5; ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#141a24'; ctx.strokeText(String(score), W / 2, 66);
+      ctx.fillStyle = '#ffffff'; ctx.fillText(String(score), W / 2, 66);
+    }
+    if (flash > 0) { ctx.fillStyle = 'rgba(255,255,255,' + (flash / 0.18 * 0.5).toFixed(2) + ')'; ctx.fillRect(0, 0, W, H); }
+  }
+  function drawPipe(x, y, h, isTop) {
+    if (h <= 0) return;
+    var g = ctx.createLinearGradient(x, 0, x + PIPE_W, 0);
+    g.addColorStop(0, '#1f6a50'); g.addColorStop(0.3, '#3aa07a'); g.addColorStop(0.55, '#2f8f6f'); g.addColorStop(1, '#1a5a44');
+    ctx.fillStyle = g; ctx.fillRect(x, y, PIPE_W, h);
+    ctx.strokeStyle = '#123a2c'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y - 1, PIPE_W - 2, h + 2);
+    var cy = isTop ? y + h - CAP_H : y;
+    ctx.fillStyle = g; ctx.fillRect(x - 3, cy, PIPE_W + 6, CAP_H);
+    ctx.strokeRect(x - 2, cy, PIPE_W + 4, CAP_H);
+    ctx.fillStyle = 'rgba(255,255,255,0.10)'; ctx.fillRect(x + 8, y, 6, h);
+  }
+
+  /* ===== loop ===== */
+  var last = performance.now(), acc = 0, STEP = 1 / 120;
+  function frame(now) {
+    var dt = (now - last) / 1000; last = now;
+    if (dt > 0.1) dt = 0.1;
+    if (state === 'play' || state === 'dead') { acc += dt; while (acc >= STEP) { update(STEP); acc -= STEP; } }
+    else if (state === 'title') dist += 40 * dt;
+    anim += dt;
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  /* ===== input ===== */
+  function action() {
+    if (state === 'title') start();
+    else if (state === 'play') flap();
+    else if (state === 'dead') { if (deadT > 0.7) start(); }
+    else if (state === 'pause') togglePause();
+  }
+  stage.addEventListener('pointerdown', function (e) { if (e.target.closest('button')) return; e.preventDefault(); action(); });
+  window.addEventListener('keydown', function (e) {
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { e.preventDefault(); if (!e.repeat) action(); }
+    else if (e.code === 'KeyP' || e.code === 'Escape') { if (state === 'play' || state === 'pause') togglePause(); }
+    else if (e.code === 'KeyR') { if (state === 'play' || state === 'dead') start(); }
+  });
+  document.addEventListener('visibilitychange', function () { if (document.hidden && state === 'play') togglePause(); });
+
+  $('startBtn').addEventListener('click', start);
+  $('againBtn').addEventListener('click', start);
+  $('menuBtn').addEventListener('click', showMenu);
+  $('pauseBtn').addEventListener('click', togglePause);
+  $('soundBtn').addEventListener('click', function () { sound = !sound; lsSet('bgh.flappy.sound', sound ? '1' : '0'); syncHud(); });
+  $('dailyBtn').addEventListener('click', function () { daily = !daily; if (daily) dailyDate = utcDate(); try { history.replaceState(null, '', daily ? '#daily' : location.pathname); } catch (e) {} syncHud(); });
+  var segs = $('diffSeg').querySelectorAll('button');
+  for (var si = 0; si < segs.length; si++) segs[si].addEventListener('click', function () { diff = this.getAttribute('data-diff'); daily = false; lsSet('bgh.flappy.diff', diff); syncHud(); });
+  $('shareBtn').addEventListener('click', function () {
+    var m = medalFor(score), url = 'https://boardgaminghub.com/flappybird' + (daily ? '#daily' : '');
+    var text = daily ? 'Flappy Bird 🐤 Daily ' + dailyDate + ' — ' + score + ' pipes' : 'Flappy Bird 🐤 — ' + score + ' pipes on ' + cfg().label;
+    if (m !== 'none') text += ' · ' + m + ' medal';
+    text += '\n' + url;
+    var done = function () { var t = $('toast'); t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 1400); };
+    if (navigator.share) { navigator.share({ text: text }).then(done).catch(function () {}); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(function () { window.prompt('Copy your result:', text); });
+    else window.prompt('Copy your result:', text);
+  });
+
+  /* ===== init ===== */
+  if (location.hash === '#daily') { daily = true; dailyDate = utcDate(); }
+  fit(); reset(); syncHud();
+  requestAnimationFrame(frame);
+
+  window.__flappy = { get state() { return state; }, get score() { return score; }, get bird() { return bird; }, get pipes() { return pipes; }, cfg: cfg, action: action, start: start };
+})();
+</script>
+
+<section class="seo-content">
+  <h2>Flappy Bird</h2>
+  <p>Flappy Bird is the purest one-button game there is: tap to flap, do nothing to fall, and thread a bird through an endless run of pipes. This is a free browser homage to the 2013 mobile original, built as a single HTML file with no signup and no install. It adds three gap sizes, a seeded <a href="#daily">daily run</a> that is identical for every player, medals, and a best-score memory in your browser.</p>
+
+  <h3>How to play</h3>
+  <ul>
+    <li>Tap, click, or press <b>Space</b>, <b>↑</b> or <b>W</b> to flap. Each flap gives the same upward kick.</li>
+    <li>Pass between the pipes. Every pipe you clear scores one point.</li>
+    <li>Touching a pipe or the ground ends the run. The ceiling only stops you.</li>
+    <li><b>P</b> pauses, <b>R</b> restarts. The game pauses itself if you switch tabs.</li>
+  </ul>
+
+  <h3>The three difficulties</h3>
+  <table class="ref-table">
+    <thead><tr><th>Mode</th><th>Gap height</th><th>Scroll speed</th><th>Pipe spacing</th><th>Feel</th></tr></thead>
+    <tbody>
+      <tr><td>Easy</td><td class="num">180 px</td><td class="num">140 px/s</td><td class="num">240 px</td><td>Room to recover from a late tap. Good for learning the rhythm.</td></tr>
+      <tr><td>Normal</td><td class="num">150 px</td><td class="num">160 px/s</td><td class="num">220 px</td><td>Close to the original. The daily run uses these numbers.</td></tr>
+      <tr><td>Hard</td><td class="num">122 px</td><td class="num">185 px/s</td><td class="num">200 px</td><td>The gap is under five bird-heights, and it moves further between pipes.</td></tr>
+    </tbody>
+  </table>
+  <p>In every mode the speed creeps up by 0.4% per point, capped at +24% after 60 pipes, and the bird's hit circle is 10 px against a drawn radius of 13 px, so a graze that looks like contact is usually forgiven.</p>
+
+  <h3>The physics under the hood</h3>
+  <p>The bird is a point mass under constant gravity, integrated 120 times a second. Between taps its height follows the school textbook parabola <em>y(t) = y₀ + v₀t + ½gt²</em>, with <em>g</em> = 1,900 px/s². The part that makes the game feel unfair is the flap: it does not <em>add</em> lift, it <em>sets</em> the vertical velocity to −540 px/s regardless of how fast you were falling. Two consequences follow directly from that.</p>
+  <ul>
+    <li>Every flap peaks at exactly the same height above the tap point: <em>v₀² / 2g</em> = 540² / 3,800 ≈ <b>77 px</b>, reached 0.28 s after the tap. Rapid tapping does not make you climb faster, it just keeps resetting the clock.</li>
+    <li>A tap that comes 0.1 s late leaves the bird 10 px lower than it would have been, plus the extra speed gravity has added. With a 150 px gap that tenth of a second is a large fraction of your margin, which is why the game rewards a steady rhythm over reaction.</li>
+  </ul>
+  <p>At Normal speed a 58 px pipe takes 0.36 s to cross the bird, so a pipe you have entered safely is nearly always a pipe you clear. Almost every death happens at the leading edge, from arriving too high or too low, not from drifting while inside the gap.</p>
+
+  <h3>The daily run</h3>
+  <p>Choose <b>★ Daily</b> and the game seeds its random number generator from the UTC date. Every player who plays the daily on the same day sees the same pipe heights in the same order, on Normal settings. Your best run for the day is stored in your browser, and <b>Share</b> copies a spoiler-free line with the date and your pipe count so you can compare with friends without giving the layout away. A new board arrives at midnight UTC.</p>
+
+  <h3>Medals</h3>
+  <table class="ref-table">
+    <thead><tr><th>Medal</th><th>Pipes</th></tr></thead>
+    <tbody>
+      <tr><td>Bronze</td><td class="num">10</td></tr>
+      <tr><td>Silver</td><td class="num">20</td></tr>
+      <tr><td>Gold</td><td class="num">30</td></tr>
+      <tr><td>Platinum</td><td class="num">40</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Tips that actually help</h3>
+  <ul>
+    <li><b>Tap on a metronome, not on fear.</b> A flap every ~0.55 s holds the bird level. Adjust the beat early to change altitude rather than double-tapping at the last moment.</li>
+    <li><b>Aim for the centre of the gap,</b> then stop steering. The bird only needs to be inside the gap at the leading edge.</li>
+    <li><b>Read the next pipe while passing this one.</b> The layout is visible 220 px ahead, which is about 1.4 s at Normal speed. That is your planning window.</li>
+    <li><b>Descend by waiting, climb by flapping.</b> A single skipped beat drops you about 60 px. Two flaps in quick succession gain you almost nothing because the second one just resets the first.</li>
+  </ul>
+
+  <h3>Frequently asked questions</h3>
+  <details>
+    <summary>Why is Flappy Bird so hard?</summary>
+    <p>Because you cannot control how much lift you get, only when. Every tap produces the same 77 px climb, so the game is a pure timing test with a 150 px window and no way to correct mid-gap.</p>
+  </details>
+  <details>
+    <summary>Is the daily challenge the same for everyone?</summary>
+    <p>Yes. The pipe sequence comes from a random number generator seeded with the UTC date, so it is identical for everyone that day. Your best of the day is saved locally and the share line lets you compare without spoilers.</p>
+  </details>
+  <details>
+    <summary>What happened to the original Flappy Bird?</summary>
+    <p>The original was released for mobile in 2013 by Vietnamese developer Dong Nguyen and became one of the world's most-downloaded games in early 2014. Nguyen pulled it from the app stores in February 2014, saying it had become too addictive. This page is an independent free homage, not the original app.</p>
+  </details>
+  <details>
+    <summary>Does it work on a phone?</summary>
+    <p>Yes. Tap anywhere on the game to flap. The play area scales to your screen and the whole game is one HTML file, so it loads fast on mobile data.</p>
+  </details>
+  <details>
+    <summary>Is my best score saved?</summary>
+    <p>Per difficulty and per daily date, in your browser's local storage. Nothing is sent to a server, so it will not follow you between devices.</p>
+  </details>
+
+  <h3>Related games</h3>
+  <ul>
+    <li><a href="/2048">2048</a> — the other five-second-to-learn game that eats an afternoon.</li>
+    <li><a href="/minesweeper">Minesweeper</a> — pure logic where Flappy Bird is pure timing.</li>
+    <li><a href="/cliffwalkers">Cliffwalkers</a> — a puzzle platformer where the little folk do the walking.</li>
+    <li><a href="/hellcat">Hellcat</a> — flight with actual aerodynamics, if the bird has left you wanting a proper wing.</li>
+  </ul>
+</section>
+
+<section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
+  <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>
+  <p style="color:#8098a8;font-size:0.9em;margin-bottom:18px;line-height:1.5;">Sign in with GitHub to post your daily score, share tips, or report a bug.</p>
+  <div class="giscus"></div>
+</section>
+<script src="https://giscus.app/client.js"
+  data-repo="mf4633/board-gaming"
+  data-repo-id="R_kgDOKyyThA"
+  data-category="Announcements"
+  data-category-id="DIC_kwDOKyyThM4C75Cz"
+  data-mapping="pathname"
+  data-strict="0"
+  data-reactions-enabled="1"
+  data-emit-metadata="0"
+  data-input-position="bottom"
+  data-theme="dark"
+  data-lang="en"
+  crossorigin="anonymous"
+  async></script>
+<script src="/analytics.js"></script>
+<script src="/nav.js" defer></script>
+</body>
+</html>

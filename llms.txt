@@ -47,8 +47,9 @@ Faithful free implementations, each with rules and strategy notes on the page:
 
 - [Sudoku](https://boardgaminghub.com/sudoku) — easy through expert, daily puzzle
 - [Solitaire](https://boardgaminghub.com/solitaire) — Klondike
-- [Minesweeper](https://boardgaminghub.com/minesweeper)
+- [Minesweeper](https://boardgaminghub.com/minesweeper) — classic grids plus solver-verified no-guess boards, a seeded daily challenge, hex and knight's-move variants, shareable board links, hints and 3BV scoring
 - [2048](https://boardgaminghub.com/2048) — slide and merge tiles
+- [Flappy Bird](https://boardgaminghub.com/flappybird) — one-tap flight through the pipes: Easy/Normal/Hard gap sizes, a seeded daily run identical for everyone, medals and best-score tracking; the flap is a velocity reset so every climb peaks at the same 77 px
 - [Abacus](https://boardgaminghub.com/abacus) — playable soroban with calculator pad, Arabic and Roman display
 - [LovedWords](https://boardgaminghub.com/lovedwords/) — first-words flashcards for toddlers using your own photos and voice
 

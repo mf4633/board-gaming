@@ -27,13 +27,24 @@ function gameUrl(g) {
   return g.sourceHtml.endsWith('/index.html') ? `/${g.slug}/` : `/${g.slug}`;
 }
 
+// "New this week": games whose games.json `addedOn` (YYYY-MM-DD) is within
+// NEW_WINDOW_DAYS of build time. Emitted markup carries data-added so the page
+// also hides stale entries client-side if nobody regenerates for a while.
+const NEW_WINDOW_DAYS = 14;
+function isNewGame(g) {
+  if (!g.addedOn) return false;
+  const age = (Date.now() - Date.parse(g.addedOn + 'T00:00:00Z')) / 86400000;
+  return age >= 0 && age <= NEW_WINDOW_DAYS;
+}
+
 function card(g, opts = {}) {
   const demo = g.demo && g.storeUrl;
   const badge = demo ? `<span class="demo-badge">Demo — full version on itch.io</span>` : '';
   const daily = g.daily ? `<span class="daily-badge">Daily</span>` : '';
+  const newBadge = isNewGame(g) ? `<span class="new-badge" data-added="${g.addedOn}">New</span>` : '';
   const cls = opts.featured ? 'gcard featured-card' : 'gcard';
   return `    <a class="${cls}" href="${gameUrl(g)}">
-      <div class="gname">${esc(g.title)}${daily}</div>
+      <div class="gname">${esc(g.title)}${newBadge}${daily}</div>
       <div class="gsub">${esc(g.description)}${badge ? '<br>' + badge : ''}</div>
     </a>`;
 }
@@ -99,6 +110,12 @@ const sharedCss = `  * { box-sizing: border-box; }
   .demo-badge { display: inline-block; margin-top: 6px; font-size: 0.78em; color: #a0c8a8; letter-spacing: 1px; }
   .demo-badge a { color: #94c3e8; }
   .daily-badge { display: inline-block; margin-left: 8px; font-size: 0.65em; color: #a0d0a8; letter-spacing: 2px; vertical-align: middle; font-weight: normal; }
+  .new-badge { display: inline-block; margin-left: 8px; padding: 1px 6px; font-size: 0.6em; color: #0c1016; background: #f0c060; border-radius: 2px; letter-spacing: 2px; vertical-align: middle; font-weight: bold; }
+  .new-strip { text-align: center; margin: 0 0 16px; padding: 14px 18px; background: linear-gradient(90deg,#1a1408,#26200c,#1a1408); border: 1px solid #7a6020; border-radius: 4px; }
+  .new-strip b { color: #f0c060; letter-spacing: 2px; }
+  .new-strip a { color: #f0d89c; text-decoration: none; margin: 0 10px; letter-spacing: 1px; }
+  .new-strip a:hover { color: #fff; }
+  .new-strip .when { color: #8a7a50; font-size: 0.85em; }
   .ad-slot { position: relative; width: 100%; margin: 24px 0; min-height: 90px; display: block; background: #11161e; border: 1px dashed #2a3540; border-radius: 4px; padding: 6px; overflow: hidden; }
   .ad-slot--pending { display: none; }
   .ad-slot::before { content: 'Advertisement'; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); color: #5a6874; font-size: 0.65em; letter-spacing: 3px; pointer-events: none; }
@@ -196,6 +213,28 @@ const eclipseStrip = `  <div class="eclipse-strip" id="eclipse-strip" style="dis
   })();
   </script>`;
 
+const newGames = games.filter(isNewGame).sort((a, b) => b.addedOn.localeCompare(a.addedOn));
+const newStrip = newGames.length
+  ? `  <div class="new-strip" id="new-strip">
+    <b>✦ NEW THIS WEEK</b> —
+    ${newGames.map(g => `<a href="${gameUrl(g)}" data-added="${g.addedOn}">${esc(g.title)}</a>`).join(' · ')}
+    <span class="when">· fresh from the workshop</span>
+  </div>
+  <script>
+  (function () {
+    // Hide "new" markers older than ${NEW_WINDOW_DAYS} days even if the site isn't regenerated.
+    var cutoff = Date.now() - ${NEW_WINDOW_DAYS} * 86400000, live = 0;
+    var els = document.querySelectorAll('[data-added]');
+    for (var i = 0; i < els.length; i++) {
+      if (Date.parse(els[i].getAttribute('data-added') + 'T00:00:00Z') < cutoff) els[i].style.display = 'none';
+      else if (els[i].tagName === 'A') live++;
+    }
+    var strip = document.getElementById('new-strip');
+    if (strip && !live) strip.style.display = 'none';
+  })();
+  </script>`
+  : '';
+
 const dailyGames = games.filter(g => g.daily);
 const dailyStrip = dailyGames.length
   ? `  <div class="daily-strip">
@@ -248,6 +287,7 @@ ${guidesStrip}
 
 ${adUnit()}
 
+${newStrip}
 ${eclipseStrip}
 ${dailyStrip}
 ${section('puzzles', { highlightPuzzles: true })}
@@ -295,6 +335,11 @@ const indexHtml = `<!DOCTYPE html>
 <meta property="og:url" content="${BASE}/">
 <meta property="og:title" content="Board Gaming Hub — ${count} free browser games">
 <meta property="og:description" content="Classics, original strategy games, and simulations — all in a single HTML file each.">
+<meta property="og:image" content="${BASE}/og/home.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${BASE}/og/home.png">
 <style>
 ${sharedCss.replace(/header \.free-tag[^}]+\}/g, '').replace(/\.ad-slot[^}]+\}/g, '').replace(/\.disclosure[^}]+\}/g, '')}
   #wrap { padding: 40px 24px 80px 24px; }
@@ -323,12 +368,14 @@ ${sharedCss.replace(/header \.free-tag[^}]+\}/g, '').replace(/\.ad-slot[^}]+\}/g
 ${hubEditorial}
 ${guidesStrip}
 
+${newStrip}
 ${eclipseStrip}
 ${dailyStrip}
 ${categories.map(c => indexSection(c)).join('\n')}
 
   <footer>
     <p style="margin-bottom:10px;font-size:0.95em;">Enjoying the games? <a href="https://buymeacoffee.com/mf4633" style="color:#f0c060;" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
+    <p style="color:#7090a0;margin-bottom:10px;font-size:0.95em;">Engineering tools by the same author at <a href="https://pe-calc.com/" style="color:#a8c0d8;">pe-calc.com</a> · Stormwater design SaaS at <a href="https://hydrocomplete.com/" style="color:#a8c0d8;">hydrocomplete.com</a></p>
     <a href="/play">Ad-supported catalog</a> ·
     <a href="/apps">Android apps</a> ·
     <a href="https://github.com/mf4633/board-gaming">github.com/mf4633/board-gaming</a>

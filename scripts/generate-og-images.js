@@ -24,7 +24,7 @@ const CARDS = [
   { file: 'cliffwalkers', title: 'CLIFFWALKERS', sub: 'Save the wee folk — puzzle platformer', accent: '#90c8f0', bg: '#0a1016' },
   { file: 'mahjong', title: 'MAHJONG', sub: 'Solitaire tile matching — free', accent: '#e0b070', bg: '#101610' },
   { file: '2048', title: '2048', sub: 'Slide & merge to the golden tile', accent: '#f0c060', bg: '#14100c' },
-  { file: 'minesweeper', title: 'MINESWEEPER', sub: 'Find the mines — beginner to expert', accent: '#94c3e8', bg: '#0c1016' },
+  { file: 'minesweeper', title: 'MINESWEEPER 2.0', sub: 'No-guess boards · daily challenge · hex & knight', accent: '#f0c060', bg: '#0c1016' },
   { file: 'abacus', title: 'ABACUS', sub: 'Soroban with Arabic & Roman numerals', accent: '#d4a574', bg: '#150f0a' },
   { file: 'lovedwords', title: 'LOVEDWORDS', sub: 'First-words flashcards for toddlers', accent: '#f0a0b0', bg: '#1a1424' },
   { file: 'agora', title: 'AGORA', sub: 'The Mediterranean trade game', accent: '#f0d89c', bg: '#141008' },
@@ -43,6 +43,7 @@ const CARDS = [
   { file: 'tictactoe', title: 'TIC-TAC-TOE', sub: 'Three levels — the last one is unbeatable', accent: '#7ec4e8', bg: '#141a20' },
   { file: 'ultimatetictactoe', title: 'ULTIMATE TIC-TAC-TOE', sub: 'Nine boards inside a tenth', accent: '#d4a860', bg: '#141a20' },
   { file: 'hellcat', title: 'HELLCAT', sub: 'WWII carrier flight sim — real aerodynamics', accent: '#8fe6b0', bg: '#0a1018' },
+  { file: 'flappybird', title: 'FLAPPY BIRD', sub: 'One tap · three gap sizes · daily challenge', accent: '#f0c060', bg: '#0b1220' },
 ];
 
 function xmlEsc(s) {

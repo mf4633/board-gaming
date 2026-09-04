@@ -308,14 +308,19 @@
       "sourceHtml": "Minesweeper.html",
       "category": "puzzles",
       "featured": true,
-      "daily": false,
+      "daily": true,
       "priority": 0.9,
-      "description": "Find the mines",
+      "description": "Find the mines — no-guess boards, daily challenge, hex & knight variants",
       "searchKeys": [
         "mines",
         "grid",
         "flag",
-        "classic"
+        "classic",
+        "no guess",
+        "daily",
+        "hex",
+        "knight",
+        "3bv"
       ],
       "appId": "com.hydroengineer.minesweeper",
       "platforms": [
@@ -400,7 +405,8 @@
       ],
       "hasSteam": false,
       "admob": false,
-      "ogImage": "/og/tictactoe.png"
+      "ogImage": "/og/tictactoe.png",
+      "addedOn": "2026-09-01"
     },
     {
       "slug": "agora",
@@ -739,7 +745,8 @@
       ],
       "hasSteam": false,
       "admob": false,
-      "ogImage": "/og/ultimatetictactoe.png"
+      "ogImage": "/og/ultimatetictactoe.png",
+      "addedOn": "2026-09-01"
     },
     {
       "slug": "apoapsis",
@@ -998,7 +1005,36 @@
       ],
       "hasSteam": false,
       "admob": false,
-      "ogImage": "/og/hellcat.png"
+      "ogImage": "/og/hellcat.png",
+      "addedOn": "2026-09-01"
+    },
+    {
+      "slug": "flappybird",
+      "title": "Flappy Bird",
+      "sourceHtml": "FlappyBird.html",
+      "category": "puzzles",
+      "featured": false,
+      "daily": true,
+      "priority": 0.9,
+      "description": "One-tap flight through the pipes — three gap sizes, a shared daily run, medals",
+      "searchKeys": [
+        "flappy bird",
+        "flappy",
+        "bird",
+        "pipes",
+        "arcade",
+        "one tap",
+        "reflex",
+        "daily",
+        "endless"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": false,
+      "ogImage": "/og/flappybird.png",
+      "addedOn": "2026-09-04"
     }
   ]
-}
+}

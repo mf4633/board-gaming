@@ -15,7 +15,7 @@
     { slug:'mahjong', url:'/mahjong', name:'Mahjong', cat:'puzzles', desc:'Solitaire tile matching', keys:['tile','matching','asian','solitaire'] },
     { slug:'chess', url:'/chess', name:'Chess', cat:'puzzles', desc:'The royal game', keys:['chess','board','strategy','classic','royal'] },
     { slug:'2048', url:'/2048', name:'2048', cat:'puzzles', desc:'Slide & merge tiles', keys:['merge','tile','number','slide','arcade'] },
-    { slug:'minesweeper', url:'/minesweeper', name:'Minesweeper', cat:'puzzles', desc:'Find the mines', keys:['mines','grid','flag','classic'] },
+    { slug:'minesweeper', url:'/minesweeper', name:'Minesweeper', cat:'puzzles', desc:'Find the mines — no-guess boards, daily challenge, hex & knight variants', keys:['mines','grid','flag','classic','no guess','daily','hex','knight','3bv'], daily:true },
     { slug:'abacus', url:'/abacus', name:'Abacus', cat:'puzzles', desc:'Soroban calculator with Arabic & Roman numerals', keys:['abacus','soroban','calculator','math','roman'] },
     { slug:'lovedwords', url:'/lovedwords/', name:'LovedWords', cat:'puzzles', desc:'First-words flashcards with your photos & voice', keys:['flashcards','toddler','first words','learning','baby','photos'] },
     { slug:'tictactoe', url:'/tictactoe', name:'Tic-Tac-Toe', cat:'puzzles', desc:'Noughts and crosses with a genuinely unbeatable AI', keys:['tic tac toe','tictactoe','noughts and crosses','xo','minimax','unbeatable'] },
@@ -43,6 +43,7 @@
     { slug:'metropolis2k', url:'/metropolis2k', name:'Metropolis 2K', cat:'sims', desc:'City-building sim with districts & bonds', keys:['city','building','simulation','tycoon','urban'] },
     { slug:'tower', url:'/tower', name:'Tower', cat:'sims', desc:'High-rise operations (SKYSTACK)', keys:['tower','building','simulation','tycoon','skyscraper'] },
     { slug:'hellcat', url:'/hellcat', name:'Hellcat', cat:'sims', desc:'WWII carrier flight sim with real aerodynamics', keys:['flight simulator','hellcat','f6f','wwii','aircraft carrier','aviation','plane','flying'] },
+    { slug:'flappybird', url:'/flappybird', name:'Flappy Bird', cat:'puzzles', desc:'One-tap flight through the pipes — three gap sizes, a shared daily run, medals', keys:['flappy bird','flappy','bird','pipes','arcade','one tap','reflex','daily','endless'], daily:true },
     // END GAMES
   ];
 

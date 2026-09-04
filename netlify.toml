@@ -298,6 +298,11 @@
   from = "/hellcat"
   to = "/Hellcat.html"
   status = 200
+
+[[redirects]]
+  from = "/flappybird"
+  to = "/FlappyBird.html"
+  status = 200
 # ─── Headers ───────────────────────────────────────────────────────────────
 # Version-pinned vendor libraries and generated OG cards never change under the
 # same name, so they can be cached hard. HTML keeps must-revalidate (default).
