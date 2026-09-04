@@ -217,7 +217,15 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
 #loanBar button:hover { background: #3A4858; color: #FFD060; border-color: #FFD060; }
 #loanBar .debt-val { color: #E0A040; font-weight: bold; }
 
-#seasonPill { position: absolute; top: 44px; left: 50%; transform: translateX(-60%) translateY(38px); background: rgba(12,18,26,0.85); border: 1px solid #3A4858; border-radius: 4px; padding: 3px 10px; font-family: 'Courier New', monospace; font-size: 0.72em; color: #90B0D0; z-index: 10; white-space: nowrap; }
+#seasonPill { position: absolute; top: 44px; left: 50%; transform: translateX(-50%) translateY(70px); background: rgba(12,18,26,0.85); border: 1px solid #3A4858; border-radius: 4px; padding: 3px 10px; font-family: 'Courier New', monospace; font-size: 0.72em; color: #90B0D0; z-index: 10; white-space: nowrap; cursor: pointer; }
+#seasonPill:hover { border-color: #7AB0E0; }
+#weatherPanel { position: absolute; top: 44px; left: 50%; transform: translateX(-50%) translateY(96px); background: rgba(12,18,26,0.94); border: 1.5px solid #5A7898; border-radius: 8px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 0.74em; color: #B0C8E0; z-index: 22; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.55); min-width: 340px; }
+#weatherPanel.show { display: block; }
+#weatherPanel h4 { color: #9ADBFF; font-family: Georgia, serif; font-size: 0.95em; margin: 0 0 6px 0; letter-spacing: 1.5px; }
+#weatherPanel .fc-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; border-top: 1px solid #22303E; }
+#weatherPanel .fc-row span:first-child { color: #9AB8D8; min-width: 84px; }
+#weatherPanel .fc-hi { color: #FFB060; } #weatherPanel .fc-lo { color: #80C0FF; }
+#weatherPanel .fc-note { color: #6A8098; font-size: 0.9em; margin-top: 6px; line-height: 1.4; }
 
 #infoOverlay { position: absolute; inset: 34px 0 0 0; background: rgba(6,10,16,0.92); z-index: 200; display: none; padding: 40px; overflow-y: auto; }
 #infoOverlay.show { display: block; }
@@ -325,7 +333,16 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
   </div>
   <div id="legacyDisplay" style="position:absolute;top:28px;left:50%;transform:translateX(-50%);color:#FFD060;font-family:'Courier New',monospace;font-size:0.85em;letter-spacing:2px;z-index:3;display:none;"></div>
   <div class="copyright">&copy; 2026 &middot; built with Claude Code</div>
-  <div class="version">v1.0</div>
+  <div class="version">v2.0</div>
+</div>
+
+<div id="cityModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:640px;">
+    <button class="modal-close" onclick="hideModal('cityModal')">&times;</button>
+    <h2>CHOOSE YOUR CITY</h2>
+    <p style="color:#9AB8D8;line-height:1.5;margin:6px 0 12px 0;">Your site's real latitude sets sunrise and sunset through the year; its climate normals drive every day's weather, from heat waves to blizzards. Weather moves foot traffic, hotel bookings, the utility bill, and the odd disaster.</p>
+    <div id="cityGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+  </div>
 </div>
 
 <div id="pauseMenu">
@@ -532,6 +549,13 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
   </div>
 </div>
 
+<div id="financeModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:620px;">
+    <button class="modal-close" onclick="hideModal('financeModal')">&times;</button>
+    <h2>FINANCE</h2>
+    <div id="financeBody"></div>
+  </div>
+</div>
 <div id="statsModal" class="modal-overlay">
   <div class="modal-box">
     <button class="modal-close" onclick="hideModal('statsModal')">&times;</button>
@@ -544,6 +568,9 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
   <div class="modal-box">
     <button class="modal-close" onclick="hideModal('howToModal')">&times;</button>
     <h2>HOW TO PLAY</h2>
+    <h3 style="color:#9ADBFF;font-size:1.05em;margin-top:10px;">A living city</h3>
+    <p style="line-height:1.5;">Pick a real city. Its latitude sets sunrise and sunset through the year; its climate drives each day's weather from a stochastic generator. Heat waves fill the shops and the cooling bill, blizzards thin the streets and close the helipad, thunderstorms can take the grid down. Click the weather pill for the 3-day forecast.</p>
+    <p style="line-height:1.5;">Money runs one accounting period per day (rent is collected daily; quoted annual rates apply at 1/12 per day). A slow business cycle moves demand, spending, the prime rate and the cap rate that values your tower. Condos sell once, then pay HOA; set asking rents in FINANCE. Banks lend to 65% loan-to-value and 1.25x debt-service coverage. The Comptroller posts a statement to your mail on the 1st of each month.</p>
     <h3 style="color:#9ADBFF;font-size:1.05em;margin-top:10px;">Goal</h3>
     <p style="line-height:1.5;">Build a thriving vertical city. Keep tenants happy, guests flowing, and cash in the green. Reach 5&#9733; status to unlock prestige content.</p>
     <h3 style="color:#9ADBFF;font-size:1.05em;margin-top:14px;">Quick Start</h3>
@@ -621,6 +648,7 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
   <div class="hud" id="hudTopRight">
     <div><b>FUNDS</b> <span class="val" id="fundsDisplay">$2,000,000</span></div>
     <div><b>YESTERDAY</b> <span id="incomeDisplay">---</span></div>
+    <div><b>VALUE</b> <span id="valueDisplay" style="color:#FFD060;">---</span></div>
   </div>
 
   <div class="palette-wrap">
@@ -655,7 +683,8 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
   <div id="tutHint"></div>
   <div id="guidedTutorial"></div>
   <div id="eodSummary"></div>
-  <div id="seasonPill">Spring, Day 1 &middot; <span id="weatherPill">clear</span></div>
+  <div id="seasonPill" onclick="toggleWeatherPanel()" title="Click for the forecast">Spring &middot; <span id="weatherPill">clear</span></div>
+  <div id="weatherPanel"></div>
   <div id="loanBar"></div>
   <div id="infoOverlay">
     <div class="io-box">
@@ -678,6 +707,7 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
     </div>
   </div>
   <button id="helpBtn" onclick="toggleInfoOverlay()" style="position:absolute;top:100px;right:200px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">HELP</button>
+  <button id="financeBtn" onclick="showModal('financeModal')" style="position:absolute;top:100px;right:540px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #FFD060;color:#FFD060;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">FINANCE</button>
   <button id="statsBtn" onclick="showModal('statsModal')" style="position:absolute;top:100px;right:260px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">STATS</button>
   <button id="timelineBtn" onclick="showModal('timelineModal')" style="position:absolute;top:100px;right:320px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">GRAPH</button>
   <button id="mailBtn" onclick="showModal('mailModal')" style="position:absolute;top:100px;right:380px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">MAIL</button>
@@ -819,39 +849,425 @@ var state = {
 // Discounts applied at higher star tiers
 var costMultiplier = { elevator: 1.0 };
 
-/* ===== WEATHER / SEASON ===== */
-// 30 game-days per season; year = 120 days
+/* ===== REAL CALENDAR / SUN / MOON / WEATHER =====
+ * Day 1 of every game is Monday, March 2, 2026, and the calendar is a real one:
+ * months, weekdays, daylight-saving changes. Sunrise, sunset, sun elevation and
+ * moon phase are computed from the chosen city's latitude and longitude, so a
+ * June evening in Seattle stays light past 9 and a December afternoon in London
+ * goes dark before 4. Daily weather comes from a stochastic weather generator
+ * of the Richardson (1981) type: a wet/dry Markov chain plus an AR(1) temperature
+ * anomaly, driven by each city's monthly climate normals. The normals below are
+ * APPROXIMATE 1991-2020 values (NOAA / Met Office / JMA), rounded for the game.
+ */
+var GAME_EPOCH_UTC = Date.UTC(2026, 2, 2);
+var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DOW_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var SEASONS = ['Spring','Summer','Fall','Winter'];
 var WEATHER_TYPES = ['clear','cloudy','rain','fog','snow','storm'];
-var weather = { kind: 'clear', intensity: 0, until: 0, droplets: [], flakes: [] };
-function currentSeason() { return SEASONS[Math.floor(((state.day - 1) % 120) / 30)]; }
-function currentSeasonIdx() { return Math.floor(((state.day - 1) % 120) / 30); }
-function weatherPick() {
-  // Daily challenge can force a fixed weather all week (e.g. "Eye of the Storm").
-  if (state.dailyForcedWeather) return state.dailyForcedWeather;
-  var s = currentSeasonIdx();
-  var pool;
-  if (s === 0) pool = ['clear','clear','cloudy','rain','rain','fog'];         // Spring
-  else if (s === 1) pool = ['clear','clear','clear','cloudy','storm'];         // Summer
-  else if (s === 2) pool = ['clear','cloudy','cloudy','rain','fog','fog'];     // Fall
-  else pool = ['clear','cloudy','snow','snow','snow','storm'];                 // Winter
-  return pool[Math.floor(gameRandom() * pool.length)];
+
+var CITIES = {
+  nyc: { name:'New York', blurb:'Four real seasons. Humid summers, nor\'easters, the odd blizzard.',
+    lat:40.78, lon:-73.97, tz:-5, dst:'us', country:'us', hemisphere:'n', snow:true, fog:1.0,
+    tmax:[39,42,50,62,72,80,85,84,76,65,54,44], tmin:[27,29,35,45,55,64,70,69,62,51,42,33],
+    precip:[3.6,3.2,4.3,4.1,4.0,4.5,4.6,4.4,4.3,4.4,3.6,4.4], wet:[11,10,11,11,11,11,10,10,9,9,9,11],
+    sigma:5.5, wind:[11,11,11,10,9,8,8,8,8,9,10,11], thunder:[0,0,0.05,0.1,0.2,0.3,0.35,0.35,0.2,0.1,0.02,0] },
+  chi: { name:'Chicago', blurb:'Continental extremes. Bitter winters, hot stormy summers, big wind.',
+    lat:41.88, lon:-87.63, tz:-6, dst:'us', country:'us', hemisphere:'n', snow:true, fog:0.8,
+    tmax:[32,36,47,59,70,80,84,82,75,63,48,36], tmin:[18,22,31,41,51,61,67,66,58,46,34,23],
+    precip:[2.0,2.0,2.5,3.6,4.1,4.1,3.7,4.1,3.3,3.2,2.6,2.2], wet:[10,9,11,11,12,11,10,10,9,10,10,11],
+    sigma:7.0, wind:[12,12,12,12,10,9,8,8,9,10,11,11], thunder:[0,0,0.08,0.15,0.3,0.4,0.42,0.4,0.25,0.1,0.03,0] },
+  mia: { name:'Miami', blurb:'Tropical. Dry sunny winters, a six-month wet season of afternoon storms.',
+    lat:25.77, lon:-80.19, tz:-5, dst:'us', country:'us', hemisphere:'n', snow:false, fog:0.5,
+    tmax:[76,78,80,83,87,89,91,91,89,86,81,78], tmin:[61,63,66,69,74,77,78,78,77,74,68,64],
+    precip:[1.9,2.2,2.6,3.4,5.9,9.7,6.5,8.9,9.9,6.9,3.3,2.2], wet:[7,6,7,7,10,15,16,18,17,12,8,7],
+    sigma:2.8, wind:[10,11,11,11,10,8,8,8,8,10,10,10], thunder:[0.1,0.1,0.15,0.25,0.4,0.6,0.65,0.65,0.55,0.35,0.15,0.1] },
+  sea: { name:'Seattle', blurb:'Mild and gray. Long wet winters, glorious dry summers, late sunsets.',
+    lat:47.61, lon:-122.33, tz:-8, dst:'us', country:'us', hemisphere:'n', snow:true, fog:1.3,
+    tmax:[47,50,54,59,65,70,76,76,70,60,51,46], tmin:[37,38,40,44,49,53,57,57,53,47,41,37],
+    precip:[5.6,3.5,3.8,2.8,1.9,1.5,0.6,0.9,1.6,3.5,6.3,5.4], wet:[18,15,16,14,11,9,4,5,8,14,18,18],
+    sigma:4.0, wind:[9,9,9,9,8,8,8,7,7,8,9,9], thunder:[0,0,0.01,0.02,0.04,0.05,0.04,0.04,0.03,0.01,0,0] },
+  den: { name:'Denver', blurb:'Mile-high sun. Dry air, huge day-night swings, snow from October to April.',
+    lat:39.74, lon:-104.99, tz:-7, dst:'us', country:'us', hemisphere:'n', snow:true, fog:0.5,
+    tmax:[45,46,54,61,71,82,89,87,79,66,53,44], tmin:[18,20,27,34,44,53,59,58,49,36,26,18],
+    precip:[0.4,0.4,0.9,1.7,2.2,1.9,2.2,1.8,1.0,1.0,0.7,0.4], wet:[5,5,7,9,11,9,10,9,7,6,6,5],
+    sigma:7.5, wind:[9,9,10,10,9,9,8,8,8,8,9,9], thunder:[0,0,0.05,0.15,0.35,0.45,0.5,0.45,0.25,0.1,0.02,0] },
+  phx: { name:'Phoenix', blurb:'Desert. Brutal summers, perfect winters, monsoon thunderstorms in August.',
+    lat:33.45, lon:-112.07, tz:-7, dst:'none', country:'us', hemisphere:'n', snow:false, fog:0.2,
+    tmax:[67,71,77,86,95,104,106,105,100,89,76,66], tmin:[46,49,54,61,70,79,85,84,78,65,53,45],
+    precip:[0.9,0.9,1.0,0.3,0.1,0.05,1.0,1.0,0.6,0.6,0.6,0.9], wet:[4,4,4,2,1,1,4,5,3,3,3,4],
+    sigma:4.5, wind:[6,6,7,7,7,7,8,8,7,6,6,6], thunder:[0,0,0.02,0.05,0.1,0.2,0.55,0.6,0.35,0.1,0.02,0] },
+  lon: { name:'London', blurb:'Temperate maritime. Drizzle, changeable skies, short winter days.',
+    lat:51.51, lon:-0.12, tz:0, dst:'eu', country:'uk', hemisphere:'n', snow:true, fog:1.2,
+    tmax:[47,48,53,59,65,71,75,74,68,60,52,47], tmin:[38,38,41,44,50,55,59,59,54,49,43,39],
+    precip:[2.2,1.6,1.5,1.6,1.9,1.8,1.7,2.0,1.9,2.7,2.5,2.2], wet:[11,9,9,9,9,8,8,9,8,11,11,11],
+    sigma:3.8, wind:[10,10,10,9,9,8,8,8,8,9,9,10], thunder:[0,0,0.02,0.04,0.08,0.12,0.15,0.15,0.08,0.03,0.01,0] },
+  tyo: { name:'Tokyo', blurb:'Humid subtropical. Cherry-blossom spring, rainy season, typhoon autumn.',
+    lat:35.68, lon:139.69, tz:9, dst:'none', country:'jp', hemisphere:'n', snow:true, fog:0.6,
+    tmax:[50,51,56,66,74,79,86,88,81,71,62,54], tmin:[35,36,42,51,60,67,74,76,69,58,48,39],
+    precip:[2.3,2.2,4.6,5.2,5.4,6.6,6.1,6.1,8.3,9.2,3.8,2.0], wet:[5,6,10,11,11,12,11,9,12,11,8,5],
+    sigma:4.2, wind:[8,9,9,9,8,8,8,8,8,8,8,8], thunder:[0,0,0.03,0.05,0.1,0.15,0.3,0.35,0.25,0.1,0.02,0] }
+};
+var CITY_ORDER = ['nyc','chi','mia','sea','den','phx','lon','tyo'];
+function city() { return CITIES[state.cityId] || CITIES.nyc; }
+
+/* ---- calendar ---- */
+function gameDate(day) { return new Date(GAME_EPOCH_UTC + ((day == null ? state.day : day) - 1) * 86400000); }
+function gameMonth(day) { return gameDate(day).getUTCMonth(); }
+function gameDOY(day) {
+  var d = gameDate(day);
+  return Math.floor((d.getTime() - Date.UTC(d.getUTCFullYear(), 0, 1)) / 86400000) + 1;
 }
-function weatherTraffic() {
-  if (weather.kind === 'storm') return 0.5;
-  if (weather.kind === 'snow') return 0.7;
-  if (weather.kind === 'rain') return 0.85;
-  if (weather.kind === 'fog') return 0.9;
-  return 1.0;
+function gameYearIdx() { return Math.floor((state.day - 1) / 365) + 1; }
+function formatGameDate(day) {
+  var d = gameDate(day);
+  return DOW_NAMES[d.getUTCDay()] + ', ' + MONTH_NAMES[d.getUTCMonth()] + ' ' + d.getUTCDate();
+}
+function isWeekend(day) { var w = gameDate(day).getUTCDay(); return w === 0 || w === 6; }
+function currentSeasonIdx() {
+  var idx = [3,3,0,0,0,1,1,1,2,2,2,3][gameMonth()];
+  if (city().hemisphere === 's') idx = (idx + 2) % 4;
+  return idx;
+}
+function currentSeason() { return SEASONS[currentSeasonIdx()]; }
+function nthWeekdayUTC(year, month, weekday, n) {
+  var first = new Date(Date.UTC(year, month, 1)).getUTCDay();
+  return 1 + ((weekday - first + 7) % 7) + (n - 1) * 7;
+}
+function lastSundayUTC(year, month) {
+  var d = new Date(Date.UTC(year, month + 1, 0));
+  return d.getUTCDate() - d.getUTCDay();
+}
+function dstActive(date, rule) {
+  if (!rule || rule === 'none') return false;
+  var y = date.getUTCFullYear(), t = date.getUTCMonth() * 100 + date.getUTCDate();
+  if (rule === 'us') return t >= 200 + nthWeekdayUTC(y, 2, 0, 2) && t < 1000 + nthWeekdayUTC(y, 10, 0, 1);
+  if (rule === 'eu') return t >= 200 + lastSundayUTC(y, 2) && t < 900 + lastSundayUTC(y, 9);
+  return false;
+}
+
+/* ---- sun & moon ---- */
+var _solarCache = { day: 0, city: null, info: null };
+function solarInfo(day) {
+  if (_solarCache.day === day && _solarCache.city === state.cityId && _solarCache.info) return _solarCache.info;
+  var c = city();
+  var rad = Math.PI / 180;
+  var g = 2 * Math.PI / 365 * (gameDOY(day) - 1);
+  // NOAA solar-position approximation (Spencer 1971): declination in radians, equation of time in minutes
+  var decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g)
+           + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  var eot = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g)
+           - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  var dst = dstActive(gameDate(day), c.dst);
+  var tzOff = c.tz + (dst ? 1 : 0);
+  var noon = 720 - 4 * c.lon - eot + 60 * tzOff;
+  var lat = c.lat * rad;
+  var cosH = (Math.sin(-0.833 * rad) - Math.sin(lat) * Math.sin(decl)) / (Math.cos(lat) * Math.cos(decl));
+  var H = cosH <= -1 ? Math.PI : (cosH >= 1 ? 0 : Math.acos(cosH));
+  var half = H / rad * 4;
+  var info = { decl: decl, eot: eot, noon: noon, sunrise: noon - half, sunset: noon + half, dayLen: 2 * half, lat: lat, dst: dst };
+  _solarCache = { day: day, city: state.cityId, info: info };
+  return info;
+}
+function sunElevation(minute) {
+  var si = solarInfo(state.day);
+  var ha = (minute - si.noon) / 4 * Math.PI / 180;
+  var sinA = Math.sin(si.lat) * Math.sin(si.decl) + Math.cos(si.lat) * Math.cos(si.decl) * Math.cos(ha);
+  return Math.asin(Math.max(-1, Math.min(1, sinA))) * 180 / Math.PI;
+}
+function sunProgress() {
+  // 0 at sunrise, 1 at sunset (clamped); used to slide the sun disc across the sky
+  var si = solarInfo(state.day);
+  return Math.max(0, Math.min(1, (state.minute - si.sunrise) / Math.max(1, si.sunset - si.sunrise)));
+}
+function ambientLight() {
+  var a = sunElevation(state.minute);
+  var L = Math.max(0, Math.min(1, (a + 6) / 14));
+  L *= 1 - 0.45 * (weather.clouds || 0);
+  if (weather.kind === 'storm') L *= 0.7;
+  if (weather.kind === 'fog') L *= 0.85;
+  return L;
+}
+function moonPhase(day) {
+  // synodic month from the reference new moon of 2000-01-06 18:14 UTC
+  var t = gameDate(day).getTime() + 12 * 3600000 - Date.UTC(2000, 0, 6, 18, 14);
+  var cyc = t / (29.530588853 * 86400000);
+  return cyc - Math.floor(cyc);
+}
+function moonPhaseName(p) {
+  var names = ['New Moon','Waxing Crescent','First Quarter','Waxing Gibbous','Full Moon','Waning Gibbous','Last Quarter','Waning Crescent'];
+  return names[Math.round(p * 8) % 8];
+}
+function formatClock(min) {
+  min = ((Math.round(min) % 1440) + 1440) % 1440;
+  return formatTime(min);
+}
+
+/* ---- weather generator ---- */
+var weather = { kind: 'clear', intensity: 0, until: 0, droplets: [], flakes: [],
+  tmax: 60, tmin: 45, precipIn: 0, windMph: 8, clouds: 0.2, snowDepth: 0, anomaly: 0, wet: false,
+  upcoming: [], history: [], today: null };
+function monthlyInterp(arr, day) {
+  var d = gameDate(day), m = d.getUTCMonth(), dom = d.getUTCDate();
+  var dim = new Date(Date.UTC(d.getUTCFullYear(), m + 1, 0)).getUTCDate();
+  var f = (dom - 0.5) / dim, a, b, t;
+  if (f < 0.5) { a = arr[(m + 11) % 12]; b = arr[m]; t = f + 0.5; }
+  else { a = arr[m]; b = arr[(m + 1) % 12]; t = f - 0.5; }
+  return a + (b - a) * t;
+}
+function gaussRand() {
+  var u = 0, v = 0;
+  while (u === 0) u = gameRandom();
+  while (v === 0) v = gameRandom();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function genDayWeather(day, prev) {
+  var c = city();
+  var wetDays = Math.max(0.3, monthlyInterp(c.wet, day));
+  var wetFrac = Math.min(0.95, wetDays / 30.4);
+  // Two-state Markov chain: wet days cluster (fronts last a few days)
+  var pww = wetFrac + 0.38 * (1 - wetFrac);
+  var pwd = wetFrac * (1 - pww) / (1 - wetFrac);
+  var wet = gameRandom() < ((prev && prev.wet) ? pww : pwd);
+  var meanAmt = monthlyInterp(c.precip, day) / wetDays;
+  var amt = wet ? Math.max(0.01, meanAmt * (-Math.log(gameRandom())) * (0.6 + 0.8 * gameRandom())) : 0;
+  // AR(1) temperature anomaly: yesterday's warmth persists, so heat waves and cold snaps emerge
+  var anomaly = (prev ? prev.anomaly : 0) * 0.65 + gaussRand() * c.sigma;
+  var tmax = monthlyInterp(c.tmax, day) + anomaly - (wet ? 3.5 : 0);
+  var tmin = monthlyInterp(c.tmin, day) + anomaly * 0.8 + (wet ? 1.5 : 0);
+  if (tmax < tmin + 3) tmax = tmin + 3;
+  var tavg = (tmax + tmin) / 2;
+  var clouds = wet ? 0.75 + 0.25 * gameRandom()
+                   : Math.max(0, Math.min(1, gaussRand() * 0.25 + 0.3 + ((prev && prev.wet) ? 0.2 : 0) + (wetFrac - 0.3) * 0.5));
+  var windMean = monthlyInterp(c.wind, day);
+  var wind = windMean * (0.4 + 1.3 * gameRandom());
+  var m = gameDate(day).getUTCMonth();
+  var kind, intensity;
+  if (wet) {
+    if (tavg <= 33 && c.snow !== false) { kind = 'snow'; intensity = Math.min(1, 0.3 + amt * 0.9); wind *= 1.2; }
+    else if (gameRandom() < c.thunder[m] || amt > 1.2) { kind = 'storm'; intensity = Math.min(1, 0.5 + amt * 0.5); wind = wind * 1.6 + 8; }
+    else { kind = 'rain'; intensity = Math.min(1, 0.25 + amt * 0.9); }
+  } else {
+    // Radiation fog: calm, clear-ish morning after a wet day, mild temperatures
+    var fogChance = ((prev && prev.wet) ? 0.28 : 0.07) * (wind < windMean * 0.7 ? 1.6 : 0.4)
+                  * ((tmin > 30 && tmin < 60) ? 1.2 : 0.5) * (c.fog || 1);
+    if (gameRandom() < fogChance) { kind = 'fog'; intensity = 0.5 + 0.4 * gameRandom(); }
+    else if (clouds > 0.6) { kind = 'cloudy'; intensity = clouds; }
+    else { kind = 'clear'; intensity = 0; }
+  }
+  return { day: day, wet: wet, kind: kind, intensity: Math.round(intensity * 100) / 100,
+    tmax: Math.round(tmax), tmin: Math.round(tmin), precipIn: Math.round(amt * 100) / 100,
+    windMph: Math.round(wind), clouds: Math.round(clouds * 100) / 100, anomaly: anomaly };
+}
+function initWeather() {
+  weather.upcoming = [];
+  weather.snowDepth = 0;
+  weather.history = [];
+  var prev = null;
+  // Spin the chain up for a few days so day 1 isn't always plain climatology
+  for (var i = -4; i <= 3; i++) {
+    var w = genDayWeather(state.day + i, prev);
+    prev = w;
+    if (i >= 0) weather.upcoming.push(w);
+  }
+  applyDayWeather(weather.upcoming.shift());
+}
+function applyDayWeather(w) {
+  weather.today = w;
+  weather.kind = state.dailyForcedWeather || w.kind;
+  weather.intensity = weather.kind === 'storm' ? Math.max(0.8, w.intensity) : w.intensity;
+  weather.tmax = w.tmax; weather.tmin = w.tmin; weather.precipIn = w.precipIn;
+  weather.windMph = w.windMph; weather.clouds = w.clouds; weather.wet = w.wet; weather.anomaly = w.anomaly;
+  weather.droplets = []; weather.flakes = [];
+  // Snowpack: 10:1 snow-to-liquid on snow days, melts when the day averages above freezing
+  var depth = weather.snowDepth || 0;
+  if (w.kind === 'snow') depth += w.precipIn * 10;
+  var tavg = (w.tmax + w.tmin) / 2;
+  if (tavg > 32) depth = Math.max(0, depth - (tavg - 32) * 0.25 - (w.kind === 'rain' ? 1.5 : 0));
+  weather.snowDepth = Math.round(depth * 10) / 10;
+  weather.history = weather.history || [];
+  weather.history.push({ day: w.day, tmax: w.tmax, tmin: w.tmin, kind: w.kind, precipIn: w.precipIn });
+  if (weather.history.length > 400) weather.history.shift();
 }
 function rollWeather() {
-  // Once per day morning: pick a new weather that holds all day
-  weather.kind = weatherPick();
-  weather.intensity = weather.kind === 'storm' ? 1.0 : 0.6 + gameRandom() * 0.3;
-  // Seed droplets/flakes lazily on demand in render
-  weather.droplets = [];
-  weather.flakes = [];
+  if (!weather.upcoming || weather.upcoming.length === 0) { initWeather(); return; }
+  var w = weather.upcoming.shift();
+  var last = weather.upcoming.length ? weather.upcoming[weather.upcoming.length - 1] : w;
+  while (weather.upcoming.length < 3) { last = genDayWeather(last.day + 1, last); weather.upcoming.push(last); }
+  applyDayWeather(w);
 }
+function weatherPick() { return weather.kind; }
+function forecastFor(lead) {
+  // The forecast is the generator's actual future with skill that decays by lead day.
+  // Noise is seeded per day so the panel doesn't flicker frame to frame.
+  var w = weather.upcoming[lead - 1];
+  if (!w) return null;
+  var seed = ((w.day * 7919 + lead * 104729) % 1000) / 1000;
+  var err = (seed - 0.5) * 2 * (1.5 * lead);
+  var base = w.wet ? 0.85 - 0.12 * lead : 0.08 + 0.08 * lead;
+  var pop = Math.round(Math.max(0.05, Math.min(0.95, base + (seed - 0.5) * 0.2)) * 20) * 5;
+  return { day: w.day, kind: w.kind, tmax: Math.round(w.tmax + err), tmin: Math.round(w.tmin + err * 0.8), pop: pop, windMph: w.windMph };
+}
+function currentTempF() {
+  // Diurnal curve: minimum at sunrise, peak mid-afternoon, exponential cooling overnight
+  var si = solarInfo(state.day), m = state.minute;
+  var rise = si.sunrise, set = si.sunset, tmax = weather.tmax, tmin = weather.tmin;
+  var span = Math.max(60, set - rise);
+  if (m >= rise && m <= set) return tmin + (tmax - tmin) * Math.sin(Math.PI * (m - rise) / (span + 150));
+  var tSet = tmin + (tmax - tmin) * Math.sin(Math.PI * span / (span + 150));
+  var nightLen = 1440 - span;
+  var since = m > set ? m - set : m + (1440 - set);
+  return tSet + (tmin - tSet) * Math.pow(Math.min(1, since / nightLen), 0.6);
+}
+function weatherIcon(kind) {
+  return { clear: '☀', cloudy: '☁', rain: '☔', fog: '🌫', snow: '❄', storm: '⛈' }[kind] || '';
+}
+function weatherWord(kind, intensity) {
+  if (kind === 'rain') return intensity > 0.7 ? 'Heavy rain' : intensity > 0.4 ? 'Rain' : 'Showers';
+  if (kind === 'snow') return intensity > 0.7 ? 'Heavy snow' : 'Snow';
+  if (kind === 'storm') return 'Thunderstorms';
+  if (kind === 'fog') return 'Fog';
+  if (kind === 'cloudy') return intensity > 0.85 ? 'Overcast' : 'Cloudy';
+  return 'Clear';
+}
+function weatherTraffic() {
+  var k = weather.kind, i = weather.intensity || 0.5, m = 1.0;
+  if (k === 'storm') m = 0.5;
+  else if (k === 'snow') m = i > 0.7 ? 0.45 : 0.7;
+  else if (k === 'rain') m = i > 0.7 ? 0.75 : 0.88;
+  else if (k === 'fog') m = 0.92;
+  if (weather.tmax >= 100) m *= 0.85; else if (weather.tmax <= 15) m *= 0.8;
+  if ((weather.snowDepth || 0) > 6) m *= 0.8;
+  return m;
+}
+// Venue-specific appeal: heat drives people INTO air-conditioned shops and cinemas,
+// rain fills the museum, a clear mild evening fills the observatory.
+function weatherVenueMult(type) {
+  var t = weather.tmax, k = weather.kind, m = 1.0;
+  var indoor = (type === 'shop' || type === 'cinema' || type === 'gym' || type === 'museum' || type === 'spa');
+  if (t >= 92 && indoor) m *= 1.2;
+  if ((k === 'rain' || k === 'storm') && (type === 'cinema' || type === 'museum')) m *= 1.15;
+  if (type === 'observatory') m *= (k === 'clear') ? 1.3 : (k === 'cloudy' || k === 'fog') ? 0.4 : 0.15;
+  if (type === 'restaurant' && k === 'clear' && t >= 62 && t <= 84) m *= 1.1;
+  return m;
+}
+function hotelDemandMult() {
+  var m = 1.0, t = weather.tmax, k = weather.kind;
+  if (t >= 65 && t <= 88 && (k === 'clear' || k === 'cloudy')) m *= 1.25;
+  if (t < 30 || t > 98) m *= 0.75;
+  if (k === 'storm' || (k === 'snow' && weather.intensity > 0.6)) m *= 0.6;
+  if (isWeekend()) m *= 1.2;
+  if (state.holiday) m *= 1.3;
+  return m;
+}
+function heatingDegreeDays() { return Math.max(0, 65 - (weather.tmax + weather.tmin) / 2); }
+function coolingDegreeDays() { return Math.max(0, (weather.tmax + weather.tmin) / 2 - 65); }
+function helipadClosed() {
+  return (weather.windMph || 0) >= 30 || weather.kind === 'storm' || weather.kind === 'fog' || (weather.kind === 'snow' && weather.intensity > 0.6);
+}
+
+/* ---- holidays (real dates per country) ---- */
+var HOLIDAY_SETS = {
+  us: [
+    { m: 0, d: 1, name: "New Year's Day" },
+    { m: 1, d: 14, name: "Valentine's Day", dining: true },
+    { m: 2, d: 17, name: "St. Patrick's Day", dining: true },
+    { m: 6, d: 4, name: 'Independence Day', fireworks: 'evening' },
+    { m: 9, d: 31, name: 'Halloween' },
+    { m: 10, nth: [4, 4], name: 'Thanksgiving', dining: true },
+    { m: 11, d: 25, name: 'Christmas Day', quiet: true },
+    { m: 11, d: 31, name: "New Year's Eve", fireworks: 'midnight', dining: true }
+  ],
+  uk: [
+    { m: 0, d: 1, name: "New Year's Day" },
+    { m: 1, d: 14, name: "Valentine's Day", dining: true },
+    { m: 10, d: 5, name: 'Bonfire Night', fireworks: 'evening' },
+    { m: 11, d: 25, name: 'Christmas Day', quiet: true },
+    { m: 11, d: 26, name: 'Boxing Day' },
+    { m: 11, d: 31, name: "New Year's Eve", fireworks: 'midnight', dining: true }
+  ],
+  jp: [
+    { m: 0, d: 1, name: 'Shōgatsu (New Year)' },
+    { m: 1, d: 14, name: "Valentine's Day", dining: true },
+    { m: 2, d: 20, name: 'Vernal Equinox Day' },
+    { m: 4, d: 3, name: 'Golden Week' }, { m: 4, d: 4, name: 'Golden Week' }, { m: 4, d: 5, name: 'Golden Week' },
+    { m: 6, d: 7, name: 'Tanabata' },
+    { m: 7, d: 15, name: 'Obon', fireworks: 'evening' },
+    { m: 11, d: 31, name: 'Ōmisoka (New Year\'s Eve)', fireworks: 'midnight', dining: true }
+  ]
+};
+function holidayFor(day) {
+  var d = gameDate(day), m = d.getUTCMonth(), dom = d.getUTCDate(), y = d.getUTCFullYear();
+  var set = HOLIDAY_SETS[city().country] || HOLIDAY_SETS.us;
+  for (var i = 0; i < set.length; i++) {
+    var h = set[i];
+    if (h.m !== m) continue;
+    if (h.d === dom) return h;
+    if (h.nth && dom === nthWeekdayUTC(y, m, h.nth[0], h.nth[1])) return h;
+  }
+  return null;
+}
+function checkHoliday() {
+  var h = holidayFor(state.day);
+  if (h) {
+    state.holiday = h.name;
+    state.holidayInfo = h;
+    logEvent('✨ Today is ' + h.name + (h.quiet ? ' — shops closed, the tower rests' : ' — traffic and tips +40%'), 'good');
+  } else {
+    state.holiday = null;
+    state.holidayInfo = null;
+  }
+}
+function fireworksActive() {
+  var h = state.holidayInfo;
+  if (!h || !h.fireworks) {
+    // The night after New Year's Eve also counts for the first 20 minutes
+    var y = holidayFor(state.day - 1);
+    if (y && y.fireworks === 'midnight' && state.minute < 20) return true;
+    return false;
+  }
+  if (h.fireworks === 'evening') return state.minute >= 21 * 60 && state.minute < 22 * 60;
+  if (h.fireworks === 'midnight') return state.minute >= 23 * 60 + 55;
+  return false;
+}
+
+/* ---- sky palette from sun elevation ---- */
+var SKY_KEYS = [
+  [-90, [5, 7, 15], [14, 20, 40]],
+  [-18, [5, 7, 15], [14, 20, 40]],
+  [-12, [10, 16, 48], [30, 40, 80]],
+  [-6, [24, 40, 96], [96, 76, 120]],
+  [-2, [40, 70, 140], [232, 120, 70]],
+  [0, [60, 100, 170], [240, 150, 80]],
+  [6, [70, 130, 200], [210, 190, 150]],
+  [15, [74, 144, 216], [168, 208, 232]],
+  [90, [74, 144, 216], [168, 208, 232]]
+];
+function lerpRgb(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+function rgbStr(c) { return 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')'; }
+function skyColors() {
+  var a = sunElevation(state.minute);
+  var top = SKY_KEYS[0][1], bot = SKY_KEYS[0][2];
+  for (var i = 1; i < SKY_KEYS.length; i++) {
+    if (a <= SKY_KEYS[i][0]) {
+      var t = (a - SKY_KEYS[i - 1][0]) / (SKY_KEYS[i][0] - SKY_KEYS[i - 1][0]);
+      top = lerpRgb(SKY_KEYS[i - 1][1], SKY_KEYS[i][1], t);
+      bot = lerpRgb(SKY_KEYS[i - 1][2], SKY_KEYS[i][2], t);
+      break;
+    }
+  }
+  // Overcast flattens the sky toward gray; storms toward slate
+  var cl = weather.clouds || 0;
+  if (weather.kind === 'storm') cl = 1;
+  var dayness = Math.max(0, Math.min(1, (a + 4) / 12));
+  var grayT = [110, 120, 132], grayB = [150, 158, 168];
+  if (weather.kind === 'storm') { grayT = [56, 62, 74]; grayB = [92, 98, 110]; }
+  var mix = cl * 0.7 * dayness;
+  top = lerpRgb(top, grayT, mix);
+  bot = lerpRgb(bot, grayB, mix);
+  if (weather.kind === 'fog') { top = lerpRgb(top, [170, 178, 186], 0.5 * dayness); bot = lerpRgb(bot, [190, 196, 202], 0.6 * dayness); }
+  return { top: rgbStr(top), bottom: rgbStr(bot), elevation: a };
+}
+
 var build = { mode: null, bulldoze: false, hoverCell: null };
 var canvas, ctx, dpr = 1;
 var lastRealTime = 0;
@@ -923,12 +1339,14 @@ function computeDailyDemandGrowth() {
     if (t === 'metro')    { growth.condo += 3; growth.office += 5; growth.restaurant += 3; }
     if (t === 'airport')  { growth.condo += 4; growth.office += 7; growth.restaurant += 4; }
   }
-  // Market swings amplify
-  growth.condo      *= state.market || 1.0;
-  growth.office     *= state.market || 1.0;
-  growth.restaurant *= state.market || 1.0;
+  // Market swings and the business cycle amplify
+  var cyc = cycleDemandMult();
+  growth.condo      *= (state.market || 1.0) * cyc;
+  growth.office     *= (state.market || 1.0) * cyc;
+  growth.restaurant *= (state.market || 1.0) * cyc;
   // Holidays bring buzz
   if (state.holiday) { growth.condo *= 1.25; growth.office *= 1.1; growth.restaurant *= 1.4; }
+  if (state.holidayInfo && state.holidayInfo.dining) growth.restaurant *= 1.3;
   return growth;
 }
 
@@ -1684,8 +2102,11 @@ function renderTimeline() {
 
 /* ===== NEWS TICKER ===== */
 var NEWS_TEMPLATES = [
-  function() { return 'Weather forecast: ' + weather.kind.toUpperCase() + ' through ' + currentSeason(); },
+  function() { var f = forecastFor(1); return f ? ('Forecast for ' + formatGameDate(f.day) + ': ' + weatherWord(f.kind, 0.5).toLowerCase() + ', high ' + f.tmax + '\u00B0F, ' + f.pop + '% chance of precipitation.') : 'Forecast unavailable.'; },
+  function() { var si = solarInfo(state.day); return city().name + ' today: sunrise ' + formatClock(si.sunrise) + ', sunset ' + formatClock(si.sunset) + ', ' + moonPhaseName(moonPhase(state.day)).toLowerCase() + '.'; },
   function() { return 'Market index: ' + (state.market > 1.1 ? 'UP 30%' : state.market < 0.9 ? 'DOWN 30%' : 'FLAT') + ' today.'; },
+  function() { var e = econ(); return 'Prime rate ' + (e.prime * 100).toFixed(2) + '% — economy ' + (e.cycle > 0.45 ? 'booming' : e.cycle < -0.45 ? 'in recession' : e.cycle > 0.15 ? 'expanding' : e.cycle < -0.15 ? 'slowing' : 'steady') + '.'; },
+  function() { var e = econ(); return 'Tower valued at $' + formatMoney(e.valuation || towerValuation()) + ' at a ' + (e.capRate * 100).toFixed(1) + '% cap rate.'; },
   function() { return 'Population: ' + state.population + ' residents and workers call the tower home.'; },
   function() { return 'Tower reaches ' + (highestOccupiedFloor() + 1) + ' floors.'; },
   function() { return 'Prestige rating: +' + state.prestige + '% income from landmarks.'; },
@@ -1725,6 +2146,7 @@ function showModal(id) {
   if (id === 'scenarioModal') renderScenarioList();
   if (id === 'dailyModal') renderDailyChallenge();
   if (id === 'statsModal') renderStats();
+  if (id === 'financeModal') renderFinancePanel();
   if (id === 'timelineModal') renderTimeline();
   if (id === 'mailModal') renderMail();
   if (id === 'campaignModal') renderCampaignModal();
@@ -1911,7 +2333,7 @@ function captureThumbnail() {
 // migration. applySaveSnapshot() must accept any older version by backfilling
 // missing fields (it already defaults most of them). Increment when you add
 // or rename a field that affects gameplay.
-var SAVE_VERSION = 2;
+var SAVE_VERSION = 3;
 function captureSaveSnapshot() {
   return {
     version: SAVE_VERSION,
@@ -1946,6 +2368,12 @@ function captureSaveSnapshot() {
     rivalTower: state.rivalTower || { floors: 0 },
     dailyChallenge: state.dailyChallenge || null,
     scenarioId: state.scenarioId || null,
+    // v3: real city + weather generator state
+    cityId: state.cityId || 'nyc',
+    weather: { kind: weather.kind, intensity: weather.intensity, tmax: weather.tmax, tmin: weather.tmin, precipIn: weather.precipIn,
+               windMph: weather.windMph, clouds: weather.clouds, snowDepth: weather.snowDepth, anomaly: weather.anomaly, wet: weather.wet,
+               upcoming: weather.upcoming || [], history: (weather.history || []).slice(-60), today: weather.today || null },
+    econ: state.econ || null,
     thumbnail: captureThumbnail(),
     savedAt: Date.now()
   };
@@ -1995,6 +2423,17 @@ function applySaveSnapshot(snap) {
   // seeded RNG stream.
   state.dailyChallenge = snap.dailyChallenge || null;
   state.scenarioId = snap.scenarioId || null;
+  state.cityId = snap.cityId || 'nyc';
+  _solarCache = { day: 0, city: null, info: null };
+  if (snap.weather && snap.weather.upcoming) {
+    for (var wk in snap.weather) weather[wk] = snap.weather[wk];
+    weather.droplets = []; weather.flakes = [];
+  } else {
+    initWeather();
+  }
+  state.econ = snap.econ || null;
+  if (!state.econ) initEcon();
+  checkHoliday();
   if (state.dailyChallenge && state.dailyChallenge.seed != null) {
     _gameRng = makeRng((state.dailyChallenge.seed ^ 0xC0FFEE) >>> 0);
   } else {
@@ -2035,9 +2474,10 @@ function refreshContinueButton() {
 
 function menuNewGame() {
   function askName() {
+    if (!state.pendingCityId) { showModal('cityModal'); return; }
     var suggest = randomTowerName();
     uiPrompt('Name your tower:', suggest, function(name) {
-      if (name === null) return; // cancelled
+      if (name === null) { state.pendingCityId = null; return; } // cancelled
       name = (name || suggest).slice(0, 28).trim() || suggest;
       resetGameState();
       state.towerName = name;
@@ -2050,6 +2490,26 @@ function menuNewGame() {
   } else {
     askName();
   }
+}
+
+function renderCityPicker() {
+  var grid = document.getElementById('cityGrid');
+  if (!grid) return;
+  var html = '';
+  for (var i = 0; i < CITY_ORDER.length; i++) {
+    var id = CITY_ORDER[i], c = CITIES[id];
+    html += '<div onclick="pickCity(\'' + id + '\')" style="cursor:pointer;background:#141C28;border:1.5px solid #3A4858;border-radius:6px;padding:10px 12px;" ' +
+      'onmouseover="this.style.borderColor=\'#FFD060\'" onmouseout="this.style.borderColor=\'#3A4858\'">' +
+      '<div style="color:#FFD060;font-family:Georgia,serif;font-size:1.05em;letter-spacing:1px;">' + c.name + '</div>' +
+      '<div style="color:#8098B8;font-size:0.8em;margin:3px 0;">' + Math.abs(c.lat).toFixed(1) + '\u00B0' + (c.lat >= 0 ? 'N' : 'S') + ' &middot; Jan ' + c.tmax[0] + '/' + c.tmin[0] + '\u00B0F &middot; Jul ' + c.tmax[6] + '/' + c.tmin[6] + '\u00B0F</div>' +
+      '<div style="color:#C0D0E0;font-size:0.85em;line-height:1.35;">' + c.blurb + '</div></div>';
+  }
+  grid.innerHTML = html;
+}
+function pickCity(id) {
+  state.pendingCityId = id;
+  hideModal('cityModal');
+  menuNewGame();
 }
 
 function randomTowerName() {
@@ -2250,6 +2710,15 @@ function resetGameState() {
   state.dailyOfficeBoost = 1.0;
   _gameRng = null;
   costMultiplier.elevator = 1.0;
+  state.cityId = state.pendingCityId || state.cityId || 'nyc';
+  state.pendingCityId = null;
+  state.holidayInfo = null;
+  state.weatherPanelOpen = false;
+  state.elevFloorsToday = 0;
+  state.heatWaveDay = 0;
+  _solarCache = { day: 0, city: null, info: null };
+  initWeather();
+  initEcon();
   // Keep achievements (persistent across runs)
 }
 
@@ -2340,8 +2809,11 @@ function startGameFresh() {
   document.getElementById('titleScreen').classList.add('hide');
   document.getElementById('gameNav').style.display = 'block';
   state.gameStarted = true;
-  rollWeather();
+  if (state.dailyForcedWeather) { weather.kind = state.dailyForcedWeather; weather.intensity = weather.kind === 'storm' ? 1 : 0.7; }
   checkHoliday();
+  var si = solarInfo(state.day);
+  logEvent('Site: ' + city().name + '. ' + formatGameDate(state.day) + ' — sunrise ' + formatClock(si.sunrise) + ', sunset ' + formatClock(si.sunset) + '. ' +
+    weatherWord(weather.kind, weather.intensity) + ', high ' + weather.tmax + '\u00B0F.', 'info');
   renderPalette();
   rotateNewsTicker();
   setSpeed(settings.defaultSpeed);
@@ -2514,6 +2986,16 @@ function playElevSfx() {
 }
 
 function sfx(type) {
+  if (type === 'thunder') {
+    ensureAudio();
+    if (!audioCtx || !sfxGain) return;
+    try {
+      var t0 = audioCtx.currentTime;
+      musicNoise(t0, 1.6, 0.5);
+      musicNoise(t0 + 0.35, 1.2, 0.3);
+    } catch (e) {}
+    return;
+  }
   if (!settings.volSfx) return;
   ensureAudio();
   if (!audioCtx) return;
@@ -2737,8 +3219,10 @@ function init() {
   loadLegacy();
   updateLegacyDisplay();
   refreshContinueButton();
-  rollWeather();
+  state.cityId = state.cityId || 'nyc';
+  initWeather();
   checkHoliday();
+  renderCityPicker();
   requestAnimationFrame(loop);
 }
 
@@ -3059,7 +3543,7 @@ function screenToCell(sx, sy) {
 function effectiveCost(type) {
   var u = UNITS[type];
   if (!u) return 0;
-  var base = u.cost;
+  var base = Math.round(u.cost * cpiMult());
   if (u.isElevator) base = Math.round(base * costMultiplier.elevator);
   if (state.promoUnit === type && state.promoUntil && state.day <= state.promoUntil) {
     base = Math.round(base * (1 - (state.promoDiscount || 0.3)));
@@ -3361,11 +3845,14 @@ function formatTime(m) {
 /* ===== SIMULATION ===== */
 function simMinute() {
   state.tickCount++;
+  reindexAgents();
   var h = Math.floor(state.minute / 60);
-  if (state.minute === 8 * 60) spawnWorkers();
-  if (state.minute === 17 * 60) releaseWorkers();
+  // Commute waves are spread like a real building's: office arrivals 7:30-9:30,
+  // departures 16:30-18:30, residents drift home 18:00-21:00 and leave 7:30-9:00.
+  if (state.minute === 7 * 60 + 30) spawnWorkers();
+  if (state.minute === 16 * 60 + 30) releaseWorkers();
   if (state.minute === 18 * 60) spawnResidents();
-  if (state.minute === 8 * 60 + 30) releaseResidents();
+  if (state.minute === 7 * 60 + 30) releaseResidents();
   // Hotel guests: arrive 6pm-10pm random, check out 8am-10am
   if (state.minute >= 18 * 60 && state.minute <= 22 * 60 && state.minute % 5 === 0) spawnHotelGuests();
   if (state.minute === 9 * 60) checkoutHotelGuests();
@@ -3418,34 +3905,47 @@ function simMinute() {
   tickEvents();
 }
 
+function agentsAssignedTo(uid, type) {
+  var n = 0;
+  for (var i = 0; i < state.agents.length; i++) if (state.agents[i].unitId === uid && state.agents[i].type === type) n++;
+  return n;
+}
 function spawnWorkers() {
   if (bombThreatActive()) return;
-  // Office tenants show up based on market pressure — glutted market = empty desks.
-  var fill = Math.min(1.0, Math.max(0.15, (marketMult('office') - 0.15) * 0.85));
+  // Leases: the market and your asking rent set how many desks the office CAN fill;
+  // absorption is gradual (a couple of desks a day, faster in a boom). Leases persist
+  // overnight; churn at the end of the day is what ends them.
+  var fill = Math.min(1.0, Math.max(0.15, (marketMult('office') - 0.15) * 0.85)) * askFillMult('office');
+  var absorb = econ().cycle > 0.3 ? 3 : 2;
   for (var id in state.units) {
     var u = state.units[id];
     if (u.type !== 'office' || u.damaged) continue;
     var def = UNITS.office;
     var target = Math.floor(def.capacity * fill + Math.random() * 0.99);
-    var need = Math.max(0, target - u.tenants);
-    for (var k = 0; k < need; k++) {
+    if (u.tenants < target) u.tenants = Math.min(target, u.tenants + absorb);
+    if (u.tenants > 0) ensureTenantMetadata(u);
+    // Everyone with a desk commutes in this morning (skip any still in the building)
+    var present = agentsAssignedTo(u.id, 'worker');
+    for (var k = present; k < u.tenants; k++) {
       state.agents.push({
         id: state.nextAgentId++, type: 'worker',
         x: GRID_W/2, y: 0,
         phase: 'toWork', unitId: u.id,
         path: null,
         inElevator: null,
-        walkDelay: Math.random() * 30
+        walkDelay: Math.random() * 120
       });
-      u.tenants++;
     }
-    if (u.tenants > 0) ensureTenantMetadata(u);
   }
 }
 function releaseWorkers() {
   for (var i = 0; i < state.agents.length; i++) {
     var a = state.agents[i];
-    if (a.type === 'worker') a.phase = 'leaving';
+    if (a.type === 'worker') {
+      a.phase = 'leaving';
+      // Stagger the exodus over two hours; anyone mid-ride leaves immediately.
+      if (!a.inElevator && !a.waiting) a.walkDelay = Math.random() * 120;
+    }
   }
 }
 
@@ -3486,7 +3986,7 @@ function returnWorkersFromLunch() {
     var a = state.agents[i];
     if (a.type === 'worker' && (a.phase === 'toLunch' || a.phase === 'atLunch') && a.lunchOrigUnitId) {
       // Pay and release restaurant seat
-      if (a.payment) { state.dayRevenue = (state.dayRevenue || 0) + a.payment; a.payment = 0; }
+      if (a.payment) { state.dayRevenue = (state.dayRevenue || 0) + Math.round(a.payment * spendMult()); a.payment = 0; }
       var r = state.units[a.unitId];
       if (r) r.tenants = Math.max(0, r.tenants - 1);
       a.unitId = a.lunchOrigUnitId;
@@ -3499,26 +3999,30 @@ function spawnResidents() {
   if (bombThreatActive()) return;
   // Condo demand scales with market ratio too — glutted = vacant units.
   var fill = Math.min(1.0, Math.max(0.1, (marketMult('condo') - 0.15) * 0.9));
+  var fillRental = fill * askFillMult('condo');
   for (var id in state.units) {
     var u = state.units[id];
     if ((u.type !== 'condo' && u.type !== 'penthouse') || u.damaged) continue;
     var def = UNITS[u.type];
-    var target = Math.floor(def.capacity * fill + Math.random() * 0.99);
-    var need = Math.max(0, target - u.tenants);
-    for (var k = 0; k < need; k++) {
+    var target = Math.floor(def.capacity * (u.sold ? fill : fillRental) + Math.random() * 0.99);
+    if (u.tenants < target) u.tenants = Math.min(target, u.tenants + 1);
+    if (u.tenants > 0) ensureTenantMetadata(u);
+    var present = agentsAssignedTo(u.id, 'resident');
+    for (var k = present; k < u.tenants; k++) {
       state.agents.push({
         id: state.nextAgentId++, type: 'resident',
-        x: GRID_W/2, y: 0, phase: 'toHome', unitId: u.id, walkDelay: Math.random() * 60
+        x: GRID_W/2, y: 0, phase: 'toHome', unitId: u.id, walkDelay: Math.random() * 180
       });
-      u.tenants++;
     }
-    if (u.tenants > 0) ensureTenantMetadata(u);
   }
 }
 function releaseResidents() {
   for (var i = 0; i < state.agents.length; i++) {
     var a = state.agents[i];
-    if (a.type === 'resident') a.phase = 'leaving';
+    if (a.type === 'resident') {
+      a.phase = 'leaving';
+      if (!a.inElevator && !a.waiting) a.walkDelay = Math.random() * 90;
+    }
   }
 }
 
@@ -3530,11 +4034,11 @@ function spawnHotelGuests() {
     var def = UNITS.hotel;
     var free = def.capacity - u.tenants;
     if (free <= 0) continue;
-    if (Math.random() < 0.35) {
+    if (Math.random() < 0.35 * hotelDemandMult() * askFillMult('hotel') * (0.75 + 0.25 * cycleDemandMult())) {
       state.agents.push({
         id: state.nextAgentId++, type: 'hotelGuest',
         x: GRID_W/2, y: 0, phase: 'toHome', unitId: u.id, walkDelay: Math.random() * 40,
-        payment: def.nightly
+        payment: Math.round(def.nightly * (econ().rentIdx.hotel || 1))
       });
       u.tenants++;
     }
@@ -3598,7 +4102,7 @@ function spawnRestaurantPatrons() {
 function spawnShopPatrons() {
   if (bombThreatActive()) return;
   if (agentsOverCap()) return;
-  var m = trafficMultiplier();
+  var m = trafficMultiplier() * weatherVenueMult('shop');
   for (var id in state.units) {
     var u = state.units[id];
     if (u.type !== 'shop' || u.damaged) continue;
@@ -3638,7 +4142,7 @@ function trafficMultiplier() {
 function spawnCinemaGoers() {
   if (bombThreatActive()) return;
   if (agentsOverCap()) return;
-  var m = trafficMultiplier();
+  var m = trafficMultiplier() * weatherVenueMult('cinema');
   var show = rushActive.matinee ? 'matinee' : (rushActive.primetime ? 'primetime' : 'latenight');
   for (var id in state.units) {
     var u = state.units[id];
@@ -3661,7 +4165,7 @@ function spawnCinemaGoers() {
 function spawnClinicPatients() {
   if (bombThreatActive()) return;
   if (agentsOverCap()) return;
-  var m = trafficMultiplier();
+  var m = trafficMultiplier() * weatherVenueMult('clinic');
   for (var id in state.units) {
     var u = state.units[id];
     if (u.type !== 'clinic' || u.damaged) continue;
@@ -3683,7 +4187,7 @@ function spawnClinicPatients() {
 function spawnGymVisitors() {
   if (bombThreatActive()) return;
   if (agentsOverCap()) return;
-  var m = trafficMultiplier();
+  var m = trafficMultiplier() * weatherVenueMult('gym');
   for (var id in state.units) {
     var u = state.units[id];
     if (u.type !== 'gym' || u.damaged) continue;
@@ -3738,7 +4242,7 @@ function spawnConferenceGuests() {
 function spawnMuseumVisitors() {
   if (bombThreatActive()) return;
   if (agentsOverCap()) return;
-  var m = trafficMultiplier();
+  var m = trafficMultiplier() * weatherVenueMult('museum');
   for (var id in state.units) {
     var u = state.units[id];
     if (u.type !== 'museum' || u.damaged) continue;
@@ -3760,7 +4264,7 @@ function spawnMuseumVisitors() {
 function spawnStudents() {
   if (bombThreatActive()) return;
   if (agentsOverCap()) return;
-  var m = trafficMultiplier();
+  var m = trafficMultiplier() * weatherVenueMult('university');
   for (var id in state.units) {
     var u = state.units[id];
     if (u.type !== 'university' || u.damaged) continue;
@@ -3782,7 +4286,7 @@ function spawnStudents() {
 
 function spawnSpaVisitors() {
   if (bombThreatActive()) return;
-  var m = trafficMultiplier();
+  var m = trafficMultiplier() * weatherVenueMult('spa');
   for (var id in state.units) {
     var u = state.units[id];
     if (u.type !== 'spa' || u.damaged) continue;
@@ -3803,7 +4307,7 @@ function spawnSpaVisitors() {
 
 function spawnObservatoryVisitors() {
   if (bombThreatActive()) return;
-  var m = trafficMultiplier();
+  var m = trafficMultiplier() * weatherVenueMult('observatory');
   for (var id in state.units) {
     var u = state.units[id];
     if (u.type !== 'observatory' || u.damaged) continue;
@@ -3823,6 +4327,7 @@ function spawnObservatoryVisitors() {
 }
 
 function maybeSpawnHelipadVIP() {
+  if (helipadClosed()) return;
   for (var id in state.units) {
     var u = state.units[id];
     if (u.type !== 'helipad' || u.damaged) continue;
@@ -3865,7 +4370,7 @@ function tickAgent(a) {
         a.phase = 'leaving';
         if (a.payment) {
           var q = target ? (target.quality || 1) : 1;
-          var pay = Math.round(a.payment * q);
+          var pay = Math.round(a.payment * q * spendMult());
           state.dayRevenue = (state.dayRevenue || 0) + pay;
           if (target) { target.dayRevenue = (target.dayRevenue || 0) + pay; if (state.stats && state.stats.revByType) state.stats.revByType[target.type] = (state.stats.revByType[target.type] || 0) + pay; }
           a.payment = 0;
@@ -3875,10 +4380,11 @@ function tickAgent(a) {
   } else if (a.phase === 'leaving') {
     if (stepToward(a, GRID_W/2, 0)) {
       a.state = 'gone';
-      if (target) target.tenants = Math.max(0, target.tenants - 1);
+      // Leaving the building ends a VISIT, not a lease: workers and residents keep their desk/home
+      if (target && a.type !== 'worker' && a.type !== 'resident') target.tenants = Math.max(0, target.tenants - 1);
       if (a.payment) {
         var q2 = target ? (target.quality || 1) : 1;
-        var pay2 = Math.round(a.payment * q2);
+        var pay2 = Math.round(a.payment * q2 * spendMult());
         state.dayRevenue = (state.dayRevenue || 0) + pay2;
         if (target) { target.dayRevenue = (target.dayRevenue || 0) + pay2; if (state.stats && state.stats.revByType) state.stats.revByType[target.type] = (state.stats.revByType[target.type] || 0) + pay2; }
         a.payment = 0;
@@ -3886,6 +4392,9 @@ function tickAgent(a) {
     }
   }
   // Wait-time accounting: penalize sitting in elevator queue
+  // stress 0..1 climbs while waiting and relaxes slowly once moving again
+  if (a.waiting) a.stress = Math.min(1, (a.stress || 0) + 1 / 90);
+  else if (a.stress) a.stress = Math.max(0, a.stress - 1 / 240);
   if (a.waiting) {
     a.waitTicks = (a.waitTicks || 0) + 1;
     if (target && a.waitTicks > 5) target.satFall = (target.satFall || 0) + 1;
@@ -3967,13 +4476,16 @@ function stepToward(a, tx, ty) {
       // Express: set the transfer floor so drop-off happens at the chosen hub, not the final floor
       a.transferAt = (transport.hubExit !== undefined) ? transport.hubExit : null;
       var queue = goingUp ? car.queueUp : car.queueDown;
+      var other = goingUp ? car.queueDown : car.queueUp;
+      if (other[a.y]) { var oi = other[a.y].indexOf(a.id); if (oi >= 0) other[a.y].splice(oi, 1); }
       if (!queue[a.y]) queue[a.y] = [];
       if (queue[a.y].indexOf(a.id) < 0) queue[a.y].push(a.id);
       a.waiting = true;
       return false;
     }
   }
-  // Same floor, walk horizontally toward tx
+  // Same floor, walk horizontally toward tx. If we were queued for a car, leave the queue.
+  if (a.assignedCar) dequeueAgent(a);
   if (Math.abs(a.x - tx) > 0.08) {
     a.x += Math.sign(tx - a.x) * 0.14;
     if (Math.abs(a.x - tx) < 0.14) a.x = tx;
@@ -3982,22 +4494,34 @@ function stepToward(a, tx, ty) {
   return true;
 }
 
+function dequeueAgent(a) {
+  var ac = a.assignedCar;
+  if (ac) {
+    var e = state.elevators[ac.elevIdx];
+    var car = e && e.cars[ac.carIdx];
+    if (car) {
+      for (var k in car.queueUp) { var i1 = car.queueUp[k].indexOf(a.id); if (i1 >= 0) car.queueUp[k].splice(i1, 1); }
+      for (var k2 in car.queueDown) { var i2 = car.queueDown[k2].indexOf(a.id); if (i2 >= 0) car.queueDown[k2].splice(i2, 1); }
+    }
+  }
+  a.assignedCar = null;
+}
+
 // Find nearest vertical-transport that serves floors [a.y, ty].
 function findBestTransport(ax, ay, targetY) {
   var best = null, bestDist = Infinity;
-  // Stairs
-  for (var id in state.units) {
-    var u = state.units[id];
-    if (u.type !== 'stairs') continue;
-    if (u.y !== ay) continue;
-    // Stairs only connect to adjacent floor (ay ± 1)
-    var desiredNext = ay + Math.sign(targetY - ay);
-    if (desiredNext === ay) continue;
-    // Check stairs exist on the desiredNext floor OR we can accept stairs just here
-    // We accept: stepping onto any stairs at current floor moves one floor toward target.
-    var sx = u.x + u.w / 2;
-    var d = Math.abs(ax - sx);
-    if (d < bestDist) { bestDist = d; best = { kind: 'stairs', x: sx, unitId: id }; }
+  // Stairs: a flight placed on floor y connects y and y+1 in BOTH directions.
+  // Going up from ay needs a flight on ay; going down needs the flight on ay-1.
+  var goingUpS = targetY > ay;
+  var flightFloor = goingUpS ? ay : ay - 1;
+  if (targetY !== ay) {
+    for (var id in state.units) {
+      var u = state.units[id];
+      if (u.type !== 'stairs' || u.y !== flightFloor) continue;
+      var sx = u.x + u.w / 2;
+      var d = Math.abs(ax - sx);
+      if (d < bestDist) { bestDist = d; best = { kind: 'stairs', x: sx, unitId: id }; }
+    }
   }
   // Elevator. For express shafts, only consider if both endpoints (or transfer hubs) are hubs.
   for (var ei = 0; ei < state.elevators.length; ei++) {
@@ -4047,9 +4571,19 @@ function nearestHubInRange(targetY, minY, maxY) {
   return best;
 }
 
+/* Elevator cars move ELEV_SUBTICKS floors per game-minute (a real car does ~1 floor/s;
+ * one game-minute is one real second at 1x, so this is the visual compromise between
+ * realism and readability). A car dwells ELEV_STOP_TICKS sub-ticks at each stop.
+ * Cars in one shaft are a BANK of parallel hoistways: they never block each other.
+ * (The old same-column collision rule deadlocked: a car parked on floor 1 pinned two
+ * loaded cars at the lobby forever.) */
+var ELEV_SUBTICKS = 4;
+var ELEV_STOP_TICKS = 5;
 function tickElevator(e) {
   if (powerOut()) return; // cars frozen
-  for (var ci = 0; ci < e.cars.length; ci++) tickCar(e, e.cars[ci], ci);
+  for (var st = 0; st < ELEV_SUBTICKS; st++) {
+    for (var ci = 0; ci < e.cars.length; ci++) tickCar(e, e.cars[ci], ci);
+  }
 }
 
 function tickCar(e, c, carIdx) {
@@ -4088,7 +4622,7 @@ function tickCar(e, c, carIdx) {
         a.transferAt = null;
         a.y = c.y;
         c.passengers.splice(i, 1);
-        c.stopTimer = 8;
+        c.stopTimer = ELEV_STOP_TICKS;
         didStop = true;
       }
     }
@@ -4105,12 +4639,22 @@ function tickCar(e, c, carIdx) {
         ea.transferAt = null;
         ea.y = c.y;
         c.passengers.splice(ei, 1);
-        c.stopTimer = 8;
+        c.stopTimer = ELEV_STOP_TICKS;
         didStop = true;
       }
     }
   }
   if (canService) {
+    // Direction decision happens ON ARRIVAL, before boarding. A SCAN car keeps its
+    // sweep direction while anything (rider destination or hall call) lies ahead;
+    // at the end of a sweep it reverses HERE, so the people waiting on this floor
+    // for the opposite direction board now instead of watching the car leave.
+    var aheadUp = hasCallsAround(e, c, c.y, +1);
+    var aheadDown = hasCallsAround(e, c, c.y, -1);
+    var hereUp = !!(c.queueUp[c.y] && c.queueUp[c.y].length);
+    var hereDown = !!(c.queueDown[c.y] && c.queueDown[c.y].length);
+    if (c.dir > 0 && !aheadUp && !hereUp && (aheadDown || hereDown)) c.dir = -1;
+    else if (c.dir < 0 && !aheadDown && !hereDown && (aheadUp || hereUp)) c.dir = 1;
     // Pick up passengers waiting in our direction (only those assigned to THIS car)
     var queue = c.dir > 0 ? c.queueUp : c.queueDown;
     var maxCap = 8 + Math.max(0, (state.stars || 1) - 1) * 2; // 8/10/12/14/16 by star tier
@@ -4119,11 +4663,19 @@ function tickCar(e, c, carIdx) {
       for (var j = 0; j < picks.length && c.passengers.length < maxCap; j++) {
         var a2 = findAgent(picks[j]);
         if (!a2) { var idx = queue[c.y].indexOf(picks[j]); if (idx >= 0) queue[c.y].splice(idx, 1); continue; }
+        // Rider's need may have changed since they queued (e.g. sent home while
+        // waiting to go up). Only board if this car's direction still serves them.
+        var wantY = desiredFloorForAgent(a2);
+        if (wantY === c.y || (wantY > c.y) !== (c.dir > 0)) {
+          var idx2 = queue[c.y].indexOf(picks[j]); if (idx2 >= 0) queue[c.y].splice(idx2, 1);
+          if (wantY === c.y) { a2.assignedCar = null; a2.waiting = false; }
+          continue;
+        }
         a2.inElevator = e;
         a2.waitTicks = 0;
         c.passengers.push(a2.id);
         queue[c.y].splice(queue[c.y].indexOf(picks[j]), 1);
-        c.stopTimer = 8;
+        c.stopTimer = ELEV_STOP_TICKS;
         didStop = true;
       }
     }
@@ -4131,35 +4683,31 @@ function tickCar(e, c, carIdx) {
   }
   if (c.stopTimer > 0) return;
 
-  // Collision avoidance against sibling cars
-  var otherYs = [];
-  for (var oi = 0; oi < e.cars.length; oi++) if (oi !== carIdx) otherYs.push(e.cars[oi].y);
-  var collides = function(ny) { return otherYs.indexOf(ny) >= 0; };
-
-  // No passengers, no calls assigned to this car: park at a unique floor and stop
+  // Idle car (no passengers, no calls pinned to it): during the morning up-peak,
+  // return to the main lobby so the next arrival wave is served instantly.
+  // Otherwise stay put, which is what real group controllers do after the last call.
   if (c.passengers.length === 0 && !anyCallsCar(c)) {
-    var parkY = Math.min(e.maxY, Math.max(e.minY, 0) + carIdx);
-    while (otherYs.indexOf(parkY) >= 0 && parkY < e.maxY) parkY++;
-    if (c.y > parkY && !collides(c.y - 1)) c.y--;
-    else if (c.y < parkY && !collides(c.y + 1)) c.y++;
+    var hr = state.minute / 60;
+    if (hr >= 6 && hr < 10) {
+      var lobbyY = (e.minY <= 0 && e.maxY >= 0) ? 0 : e.minY;
+      if (c.y > lobbyY) { c.y--; state.elevFloorsToday = (state.elevFloorsToday || 0) + 1; }
+      else if (c.y < lobbyY) { c.y++; state.elevFloorsToday = (state.elevFloorsToday || 0) + 1; }
+    }
     return;
   }
 
-  // SCAN scheduling: move toward demand; reverse when there's none in current direction
-  var callsAbove = hasCallsAround(e, c, c.y, +1);
-  var callsBelow = hasCallsAround(e, c, c.y, -1);
-  var sameFloorOpposite = c.dir > 0
-    ? (c.queueDown[c.y] && c.queueDown[c.y].length > 0)
-    : (c.queueUp[c.y] && c.queueUp[c.y].length > 0);
+  // Move one floor along the sweep; reverse if the sweep is exhausted.
+  var goUp = hasCallsAround(e, c, c.y, +1);
+  var goDown = hasCallsAround(e, c, c.y, -1);
+  var moved = false;
   if (c.dir > 0) {
-    if (c.y < e.maxY && callsAbove && !collides(c.y + 1)) c.y++;
-    else if (c.y > e.minY && callsBelow && !collides(c.y - 1)) { c.dir = -1; c.y--; }
-    else if (sameFloorOpposite) c.dir = -1;
+    if (c.y < e.maxY && goUp) { c.y++; moved = true; }
+    else if (c.y > e.minY && goDown) { c.dir = -1; c.y--; moved = true; }
   } else {
-    if (c.y > e.minY && callsBelow && !collides(c.y - 1)) c.y--;
-    else if (c.y < e.maxY && callsAbove && !collides(c.y + 1)) { c.dir = 1; c.y++; }
-    else if (sameFloorOpposite) c.dir = 1;
+    if (c.y > e.minY && goDown) { c.y--; moved = true; }
+    else if (c.y < e.maxY && goUp) { c.dir = 1; c.y++; moved = true; }
   }
+  if (moved) state.elevFloorsToday = (state.elevFloorsToday || 0) + 1;
 }
 
 // Are there any calls/passengers (assigned to THIS car) with destinations above/below the car's current floor?
@@ -4245,8 +4793,8 @@ function pickBestCarForCall(e, callY, goingUp) {
 }
 
 function estimateEta(e, c, callY, goingUp) {
-  var stopPenalty = 6;       // ticks lost per intermediate stop
-  var travelPerFloor = 1;    // ticks per floor of travel
+  var stopPenalty = ELEV_STOP_TICKS; // sub-ticks lost per intermediate stop
+  var travelPerFloor = 1;            // sub-ticks per floor of travel
   var loadPenalty = c.passengers.length * 0.5;
   var idle = c.passengers.length === 0 && !anyCallsCar(c);
   var eta;
@@ -4304,7 +4852,14 @@ function lowestStopForCar(c, floorY) {
   }
   return Math.max(lo, floorY);
 }
+var _agentIndex = {};
+function reindexAgents() {
+  _agentIndex = {};
+  for (var i = 0; i < state.agents.length; i++) _agentIndex[state.agents[i].id] = state.agents[i];
+}
 function findAgent(id) {
+  var a = _agentIndex[id];
+  if (a && a.state !== 'gone') return a;
   for (var i = 0; i < state.agents.length; i++) if (state.agents[i].id === id) return state.agents[i];
   return null;
 }
@@ -4317,7 +4872,13 @@ function showUnitInfo(uid) {
   var def = UNITS[u.type];
   var sat = Math.round(unitSatisfaction(u));
   var occPct = def.capacity > 0 ? Math.round(u.tenants / def.capacity * 100) : null;
-  var rentLine = def.rent ? '$' + def.rent + '/day (peak)' : (def.nightly ? '$' + def.nightly + '/night/guest' : (def.perVisit ? '$' + def.perVisit + '/visit' : '\u2014'));
+  var cpiNow = cpiMult();
+  var rentLine;
+  if (def.salePrice) rentLine = u.sold ? 'SOLD day ' + u.soldDay + ' · HOA $' + Math.round(def.rent * cpiNow) + '/day' : 'Rental $' + Math.round(def.rent * 2.2 * cpiNow * (econ().rentIdx.condo || 1)) + '/day · listed for sale';
+  else if (def.rent) rentLine = '$' + Math.round(def.rent * cpiNow * (econ().rentIdx.office || 1)) + '/day (peak)';
+  else if (def.nightly) rentLine = '$' + Math.round(def.nightly * (econ().rentIdx.hotel || 1)) + '/night/guest';
+  else if (def.perVisit) rentLine = '$' + Math.round(def.perVisit * spendMult()) + '/visit';
+  else rentLine = '\u2014';
   var upkeep = def.upkeep || 0;
   // Recent complaints from this unit's tenants
   var complaints = [];
@@ -4462,6 +5023,8 @@ function endOfDay() {
     state.agents[ai].waitTicks = 0;
   }
   var income = 0, expenses = 0, prestige = 0;
+  var bd = { rent: 0, hoa: 0, sales: 0, visits: 0, passive: 0, upkeep: 0, utilities: 0, insurance: 0 };
+  var cpi = cpiMult();
   // City grows independently; demand follows from that, not from your tower's headcount.
   tickCityGrowth();
   tickMarketDemand();
@@ -4471,9 +5034,10 @@ function endOfDay() {
     var def = UNITS[u.type];
     // Reset per-day revenue accumulator before computing today's income
     u.dayRevenue = u.dayRevenue || 0;
-    // Probabilistic condo/penthouse sales: need ≥80% occupancy for 3 days, then roll market-weighted.
-    // Sale price uses a tightened multiplier range (0.30–1.50) so gluts hurt more and bubbles are capped.
-    if (def.salePrice && def.capacity > 0) {
+    // Condo/penthouse sales happen ONCE per unit, like a real developer selling to an
+    // owner-occupier: need ≥80% occupancy for 3 days, then a market-weighted roll. After the
+    // sale the owners stay and pay HOA fees; an unsold unit collects rent instead.
+    if (def.salePrice && def.capacity > 0 && !u.sold) {
       var saleThreshold = Math.max(1, Math.ceil(def.capacity * 0.8));
       if (u.tenants >= saleThreshold) {
         u.fullSince = u.fullSince || state.day;
@@ -4482,15 +5046,15 @@ function endOfDay() {
           // Sale probability scales with market — hot market sells fast, glut is slow
           var saleProb = Math.max(0.04, Math.min(0.80, (mMult.condo - 0.5) * 0.55));
           if (gameRandom() < saleProb) {
-            var saleMkt = Math.max(0.30, Math.min(1.50, 0.40 + marketRatio('condo') * 0.55));
-            var salePrice = Math.round(def.salePrice * saleMkt);
+            var saleMkt = Math.max(0.30, Math.min(1.50, 0.40 + marketRatio('condo') * 0.55)) * (1 + 0.15 * econ().cycle);
+            var salePrice = Math.round(def.salePrice * saleMkt * cpi * (u.quality || 1));
             income += salePrice;
+            bd.sales += salePrice;
             u.dayRevenue = (u.dayRevenue || 0) + salePrice;
             if (state.stats && state.stats.revByType) state.stats.revByType[u.type] = (state.stats.revByType[u.type] || 0) + salePrice;
-            logEvent(def.name + ' sold @ floor ' + floorLabel(u.y) + '  +$' + formatMoney(salePrice) + ' (\u00d7' + saleMkt.toFixed(2) + ')', 'good');
-            // One tenant cycles out — reset warmup counter so it must refill before the next sale
-            u.tenants = Math.max(0, u.tenants - 1);
-            if (u.tenantList && u.tenantList.length > 0) u.tenantList.splice(Math.floor(Math.random() * u.tenantList.length), 1);
+            logEvent(def.name + ' SOLD @ floor ' + floorLabel(u.y) + '  +$' + formatMoney(salePrice) + ' (\u00d7' + saleMkt.toFixed(2) + ') — owners now pay HOA', 'good');
+            u.sold = true;
+            u.soldDay = state.day;
             u.fullSince = null;
           }
         }
@@ -4503,6 +5067,9 @@ function endOfDay() {
     if (def.capacity > 0 && u.tenants > 0 && (u.type === 'office' || u.type === 'condo' || u.type === 'penthouse')) {
       var satPct = unitSatisfaction(u) / 100;
       var churn = Math.max(0.01, 0.09 - satPct * 0.08);
+      // Owners who bought don't leave over rent; renters and office tenants do when asked too much
+      if (!u.sold) churn += askChurnAdd(u.type === 'office' ? 'office' : 'condo');
+      if (u.sold) churn *= 0.5;
       var left = 0;
       for (var ti = u.tenants - 1; ti >= 0; ti--) {
         if (gameRandom() < churn) left++;
@@ -4523,18 +5090,25 @@ function endOfDay() {
       var occ = u.tenants / def.capacity;
       var sat = unitSatisfaction(u) / 100;
       var rentClassMult = 1.0;
-      if (u.type === 'office') rentClassMult = mMult.office * (state.dailyOfficeBoost || 1.0);
-      if (u.type === 'condo' || u.type === 'penthouse') rentClassMult = 0.5 + 0.5 * mMult.condo;
-      var rentInc = Math.round(def.rent * occ * (0.4 + 0.6 * sat) * q * tm * rentClassMult);
+      var askIdx = 1.0;
+      if (u.type === 'office') { rentClassMult = mMult.office * (state.dailyOfficeBoost || 1.0); askIdx = econ().rentIdx.office || 1; }
+      if (u.type === 'condo' || u.type === 'penthouse') {
+        rentClassMult = 0.5 + 0.5 * mMult.condo;
+        // Unsold units are rentals at roughly 2.2x the HOA fee; sold units collect HOA only
+        if (!u.sold) { rentClassMult *= 2.2; askIdx = econ().rentIdx.condo || 1; }
+      }
+      var rentInc = Math.round(def.rent * occ * (0.4 + 0.6 * sat) * q * tm * rentClassMult * askIdx * cpi);
       income += rentInc;
+      if (u.type === 'office') bd.rent += rentInc; else bd.hoa += rentInc;
       u.dayRevenue = (u.dayRevenue || 0) + rentInc;
       if (state.stats && state.stats.revByType) state.stats.revByType[u.type] = (state.stats.revByType[u.type] || 0) + rentInc;
     }
     // Passive daily income (ATM, parking)
     if (def.perDay && !u.damaged) {
       var perDayOcc = def.capacity > 0 ? Math.min(1, (u.tenants || 0) / def.capacity + 0.5) : 1.0;
-      var passiveInc = Math.round(def.perDay * perDayOcc * q);
+      var passiveInc = Math.round(def.perDay * perDayOcc * q * cpi * (u.type === 'parking' && (weather.snowDepth || 0) > 4 ? 0.5 : 1));
       income += passiveInc;
+      bd.passive += passiveInc;
       u.dayRevenue = (u.dayRevenue || 0) + passiveInc;
       if (state.stats && state.stats.revByType) state.stats.revByType[u.type] = (state.stats.revByType[u.type] || 0) + passiveInc;
     }
@@ -4542,8 +5116,8 @@ function endOfDay() {
     if (def.prestige && !u.damaged) prestige += def.prestige;
     // Decay satFall so yesterday's misery doesn't haunt forever
     if (u.satFall) u.satFall = Math.max(0, u.satFall - 30);
-    // Upkeep
-    if (def.upkeep) expenses += u.damaged ? Math.round(def.upkeep * 0.3) : def.upkeep;
+    // Upkeep (staff, maintenance) rises with the price index
+    if (def.upkeep) { var up = Math.round((u.damaged ? def.upkeep * 0.3 : def.upkeep) * cpi); expenses += up; bd.upkeep += up; }
   }
   state.prestige = prestige;
   // Recompute population from actual occupancy now that spawns/churn/sales are resolved,
@@ -4561,14 +5135,30 @@ function endOfDay() {
   var boomMult = state.market || 1.0;
   var prestigeMult = 1 + state.prestige / 100;
   income = Math.round(income * boomMult * prestigeMult);
+  bd.rent = Math.round(bd.rent * boomMult * prestigeMult); bd.hoa = Math.round(bd.hoa * boomMult * prestigeMult);
+  bd.sales = Math.round(bd.sales * boomMult * prestigeMult); bd.passive = Math.round(bd.passive * boomMult * prestigeMult);
   // Visit-based revenue accumulated during the day
-  income += Math.round((state.dayRevenue || 0) * boomMult * prestigeMult);
+  bd.visits = Math.round((state.dayRevenue || 0) * boomMult * prestigeMult);
+  income += bd.visits;
   state.dayRevenue = 0;
+  // Utilities: heating and cooling degree-days times conditioned floor area,
+  // plus elevator traction energy. This is where a February in Chicago or an
+  // August in Phoenix shows up on the ledger.
+  var util = weatherUtilityCost();
+  expenses += util.total;
+  bd.utilities = util.total;
+  state.lastUtility = util;
+  if (util.snowRemoval > 0) logEvent('Snow removal crew: -$' + formatMoney(util.snowRemoval) + ' (' + weather.precipIn.toFixed(1) + '" liquid, ' + (weather.snowDepth || 0).toFixed(0) + '" on the ground)', 'warn');
   // Insurance premium scales with tower size (larger = more risk)
   if (state.insurance) {
     var unitCount = Object.keys(state.units).length;
-    expenses += 200 + unitCount * 80;
+    var prem = Math.round((200 + unitCount * 80) * cpi);
+    expenses += prem;
+    bd.insurance = prem;
   }
+  // Property tax, valuation, business cycle, monthly close
+  var taxToday = econEndOfDay(income - bd.visits, expenses, bd);
+  expenses += taxToday;
   // Loan interest + bond maturity
   accrueInterest();
   checkBondMaturity();
@@ -4626,6 +5216,9 @@ function endOfDay() {
   logEvent('End of day ' + (state.day - 1) + ': income $' + formatMoney(income) + ', upkeep $' + formatMoney(expenses) + ', net ' + (net >= 0 ? '+$' : '-$') + formatMoney(Math.abs(net)) + marketTag, net >= 0 ? 'good' : 'bad');
   showEodSummary(income, expenses, net, marketTag);
   sfx('eod');
+  // Weather-driven incidents for TOMORROW's conditions get rolled after rollWeather below;
+  // tonight's storm can still take the grid down.
+  rollWeatherIncidents();
   // Nightly crime roll (applies to covered vs uncovered units)
   rollCrime();
   // Fire spread: each burning unit tries to ignite neighbors. Fire stations cap this.
@@ -4650,6 +5243,299 @@ function endOfDay() {
   updateStars();
   checkQuestProgress();
   rollNewQuest();
+}
+
+function conditionedCells() {
+  var n = 0;
+  for (var id in state.units) {
+    var u = state.units[id];
+    if (UNITS[u.type].isElevator || u.type === 'stairs' || u.type === 'parking' || u.type === 'helipad') continue;
+    n += u.w * u.h;
+  }
+  return n;
+}
+function weatherUtilityCost() {
+  var cells = conditionedCells();
+  var hdd = heatingDegreeDays(), cdd = coolingDegreeDays();
+  // $/cell/degree-day: cooling is dearer than heating per degree, and a hot day over 95F
+  // pushes chillers into their inefficient range
+  var heating = Math.round(hdd * cells * 0.8);
+  var cooling = Math.round(cdd * cells * 1.3 * (weather.tmax >= 95 ? 1.35 : 1));
+  var elev = Math.round((state.elevFloorsToday || 0) * 0.3);
+  state.elevFloorsToday = 0;
+  var snowRemoval = 0;
+  if (weather.kind === 'snow' && weather.precipIn >= 0.1) snowRemoval = Math.round(800 + weather.precipIn * 10 * 250);
+  var lighting = Math.round(cells * 4);
+  return { heating: heating, cooling: cooling, elevators: elev, lighting: lighting, snowRemoval: snowRemoval,
+           total: heating + cooling + elev + lighting + snowRemoval, hdd: hdd, cdd: cdd };
+}
+function rollWeatherIncidents() {
+  // Lightning: a thunderstorm day has a real chance of knocking the grid out overnight
+  if (weather.kind === 'storm' && !powerOut() && gameRandom() < 0.12) {
+    var dur = 60 + Math.floor(gameRandom() * 150);
+    state.events.push({ kind: 'outage', remaining: dur });
+    logEvent('Lightning strike on the grid — power out, elevators halted for ~' + Math.round(dur / 60 * 10) / 10 + 'h', 'bad');
+    state.shake = 0.6;
+    sfx('warn');
+  }
+  // Hard freeze: exposed plumbing bursts
+  if (weather.tmin <= 10 && gameRandom() < 0.10 && Object.keys(state.units).length > 0) {
+    logEvent('Hard freeze (' + weather.tmin + '\u00B0F) — a frozen pipe let go overnight', 'bad');
+    triggerEvent('pipeburst');
+  }
+  // Heat wave: three straight days at 95F+ strains everything
+  var hist = weather.history || [];
+  if (hist.length >= 3 && hist[hist.length - 1].tmax >= 95 && hist[hist.length - 2].tmax >= 95 && hist[hist.length - 3].tmax >= 95) {
+    if (!state.heatWaveDay || state.day - state.heatWaveDay > 5) {
+      state.heatWaveDay = state.day;
+      logEvent('Heat wave: third straight day over 95\u00B0F. Cooling costs up, shoppers seek air conditioning.', 'warn');
+      postMail({ from: 'City Emergency Management', subject: 'Excessive heat warning',
+        body: 'An excessive heat warning is in effect. Building operators should expect elevated cooling loads and heavier indoor foot traffic. Check chiller capacity and keep lobbies open as cooling centers.' });
+    }
+  }
+}
+
+/* ===== ECONOMY =====
+ * Time convention: the calendar and the weather run in real days, but money runs
+ * one accounting period per game day (rent is collected daily). Rates quoted
+ * "per year" below are applied at 1/12 per game day, so a 6% loan costs 0.5% of
+ * principal each day, the same as a monthly payment in the real world.
+ *
+ * The macro picture is a damped, noise-driven business cycle (a slow oscillator
+ * with a period of roughly 400 game days). It moves demand growth, consumer
+ * spending, the prime rate (the central bank leans against the cycle) and the
+ * cap rate that values the tower. Inflation drifts prices upward over time.
+ */
+var ECON_BASE_PRIME = 0.05;      // long-run prime rate
+var ECON_LOAN_SPREAD = 0.025;    // bank spread over prime for a clean borrower
+var ECON_RISK_PREMIUM = 0.03;    // cap rate = prime + this
+var ECON_PROPERTY_TAX = 0.010;   // annual, on assessed value
+var ECON_CYCLE_PERIOD = 400;     // game days
+
+function initEcon() {
+  state.econ = {
+    prime: ECON_BASE_PRIME, cpi: 1.0, cycle: 0, cycleV: 0, confidence: 1.0,
+    capRate: ECON_BASE_PRIME + ECON_RISK_PREMIUM,
+    rentIdx: { office: 1.0, condo: 1.0, hotel: 1.0 },
+    cur: newLedger(), monthly: [], noiHist: [], valuation: 0,
+    regime: 'steady', lastRegimeDay: 0, taxToday: 0, interestToday: 0
+  };
+}
+function econ() { if (!state.econ) initEcon(); return state.econ; }
+function newLedger() {
+  return { rent: 0, hoa: 0, sales: 0, visits: 0, passive: 0, upkeep: 0, utilities: 0, tax: 0, interest: 0, insurance: 0, days: 0, cashStart: state.cash, cashEnd: state.cash, label: '' };
+}
+function cpiMult() { return econ().cpi; }
+function spendMult() { return econ().confidence * econ().cpi; }
+function loanApr() {
+  var e = econ();
+  var v = Math.max(1, e.valuation || 1);
+  var ltv = state.loan.principal / v;
+  var spread = ECON_LOAN_SPREAD + (ltv > 0.5 ? 0.02 : 0) + (ltv > 0.65 ? 0.03 : 0) + (state.negDays > 0 ? 0.03 : 0);
+  return e.prime + spread;
+}
+function loanDailyRate() { return loanApr() / 12; }
+function annualNoi() {
+  // Trailing 30 accounting periods, annualized at 12 periods per year
+  var h = econ().noiHist;
+  if (!h.length) return 0;
+  var n = Math.min(30, h.length), sum = 0;
+  for (var i = h.length - n; i < h.length; i++) sum += h[i];
+  return (sum / n) * 12;
+}
+function assessedValue() {
+  var v = 0;
+  for (var id in state.units) v += UNITS[state.units[id].type].cost * (state.units[id].level || 1) * 0.8;
+  return Math.round(v * cpiMult());
+}
+function towerValuation() {
+  // Income approach with a floor at land-and-bricks; cap rate follows interest rates
+  var noi = annualNoi();
+  var income = noi > 0 ? noi / econ().capRate : 0;
+  return Math.round(Math.max(income, assessedValue() * 0.6));
+}
+function creditLimit() {
+  // Banks lend to 65% loan-to-value and to a 1.25x debt-service coverage ratio,
+  // whichever binds; a small facility is always available so an early tower can build.
+  var e = econ();
+  var v = e.valuation || towerValuation();
+  var byLtv = v * 0.65;
+  var noi = annualNoi();
+  var byDscr = noi > 0 ? noi / (1.25 * loanApr()) : 0;
+  var base = 250000 * Math.max(1, state.stars);
+  return Math.round(Math.max(base, Math.min(byLtv, byDscr)));
+}
+function dscr() {
+  var ds = state.loan.principal * loanApr();
+  return ds > 0 ? annualNoi() / ds : Infinity;
+}
+function tickEconDaily() {
+  var e = econ();
+  // Business cycle: damped oscillator kicked by noise
+  var k = Math.pow(2 * Math.PI / ECON_CYCLE_PERIOD, 2), damp = 0.010;
+  e.cycleV += -k * e.cycle - damp * e.cycleV + gaussRand() * 0.0008;
+  e.cycle = Math.max(-1, Math.min(1, e.cycle + e.cycleV));
+  // Central bank leans against the cycle; the rate moves slowly toward its target
+  var target = ECON_BASE_PRIME + 0.03 * e.cycle;
+  e.prime += 0.03 * (target - e.prime) + gaussRand() * 0.0002;
+  e.prime = Math.max(0.01, Math.min(0.12, e.prime));
+  e.capRate = e.prime + ECON_RISK_PREMIUM;
+  e.confidence = 1 + 0.25 * e.cycle;
+  // Inflation: ~2.5% per calendar year, hotter in a boom (prices drift with the calendar,
+  // even though rent is collected every day)
+  e.cpi *= 1 + (0.025 + 0.02 * e.cycle) / 365;
+  // Regime headlines
+  var regime = e.cycle > 0.45 ? 'boom' : e.cycle < -0.45 ? 'recession' : 'steady';
+  if (regime !== e.regime && state.day - e.lastRegimeDay > 20) {
+    e.regime = regime; e.lastRegimeDay = state.day;
+    if (regime === 'recession') {
+      logEvent('Recession: demand growth stalls, shoppers tighten up, rates ease', 'bad');
+      postMail({ from: 'Metro Business Journal', subject: 'Economy slips into recession',
+        body: 'Leading indicators have turned down. Expect slower absorption of office and residential space, thinner retail spending, and softer hotel bookings. The upside: the central bank is cutting, so borrowing gets cheaper and the cap rate on your tower compresses.\n\nPrime rate: ' + (e.prime * 100).toFixed(2) + '%' });
+    } else if (regime === 'boom') {
+      logEvent('Boom: demand surges, spending up, rates rising', 'good');
+      postMail({ from: 'Metro Business Journal', subject: 'Economy running hot',
+        body: 'Hiring is strong and consumers are spending. Expect fast lease-up and fat retail tills, but the central bank is raising rates: loans cost more and the cap rate on your tower widens.\n\nPrime rate: ' + (e.prime * 100).toFixed(2) + '%' });
+    } else {
+      logEvent('Economy back to steady growth', 'info');
+    }
+  }
+}
+function cycleDemandMult() { return 1 + 0.5 * econ().cycle; }
+// Player asking-rent index vs the market: above-market asking rents slow lease-up and raise churn
+function askFillMult(cls) {
+  var idx = (econ().rentIdx[cls] || 1);
+  return Math.max(0.2, Math.min(1.15, 1 - 1.2 * (idx - 1)));
+}
+function askChurnAdd(cls) {
+  var idx = (econ().rentIdx[cls] || 1);
+  return Math.max(0, (idx - 1) * 0.06);
+}
+function setRentIdx(cls, pct) {
+  econ().rentIdx[cls] = Math.max(0.7, Math.min(1.5, pct / 100));
+  renderFinancePanel();
+  state._marketDirty = true;
+}
+function closeMonth() {
+  var e = econ();
+  var L = e.cur;
+  L.cashEnd = state.cash;
+  var d = gameDate(state.day - 1);
+  L.label = MONTH_NAMES[d.getUTCMonth()] + ' Yr ' + gameYearIdx();
+  L.revenue = L.rent + L.hoa + L.sales + L.visits + L.passive;
+  L.opex = L.upkeep + L.utilities + L.tax + L.insurance;
+  L.noi = L.revenue - L.opex;
+  L.net = L.noi - L.interest;
+  L.valuation = e.valuation;
+  L.prime = e.prime; L.cpi = e.cpi; L.cycle = e.cycle;
+  e.monthly.push(L);
+  if (e.monthly.length > 24) e.monthly.shift();
+  var lines = [
+    'FINANCIAL STATEMENT — ' + L.label + ' (' + L.days + ' periods)', '',
+    'Revenue',
+    '  Office rent          $' + formatMoney(L.rent),
+    '  Condo HOA / rent     $' + formatMoney(L.hoa),
+    '  Condo sales          $' + formatMoney(L.sales),
+    '  Retail, dining, hotel $' + formatMoney(L.visits),
+    '  Parking, ATM, other  $' + formatMoney(L.passive),
+    '  Total revenue        $' + formatMoney(L.revenue), '',
+    'Operating expenses',
+    '  Upkeep & staff       $' + formatMoney(L.upkeep),
+    '  Utilities            $' + formatMoney(L.utilities),
+    '  Property tax         $' + formatMoney(L.tax),
+    '  Insurance            $' + formatMoney(L.insurance),
+    '  Total opex           $' + formatMoney(L.opex), '',
+    'Net operating income   $' + formatMoney(L.noi),
+    'Interest expense       $' + formatMoney(L.interest),
+    'Net income             ' + (L.net >= 0 ? '$' : '-$') + formatMoney(Math.abs(L.net)), '',
+    'Tower valuation        $' + formatMoney(L.valuation) + '  (cap rate ' + (e.capRate * 100).toFixed(1) + '%)',
+    'Debt                   $' + formatMoney(state.loan.principal) + '  (' + (e.valuation > 0 ? Math.round(state.loan.principal / e.valuation * 100) : 0) + '% LTV, DSCR ' + (isFinite(dscr()) ? dscr().toFixed(2) + 'x' : 'n/a') + ')',
+    'Prime rate ' + (e.prime * 100).toFixed(2) + '%  ·  price index ' + e.cpi.toFixed(3) + '  ·  economy: ' + e.regime
+  ];
+  postMail({ from: 'Tower Comptroller', subject: 'Statement: ' + L.label + ' — NOI $' + formatMoney(L.noi), body: lines.join('\n') });
+  logEvent('Month closed (' + L.label + '): NOI $' + formatMoney(L.noi) + ', tower valued at $' + formatMoney(L.valuation), L.noi >= 0 ? 'good' : 'bad');
+  e.cur = newLedger();
+}
+function econEndOfDay(income, expenses, breakdown) {
+  var e = econ();
+  var L = e.cur;
+  L.rent += breakdown.rent; L.hoa += breakdown.hoa; L.sales += breakdown.sales; L.visits += breakdown.visits; L.passive += breakdown.passive;
+  L.upkeep += breakdown.upkeep; L.utilities += breakdown.utilities; L.insurance += breakdown.insurance;
+  // Property tax on assessed value, one twelfth of the annual bill each accounting period
+  var tax = Math.round(assessedValue() * ECON_PROPERTY_TAX / 12);
+  L.tax += tax; e.taxToday = tax;
+  L.days++;
+  var noi = (income + breakdown.visits) - expenses - tax;
+  e.noiHist.push(noi);
+  if (e.noiHist.length > 60) e.noiHist.shift();
+  e.valuation = towerValuation();
+  tickEconDaily();
+  if (gameDate(state.day).getUTCDate() === 1 && L.days > 0) closeMonth();
+  return tax;
+}
+
+function renderFinancePanel() {
+  var body = document.getElementById('financeBody');
+  if (!body) return;
+  var e = econ();
+  var v = e.valuation || towerValuation();
+  var ltv = v > 0 ? state.loan.principal / v : 0;
+  var cov = dscr();
+  var noi = annualNoi();
+  var cyc = e.cycle;
+  var cycLabel = cyc > 0.45 ? 'BOOM' : cyc > 0.15 ? 'expansion' : cyc < -0.45 ? 'RECESSION' : cyc < -0.15 ? 'slowdown' : 'steady';
+  var cycColor = cyc > 0.15 ? '#60E090' : cyc < -0.15 ? '#E04040' : '#FFD060';
+  var html = '';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">';
+  var tile = function(label, val, color) { return '<div style="background:rgba(20,26,40,0.7);border:1px solid #3A4858;border-radius:6px;padding:8px 10px;"><div style="color:#9AB8D8;font-size:0.72em;letter-spacing:2px;">' + label + '</div><div style="color:' + (color || '#FFD060') + ';font-family:monospace;font-weight:bold;font-size:1.15em;margin-top:2px;">' + val + '</div></div>'; };
+  html += tile('TOWER VALUE', '$' + formatMoney(v));
+  html += tile('NOI (ANNUALIZED)', (noi >= 0 ? '$' : '-$') + formatMoney(Math.abs(Math.round(noi))), noi >= 0 ? '#60E090' : '#E04040');
+  html += tile('CAP RATE', (e.capRate * 100).toFixed(1) + '%');
+  html += tile('PRIME RATE', (e.prime * 100).toFixed(2) + '%');
+  html += tile('YOUR LOAN APR', (loanApr() * 100).toFixed(2) + '%');
+  html += tile('PRICE INDEX', e.cpi.toFixed(3));
+  html += tile('DEBT / LTV', '$' + formatMoney(state.loan.principal) + ' · ' + Math.round(ltv * 100) + '%', ltv > 0.65 ? '#E04040' : '#FFD060');
+  html += tile('DSCR', isFinite(cov) ? cov.toFixed(2) + 'x' : 'no debt', cov < 1.25 ? '#E04040' : '#60E090');
+  html += tile('CREDIT LIMIT', '$' + formatMoney(creditLimit()));
+  html += '</div>';
+  html += '<div style="margin:6px 0 10px 0;padding:8px 10px;background:rgba(20,26,40,0.5);border-radius:6px;"><span style="color:#9AB8D8;font-size:0.8em;letter-spacing:2px;">ECONOMY</span> <b style="color:' + cycColor + ';">' + cycLabel + '</b> ' +
+    '<span class="mkt-bar" style="display:inline-block;width:160px;height:8px;vertical-align:middle;margin:0 8px;position:relative;background:#1A2030;border:1px solid #2A3040;"><span style="position:absolute;top:0;bottom:0;left:' + (50 + cyc * 48) + '%;width:3px;background:' + cycColor + ';"></span></span>' +
+    '<span style="color:#8098B8;font-size:0.85em;">demand ×' + cycleDemandMult().toFixed(2) + ' · spending ×' + e.confidence.toFixed(2) + '</span></div>';
+  html += '<h3 style="color:#9ADBFF;font-size:1em;margin:10px 0 4px 0;">Asking rents vs market</h3>';
+  html += '<p style="color:#8098B8;font-size:0.82em;margin:0 0 8px 0;line-height:1.4;">Above-market rents earn more per tenant but slow lease-up and push tenants out. Below-market fills fast.</p>';
+  var classes = [['office', 'Offices'], ['condo', 'Condos (HOA / rent)'], ['hotel', 'Hotel nightly']];
+  for (var i = 0; i < classes.length; i++) {
+    var c = classes[i][0], pct = Math.round((e.rentIdx[c] || 1) * 100);
+    html += '<div style="display:flex;align-items:center;gap:10px;margin:4px 0;"><span style="color:#9AB8D8;min-width:150px;">' + classes[i][1] + '</span>' +
+      '<input type="range" min="70" max="150" step="5" value="' + pct + '" oninput="setRentIdx(\'' + c + '\', +this.value)" style="flex:1;">' +
+      '<span style="color:#FFD060;font-family:monospace;min-width:48px;text-align:right;">' + pct + '%</span>' +
+      '<span style="color:#6A8098;font-size:0.8em;min-width:120px;">fill ×' + askFillMult(c).toFixed(2) + ', churn +' + Math.round(askChurnAdd(c) * 100) + '%/day</span></div>';
+  }
+  if (e.monthly.length) {
+    var L = e.monthly[e.monthly.length - 1];
+    html += '<h3 style="color:#9ADBFF;font-size:1em;margin:14px 0 4px 0;">Last statement: ' + L.label + '</h3>';
+    var rows = [['Office rent', L.rent], ['Condo HOA / rent', L.hoa], ['Condo sales', L.sales], ['Retail, dining, hotel', L.visits], ['Parking, ATM, other', L.passive], ['Total revenue', L.revenue, true],
+      ['Upkeep & staff', -L.upkeep], ['Utilities', -L.utilities], ['Property tax', -L.tax], ['Insurance', -L.insurance], ['Net operating income', L.noi, true], ['Interest', -L.interest], ['Net income', L.net, true]];
+    for (var r = 0; r < rows.length; r++) {
+      var val = rows[r][1], bold = rows[r][2];
+      html += '<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dotted #2A3040;' + (bold ? 'font-weight:bold;' : '') + '"><span style="color:#9AB8D8;">' + rows[r][0] + '</span><span style="font-family:monospace;color:' + (val >= 0 ? '#60E090' : '#E08080') + ';">' + (val < 0 ? '-' : '') + '$' + formatMoney(Math.abs(Math.round(val))) + '</span></div>';
+    }
+    // 12-month NOI sparkline
+    var hist = e.monthly.slice(-12), mx = 1;
+    for (var h = 0; h < hist.length; h++) mx = Math.max(mx, Math.abs(hist[h].noi));
+    var gw = 300, gh = 44, bw = gw / hist.length;
+    var svg = '<svg width="' + gw + '" height="' + gh + '" style="margin-top:8px;background:#0A0E14;border-radius:3px;">';
+    for (var hb = 0; hb < hist.length; hb++) {
+      var bh = Math.abs(hist[hb].noi) / mx * (gh / 2 - 2);
+      var y = hist[hb].noi >= 0 ? gh / 2 - bh : gh / 2;
+      svg += '<rect x="' + (hb * bw + 1) + '" y="' + y + '" width="' + (bw - 2) + '" height="' + bh + '" fill="' + (hist[hb].noi >= 0 ? '#60E090' : '#E04040') + '"/>';
+    }
+    svg += '<line x1="0" y1="' + gh / 2 + '" x2="' + gw + '" y2="' + gh / 2 + '" stroke="#3A4858"/></svg>';
+    html += '<div style="color:#8098B8;font-size:0.8em;margin-top:6px;">Monthly NOI, last ' + hist.length + ' months</div>' + svg;
+  } else {
+    html += '<p style="color:#6A8098;font-size:0.85em;margin-top:12px;">The first statement posts on the 1st of next month.</p>';
+  }
+  body.innerHTML = html;
 }
 
 /* ===== CHOICE EVENTS ===== */
@@ -4692,8 +5578,8 @@ var CHOICE_EVENTS = [
     id: 'expansion_loan',
     when: function() { return state.stars >= 2 && state.loan.principal < 100000; },
     title: 'Opportunity Loan',
-    body: 'A local bank offers $500,000 at 0.15%/day (below your standard rate) — but you must accept within the hour.',
-    a: { label: 'Take the loan', act: function() { state.loan.principal += 500000; state.cash += 500000; state.loan.rate = 0.0015; logEvent('Special loan +$500k @ 0.15%/day', 'warn'); } },
+    body: 'A local bank offers $500,000 at 1.8% APR, fixed for 90 days (well below the floating rate) — but you must accept within the hour.',
+    a: { label: 'Take the loan', act: function() { state.loan.principal += 500000; state.cash += 500000; state.loan.rate = 0.0015; state.loan.fixedUntil = state.day + 90; logEvent('Special loan +$500k @ 1.8% APR fixed for 90 days', 'warn'); } },
     b: { label: 'Decline',       act: function() { logEvent('Declined the loan offer.', 'info'); } }
   }
 ];
@@ -5219,11 +6105,11 @@ function maybeStartPromo() {
 /* ===== LOANS ===== */
 function borrow(amount) {
   if (state.stars < 2) { showToast('Loans unlock at 2★'); return; }
-  var maxLoan = 500000 * state.stars;
-  if (state.loan.principal + amount > maxLoan) { showToast('Credit limit $' + formatMoney(maxLoan)); return; }
+  var maxLoan = creditLimit();
+  if (state.loan.principal + amount > maxLoan) { showToast('Bank declines: credit limit $' + formatMoney(maxLoan) + ' (65% LTV / 1.25x DSCR)'); return; }
   state.loan.principal += amount;
   state.cash += amount;
-  logEvent('Borrowed $' + formatMoney(amount) + ' @ ' + (state.loan.rate * 100).toFixed(1) + '%/day (debt: $' + formatMoney(state.loan.principal) + ')', 'warn');
+  logEvent('Borrowed $' + formatMoney(amount) + ' @ ' + (loanApr() * 100).toFixed(2) + '% APR floating (debt: $' + formatMoney(state.loan.principal) + ')', 'warn');
 }
 function repayLoan(amount) {
   var pay = Math.min(amount, state.loan.principal, state.cash);
@@ -5236,28 +6122,13 @@ function repayLoan(amount) {
 }
 function accrueInterest() {
   if (state.loan.principal <= 0) return;
-  var interest = Math.round(state.loan.principal * state.loan.rate);
+  var fixed = state.loan.fixedUntil && state.day <= state.loan.fixedUntil;
+  var rate = fixed ? state.loan.rate : loanDailyRate();
+  var interest = Math.round(state.loan.principal * rate);
   state.cash -= interest;
-  logEvent('Loan interest: -$' + formatMoney(interest) + ' (principal $' + formatMoney(state.loan.principal) + ')', 'warn');
-}
-
-/* ===== HOLIDAYS ===== */
-// Fixed calendar: day-of-year holidays. Year = 120 days (30 per season).
-var HOLIDAYS = {
-  15: 'Spring Festival',
-  55: 'Midsummer Day',
-  95: 'Harvest Feast',
-  115: 'Winter Solstice'
-};
-function checkHoliday() {
-  var doy = ((state.day - 1) % 120) + 1;
-  var h = HOLIDAYS[doy];
-  if (h) {
-    state.holiday = h;
-    logEvent('\u2728 Today is ' + h + ' — traffic and tips +40%', 'good');
-  } else {
-    state.holiday = null;
-  }
+  econ().cur.interest += interest;
+  econ().interestToday = interest;
+  logEvent('Loan interest: -$' + formatMoney(interest) + ' @ ' + (rate * 12 * 100).toFixed(2) + '% APR' + (fixed ? ' (fixed)' : '') + ' (principal $' + formatMoney(state.loan.principal) + ')', 'warn');
 }
 
 /* ===== UNIT UPGRADES ===== */
@@ -5452,23 +6323,18 @@ function render() {
     if (state.shake < 0.02) state.shake = 0;
   }
   ctx.setTransform(dpr, 0, 0, dpr, shakeX * dpr, shakeY * dpr);
-  // Sky gradient — colour shifts with time of day
+  // Sky: colour comes from the real sun elevation for this city and date
   var h = state.minute / 60;
-  var dayT = (h >= 6 && h <= 18) ? 1 : 0;
-  var dawn = Math.max(0, 1 - Math.abs(h - 6)) + Math.max(0, 1 - Math.abs(h - 18));
-  var skyTop, skyBottom;
-  if (h < 5 || h > 19) { skyTop = '#0A0E22'; skyBottom = '#1A2040'; }
-  else if (h < 7) { skyTop = '#183060'; skyBottom = '#D86040'; }
-  else if (h < 17) { skyTop = '#4A80C0'; skyBottom = '#9AC8E0'; }
-  else if (h < 19) { skyTop = '#183060'; skyBottom = '#D06030'; }
-  else { skyTop = '#0A0E22'; skyBottom = '#1A2040'; }
+  var sky = skyColors();
   var g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, skyTop);
-  g.addColorStop(1, skyBottom);
+  g.addColorStop(0, sky.top);
+  g.addColorStop(1, sky.bottom);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
-  // Stars at night
-  if (h < 6 || h > 20) drawStars(W, H);
+  // Stars fade in through nautical twilight, hidden by cloud
+  var starAlpha = Math.max(0, Math.min(1, (-sky.elevation - 6) / 8)) * (1 - (weather.clouds || 0)) * (weather.kind === 'storm' ? 0 : 1);
+  if (starAlpha > 0.02) drawStars(W, H, starAlpha);
+  drawSunAndMoon(W, H, sky.elevation);
   // Distant city skyline (behind everything)
   drawSkyline(W, H, h);
   // Weather overlay (between sky and tower)
@@ -5554,6 +6420,8 @@ function render() {
   }
   // Roof decorations on the topmost unit per column
   drawRoofDecorations();
+  drawSnowCover(W);
+  drawNightShade(W, H);
   // Heatmap overlay (H key)
   if (state.heatmapMode) drawHeatmap();
   // Selected-unit highlight (Identify panel open)
@@ -5589,6 +6457,7 @@ function render() {
   if (state.showMinimap) drawMinimap(W, H);
   // Celebratory particles (if any)
   drawParticles();
+  if (fireworksActive()) drawFireworks(W, H);
   // Day-change flash (subtle)
   if (state.dayFlash && !settings.reduceMotion) {
     ctx.fillStyle = 'rgba(255,240,200,' + (state.dayFlash * 0.3) + ')';
@@ -5695,6 +6564,8 @@ function drawStreetLife(W, streetY) {
   var crowdFactor = (h < 6 || h > 22) ? 0.3 : 1.0;
   if (state.holiday) crowdFactor *= 1.5;
   if (weather.kind === 'storm' || weather.kind === 'snow') crowdFactor *= 0.4;
+  else if (weather.kind === 'rain') crowdFactor *= 0.7;
+  if (weather.tmax >= 100 || weather.tmax <= 12) crowdFactor *= 0.6;
   var showN = Math.floor(streetWalkers.length * Math.min(1, crowdFactor));
   for (var wi = 0; wi < showN; wi++) {
     var p = streetWalkers[wi];
@@ -5783,6 +6654,63 @@ function drawHeatmap() {
   ctx.fillText(['', 'OCCUPANCY', 'SATISFACTION', 'REVENUE'][state.heatmapMode] + ' [H]', 16, 56);
 }
 
+function drawNightShade(W, H) {
+  // Dusk settles over the tower itself; lit windows still read through it
+  var L = ambientLight();
+  if (L >= 0.9) return;
+  var streetY = worldToScreen(0, -1).y;
+  ctx.fillStyle = 'rgba(8,12,36,' + ((1 - L) * 0.32).toFixed(3) + ')';
+  ctx.fillRect(0, 0, W, Math.max(0, streetY));
+}
+var _snowTop = null, _snowTopKey = '';
+function drawSnowCover(W) {
+  var depth = weather.snowDepth || 0;
+  if (depth < 0.25) return;
+  var capH = Math.min(7, 1 + depth * 0.9);
+  // Cache the topmost cell per column; rebuild when the unit set changes
+  var key = state.nextUnitId + ':' + Object.keys(state.units).length;
+  if (key !== _snowTopKey) {
+    _snowTop = {};
+    for (var id in state.units) {
+      var u = state.units[id];
+      if (UNITS[u.type].isElevator) continue;
+      for (var dx = 0; dx < u.w; dx++) {
+        var cx = u.x + dx, top = u.y + u.h - 1;
+        if (_snowTop[cx] === undefined || top > _snowTop[cx]) _snowTop[cx] = top;
+      }
+    }
+    _snowTopKey = key;
+  }
+  ctx.fillStyle = 'rgba(245,248,255,0.92)';
+  for (var col in _snowTop) {
+    var p = worldToScreen(+col, _snowTop[col]);
+    ctx.fillRect(p.x, p.y - capH + 1, CELL_W, capH);
+  }
+  // Snow on the sidewalk
+  var streetY = worldToScreen(0, -1).y;
+  ctx.fillRect(0, streetY - 3 - capH * 0.6, W, capH * 0.6);
+}
+var _fw = [];
+function drawFireworks(W, H) {
+  var streetY = worldToScreen(0, -1).y;
+  if (!settings.reduceMotion && Math.random() < 0.06) {
+    var hue = Math.floor(Math.random() * 360);
+    var ox = W * (0.1 + Math.random() * 0.8), oy = streetY * (0.15 + Math.random() * 0.35);
+    for (var i = 0; i < 46; i++) {
+      var ang = Math.random() * Math.PI * 2, sp = 1.2 + Math.random() * 2.4;
+      _fw.push({ x: ox, y: oy, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, life: 40 + Math.random() * 30, hue: hue });
+    }
+    if (Math.random() < 0.5) sfx('bell');
+  }
+  for (var k = _fw.length - 1; k >= 0; k--) {
+    var f = _fw[k];
+    f.x += f.vx; f.y += f.vy; f.vy += 0.04; f.vx *= 0.985; f.life--;
+    if (f.life <= 0) { _fw.splice(k, 1); continue; }
+    ctx.fillStyle = 'hsla(' + f.hue + ',95%,' + (55 + f.life * 0.5) + '%,' + Math.min(1, f.life / 30) + ')';
+    ctx.fillRect(f.x, f.y, 2, 2);
+  }
+}
+
 function drawRoofDecorations() {
   // Find topmost unit in the tower overall
   var topY = -Infinity, topUnits = [];
@@ -5852,41 +6780,91 @@ function drawRoofDecorations() {
   }
 }
 
-function drawStars(W, H) {
-  // Deterministic seeded stars
+function drawStars(W, H, alpha) {
+  // Deterministic seeded stars; a few twinkle
+  ctx.save();
+  ctx.globalAlpha = alpha;
   ctx.fillStyle = '#FFF';
-  for (var i = 0; i < 120; i++) {
+  for (var i = 0; i < 140; i++) {
     var px = ((i * 1973) % W);
     var py = ((i * 977) % (H * 0.6));
     var s = (i % 3 === 0) ? 2 : 1;
+    if (i % 11 === 0 && ((state.tickCount + i) % 40) < 6) continue;
     ctx.fillRect(px, py, s, s);
   }
-  // Moon
-  ctx.fillStyle = '#F0EEDC';
-  ctx.beginPath();
-  ctx.arc(W * 0.82, H * 0.18, 14, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(200,200,180,0.35)';
-  ctx.beginPath();
-  ctx.arc(W * 0.82 - 3, H * 0.18 - 2, 3, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(W * 0.82 + 5, H * 0.18 + 4, 2, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.restore();
+}
+
+function drawSunAndMoon(W, H, elevation) {
+  var streetY = worldToScreen(0, -1).y;
+  var horizon = Math.min(H, streetY);
+  var cloudHide = 1 - 0.85 * (weather.clouds || 0);
+  if (weather.kind === 'storm' || weather.kind === 'fog') cloudHide *= 0.15;
+  // Sun: slides across the sky between sunrise and sunset, height from real elevation
+  if (elevation > -1 && cloudHide > 0.05) {
+    var sx = W * (0.08 + 0.84 * sunProgress()) - state.camX * 0.05;
+    var sy = horizon - Math.sin(Math.max(0, elevation) * Math.PI / 180) * horizon * 0.95 - 10;
+    var warm = Math.max(0, Math.min(1, 1 - elevation / 20));
+    var r = 14 + warm * 6;
+    var glow = ctx.createRadialGradient(sx, sy, r * 0.5, sx, sy, r * 5);
+    glow.addColorStop(0, 'rgba(255,' + Math.round(230 - warm * 90) + ',' + Math.round(150 - warm * 110) + ',' + (0.55 * cloudHide) + ')');
+    glow.addColorStop(1, 'rgba(255,200,120,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(sx - r * 5, sy - r * 5, r * 10, r * 10);
+    ctx.fillStyle = 'rgba(255,' + Math.round(250 - warm * 80) + ',' + Math.round(220 - warm * 140) + ',' + cloudHide + ')';
+    ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+  }
+  // Moon: visible when the sun is down; phase from the real synodic cycle
+  if (elevation < 2) {
+    var ph = moonPhase(state.day);
+    var illum = 0.5 - 0.5 * Math.cos(ph * Math.PI * 2); // 0 new .. 1 full
+    var si = solarInfo(state.day);
+    var nightLen = 1440 - (si.sunset - si.sunrise);
+    var since = state.minute > si.sunset ? state.minute - si.sunset : state.minute + (1440 - si.sunset);
+    // A full moon rises at sunset; earlier phases sit further west, later ones rise later
+    var prog = since / nightLen + (ph - 0.5) * 0.9;
+    if (prog < -0.05 || prog > 1.05) return;
+    var mx = W * (0.1 + 0.8 * prog) - state.camX * 0.04;
+    var my = horizon - Math.sin(Math.PI * Math.max(0, Math.min(1, prog))) * horizon * 0.75 - 20;
+    var mr = 13;
+    var a = Math.max(0, Math.min(1, (-elevation + 2) / 8)) * cloudHide;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle = '#F0EEDC';
+    ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(200,200,180,0.35)';
+    ctx.beginPath(); ctx.arc(mx - 3, my - 2, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(mx + 5, my + 4, 2, 0, Math.PI * 2); ctx.fill();
+    // Phase shadow: a sky-coloured disc offset by the illuminated fraction
+    if (illum < 0.97) {
+      var waxing = ph < 0.5;
+      var off = (1 - illum) * 2 * mr * (waxing ? -1 : 1);
+      ctx.fillStyle = skyColors().top;
+      ctx.beginPath(); ctx.arc(mx + off, my, mr + 0.5, 0, Math.PI * 2); ctx.fill();
+      // Dark half-disc for the unlit limb when less than half lit
+      if (illum < 0.5) {
+        ctx.beginPath();
+        ctx.arc(mx, my, mr + 0.5, waxing ? Math.PI / 2 : -Math.PI / 2, waxing ? 3 * Math.PI / 2 : Math.PI / 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
 }
 
 // Parallax city silhouette behind the tower
 function drawSkyline(W, H, h) {
+  var lit = ambientLight() < 0.42;
   var streetY = worldToScreen(0, -1).y;
   if (streetY < 0) return;
   // Back row (far, darker)
-  ctx.fillStyle = h > 6 && h < 19 ? 'rgba(40,50,72,0.55)' : 'rgba(20,26,44,0.85)';
+  ctx.fillStyle = !lit ? 'rgba(40,50,72,0.55)' : 'rgba(20,26,44,0.85)';
   for (var i = 0; i < 30; i++) {
     var bx = (i * 60 - state.camX * 0.15) % (W + 120) - 60;
     var bh = 40 + ((i * 137) % 80);
     ctx.fillRect(bx, streetY - bh, 50, bh);
     // Window lights at night
-    if (h < 7 || h > 18) {
+    if (lit) {
       for (var wi = 0; wi < 3; wi++) {
         for (var wj = 0; wj < Math.floor(bh / 10) - 1; wj++) {
           if ((i * 7 + wi * 3 + wj * 11) % 5 === 0) {
@@ -5904,20 +6882,20 @@ function drawSkyline(W, H, h) {
     var rHeight = rfloors * 14;
     var rX = W * 0.18 - state.camX * 0.25;
     var rW = 60;
-    ctx.fillStyle = h > 6 && h < 19 ? 'rgba(46,24,62,0.7)' : 'rgba(30,10,46,0.92)';
+    ctx.fillStyle = !lit ? 'rgba(46,24,62,0.7)' : 'rgba(30,10,46,0.92)';
     ctx.fillRect(rX, streetY - rHeight, rW, rHeight);
     // Floor-band windows
     for (var rf = 0; rf < rfloors; rf++) {
       for (var rc = 0; rc < 5; rc++) {
         var rwx = rX + 6 + rc * 10;
         var rwy = streetY - (rf + 1) * 14 + 3;
-        var lit = (h < 7 || h > 18) && ((rf * 7 + rc * 3) % 5 < 2);
-        ctx.fillStyle = lit ? 'rgba(255,220,120,0.5)' : 'rgba(200,180,220,0.12)';
+        var rlit = lit && ((rf * 7 + rc * 3) % 5 < 2);
+        ctx.fillStyle = rlit ? 'rgba(255,220,120,0.5)' : 'rgba(200,180,220,0.12)';
         ctx.fillRect(rwx, rwy, 4, 6);
       }
     }
     // Rival signboard
-    if (h > 6 && h < 19) {
+    if (!lit) {
       ctx.fillStyle = 'rgba(80,40,100,0.9)';
       ctx.fillRect(rX, streetY - rHeight - 14, rW, 12);
       ctx.fillStyle = '#FFD060';
@@ -5927,7 +6905,7 @@ function drawSkyline(W, H, h) {
     }
   }
   // Near row (closer, slightly brighter)
-  ctx.fillStyle = h > 6 && h < 19 ? 'rgba(30,40,60,0.7)' : 'rgba(10,14,28,0.95)';
+  ctx.fillStyle = !lit ? 'rgba(30,40,60,0.7)' : 'rgba(10,14,28,0.95)';
   for (var j = 0; j < 22; j++) {
     var nx = (j * 80 - state.camX * 0.3) % (W + 160) - 80;
     var nh = 70 + ((j * 211) % 120);
@@ -5949,9 +6927,13 @@ function drawWeather(W, H) {
     return;
   }
   if (weather.kind === 'fog') {
-    ctx.fillStyle = 'rgba(180,190,200,' + (0.25 + weather.intensity * 0.2) + ')';
+    // Radiation fog is thickest around sunrise and burns off by late morning
+    var si = solarInfo(state.day);
+    var sinceRise = state.minute - si.sunrise;
+    var burn = sinceRise > 0 ? Math.max(0.25, 1 - sinceRise / 300) : 1;
+    ctx.fillStyle = 'rgba(180,190,200,' + ((0.2 + weather.intensity * 0.25) * burn) + ')';
     ctx.fillRect(0, 0, W, H);
-    drawClouds(W, H, 0.5);
+    drawClouds(W, H, 0.5 * burn);
     return;
   }
   if (weather.kind === 'rain' || weather.kind === 'storm') {
@@ -5962,27 +6944,31 @@ function drawWeather(W, H) {
       weather.droplets = [];
       for (var i = 0; i < count; i++) weather.droplets.push({ x: Math.random() * W, y: Math.random() * H, speed: 6 + Math.random() * 6 });
     }
-    ctx.strokeStyle = weather.kind === 'storm' ? 'rgba(170,200,220,0.7)' : 'rgba(150,180,200,0.55)';
+    ctx.strokeStyle = weather.kind === 'storm' ? 'rgba(170,200,220,0.7)' : 'rgba(150,180,200,' + (0.3 + 0.35 * (weather.intensity || 0.5)) + ')';
     ctx.lineWidth = 1;
-    for (var d = 0; d < weather.droplets.length; d++) {
+    var slant = Math.min(4, (weather.windMph || 8) / 8);
+    var visible = weather.kind === 'storm' ? weather.droplets.length : Math.floor(weather.droplets.length * (0.4 + 0.6 * (weather.intensity || 0.5)));
+    for (var d = 0; d < visible; d++) {
       var dr = weather.droplets[d];
       dr.y += dr.speed;
-      dr.x += 1;
+      dr.x += slant * 0.6;
       if (dr.y > H) { dr.y = -10; dr.x = Math.random() * W; }
+      if (dr.x > W) dr.x -= W;
       ctx.beginPath();
       ctx.moveTo(dr.x, dr.y);
-      ctx.lineTo(dr.x - 2, dr.y + 6);
+      ctx.lineTo(dr.x - slant, dr.y + 6);
       ctx.stroke();
     }
-    // Lightning flash during storm
-    if (weather.kind === 'storm' && Math.random() < 0.008) {
+    // Lightning flash during storm, thunder a beat later
+    if (weather.kind === 'storm' && !settings.reduceMotion && Math.random() < 0.006) {
       ctx.fillStyle = 'rgba(255,255,255,0.35)';
       ctx.fillRect(0, 0, W, H);
+      setTimeout(function() { try { sfx('thunder'); } catch (e) {} }, 400 + Math.random() * 1200);
     }
     return;
   }
   if (weather.kind === 'snow') {
-    var flakeCount = 120;
+    var flakeCount = weather.intensity > 0.7 ? 220 : 120;
     if (weather.flakes.length !== flakeCount) {
       weather.flakes = [];
       for (var fi = 0; fi < flakeCount; fi++) weather.flakes.push({ x: Math.random() * W, y: Math.random() * H, drift: (Math.random() - 0.5) * 0.5, speed: 0.6 + Math.random() * 1.4, size: 1 + Math.random() * 2 });
@@ -5991,7 +6977,8 @@ function drawWeather(W, H) {
     for (var f = 0; f < weather.flakes.length; f++) {
       var fl = weather.flakes[f];
       fl.y += fl.speed;
-      fl.x += fl.drift;
+      fl.x += fl.drift + (weather.windMph || 8) * 0.03;
+      if (fl.x > W) fl.x -= W;
       if (fl.y > H) { fl.y = -5; fl.x = Math.random() * W; }
       ctx.beginPath();
       ctx.arc(fl.x, fl.y, fl.size, 0, Math.PI * 2);
@@ -6017,11 +7004,13 @@ function drawClouds(W, H, alpha) {
 function drawWindowedUnit(u, x, y, w, h, label, textColor, kind) {
   var def = UNITS[u.type];
   var h2 = state.minute / 60;
-  // Is this the unit's "active" (lit) period?
+  var dark = ambientLight() < 0.5;
+  // "Active" = someone is in and the lights matter: offices during the working day,
+  // homes and hotel rooms in the evening. Individual windows keep their own habits below.
   var active;
-  if (kind === 'office') active = (h2 >= 8 && h2 < 18);
-  else if (kind === 'condo') active = (h2 < 7 || h2 >= 18);
-  else active = (h2 < 7 || h2 >= 21);   // hotel
+  if (kind === 'office') active = (h2 >= 7.5 && h2 < 18.5);
+  else if (kind === 'condo') active = dark && (h2 >= 16 || h2 < 8);
+  else active = dark && (h2 >= 17 || h2 < 9);   // hotel
   var nWindows = Math.max(2, def.capacity);
   var ww = (w - 6) / nWindows;
   var winY = y + 3, winH = h - 10;
@@ -6029,7 +7018,16 @@ function drawWindowedUnit(u, x, y, w, h, label, textColor, kind) {
   for (var wi = 0; wi < nWindows; wi++) {
     var wx = x + 3 + wi * ww;
     var occupied = wi < u.tenants;
+    var habit = (u.id * 7 + wi * 13) % 10;
     var lit = occupied && active;
+    // Night owls and early birds: a few windows stay lit late or light up early
+    if (occupied && !lit && dark) {
+      if (kind === 'office' && habit < 2 && h2 >= 18.5 && h2 < 22) lit = true;
+      if (kind === 'condo' && habit < 3 && (h2 >= 22 || h2 < 1)) lit = true;
+      if (kind === 'condo' && habit >= 8 && h2 >= 5.5 && h2 < 8) lit = true;
+    }
+    if (occupied && lit && kind === 'condo' && h2 >= 0.5 && h2 < 5.5 && habit >= 3) lit = false;
+    if (occupied && lit && kind === 'hotel' && h2 >= 1 && h2 < 6) lit = false;
     if (lit) {
       // Warm glow
       ctx.fillStyle = kind === 'office' ? '#FFEE90' : (kind === 'condo' ? '#FFC868' : '#FFB088');
@@ -6696,29 +7694,66 @@ function drawUnit(u) {
   }
 }
 
+function carLaneX(e, ci) {
+  // A shaft with N cars is drawn as N side-by-side hoistway lanes
+  var n = e.cars.length;
+  var left = worldToScreen(e.shaftX, 0).x + 2;
+  var laneW = (CELL_W - 4) / n;
+  return { x: left + laneW * ci, w: laneW };
+}
 function drawElevatorCar(e) {
   for (var ci = 0; ci < e.cars.length; ci++) {
     var c = e.cars[ci];
-    var center = worldToScreen(e.shaftX + 0.5, 0);
+    var lane = carLaneX(e, ci);
     var ySnap = canvas.clientHeight - state.camY - c.floatY * CELL_H - CELL_H;
-    var cx = center.x;
-    var w = CELL_W - 4, h = CELL_H - 4;
-    ctx.fillStyle = '#FFD060';
-    ctx.fillRect(cx - w/2, ySnap + 2, w, h);
+    var w = Math.max(3, lane.w - 1), h = CELL_H - 4;
+    var x = lane.x;
+    var dwelling = c.stopTimer > 0 && Math.abs(c.floatY - c.y) < 0.05;
+    ctx.fillStyle = e.express ? '#FFB040' : '#FFD060';
+    ctx.fillRect(x, ySnap + 2, w, h);
     ctx.strokeStyle = '#9A7020';
     ctx.lineWidth = 1;
-    ctx.strokeRect(cx - w/2 + 0.5, ySnap + 2.5, w - 1, h - 1);
-    if (c.passengers.length > 0) {
+    ctx.strokeRect(x + 0.5, ySnap + 2.5, w - 1, h - 1);
+    if (dwelling && w >= 6) {
+      // Doors open: dark cab interior showing between the two door leaves
+      ctx.fillStyle = '#4A3A18';
+      ctx.fillRect(x + w * 0.3, ySnap + 3, w * 0.4, h - 2);
+    }
+    if (c.passengers.length > 0 && w >= 8) {
       ctx.fillStyle = '#1A1A1A';
-      ctx.font = 'bold 9px monospace';
+      ctx.font = 'bold 8px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(c.passengers.length, cx, ySnap + h - 2);
+      ctx.fillText(c.passengers.length, x + w / 2, ySnap + h - 2);
+    } else if (c.passengers.length > 0) {
+      var cap = 8 + Math.max(0, (state.stars || 1) - 1) * 2;
+      var fill = Math.min(1, c.passengers.length / cap);
+      ctx.fillStyle = fill > 0.8 ? '#E04040' : '#3A6030';
+      ctx.fillRect(x + 1, ySnap + 2 + h - 2 - (h - 4) * fill, w - 2, (h - 4) * fill);
     }
   }
 }
 
 function agentColor(a) {
   if (a.fleeing) return '#E04040';
+  var base = agentBaseColor(a);
+  // SimTower's tell: people flush red as they wait, then go dark when they've given up.
+  if (a.stress && a.stress > 0.05) {
+    var s = a.stress;
+    var target = s < 0.6 ? [230, 60, 60] : [40, 20, 24];
+    var t = s < 0.6 ? s / 0.6 : (s - 0.6) / 0.4;
+    var from = s < 0.6 ? hexToRgb(base) : [230, 60, 60];
+    var r = Math.round(from[0] + (target[0] - from[0]) * t);
+    var g = Math.round(from[1] + (target[1] - from[1]) * t);
+    var b2 = Math.round(from[2] + (target[2] - from[2]) * t);
+    return 'rgb(' + r + ',' + g + ',' + b2 + ')';
+  }
+  return base;
+}
+function hexToRgb(hex) {
+  var n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function agentBaseColor(a) {
   if (a.type === 'worker') return '#4A80D0';
   if (a.type === 'resident') return '#D06060';
   if (a.type === 'hotelGuest') return '#B080C0';
@@ -6747,9 +7782,12 @@ function drawAgent(a) {
     if (ridingCar) {
       displayY = ridingCar.floatY;
       var epos = worldToScreen(a.inElevator.shaftX + 0.5, displayY);
+      var rIdx = a.inElevator.cars.indexOf(ridingCar);
+      var rLane = carLaneX(a.inElevator, rIdx);
+      var laneCx = rLane.x + rLane.w / 2;
       ctx.fillStyle = agentColor(a);
-      ctx.fillRect(epos.x - 1, epos.y - CELL_H + 6, 2, CELL_H - 8);
-      drawX = epos.x; drawTop = epos.y - CELL_H + 6;
+      ctx.fillRect(laneCx - 1, epos.y - CELL_H + 6, 2, CELL_H - 8);
+      drawX = laneCx; drawTop = epos.y - CELL_H + 6;
       if (a.bubble) drawBubble(a.bubble, drawX, drawTop);
       return;
     }
@@ -7197,7 +8235,11 @@ function updateHUD() {
   if (inc === null) { incEl.textContent = '---'; incEl.className = ''; }
   else { incEl.textContent = (inc >= 0 ? '+$' : '-$') + formatMoney(Math.abs(inc)); incEl.className = inc >= 0 ? 'val' : 'err'; }
   document.getElementById('towerNameDisplay').textContent = state.towerName || '—';
+  var vEl = document.getElementById('valueDisplay');
+  if (vEl && (state.tickCount || 0) % 30 === 0) { var tv = econ().valuation || towerValuation(); vEl.textContent = '$' + formatMoney(tv); }
   document.getElementById('dayDisplay').textContent = state.day;
+  var dateEl = document.getElementById('dateDisplay');
+  if (dateEl) dateEl.textContent = formatGameDate(state.day) + ', Yr ' + gameYearIdx();
   document.getElementById('clockDisplay').textContent = formatTime(state.minute);
   document.getElementById('popDisplay').textContent = state.population;
   document.getElementById('unitCount').textContent = Object.keys(state.units).length;
@@ -7210,10 +8252,14 @@ function updateHUD() {
   // Season + weather pill
   var pill = document.getElementById('seasonPill');
   if (pill) {
-    var doy = ((state.day - 1) % 120) + 1;
-    var yr = Math.floor((state.day - 1) / 120) + 1;
-    var wIcon = { clear:'\u2600', cloudy:'\u2601', rain:'\u2614', fog:'\ud83c\udf2b', snow:'\u2744', storm:'\u26c8' }[weather.kind] || '';
-    pill.innerHTML = currentSeason() + ' Yr ' + yr + ' &middot; ' + wIcon + ' ' + weather.kind + (state.holiday ? ' &middot; <span style="color:#FFD060;">\u2728 ' + state.holiday + '</span>' : '');
+    var tempNow = Math.round(currentTempF());
+    pill.innerHTML = currentSeason() + ' &middot; ' + weatherIcon(weather.kind) + ' ' + weatherWord(weather.kind, weather.intensity) +
+      ' <span style="color:#E8F0FF;">' + tempNow + '\u00B0F</span>' +
+      ((weather.windMph || 0) >= 20 ? ' &middot; wind ' + weather.windMph + ' mph' : '') +
+      ((weather.snowDepth || 0) >= 1 ? ' &middot; ' + weather.snowDepth.toFixed(0) + '" snow' : '') +
+      (state.holiday ? ' &middot; <span style="color:#FFD060;">\u2728 ' + state.holiday + '</span>' : '') +
+      ' <span style="color:#6A8098;">&#9662;</span>';
+    if (state.weatherPanelOpen) renderWeatherPanel();
   }
   // Loan bar (visible at 2★+)
   var lb = document.getElementById('loanBar');
@@ -7221,8 +8267,8 @@ function updateHUD() {
     if (state.stars >= 2) {
       lb.classList.add('show');
       var debt = state.loan.principal;
-      var cap = 500000 * state.stars;
-      lb.innerHTML = '<b>DEBT</b> <span class="debt-val">$' + formatMoney(debt) + '</span> / $' + formatMoney(cap) +
+      var cap = creditLimit();
+      lb.innerHTML = '<b>DEBT</b> <span class="debt-val">$' + formatMoney(debt) + '</span> / $' + formatMoney(cap) + ' <span style="color:#8098B8;">@ ' + (loanApr() * 100).toFixed(1) + '%</span>' +
         ' <button onclick="borrow(100000)">+$100k</button>' +
         ' <button onclick="borrow(500000)">+$500k</button>' +
         (debt > 0 ? ' <button onclick="repayLoan(' + Math.min(debt, 100000) + ')">Repay $100k</button>' : '');
@@ -7234,6 +8280,38 @@ function updateHUD() {
   updateMailBadge();
   // Market panel updates once per second (every ~60 frames is overkill)
   if ((state.tickCount || 0) % 60 === 0 || state._marketDirty) { renderMarketPanel(); state._marketDirty = false; }
+}
+
+function toggleWeatherPanel() {
+  state.weatherPanelOpen = !state.weatherPanelOpen;
+  var el = document.getElementById('weatherPanel');
+  if (!el) return;
+  if (state.weatherPanelOpen) { renderWeatherPanel(); el.classList.add('show'); }
+  else el.classList.remove('show');
+}
+function renderWeatherPanel() {
+  var el = document.getElementById('weatherPanel');
+  if (!el) return;
+  var c = city(), si = solarInfo(state.day);
+  var html = '<h4>' + c.name.toUpperCase() + ' &middot; ' + formatGameDate(state.day) + '</h4>';
+  html += '<div class="fc-row"><span>Now</span><span>' + weatherIcon(weather.kind) + ' ' + weatherWord(weather.kind, weather.intensity) +
+    ', ' + Math.round(currentTempF()) + '\u00B0F &middot; wind ' + weather.windMph + ' mph</span></div>';
+  html += '<div class="fc-row"><span>Today</span><span><span class="fc-hi">' + weather.tmax + '\u00B0</span> / <span class="fc-lo">' + weather.tmin + '\u00B0</span>' +
+    (weather.precipIn > 0 ? ' &middot; ' + weather.precipIn.toFixed(2) + '" precip' : '') + (weather.snowDepth >= 0.5 ? ' &middot; snowpack ' + weather.snowDepth.toFixed(1) + '"' : '') + '</span></div>';
+  html += '<div class="fc-row"><span>Sun</span><span>rise ' + formatClock(si.sunrise) + ' &middot; set ' + formatClock(si.sunset) + ' &middot; ' + (si.dayLen / 60).toFixed(1) + ' h daylight' + (si.dst ? ' (DST)' : '') + '</span></div>';
+  html += '<div class="fc-row"><span>Moon</span><span>' + moonPhaseName(moonPhase(state.day)) + '</span></div>';
+  for (var lead = 1; lead <= 3; lead++) {
+    var f = forecastFor(lead);
+    if (!f) continue;
+    html += '<div class="fc-row"><span>' + formatGameDate(f.day).slice(0, 3) + ' ' + formatGameDate(f.day).slice(5) + '</span><span>' + weatherIcon(f.kind) + ' ' + weatherWord(f.kind, 0.5) +
+      ' <span class="fc-hi">' + f.tmax + '\u00B0</span>/<span class="fc-lo">' + f.tmin + '\u00B0</span> &middot; ' + f.pop + '% precip</span></div>';
+  }
+  var hdd = heatingDegreeDays(), cdd = coolingDegreeDays();
+  html += '<div class="fc-note">Heating ' + hdd.toFixed(0) + ' / cooling ' + cdd.toFixed(0) + ' degree-days today drive the utility bill. ' +
+    (helipadClosed() && countUnits('helipad') > 0 ? 'Helipad closed for weather. ' : '') +
+    (weather.tmin <= 10 ? 'Hard freeze: pipes at risk. ' : '') +
+    (weather.kind === 'storm' ? 'Lightning risk to the grid. ' : '') + '</div>';
+  el.innerHTML = html;
 }
 
 /* ===== EVENT LOG ===== */
