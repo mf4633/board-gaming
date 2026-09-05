@@ -19,7 +19,11 @@ const SCENARIOS = {
   // Full occupancy stress: every desk filled, one bank of 3 cars for 30 floors
   stress_full_30:{ floors: 30, cars: 3, full: true },
   stress_full_50:{ floors: 50, cars: 4, full: true, express: true, skylobby: 25 },
-  stress_1car_30:{ floors: 30, cars: 1, full: true }
+  stress_1car_30:{ floors: 30, cars: 1, full: true },
+  // Shaft starts at floor 3; floors 0-3 are stairs only, so every trip is stairs + elevator
+  stairs_then_lift:{ floors: 12, cars: 2, shaftFrom: 3, stairsTo: 3 },
+  // Floors 8-12 lose their only elevator at 10:00 on day 2 and never get it back
+  orphan_floors: { floors: 12, cars: 2, cutAtDay: 2 }
 };
 
 function buildTower(cfg) {
@@ -42,7 +46,8 @@ function buildTower(cfg) {
   if (cfg.stairsOnly) {
     for (var s = 0; s < cfg.floors; s++) createUnitDirect('stairs', stairsX, s);
   } else {
-    for (var e = 0; e <= cfg.floors; e++) createUnitDirect('elevator', shaftX, e);
+    for (var e = (cfg.shaftFrom || 0); e <= cfg.floors; e++) createUnitDirect('elevator', shaftX, e);
+    if (cfg.stairsTo) for (var st = 0; st < cfg.stairsTo; st++) createUnitDirect('stairs', stairsX, st);
     if (cfg.express) for (var x = 0; x <= cfg.floors; x++) createUnitDirect('expressElevator', 8, x);
     rebuildElevators();
     for (var ei = 0; ei < state.elevators.length; ei++) {
@@ -71,6 +76,7 @@ function runDays(args) {
         bulldozeAt(9, 7);
         H.splitDone = true;
       }
+      if (opts && opts.cutAtDay && state.day === opts.cutAtDay && state.minute === 10 * 60) { bulldozeAt(9, 8); H.cutDone = true; }
       if (opts && opts.splitAtDay && state.day === opts.splitAtDay && state.minute === 12 * 60) {
         createUnitDirect('elevator', 9, 7); rebuildElevators();
         H.rejoinDone = true;
@@ -116,7 +122,8 @@ function runDays(args) {
     trips: trips.length, byType: byType, maxWait: H.maxWait, stuck: stuckList.length,
     stuckSample: stuckList.slice(0, 5), stalls: H.stalls, carMoves: H.carMoves,
     elevators: state.elevators.map(function(e) { return { x: e.shaftX, range: [e.minY, e.maxY], cars: e.cars.map(function(c) { return { y: c.y, p: c.passengers.length, calls: anyCallsCar(c) }; }) }; }),
-    split: !!H.splitDone, rejoin: !!H.rejoinDone,
+    split: !!H.splitDone, rejoin: !!H.rejoinDone, cut: !!H.cutDone,
+    strandedNow: state.agents.filter(function(a) { return a.y >= 8 && (a.phase === 'leaving' || a.phase === 'toWork'); }).length,
     cash: Math.round(state.cash), day: state.day
   };
 }
@@ -136,7 +143,7 @@ function runDays(args) {
     p.on('pageerror', e => errors.push(e.message));
     await p.goto(FILE, { waitUntil: 'domcontentloaded' });
     await p.evaluate(buildTower, cfg);
-    const r = await p.evaluate(runDays, { days: days, opts: { splitAtDay: cfg.splitAtDay } });
+    const r = await p.evaluate(runDays, { days: days, opts: { splitAtDay: cfg.splitAtDay, cutAtDay: cfg.cutAtDay } });
     r.errors = errors;
     results[name] = r;
     console.log('=== ' + name + ' ===');

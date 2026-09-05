@@ -4350,8 +4350,23 @@ function maybeSpawnHelipadVIP() {
   }
 }
 
+function giveUpStranded(a) {
+  var u = state.units[a.unitId];
+  if (u) {
+    u.satFall = (u.satFall || 0) + 40;
+    if (u.strandedLogDay !== state.day) {
+      u.strandedLogDay = state.day;
+      logEvent(agentLabel(a) + ' stranded on floor ' + floorLabel(a.y) + ' — no stairs or elevator connects it. People are leaving and tenants are furious.', 'bad');
+    }
+    // A visitor's seat frees up; a lease stays (the tenant will churn out via satisfaction)
+    if (a.type !== 'worker' && a.type !== 'resident') u.tenants = Math.max(0, u.tenants - 1);
+  }
+  dequeueAgent(a);
+  a.state = 'gone';
+}
 function tickAgent(a) {
   if (a.walkDelay && a.walkDelay > 0) { a.walkDelay--; return; }
+  if ((a.noRouteTicks || 0) >= 180) { giveUpStranded(a); return; }
   if (a.waitTicks === undefined) a.waitTicks = 0;
   var wasWaiting = a.waiting;
   a.waiting = false;
@@ -4440,9 +4455,11 @@ function stepToward(a, tx, ty) {
     if (a.inElevator != null) return false;
     var transport = findBestTransport(a.x, a.y, ty);
     if (!transport) {
-      // No path - stuck. Just idle.
+      // No route from this floor. Idle, but count it: after 3 hours the person gives up.
+      a.noRouteTicks = (a.noRouteTicks || 0) + 1;
       return false;
     }
+    a.noRouteTicks = 0;
     // Walk to transport entry on this floor
     var entryX = transport.x;
     if (Math.abs(a.x - entryX) > 0.08) {
@@ -4508,40 +4525,74 @@ function dequeueAgent(a) {
 }
 
 // Find nearest vertical-transport that serves floors [a.y, ty].
-function findBestTransport(ax, ay, targetY) {
-  var best = null, bestDist = Infinity;
-  // Stairs: a flight placed on floor y connects y and y+1 in BOTH directions.
-  // Going up from ay needs a flight on ay; going down needs the flight on ay-1.
-  var goingUpS = targetY > ay;
-  var flightFloor = goingUpS ? ay : ay - 1;
-  if (targetY !== ay) {
-    for (var id in state.units) {
-      var u = state.units[id];
-      if (u.type !== 'stairs' || u.y !== flightFloor) continue;
-      var sx = u.x + u.w / 2;
-      var d = Math.abs(ax - sx);
-      if (d < bestDist) { bestDist = d; best = { kind: 'stairs', x: sx, unitId: id }; }
+/* ===== ROUTING =====
+ * Floors are graph nodes. A stairs flight on floor f links f and f+1; a local shaft links
+ * every floor in its range; an express shaft links the hub floors in its range. A BFS from
+ * the target gives each floor its hop distance, and the agent takes whichever transport on
+ * its floor reaches a floor one hop closer (nearest horizontally on ties). Multi-leg trips
+ * (stairs up to a shaft that starts on floor 3, a local shaft to a skylobby then express)
+ * fall out of this naturally; the exit floor of a partial elevator leg is set as transferAt. */
+var _routeCache = { key: '', dist: {}, hubs: null };
+function routeKey() { return state.nextUnitId + ':' + Object.keys(state.units).length + ':' + state.elevators.length; }
+function routeHubs() {
+  var hubs = { 0: true };
+  for (var id in state.units) { var u = state.units[id]; if (u.type === 'lobby' || u.type === 'skylobby') hubs[u.y] = true; }
+  return hubs;
+}
+function routeDist(targetY) {
+  var key = routeKey();
+  if (_routeCache.key !== key) { _routeCache = { key: key, dist: {}, hubs: routeHubs() }; }
+  if (_routeCache.dist[targetY]) return _routeCache.dist[targetY];
+  var hubs = _routeCache.hubs;
+  var stairsAt = {};
+  for (var id in state.units) { var u = state.units[id]; if (u.type === 'stairs') stairsAt[u.y] = true; }
+  var dist = {}; dist[targetY] = 0;
+  var queue = [targetY];
+  while (queue.length) {
+    var f = queue.shift(), d = dist[f];
+    var push = function(g) { if (dist[g] === undefined) { dist[g] = d + 1; queue.push(g); } };
+    if (stairsAt[f]) push(f + 1);
+    if (stairsAt[f - 1]) push(f - 1);
+    for (var ei = 0; ei < state.elevators.length; ei++) {
+      var e = state.elevators[ei];
+      if (f < e.minY || f > e.maxY) continue;
+      if (e.express) { if (!hubs[f]) continue; for (var h in hubs) { var hy = +h; if (hy >= e.minY && hy <= e.maxY && hy !== f) push(hy); } }
+      else { for (var fy = e.minY; fy <= e.maxY; fy++) if (fy !== f) push(fy); }
     }
   }
-  // Elevator. For express shafts, only consider if both endpoints (or transfer hubs) are hubs.
+  _routeCache.dist[targetY] = dist;
+  return dist;
+}
+function findBestTransport(ax, ay, targetY) {
+  if (targetY === ay) return null;
+  var dist = routeDist(targetY);
+  var here = dist[ay];
+  if (here === undefined) return null; // unreachable
+  var hubs = _routeCache.hubs;
+  var best = null, bestD = Infinity;
+  // Stairs flights that step one hop closer
+  for (var id in state.units) {
+    var u = state.units[id];
+    if (u.type !== 'stairs') continue;
+    var to = (u.y === ay) ? ay + 1 : (u.y === ay - 1 ? ay - 1 : null);
+    if (to === null || dist[to] !== here - 1) continue;
+    var sx = u.x + u.w / 2, d = Math.abs(ax - sx);
+    if (d < bestD) { bestD = d; best = { kind: 'stairs', x: sx, unitId: id }; }
+  }
+  // Elevators: ride to the floor in range that is closest to the target by hops
   for (var ei = 0; ei < state.elevators.length; ei++) {
     var e = state.elevators[ei];
-    var ex = e.shaftX + 0.5;
-    var d2 = Math.abs(ax - ex);
-    if (e.express) {
-      // Must board from a hub; ride to the hub closest to the target within the shaft's range
-      if (!isHubFloor(ay) || ay < e.minY || ay > e.maxY) continue;
-      var hubY = nearestHubInRange(targetY, e.minY, e.maxY);
-      if (hubY === null) continue;
-      // Express must actually reduce the distance to the target (otherwise just walk/local)
-      if (Math.abs(hubY - targetY) >= Math.abs(ay - targetY)) continue;
-      // Slight bias toward express when it gets you closer than local would (subtract a discount)
-      if (d2 - 1.0 < bestDist) { bestDist = d2 - 1.0; best = { kind: 'elevator', x: ex, elevIdx: ei, hubExit: hubY }; }
-    } else {
-      if (ay < e.minY || ay > e.maxY) continue;
-      if (targetY < e.minY || targetY > e.maxY) continue;
-      if (d2 < bestDist) { bestDist = d2; best = { kind: 'elevator', x: ex, elevIdx: ei }; }
+    if (ay < e.minY || ay > e.maxY) continue;
+    if (e.express && !hubs[ay]) continue;
+    var exit = null, exitHops = here;
+    for (var fy = e.minY; fy <= e.maxY; fy++) {
+      if (fy === ay || dist[fy] === undefined) continue;
+      if (e.express && !hubs[fy]) continue;
+      if (dist[fy] < exitHops || (dist[fy] === exitHops && exit !== null && Math.abs(fy - targetY) < Math.abs(exit - targetY))) { exitHops = dist[fy]; exit = fy; }
     }
+    if (exit === null || exitHops !== here - 1) continue;
+    var ex = e.shaftX + 0.5, d2 = Math.abs(ax - ex) - (e.express ? 1.0 : 0);
+    if (d2 < bestD) { bestD = d2; best = { kind: 'elevator', x: ex, elevIdx: ei, hubExit: (exit === targetY ? undefined : exit) }; }
   }
   return best;
 }
