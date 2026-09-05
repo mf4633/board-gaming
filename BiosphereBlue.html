@@ -62,6 +62,30 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
 #infoPanel   { bottom: 84px; right: 16px; min-width: 230px; max-width: 260px; }
 #legend      { bottom: 84px; left: 16px; max-width: 240px; }
 #toolPanel   { top: 340px; left: 16px; min-width: 210px; max-width: 210px; max-height: calc(100vh - 380px); overflow-y: auto; }
+#reportPanel { top: 520px; right: 16px; width: 236px; max-height: calc(100vh - 700px); min-height: 120px; overflow-y: auto; }
+#reportPanel .tab-row { display: flex; gap: 4px; margin-bottom: 6px; }
+#reportPanel .tab-btn { flex: 1; background: transparent; border: 1px solid #1A2A40; color: #6080A0; font-size: 0.6em; letter-spacing: 1px; padding: 3px 0; cursor: pointer; font-family: Georgia, serif; }
+#reportPanel .tab-btn.active { color: #4080D0; border-color: #4080D0; }
+#omegaBar { height: 6px; background: #0E1A30; border: 1px solid #1A2A40; border-radius: 3px; overflow: hidden; margin: 2px 0 3px; }
+#omegaBar.flash { border-color: #FF6060; }
+#omegaFill { height: 100%; width: 100%; background: linear-gradient(90deg, #4080D0, #80D080); }
+.omega-text { font-size: 0.7em; color: #8098B0; margin-bottom: 4px; letter-spacing: 0.5px; }
+.tool-btn .cost { float: right; color: #506880; font-style: normal; font-size: 0.85em; }
+.civ-head { color: #4080D0; font-size: 0.62em; letter-spacing: 1.5px; font-family: Georgia, serif; margin-bottom: 3px; }
+.civ-grid { display: flex; flex-direction: column; gap: 6px; }
+.civ-row { display: flex; align-items: center; gap: 6px; font-size: 0.72em; color: #8098B0; }
+.civ-row span { flex: 0 0 74px; }
+.civ-row input[type=range] { flex: 1; min-width: 0; }
+.civ-row b { flex: 0 0 12px; color: #B0C8E0; font-weight: normal; }
+.civ-note { font-size: 0.66em; color: #506880; font-style: italic; margin-top: 4px; }
+.gaia-msg { font-size: 0.7em; color: #8098B0; font-style: italic; margin-top: 4px; min-height: 2.4em; }
+#timeScaleStrip { display: inline-flex; gap: 3px; margin-left: 10px; vertical-align: middle; }
+.ts-btn { background: transparent; border: 1px solid #1A2A40; color: #506880; font-size: 0.62em; letter-spacing: 1px; padding: 2px 6px; cursor: pointer; font-family: Georgia, serif; }
+.ts-btn.active { color: #FFD040; border-color: #FFD040; }
+.ts-btn.locked { background: rgba(255,208,64,0.12); }
+.mm-diff { display: flex; gap: 4px; align-items: center; margin-bottom: 8px; font-size: 0.7em; color: #6080A0; letter-spacing: 1px; }
+.mm-diff button { flex: 1; background: rgba(14,20,40,0.7); border: 1px solid #1A2A40; color: #8098B0; padding: 5px 2px; cursor: pointer; font-size: 0.85em; }
+.mm-diff button.active { color: #FFD040; border-color: #FFD040; }
 #toolPanel::-webkit-scrollbar { width: 6px; }
 #toolPanel::-webkit-scrollbar-thumb { background: #1A2A40; border-radius: 3px; }
 #toolPanel::-webkit-scrollbar-track { background: transparent; }
@@ -307,6 +331,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
     <div class="mm-title">BIOSPHERE BLUE</div>
     <div class="mm-sub">a coupled Earth-system simulator</div>
     <input type="text" id="mmSeed" placeholder="seed (optional)" maxlength="32" style="width:100%;padding:8px 14px;background:rgba(14,20,40,0.7);border:1px solid #1A2A40;border-radius:4px;color:#B0C8E0;font-family:'Courier New',monospace;font-size:0.85em;letter-spacing:1px;text-align:center;margin-bottom:8px;outline:none">
+    <div id="mmDifficulty" class="mm-diff"><span>ENERGY</span><button data-d="easy" class="active">Easy 5000</button><button data-d="medium">Medium 2000</button><button data-d="hard">Hard</button><button data-d="experimental">Unlimited</button></div>
     <button class="mm-btn primary" id="mmNew">NEW EARTH</button>
     <button class="mm-btn" id="mmContinue" style="display:none">CONTINUE</button>
     <button class="mm-btn" id="mmScenarios">SCENARIOS</button>
@@ -447,6 +472,12 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
           <li><b>Wind</b>: prescribed 3-cell circulation &mdash; trades 0&ndash;30&deg;, westerlies 30&ndash;60&deg;, polar easterlies. (The next phase derives it from the temperature gradient.)</li>
           <li><b>Tectonics</b>: plates with angular velocity &omega;&times;r; convergent boundaries uplift, divergent ones thin crust. (Next phase: crust advection and isostasy in metres.)</li>
           <li><b>Wildfires</b>: ignition &prop; veg &times; heat &times; dryness &times; O&#8322;; release CO&#8322;, consume O&#8322;.</li>
+          <li><b>Energy budget</b> (SimEarth's rule): every tool and every control-panel change spends your energy Ω. Easy 5000, Medium 2000, Hard 2000 at half regeneration, Unlimited for experiments. The planet gives back 1 Ω per step in deep time and 2&ndash;8 per step once civilizations pay taxes. The Monolith costs 2500 whether or not it works (one chance in three).</li>
+          <li><b>Time scales</b>: Geologic (10 My per step) until multicellular life, Evolution (500 ky) until intelligence, Civilization (10 yr) until the Industrial Revolution, Technology (1 yr) until Exodus, then back to Evolution as a wildlife reserve. Automatic; click the strip by the clock to lock one.</li>
+          <li><b>Civilization panel</b>: invest work hours in Bioenergy, Solar/Wind, Hydro/Geo, Fossil fuel and Nuclear (each source's efficiency depends on the technology level, and fossil and atomic fuel run out), then allocate the energy between Philosophy (fewer wars), Science (faster advance), Agriculture (population), Medicine (fewer plagues) and Art/Media (quality of life). Fossil investment is what burns the reserve and feeds the carbon cycle.</li>
+          <li><b>Terraformers</b>: Oxygenator, CO&#8322; and N&#8322; generators, Vaporator, Biome factory, Ice meteor &mdash; the tools for Mars. Pressure broadening, aerosol dust and water inventory are real terms in the energy balance.</li>
+          <li><b>Events</b>: Hurricane, Tidal wave, Earthquake (turns a plate's drift), Fire, Plague, Atomic test, plus natural hurricanes over warm seas, quakes on plate boundaries, wars, pollution and Exodus. Dust from eruptions and bombs veils the sun and decays over years.</li>
+          <li><b>Daisyworld</b>: Lovelock's black and white daisies (Watson &amp; Lovelock 1983) on a planet whose sun brightens; the Report tab shows the temperature they hold against the bare-planet temperature.</li>
           <li><b>Phase portrait</b> (press <b>P</b>): 2D phase plane of global T vs ice fraction with nullclines and Jacobian eigenvalues of the operating point.</li>
           <li><b>Console</b> (press <b>`</b> backtick): command line; type <kbd>help</kbd>.</li>
         </ul>
@@ -496,7 +527,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
   <div class="row"><span>Seed</span><b id="stSeed">random</b></div>
   <canvas id="histChart" width="200" height="66" style="margin-top:6px;display:block;background:#060A16;border:1px solid #1A2A40;width:100%;height:66px"></canvas>
   <div style="font-size:0.62em;color:#6080A0;margin-top:2px;text-align:center;letter-spacing:0.5px">
-    <span style="color:#FF9060">T</span> &middot; <span style="color:#80D080">O&#8322;</span> &middot; <span style="color:#D0A060">CO&#8322;</span> &middot; <span style="color:#80B0FF">ice</span>
+    <span id="histLegend"><span style="color:#FF9060">T</span> &middot; <span style="color:#80D080">O&#8322;</span> &middot; <span style="color:#D0A060">CO&#8322;</span> &middot; <span style="color:#80B0FF">ice</span></span>
   </div>
 </div>
 
@@ -523,10 +554,15 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
   <button class="view-btn" data-view="biome">Biomes</button>
   <button class="view-btn" data-view="plate">Tectonic plates</button>
   <button class="view-btn" data-view="vegetation">Vegetation</button>
+  <button class="view-btn" data-view="rain">Rainfall</button>
+  <button class="view-btn" data-view="events">Events</button>
 </div>
 
 <div class="panel" id="toolPanel" style="display:none">
   <h4>TOOLS</h4>
+  <div id="omegaBar" title="Your energy budget. Every tool and every control-panel change spends it; the planet and its civilizations slowly replenish it."><div id="omegaFill"></div></div>
+  <div id="omegaText" class="omega-text">Ω</div>
+  <div id="toolCostNote" class="omega-text"></div>
   <button class="tool-btn active" data-tool="info">Info (inspect)</button>
   <div class="tool-group">SCENARIO</div>
   <select id="scenarioSelect" class="scenario-select">
@@ -538,6 +574,9 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
     <option value="carbon">Carboniferous (high O&#8322;)</option>
     <option value="venus">Venus runaway</option>
     <option value="iceage">Pleistocene ice age</option>
+    <option value="daisyworld">Daisyworld (Lovelock)</option>
+    <option value="mars">Mars: terraform in 500 years</option>
+    <option value="aquarium">Aquarium: a world without land</option>
   </select>
   <div class="tool-group">TERRAIN</div>
   <button class="tool-btn" data-tool="raise">Raise</button>
@@ -556,6 +595,20 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
   <button class="tool-btn" data-tool="volcano">Volcano</button>
   <button class="tool-btn" data-tool="factory">Industry (CO&#8322;)</button>
   <button class="tool-btn" data-tool="deforest">Deforest</button>
+  <div class="brush-row"><span>EVENTS</span></div>
+  <button class="tool-btn" data-tool="hurricane">Hurricane</button>
+  <button class="tool-btn" data-tool="tidalwave">Tidal wave</button>
+  <button class="tool-btn" data-tool="earthquake">Earthquake</button>
+  <button class="tool-btn" data-tool="fire">Fire</button>
+  <button class="tool-btn" data-tool="plague">Plague</button>
+  <button class="tool-btn" data-tool="atomic">Atomic test</button>
+  <div class="brush-row"><span>TERRAFORMERS</span></div>
+  <button class="tool-btn" data-tool="oxygenator" title="Splits CO₂ into oxygen">Oxygenator</button>
+  <button class="tool-btn" data-tool="co2gen" title="Releases CO₂ from the crust">CO&#8322; generator</button>
+  <button class="tool-btn" data-tool="n2gen" title="Thickens the atmosphere">N&#8322; generator</button>
+  <button class="tool-btn" data-tool="vaporator" title="Adds water vapour">Vaporator</button>
+  <button class="tool-btn" data-tool="biomefactory" title="Plants what the climate can carry">Biome factory</button>
+  <button class="tool-btn" data-tool="icemeteor" title="Crash a mountain of ice into a dry world">Ice meteor</button>
   <div class="brush-row"><span>radius</span><input type="range" id="brushRadius" min="1" max="10" value="3"><span id="brushLabel">3</span></div>
   <div class="brush-row"><span>solar &times;</span><input type="range" id="sunSlider" min="50" max="150" value="100"><span id="sunLabel">1.00</span></div>
   <div class="brush-row"><span>CO&#8322; emissions</span><input type="range" id="co2Slider" min="0" max="100" value="0"><span id="co2Label">0</span></div>
@@ -568,6 +621,13 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
     <button class="dis-btn" id="disExtinct">Extinction</button>
     <button class="dis-btn" id="disReset">Reset</button>
   </div>
+</div>
+
+<div class="panel" id="reportPanel" style="display:none">
+  <div class="tab-row"><button class="tab-btn active" data-tab="report">REPORT</button><button class="tab-btn" data-tab="civ">CIVILIZATION</button><button class="tab-btn" data-tab="gaia">GAIA</button></div>
+  <div id="reportBody" class="tab-body"></div>
+  <div id="civPanelBody" class="tab-body" style="display:none"></div>
+  <div id="gaiaBody" class="tab-body" style="display:none"><canvas id="gaiaFace" width="200" height="110" style="display:block;width:100%;height:110px"></canvas><div id="gaiaMsg" class="gaia-msg"></div></div>
 </div>
 
 <div class="panel" id="infoPanel" style="display:none">
@@ -595,6 +655,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
   <button class="speed-btn" data-speed="3">&#9654;&#9654;&#9654;</button>
   <button class="speed-btn" data-speed="4">&#9207;</button>
   <div id="yearDisplay"><b id="yrVal">0</b> years / age <b id="ageVal">0.00 Gy</b></div>
+  <div id="timeScaleStrip" title="SimEarth time scales: Geologic 10 My/step, Evolution 500 ky, Civilization 10 yr, Technology 1 yr. Automatic; click to lock."></div>
   <button class="speed-btn" id="btnSpin" title="toggle rotation">&#8635;</button>
   <button class="speed-btn" id="btnMusic" title="toggle ambient music">&#9834;</button>
   <button class="speed-btn" id="btnSave" title="save world">SAVE</button>
@@ -923,8 +984,9 @@ if (typeof module !== 'undefined' && module.exports) {
 //   OLR  = A' + B*T                            Budyko linearization of sigma*T^4
 //          with water-vapor and lapse-rate feedbacks folded into B
 //          (Planck-only B would be ~3.3; 2.09 is the observed effective slope)
-//   A'   = A - dF,   dF = 5.35 ln(CO2/280) + 0.036 (sqrt(CH4) - sqrt(700))
-//          (Myhre et al. 1998 forcing fits; CH4 in ppb, logarithmic above 20 ppm)
+//   A'   = A - dF,   dF = 5.35 ln(CO2/280) + 0.036 (sqrt(CH4) - sqrt(700)) + 13 ln(P/1 bar) - 27 tau
+//          (Myhre et al. 1998 forcing fits; CH4 in ppb, logarithmic above 20 ppm;
+//           N2 pressure broadening after Goldblatt et al. 2009; aerosol veil scaled to Pinatubo)
 //          Above the Simpson-Nakajima limit OLR flattens (runaway greenhouse),
 //          rolling over smoothly from slope B to slope bHot at olrLim.
 //   geo  = geothermal / internal heat flux, W/m^2
@@ -956,6 +1018,8 @@ var EBM = (function () {
     obliquity: 0.4091,  // rad, 23.44 deg
     co2: 280, ch4: 700, // ppm, ppb
     co2Ref: 280, ch4Ref: 700,
+    pressure: 1.0,      // bar; N2 pressure broadening ~ +9 W/m^2 per doubling (Goldblatt et al. 2009: 2x N2 -> +4.4 K)
+    aerosol: 0.0,       // stratospheric aerosol optical depth; Pinatubo tau 0.15 -> -4 W/m^2 (~ -27 W/m^2 per unit tau)
     albAtm: 0.22,       // atmospheric reflectance (clouds + Rayleigh); gives Bond albedo 0.30 and 14.6 degC for modern Earth
     albSnow: 0.55,      // annual-mean surface albedo of snow / sea ice (planetary ~0.62, North 1975)
     snowT: -10.0,       // degC, centre of the snow switch: North (1975) ice line, annual-mean surface T
@@ -1014,6 +1078,8 @@ var EBM = (function () {
     var m = Math.max(0, p.ch4), m1 = 20000;
     if (m <= m1) f += 0.036 * (Math.sqrt(m) - Math.sqrt(p.ch4Ref));
     else f += 0.036 * (Math.sqrt(m1) - Math.sqrt(p.ch4Ref)) + 4.0 * Math.log(m / m1);
+    f += 13.0 * Math.log(Math.max(0.2, p.pressure));      // pressure broadening of the absorption lines (fit floored at 0.2 bar: below that the absorbers themselves are gone)
+    f -= 27.0 * Math.max(0, p.aerosol);                    // sulfate / dust veil reflects sunlight
     return f;
   }
   function planetaryAlbedo(as, a) {
@@ -1535,7 +1601,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = HYDRO;
 //   volcanic      F_v = volc0 * tectonic                             0.1 GtC/yr modern
 //   weathering    F_w = volc0 (pCO2/280)^0.3 exp((T-T0)/13.7)        Walker-Hays-Kasting 1981
 //                       * land/0.29 * (1 + gVeg veg)/(1 + gVeg veg0)  * (1 - 0.85 ice) * liquid(T)
-//   organic burial F_b = burial0 * productivity                      source of O2
+//   organic burial F_b = burial0 * productivity * sqrt(land/0.29)      source of O2 (sediment supply)
 //   oxidative weathering F_ox = oxWeath0 sqrt(O2/0.21) land/0.29 liquid   sink of O2, returns C
 //   fossil burn   F_f = min(fossil/dt, demand)                       civilization
 //   fossil decay  fossil / fossilTau                                  reserves plateau ~ fossilFrac*burial*tau
@@ -1566,30 +1632,30 @@ var CARBON = (function () {
   // Sea water sits at or above its freezing point whatever the air does, and
   // sea ice seals the exchange: an ice-covered fraction of the ocean holds
   // its carbon but takes no more (the snowball escape mechanism).
-  function oceanC(pco2, T, p, ice) {
+  function oceanC(pco2, T, p, ice, oceanFrac) {
     var Tw = T < -2 ? -2 : T;
-    var open = 1 - (ice || 0);
+    var open = (1 - (ice || 0)) * (oceanFrac == null ? 1 : oceanFrac / 0.7);   // ocean carbon scales with how much ocean there is
     if (open < 0.02) open = 0.02;
     return p.oceanC0 * open * Math.pow(pco2 / (p.pco2_0 * Math.exp(p.solub * (Tw - p.T0))), 1 / p.revelle);
   }
-  function cexFromPco2(pco2, T, pIn, ice) {
+  function cexFromPco2(pco2, T, pIn, ice, oceanFrac) {
     var p = params(pIn);
-    return p.gtcPerPpm * pco2 + oceanC(pco2, T, p, ice);
+    return p.gtcPerPpm * pco2 + oceanC(pco2, T, p, ice, oceanFrac);
   }
   // Bisection: f(pco2) = cex(pco2) - target is monotone increasing.
-  function pco2FromCex(cEx, T, pIn, ice) {
+  function pco2FromCex(cEx, T, pIn, ice, oceanFrac) {
     var p = params(pIn);
     var lo = 1, hi = 1e7;
-    if (cexFromPco2(hi, T, p, ice) < cEx) return hi;
+    if (cexFromPco2(hi, T, p, ice, oceanFrac) < cEx) return hi;
     for (var k = 0; k < 60; k++) {
       var mid = Math.sqrt(lo * hi);              // geometric bisection: pco2 spans 7 decades
-      if (cexFromPco2(mid, T, p, ice) < cEx) lo = mid; else hi = mid;
+      if (cexFromPco2(mid, T, p, ice, oceanFrac) < cEx) lo = mid; else hi = mid;
       if (hi / lo < 1 + 1e-9) break;
     }
     return Math.sqrt(lo * hi);
   }
-  function initState(pco2, T, o2, pIn, ice) {
-    return { cEx: cexFromPco2(pco2, T, pIn, ice), fossil: 0, crust: 0, o2: o2, ch4: 700, co2: pco2, flux: null };
+  function initState(pco2, T, o2, pIn, ice, oceanFrac) {
+    return { cEx: cexFromPco2(pco2, T, pIn, ice, oceanFrac), fossil: 0, crust: 0, o2: o2, ch4: 700, co2: pco2, flux: null };
   }
   function ch4Lifetime(o2, p) {
     var life = p.ch4Life0 * (0.21 / Math.max(o2, 1e-6));
@@ -1609,9 +1675,12 @@ var CARBON = (function () {
     var nSub = Math.max(1, Math.ceil(dtY / p.subStepYr));
     var dt = dtY / nSub;
     var ice = env.seaIce != null ? env.seaIce : (env.iceFrac || 0);   // fraction of the OCEAN under ice seals the exchange
-    var T0step = env.T, pco2Start = pco2FromCex(st.cEx, T0step, p, ice);
+    var of = env.oceanFrac;
+    var T0step = env.T, pco2Start = pco2FromCex(st.cEx, T0step, p, ice, of);
     var sens = env.climSens != null ? env.climSens : 0.48;
-    var T = T0step, liquid = (T > 0 && T < 100) ? 1 : 0;
+    // liquid-water gate on the global mean: a planet averaging -5 C still weathers in its tropics
+    function liquidAt(Tm) { return Tm < 100 ? Math.max(0, Math.min(1, (Tm + 10) / 15)) : 0; }
+    var T = T0step, liquid = liquidAt(T);
     var landF = (env.landFrac != null ? env.landFrac : p.land0) / p.land0;
     var iceF = Math.max(0.05, 1 - 0.85 * (env.iceFrac || 0)) / (1 - 0.85 * p.ice0);   // normalized to modern ice cover
     var vegF = (1 + p.gVeg * (env.veg || 0)) / (1 + p.gVeg * p.veg0);
@@ -1624,12 +1693,12 @@ var CARBON = (function () {
     if (env.pulseO2) o2Mol -= env.pulseO2 * p.airMol;
     var done = 0;
     for (var s = 0; done < dtY - 1e-9 && s < 400; s++) {
-      var pco2 = pco2FromCex(st.cEx, T, p, ice);
+      var pco2 = pco2FromCex(st.cEx, T, p, ice, of);
       T = T0step + sens * 5.35 * Math.log(Math.max(1e-3, pco2) / Math.max(1e-3, pco2Start));
-      liquid = (T > 0 && T < 100) ? 1 : 0;
+      liquid = liquidAt(T);
       var Fv = p.volc0 * (env.tectonic != null ? env.tectonic : 1);
       var Fw = liquid * p.volc0 * Math.pow(pco2 / p.pco2_0, p.weathCO2) * Math.exp((T - p.T0) / p.weathT) * landF * vegF * iceF;
-      var Fb = p.burial0 * prod;
+      var Fb = p.burial0 * prod * Math.sqrt(landF);        // burial follows sediment supply, which follows exposed land (Berner)
       var Fox = liquid * p.oxWeath0 * Math.sqrt(Math.max(0, st.o2) / 0.21) * landF;
       var Ff = Math.min(st.fossil / dt, demand);   // dt here is the nominal substep; the reserve floor below keeps it non-negative
       // engineered carbon removal, to the crust; a civilization stops at its
@@ -1653,7 +1722,7 @@ var CARBON = (function () {
       dt = dtY / nSub;
     }
     for (var k in acc) if (k !== 'reductant') acc[k] /= dtY;   // time-weighted mean fluxes, GtC/yr
-    st.co2 = pco2FromCex(st.cEx, T0step, p, ice);
+    st.co2 = pco2FromCex(st.cEx, T0step, p, ice, of);
     // methane: lifetime << step, so it sits at its steady state
     var life = ch4Lifetime(st.o2, p);
     var ch4Gt = (env.ch4Source || 0) * life;
@@ -1667,6 +1736,83 @@ var CARBON = (function () {
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = CARBON;
 // @@END physics/carbon.js
+
+// @@BEGIN physics/daisy.js
+// physics/daisy.js — Daisyworld (Watson & Lovelock 1983).
+//
+// Two daisy species share bare ground of albedo A_g. Each grows where its own
+// local temperature is near 22.5 degC and dies back elsewhere:
+//
+//   beta(T)   = max(0, 1 - k (T_opt - T)^2),   k = 0.003265 /K^2, T_opt = 22.5 degC
+//   T_i       = T_e + q (A_p - A_i)             local temperature of cover i
+//   da_i/dt   = a_i (x beta(T_i) - gamma),      x = 1 - a_b - a_w (bare fraction)
+//   A_p       = x A_g + a_b A_b + a_w A_w        planetary (surface) albedo
+//
+// q sets how much a patch's own albedo shifts its temperature from the
+// effective temperature T_e (q = 20 K in the original; q = 0 makes daisies
+// feel only the mean climate and regulation vanishes). gamma is the death
+// rate, 0.3 per season. Black daisies (A_b = 0.25) warm themselves and the
+// planet when it is cold; white daisies (A_w = 0.75) cool it when hot. The
+// pair holds T_e near T_opt across a wide range of stellar luminosity and then
+// collapses abruptly: Lovelock's demonstration that life can regulate a
+// planet without intending to.
+//
+// This kernel owns the biology only. The game hands it the tile temperature
+// from the energy-balance solver and takes back the surface albedo.
+var DAISY = (function () {
+  var DEFAULTS = {
+    k: 0.003265, tOpt: 22.5, q: 20.0, gamma: 0.3,
+    albGround: 0.50, albBlack: 0.25, albWhite: 0.75,
+    seed: 0.01           // minimum viable cover, so a species can always recover
+  };
+  function params(p) { var o = {}; for (var k in DEFAULTS) o[k] = (p && p[k] != null) ? p[k] : DEFAULTS[k]; return o; }
+  function beta(T, p) { var d = p.tOpt - T; var b = 1 - p.k * d * d; return b > 0 ? b : 0; }
+  function albedo(ab, aw, p) { var x = 1 - ab - aw; return x * p.albGround + ab * p.albBlack + aw * p.albWhite; }
+
+  // One time step (dt in seasons/years) for a patch with effective temperature Te.
+  // Returns [ab, aw]. Sub-steps so the logistic terms stay stable for dt up to ~10.
+  function step(ab, aw, Te, dt, pIn) {
+    var p = params(pIn);
+    var n = Math.max(1, Math.ceil(dt / 0.5));
+    var h = dt / n;
+    for (var s = 0; s < n; s++) {
+      var Ap = albedo(ab, aw, p);
+      var x = 1 - ab - aw;
+      var Tb = Te + p.q * (Ap - p.albBlack);
+      var Tw = Te + p.q * (Ap - p.albWhite);
+      var db = ab * (x * beta(Tb, p) - p.gamma);
+      var dw = aw * (x * beta(Tw, p) - p.gamma);
+      ab += db * h; aw += dw * h;
+      if (ab < p.seed) ab = p.seed;
+      if (aw < p.seed) aw = p.seed;
+      if (ab + aw > 1) { var f = 1 / (ab + aw); ab *= f; aw *= f; }
+    }
+    return [ab, aw];
+  }
+
+  // Zero-dimensional Daisyworld for tests and the report: the planet's
+  // effective temperature from a grey-body balance, S L (1 - A_p) = sigma T^4.
+  function equilibrate(L, ab, aw, pIn, opts) {
+    var p = params(pIn);
+    opts = opts || {};
+    var S = opts.S || 917;                    // W/m^2, Watson & Lovelock's flux
+    var sigma = 5.670374419e-8;
+    var years = opts.years || 200, dt = 0.5;
+    var Te = 0;
+    for (var t = 0; t < years; t += dt) {
+      var Ap = albedo(ab, aw, p);
+      Te = Math.pow(S * L * (1 - Ap) / sigma, 0.25) - 273.15;
+      var r = step(ab, aw, Te, dt, p);
+      ab = r[0]; aw = r[1];
+    }
+    return { Te: Te, ab: ab, aw: aw, albedo: albedo(ab, aw, p),
+             Tbare: Math.pow(S * L * (1 - p.albGround) / sigma, 0.25) - 273.15 };
+  }
+
+  return { DEFAULTS: DEFAULTS, params: params, beta: beta, albedo: albedo, step: step, equilibrate: equilibrate };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = DAISY;
+// @@END physics/daisy.js
 
 // =============================================================
 // Initial world generation
@@ -2102,7 +2248,11 @@ function climateParams() {
     co2: SIM.co2,
     ch4: SIM.ch4,
     obliquity: SIM.axialTilt != null ? SIM.axialTilt : EBM.DEFAULTS.obliquity,
-    geo: SIM.geothermal || 0        // W/m^2 internal heat flux
+    geo: SIM.geothermal || 0,       // W/m^2 internal heat flux
+    pressure: SIM.pressure || 1,    // bar (N2 generators, Mars)
+    aerosol: SIM.dust || 0,         // volcanic / nuclear / impact veil
+    albAtm: SIM.albAtm != null ? SIM.albAtm : EBM.DEFAULTS.albAtm,
+    snowT: (SIM.daisy || SIM.seaLevel < -0.6) ? -1e6 : EBM.DEFAULTS.snowT   // no snow on Daisyworld (daisies are the only feedback) or on a world without water
   };
 }
 
@@ -2114,13 +2264,17 @@ function stepClimate(W, dtY) {
   ensureEBM(W);
   var F = W.ebm;
   var landCount = 0, iceCount = 0, vegSum = 0, seaTiles = 0, seaIce = 0, rockTiles = 0;
+  // Lapse-rate datum: sea level on a wet world; on a dry world (no ocean) the
+  // mean surface, since "sea level" would sit kilometres below everything.
+  var datum = SEA;
+  if (SEA < -0.6) { var mb = 0; for (var q = 0; q < n; q++) mb += d.bedrock[q]; datum = mb / n; }
   for (var i = 0; i < n; i++) {
     var elev = d.bedrock[i], ice = d.iceDepth[i];
     var isOcean = (elev + ice) <= SEA && ice < 0.05;
     if (elev <= SEA) { seaTiles++; if (ice > 0.02) seaIce++; } else rockTiles++;
     F.isOcean[i] = isOcean ? 1 : 0;
     F.elev[i] = isOcean ? (elev - SEA) * ELEV_M_PER_UNIT
-                        : (elev - SEA) * ELEV_M_PER_UNIT + ice * ICE_M_PER_UNIT;
+                        : (elev - datum) * ELEV_M_PER_UNIT + ice * ICE_M_PER_UNIT;
     // Bare surface albedo. Glacial ice is the slow field from hydrology;
     // seasonal snow / sea ice is the fast switch inside the solver.
     var alb;
@@ -2135,6 +2289,7 @@ function stepClimate(W, dtY) {
       // basalt and granite (~0.18), not the bright quartz sand of today (0.30).
       var base = bi === 1 ? 0.20 : (bi === 3 && SIM.lifeStage < 4 ? 0.18 : BIOMES[bi].albedo);
       alb = base * (1 - 0.4 * d.vegetation[i]);
+      if (SIM.daisy) alb = daisyAlbedo(i);
     }
     F.albSurf[i] = alb;
     if (!isOcean) landCount++;
@@ -2241,29 +2396,41 @@ function stepHydrology(W, dtY) {
   // Ice: accumulation / melt driven by temperature and (for land) by precipitation in sub-freezing air
   var iceVolOld = 0, iceVolNew = 0;
   var ice = d.iceDepth;
-  for (var i = 0; i < n; i++) iceVolOld += ice[i];
+  for (var i = 0; i < n; i++) if (d.bedrock[i] > SEA) iceVolOld += ice[i];   // sea ice floats: only land ice moves sea level
+  var waterAvail = SIM.daisy ? 0 : clamp((SIM.seaLevel + 0.78) / 0.4, 0, 1);   // a dry world (Mars, sea level -0.8) cannot build ice sheets
   // Asymmetric freeze / melt thresholds create a Budyko-style hysteresis window.
   // Ice sheets and perennial sea ice form where the annual-mean surface
   // temperature is below the energy-balance model's ice line (North 1975,
   // -10 degC, EBM.DEFAULTS.snowT) and persist until the annual mean rises
   // 6 K above it; thick ice resists melting via a thickness-weighted factor.
   var ICE_FORM_T = EBM.DEFAULTS.snowT, ICE_MELT_T = EBM.DEFAULTS.snowT + 6;
+  var stepIce = Math.min(dtY, 1e5) / 1e5;   // ice sheets equilibrate on ~100 kyr: a longer step does not grow them further
   for (var i = 0; i < n; i++) {
     var T2v = d.temperature[i];
     var isLand = d.bedrock[i] > SEA;
     var prev = ice[i];
     if (T2v < ICE_FORM_T) {
-      var growth = 0.04 * (-(T2v - ICE_FORM_T) / 20) * step + (P[i] / 5) * 0.02 * step;   // P in mm/day; accumulation is ablation-limited
+      var growth = (0.04 * (-(T2v - ICE_FORM_T) / 20) * waterAvail + (P[i] / 5) * 0.02) * stepIce;   // P in mm/day; accumulation is ablation-limited
       ice[i] = clamp(prev + growth, 0, isLand ? 0.6 : 0.12);
     } else if (T2v > ICE_MELT_T) {
       var thicknessResist = 1 / (1 + 3.5 * prev);  // 1 at 0m, ~0.22 at 0.1m
-      var melt = 0.06 * (T2v - ICE_MELT_T) / 20 * step * thicknessResist;
+      var melt = 0.06 * (T2v - ICE_MELT_T) / 20 * stepIce * thicknessResist;
       ice[i] = Math.max(0, prev - melt);
     }
-    iceVolNew += ice[i];
+    if (isLand) iceVolNew += ice[i];
   }
+  // Sea level from land-ice volume, by geometry: the water locked in ice sheets
+  // (depth units x ICE_M_PER_UNIT x tile area) is spread over the ocean area.
+  // Pleistocene-scale ice (~50 M km^3) gives ~ -120 m, i.e. ~0.04 units here.
   var diceVol = iceVolNew - iceVolOld;
-  SIM.seaLevel = clamp(SIM.seaLevel - diceVol * 0.008, -0.10, 0.10);
+  if (diceVol !== 0 && W.geom) {
+    var oceanArea = 0, tileArea = W.geom.totalArea / n;
+    for (var i = 0; i < n; i++) if (d.bedrock[i] <= SEA) oceanArea += W.geom.area[i];
+    if (oceanArea > 0.05 * W.geom.totalArea) {
+      var dSea = -diceVol * tileArea * ICE_M_PER_UNIT / (oceanArea * ELEV_M_PER_UNIT);
+      SIM.seaLevel = clamp(SIM.seaLevel + dSea, -1.0, 0.3);
+    }
+  }
 
   // Precipitation drives rivers — recompute accumulation every 500 Ky of sim
   // time. Accumulator (not a year-modulus) so retuning SIM_DT_YEARS doesn't
@@ -2343,13 +2510,14 @@ function updateSunLum() {
 // atmospheric pulse (GtC) before the step, so the ocean then buffers it.
 function ensureCarbon() {
   if (SIM.carbon && SIM.carbon.cEx != null) return;
-  SIM.carbon = CARBON.initState(SIM.co2, SIM.globalTemp, SIM.o2, null, SIM.seaIceFrac || 0);
+  SIM.carbon = CARBON.initState(SIM.co2, SIM.globalTemp, SIM.o2, null, SIM.seaIceFrac || 0, SIM.rockFrac != null ? 1 - SIM.rockFrac : 0.7);
   SIM.carbon.ch4 = SIM.ch4;
   SIM.carbon.fossil = SIM.fossilC != null ? SIM.fossilC : 3000;
 }
 
 function stepGlobal(W, dtY) {
   updateSunLum();
+  if (SIM.carbonLock) return;          // Daisyworld: constant greenhouse by construction
   ensureCarbon();
   var c = SIM.carbon;
   var T = SIM.globalTemp;
@@ -2358,6 +2526,7 @@ function stepGlobal(W, dtY) {
   if (Math.abs(SIM.co2 - c.co2) > 1e-6) pulseC += (SIM.co2 - c.co2) * CARBON.DEFAULTS.gtcPerPpm;
   pulseC += (SIM.fireCarbon || 0) * CARBON.DEFAULTS.gtcPerPpm;   // wildfires report ppm
   SIM.fireCarbon = 0;
+  pulseC += SIM.terraCO2 || 0; SIM.terraCO2 = 0;                  // CO2 generators
   c.o2 = SIM.o2;                                                 // life-stage floors, events
   var pulseO2 = SIM.fireO2 || 0;
   SIM.fireO2 = 0;
@@ -2368,18 +2537,21 @@ function stepGlobal(W, dtY) {
   // of today's NPP (0.3 while only microbes exist), land plants the other
   // half. The game's vegetated modern Earth has a land-mean cover of ~0.2
   // (deserts and tundra count as ~0), so that is the land normalization.
-  var productivity = stage === 0 ? 0 : (stage < 4 ? 0.3 : 0.5 + 0.5 * Math.min(1, vegLand / 0.2));
+  // Most organic burial is marine: a full multicellular ocean supplies ~80% of it,
+  // land plants the rest. Microbial seas run at ~40% of a Phanerozoic ocean.
+  var marine = stage === 0 ? 0 : (stage < 3 ? 0.4 : 1.0);
+  var productivity = 0.8 * marine + (stage >= 4 ? 0.2 * Math.min(1, vegLand / 0.2) : 0);
   // methane sources (GtC/yr): abiotic seeps, methanogens, wetlands, thawing permafrost, agriculture
   var ch4Source = 0.02 + (stage >= 1 ? 0.10 : 0) + 0.10 * vegLand
                 + 0.3 * clamp((T - 5) / 15, 0, 1) * SIM.iceFrac
                 + (stage >= 7 ? 0.05 : 0);
   var env = {
-    T: T, landFrac: landFrac, iceFrac: SIM.iceFrac, seaIce: SIM.seaIceFrac || 0, veg: vegLand, productivity: productivity,
+    T: T, landFrac: landFrac, iceFrac: SIM.iceFrac, seaIce: SIM.seaIceFrac || 0, oceanFrac: SIM.rockFrac != null ? 1 - SIM.rockFrac : 0.7, veg: vegLand, productivity: productivity,
     // outgassing follows mantle heat flow: ~3x modern on the early Earth, decaying with radiogenic heat
     age: SIM.age, tectonic: (SIM.tectonicRate || 1) * (1 + 2 * Math.exp(-SIM.age / 1.5)) / (1 + 2 * Math.exp(-4.57 / 1.5)),
     climSens: 1 / EBM.DEFAULTS.B,
     civBurn: (SIM.civBurnGtC || 0) + (SIM.co2Forcing || 0) * 0.1,   // slider: 100 = 10 GtC/yr, today's emissions
-    capture: SIM.civCaptureGtC || 0,
+    capture: (SIM.civCaptureGtC || 0) + (SIM.terraCapture || 0),
     ch4Source: ch4Source, pulseC: pulseC, pulseO2: pulseO2
   };
   CARBON.step(c, env, dtY);
@@ -2635,77 +2807,6 @@ function recomputeLifeStage() {
 // it climbs Stone -> ... -> Exodus over a few steps, self-pollutes CO2 in the
 // industrial ages, risks nuclear war from the Atomic age, collapses under a hostile
 // climate, and — if it survives to the top — departs the planet. Called each tick.
-function stepCivilization(dtY) {
-  var step = dtY / 100000;
-  var civClade = null;
-  for (var i = 0; i < SIM.clades.length; i++) {
-    var c = SIM.clades[i];
-    if (!c.extinct && c.hasCiv) { civClade = c; break; }
-  }
-  if (!civClade || SIM.exodus) {
-    // No living civilization (extinct or already departed): its technology fades.
-    if (!civClade && SIM.civTech > 0) SIM.civTech = Math.max(0, SIM.civTech - 0.4 * step);
-    SIM.civIndustrialCO2 = 0; SIM.civBurnGtC = 0; SIM.civCaptureGtC = 0;   // no civilization, no industry
-    return;
-  }
-
-  var T = SIM.globalTemp;
-  var hostile = (T > 32 || T < -2 || SIM.o2 < 0.15);   // too hot/cold/anoxic for a tech society
-  var prevAge = Math.floor(SIM.civTech);
-  if (hostile) {
-    SIM.civTech = Math.max(0, SIM.civTech - 0.5 * step);   // environmental collapse
-    if (prevAge >= 3 && Math.floor(SIM.civTech) < prevAge) {
-      notifyEvent(civClade.name + '’s civilization buckles under a hostile climate.', 'warn');
-    }
-  } else {
-    SIM.civTech = Math.min(7, SIM.civTech + 0.6 * step);   // ~1 tech age per ~1.6 steps
-  }
-  SIM.civPeakTech = Math.max(SIM.civPeakTech || 0, SIM.civTech);
-  var age = Math.floor(SIM.civTech);
-
-  // Industrial self-pollution: Industrial/Atomic burn carbon; Information decarbonizes;
-  // Nanotech captures. Added outside the geochemical rate cap (it is an anthropogenic pulse).
-  // Fossil-fuel demand in GtC/yr (today's civilization burns ~10); the
-  // carbon kernel limits it to the recoverable reserve and the ocean buffers
-  // the pulse. Nanotech and beyond capture carbon instead.
-  var ind = 0, cap = 0;
-  if (age === 3) ind = 9;
-  else if (age === 4) ind = 6;
-  else if (age === 5) ind = 2;
-  else if (age >= 6) cap = 1;
-  SIM.civIndustrialCO2 = ind;
-  SIM.civBurnGtC = ind;
-  SIM.civCaptureGtC = cap;
-
-  // Announce each new tech age.
-  if (age > prevAge && age >= 1 && age <= 7) {
-    var nm = CIV_TECH_AGES[age] || 'Advanced';
-    if (age === 3) showBanner('INDUSTRIAL AGE', civClade.name + ' burn fossil fuels — CO₂ begins to climb.', 'warn');
-    else if (age === 4) notifyEvent(civClade.name + ' enter the Atomic Age — a fragile new power.', 'warn');
-    else notifyEvent(civClade.name + ' reach the ' + nm + ' Age.', 'good');
-  }
-
-  // Nuclear war risk from the Atomic age until they mature past it.
-  if (age >= 4 && age < 7 && SIM.rng() < 0.06 * step * (age === 4 ? 2 : 1)) {
-    showBanner('NUCLEAR WAR', civClade.name + ' turn their arsenals on themselves.', 'bad');
-    applyHazard('nuclear', 0.22);                 // mass die-off across the biosphere
-    SIM.co2 = clamp(SIM.co2 + 40, 60, 500000);     // firestorms release a carbon pulse
-    SIM.civTech = Math.max(0, SIM.civTech - 3);   // the survivors fall back centuries
-    SIM.lastCivEvent = SIM.year;
-  }
-
-  // Exodus — the culmination. A civilization that reaches the top leaves the planet.
-  if (SIM.civTech >= 7 && !SIM.exodus) {
-    SIM.exodus = true;
-    SIM.lastCivEvent = SIM.year;
-    SIM.civIndustrialCO2 = 0; SIM.civBurnGtC = 0; SIM.civCaptureGtC = 0;   // no civilization, no industry
-    civClade.hasCiv = false;                      // their cities go dark; the clade lives on as fauna
-    showBanner('EXODUS', civClade.name + ' build starships and depart for the stars.', 'good');
-    notifyEvent(civClade.name + ' achieve Exodus — the planet falls quiet.', 'good');
-    SIM.cladeLog.push({ year: SIM.year, kind: 'exodus', name: civClade.name });
-  }
-}
-
 // Try to spawn a child clade with a different body plan when conditions allow.
 // Probability is small per step; only fires when the parent is well-established.
 function trySpeciate(parent) {
@@ -2825,6 +2926,7 @@ function stepLife(W, dtY) {
   // exists and the planet is old enough. This drives the legacy Prokaryotes stage.
   var anyLiquid = (SIM.globalTemp > 0 && SIM.globalTemp < 55);
   if (!SIM.clades.length && anyLiquid && age > 0.5) {
+    if (SIM.noSpontaneousLife) return;
     var founder = makeClade('microbe', { biomass: 0.01, traits: [], stage: 1 });
     SIM.clades.push(founder);
     SIM.cladeLog.push({ year: SIM.year, kind: 'born', name: founder.name, plan: 'microbe' });
@@ -2851,7 +2953,7 @@ function stepLife(W, dtY) {
     var growable = canVegetate && onLand && T > 2 && T < 40 && (d.precip ? d.precip[i] * 365 > 250 : M > 0.15) && bi >= 4 && bi <= 7;
     var rate = growable ? 0.35 * (1 - veg[i]) * (M - 0.1) : 0;
     var decay = (onLand && (T < -5 || T > 45)) ? 0.2 : 0.02;
-    veg[i] += (rate * dtY / 1e5) - (decay * veg[i] * dtY / 1e5);
+    veg[i] += (rate * Math.min(dtY, 2e5) / 1e5) - (decay * veg[i] * Math.min(dtY, 2e5) / 1e5);   // vegetation equilibrates within a geologic step
     veg[i] = clamp(veg[i], 0, 1);
     if (onLand) biomass += veg[i];
   }
@@ -2859,7 +2961,7 @@ function stepLife(W, dtY) {
 
   // Per-clade dynamics: biomass logistic growth + trophic predation,
   // mutation, advancement, speciation, extinction.
-  var dt = dtY / 1e5;
+  var dt = Math.min(dtY, 5e5) / 1e5;   // clade dynamics: at most five evolution steps per geologic step (explicit logistic stays stable)
   var clades = SIM.clades;
   // Trophic pressure: total predator demand on producers
   var prodMass = 0, consMass = 0;
@@ -2940,17 +3042,22 @@ function stepLife(W, dtY) {
 // One simulation tick
 // =============================================================
 function simStep() {
-  var dtY = SIM_DT_YEARS;
+  updateTimeScale();
+  var dtY = currentDtY();
   SIM.year += dtY;
   SIM.age += dtY / 1e9;
+  stepOmega();
   stepTectonics(WORLD, dtY);
   stepClimate(WORLD, dtY);
   stepHydrology(WORLD, dtY);
   stepBiomes(WORLD);
   stepWildfires(WORLD, dtY);
+  stepTerraformers(WORLD, dtY);
   stepGlobal(WORLD, dtY);
+  stepDaisy(WORLD, dtY);
   stepLife(WORLD, dtY);
   stepCivilization(dtY);
+  stepNaturalEvents(WORLD, dtY);
   stepEvents(dtY);
   checkAchievements();
   checkBanners();
@@ -2959,12 +3066,9 @@ function simStep() {
   // user actions outside a sim tick still flush to screen.
   SIM._meshDirty = true;
   SIM._colorsDirty = true;
-  // History sample every 10 My of sim time (accumulator, not year-modulus).
-  SIM._historyTimer = (SIM._historyTimer || 0) + dtY;
-  if (SIM._historyTimer >= 10000000) {
-    recordHistory();
-    SIM._historyTimer = 0;
-  }
+  // History sample every 20 steps: 200 My in Geologic, 10 My in Evolution, 200 yr in Civilization, 20 yr in Technology.
+  SIM._historySteps = (SIM._historySteps || 0) + 1;
+  if (SIM._historySteps >= 20) { recordHistory(); SIM._historySteps = 0; }
 }
 
 // Full-screen banner for dramatic state transitions. Each banner fires once per session/world.
@@ -3006,9 +3110,13 @@ function checkBanners() {
 }
 
 function recordHistory() {
+  var live = 0; for (var i = 0; i < SIM.clades.length; i++) if (!SIM.clades[i].extinct) live++;
+  var c = SIM.civ || {};
   SIM.history.push({
     age: SIM.age, temp: SIM.globalTemp, co2: SIM.co2, o2: SIM.o2,
-    ice: SIM.iceFrac, veg: SIM.vegFrac, life: SIM.lifeStage
+    ice: SIM.iceFrac, veg: SIM.vegFrac, life: SIM.lifeStage,
+    rain: SIM.water ? SIM.water.meanPrecip : 0, biomass: SIM.vegFrac, diversity: live,
+    pop: c.population || 0, fossil: SIM.fossilC || 0, pollution: c.pollution || 0, wars: c.wars || 0, plagues: c.plagues || 0
   });
   if (SIM.history.length > 500) SIM.history.shift();
 }
@@ -3034,16 +3142,17 @@ function tilesInRadius(centerTile, radius) {
 }
 
 function applyBrush(centerTile, tool, radius) {
+  if (tool === 'hurricane' || tool === 'tidalwave' || tool === 'earthquake' || tool === 'atomic' || tool === 'plague' || tool === 'fire') { applyEventTool(tool, centerTile, radius); return; }
+  if (TERRAFORMERS[tool]) { placeTerraformer(tool); return; }
+  if (tool === 'icemeteor') { iceMeteor(centerTile); return; }
   // Monolith is a single-tile, one-per-click action, not an area brush.
   if (tool === 'monolith') {
     if (!SIM.monoliths) SIM.monoliths = [];
     if (SIM.monoliths.indexOf(centerTile) < 0) SIM.monoliths.push(centerTile);
     buildMonolithGroup();
-    // Monoliths push the most-advanced clade forward, or birth a starter clade
-    // if the planet is sterile. They also relax atmospheric prereqs so the
-    // forced advance actually sticks under stepLife's gates next tick.
-    monolithPush();
-    notifyEvent('The monolith sings. Evolution quickens.', 'good');
+    // One chance in three (SimEarth's rule), and it costs 2500 whether or not it works.
+    if (SIM.rng() < 1 / 3) { monolithPush(); notifyEvent('The monolith sings. Evolution quickens.', 'good'); }
+    else notifyEvent('The monolith stands silent.', 'warn');
     return;
   }
 
@@ -3092,7 +3201,12 @@ function applyBrush(centerTile, tool, radius) {
   if (tool === 'meteor') {
     SIM.globalTemp -= 2;
     for (var i = 0; i < d.temperature.length; i++) d.temperature[i] -= 2;
-    notifyEvent('Meteor impact &mdash; global cooling.', 'warn');
+    SIM.dust = Math.min(2, (SIM.dust || 0) + 0.1);
+    logEvent(centerTile, 'meteor');
+    notifyEvent('Meteor impact &mdash; dust veils the sun.', 'warn');
+  } else if (tool === 'volcano') {
+    SIM.dust = Math.min(2, (SIM.dust || 0) + 0.05);
+    logEvent(centerTile, 'volcano');
   } else if (tool === 'factory') {
     // Industrial brush: local + a burst of global CO2 proportional to affected area
     SIM.co2 += 8 * area.length / 100;
@@ -3318,7 +3432,11 @@ function seedVegetationByBiome(scale) {
 function applyScenario(name) {
   if (!WORLD) return;
   var d = WORLD.data, n = d.bedrock.length;
+  clearScenarioLocks();
   switch (name) {
+    case 'daisyworld': scenarioDaisyworld(); break;
+    case 'mars': scenarioMars(); break;
+    case 'aquarium': scenarioAquarium(); break;
     case 'archean':
       SIM.age = 0.6;
       SIM.co2 = 200000; SIM.ch4 = 100000; SIM.o2 = 0.001;   // 0.2 bar CO2 + 100 ppm CH4: the Archean methane greenhouse
@@ -3539,6 +3657,22 @@ function colorForTile(i, mode, d) {
     case 'vegetation':
       if (isOcean) return [0.10, 0.22, 0.50];
       return vegColor(d.vegetation[i]);
+    case 'rain':
+      var mmyr = (d.precip ? d.precip[i] : 0) * 365;
+      var rr = clamp(Math.log10(Math.max(10, mmyr)) / 3.5, 0.3, 1);        // 10 mm -> dark, 3000 mm -> bright
+      return isOcean ? [0.06 * rr, 0.25 * rr, 0.55 * rr + 0.1] : [0.55 - 0.45 * rr, 0.45 + 0.35 * rr, 0.15 + 0.6 * rr];
+    case 'events':
+      var base = isOcean ? [0.08, 0.14, 0.30] : [0.22, 0.24, 0.26];
+      if (SIM.eventLog) {
+        for (var ev = SIM.eventLog.length - 1; ev >= 0; ev--) {
+          var e = SIM.eventLog[ev];
+          if (e.tile === i || (e.tile >= 0 && WORLD.tiles[e.tile].neighbors.indexOf(i) >= 0)) {
+            var col = EVENT_COLORS[e.kind] || [1, 1, 1], fade = clamp(1 - (SIM.year - e.year) / (40 * currentDtY()), 0.25, 1);
+            return lerpRgb(base, col, fade);
+          }
+        }
+      }
+      return base;
     case 'wind':
       var tile = WORLD && WORLD.tiles[i];
       if (!tile || !tile.wind) return [0.3, 0.3, 0.5];
@@ -3712,6 +3846,7 @@ function init() {
     document.getElementById('viewPanel').style.display = '';
     document.getElementById('toolPanel').style.display = '';
     document.getElementById('infoPanel').style.display = '';
+    document.getElementById('reportPanel').style.display = '';
     document.getElementById('legend').style.display = '';
     document.getElementById('actionBar').style.display = 'flex';
     setTimeout(function(){ document.getElementById('title').classList.add('fade'); }, 800);
@@ -3720,6 +3855,17 @@ function init() {
 
   setupInput(canvas);
   setupUI();
+  labelToolCosts();
+  document.querySelectorAll('#reportPanel .tab-btn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('#reportPanel .tab-btn').forEach(function (x) { x.classList.toggle('active', x === b); });
+      document.getElementById('reportBody').style.display = b.dataset.tab === 'report' ? '' : 'none';
+      document.getElementById('civPanelBody').style.display = b.dataset.tab === 'civ' ? '' : 'none';
+      document.getElementById('gaiaBody').style.display = b.dataset.tab === 'gaia' ? '' : 'none';
+      if (b.dataset.tab === 'civ') renderCivPanel();
+      if (b.dataset.tab === 'gaia') drawGaia();
+    });
+  });
   window.addEventListener('resize', onResize);
   animate();
 }
@@ -4127,6 +4273,7 @@ function setupInput(canvas) {
       updateInfoPanel();
       drawSelectedOutline();
     } else {
+      if (!spendOmega(toolCost(currentTool, brushRadius), currentTool)) return;
       applyBrush(ti, currentTool, brushRadius);
       stepBiomes(WORLD);
       updateMeshPositions();
@@ -4309,6 +4456,16 @@ function setupUI() {
     SIM.axialTilt = deg * Math.PI / 180;
     tiltLb.textContent = deg + '\u00B0';
   });
+  // Model-control-panel changes cost 30 E.U.; an unaffordable change snaps the slider back.
+  [sunSl, co2Sl, tiltSl].forEach(function (sl) {
+    if (!sl) return;
+    sl.addEventListener('pointerdown', function () { sl._prev = sl.value; });
+    sl.addEventListener('keydown', function () { if (sl._prev == null) sl._prev = sl.value; });
+    sl.addEventListener('change', function () {
+      if (sl._prev != null && sl._prev !== sl.value && !chargeSlider('the control panel')) { sl.value = sl._prev; sl.dispatchEvent(new Event('input')); }
+      sl._prev = null;
+    });
+  });
   var seasonCb = document.getElementById('seasonToggle');
   if (seasonCb) seasonCb.addEventListener('change', function() {
     SIM.showSeasons = seasonCb.checked;
@@ -4320,15 +4477,15 @@ function setupUI() {
     scn.value = '';  // reset dropdown after apply
   });
   syncSliderUI();
-  document.getElementById('disIceAge').addEventListener('click', disasterIceAge);
-  document.getElementById('disGreenhouse').addEventListener('click', disasterGreenhouse);
-  document.getElementById('disExtinct').addEventListener('click', disasterExtinction);
+  document.getElementById('disIceAge').addEventListener('click', function () { if (spendOmega(500, 'an ice age')) disasterIceAge(); });
+  document.getElementById('disGreenhouse').addEventListener('click', function () { if (spendOmega(500, 'a greenhouse')) disasterGreenhouse(); });
+  document.getElementById('disExtinct').addEventListener('click', function () { if (spendOmega(500, 'an extinction')) disasterExtinction(); });
   document.getElementById('disReset').addEventListener('click', disasterReset);
   window.addEventListener('keydown', handleKey);
 }
 
 var lastNonZeroSpeed = 1;
-var VIEW_ORDER = ['elevation','temperature','moisture','rivers','wind','biome','plate','vegetation'];
+var VIEW_ORDER = ['elevation','temperature','moisture','rivers','wind','biome','plate','vegetation','rain','events'];
 function handleKey(e) {
   // Console toggle: backtick or tilde. Allowed even when an input is focused
   // — but only if that input is the console's own input (so typing ` inside
@@ -4925,6 +5082,12 @@ function refreshAllUI() {
   drawHistory();
   buildLegend();
   syncSliderUI();
+  updateOmegaUI();
+  renderReport();
+  if (document.getElementById('civPanelBody').style.display !== 'none') renderCivPanel();
+  drawGaia();
+  var strip = document.getElementById('timeScaleStrip');
+  if (strip && SIM && (strip.dataset.ts !== String(SIM.timeScale) + (SIM.timeScaleLock ? 'L' : ''))) { refreshTimeScaleUI(); strip.dataset.ts = String(SIM.timeScale) + (SIM.timeScaleLock ? 'L' : ''); }
 }
 
 function drawHistory() {
@@ -4957,10 +5120,14 @@ function drawHistory() {
     }
     ctx.stroke();
   }
-  drawLine(function(s){ return s.temp; },            -20, 40,  '#FF9060');  // T
-  drawLine(function(s){ return s.o2 * 100; },         0,  30,  '#80D080');  // O2 %
-  drawLine(function(s){ return Math.log10(s.co2); },  1.8, 4.3, '#D0A060'); // log CO2
-  drawLine(function(s){ return s.ice; },              0,  0.7, '#80B0FF');  // ice frac
+  var getters = {
+    temp: function (s) { return s.temp; }, o2: function (s) { return s.o2 * 100; }, logco2: function (s) { return Math.log10(Math.max(1, s.co2)); }, ice: function (s) { return s.ice; },
+    rain: function (s) { return s.rain || 0; }, biomass: function (s) { return s.biomass != null ? s.biomass : s.veg; }, diversity: function (s) { return s.diversity || 0; }, pop: function (s) { return s.pop || 0; },
+    fossil: function (s) { return s.fossil || 0; }, pollution: function (s) { return s.pollution || 0; }, wars: function (s) { return s.wars || 0; }, plagues: function (s) { return s.plagues || 0; }
+  };
+  HISTORY_PRESETS[historyPreset].series.forEach(function (sr) { drawLine(getters[sr[0]], sr[1], sr[2], sr[3]); });
+  var lg = document.getElementById('histLegend');
+  if (lg) { lg.innerHTML = historyLegendHTML(); var cy = document.getElementById('histCycle'); if (cy) cy.onclick = cycleHistoryPreset; }
 }
 
 function updateStats() {
@@ -5191,6 +5358,10 @@ function buildLegend() {
     }
   } else if (currentMode === 'elevation') {
     html = '<div class="leg-row">abyss &rarr; shelf &rarr; plain &rarr; mountain &rarr; peak (ice caps in white)</div>';
+  } else if (currentMode === 'rain') {
+    html = '<div class="leg-row">annual rainfall: dark &lt; 30 mm &rarr; bright &gt; 3000 mm; deserts brown, forests green</div>';
+  } else if (currentMode === 'events') {
+    html = Object.keys(EVENT_COLORS).map(function (k) { var c = EVENT_COLORS[k]; return '<div class="leg-row"><span class="swatch" style="background:rgb(' + (c[0]*255|0) + ',' + (c[1]*255|0) + ',' + (c[2]*255|0) + ')"></span>' + k + '</div>'; }).join('') + '<div class="leg-row">recent events fade over ~40 steps</div>';
   } else if (currentMode === 'temperature') {
     html = '<div class="leg-row">&minus;40 \u00B0C (deep blue) &rarr; +45 \u00B0C (red)</div>';
   } else if (currentMode === 'moisture') {
@@ -5377,6 +5548,9 @@ function saveWorld(slot) {
       monoliths: SIM.monoliths, sunOverride: SIM.sunOverride, co2Forcing: SIM.co2Forcing,
       axialTilt: SIM.axialTilt, seasonPhase: SIM.seasonPhase, showSeasons: SIM.showSeasons,
       geothermal: SIM.geothermal, carbon: SIM.carbon, fossilC: SIM.fossilC,
+      omega: SIM.omega, civ: SIM.civ, terra: SIM.terra, dust: SIM.dust, pressure: SIM.pressure, albAtm: SIM.albAtm,
+      timeScale: SIM.timeScale, timeScaleLock: SIM.timeScaleLock, scenarioTimeScale: SIM.scenarioTimeScale,
+      noSpontaneousLife: SIM.noSpontaneousLife, carbonLock: SIM.carbonLock, terraGoal: SIM.terraGoal, eventLog: SIM.eventLog,
       civTech: SIM.civTech, civPeakTech: SIM.civPeakTech, exodus: SIM.exodus, lastCivEvent: SIM.lastCivEvent,
       clades: SIM.clades, cladeNextId: SIM.cladeNextId, cladeLog: (SIM.cladeLog || []).slice(-40)
     },
@@ -5820,6 +5994,14 @@ function wireMainMenu() {
 
   function dismiss() { menu.classList.add('hidden'); setTimeout(function(){ menu.style.display = 'none'; }, 700); }
 
+  document.querySelectorAll('#mmDifficulty button').forEach(function (b) {
+    if (b.dataset.d === (SETTINGS.difficulty || 'easy')) { document.querySelectorAll('#mmDifficulty button').forEach(function (x) { x.classList.remove('active'); }); b.classList.add('active'); }
+    b.addEventListener('click', function () {
+      SETTINGS.difficulty = b.dataset.d; saveSettings();
+      document.querySelectorAll('#mmDifficulty button').forEach(function (x) { x.classList.toggle('active', x === b); });
+      if (SIM) { SIM.omega = null; ensureOmega(); updateOmegaUI(); }
+    });
+  });
   document.getElementById('mmNew').addEventListener('click', function() {
     var seedInput = document.getElementById('mmSeed');
     setWorldSeed(seedInput && seedInput.value.trim() ? seedInput.value.trim() : '');
@@ -5846,6 +6028,668 @@ function wireMainMenu() {
   document.getElementById('mmSettings').addEventListener('click', function() {
     toggleSettings(true);
   });
+}
+
+// =============================================================
+// SimEarth systems: time scales, energy budget, civilization energy model,
+// terraformers, events, Gaia, report window, history, scenarios.
+// Modelled on the 1990 SimEarth manual (Bremer/Maxis); see BiosphereBlue.notes.md.
+// =============================================================
+
+// ---------- Time scales ----------
+var TIMESCALES = [
+  { id: 'geologic',     name: 'GEOLOGIC',     dtY: 1e7, short: '10 My/step',
+    blurb: 'Out of the interstellar dust a planet forms and cools. Promote the formation and survival of life; survive the shift to an oxygenated atmosphere; evolve multicellular life.' },
+  { id: 'evolution',    name: 'EVOLUTION',    dtY: 5e5, short: '500 ky/step',
+    blurb: 'The invasion of land. Survive periodic extinctions and promote intelligence to reach the Civilization time scale.' },
+  { id: 'civilization', name: 'CIVILIZATION', dtY: 10,  short: '10 yr/step',
+    blurb: 'Gaia begins to achieve consciousness. Spread your civilization across the planet and advance technology. The industrial revolution brings the Technology time scale.' },
+  { id: 'technology',   name: 'TECHNOLOGY',   dtY: 1,   short: '1 yr/step',
+    blurb: 'The industrial revolution has occurred. Civilization grows rapidly, and begins to have a significant impact on the planet. Interstellar migration is the goal.' }
+];
+function timeScaleTarget() {
+  if (SIM.scenarioTimeScale != null) return SIM.scenarioTimeScale;
+  if (SIM.exodus) return 1;
+  var stage = SIM.lifeStage;
+  if (stage < 3) return 0;
+  if (stage < 7) return 1;
+  return Math.floor(SIM.civTech || 0) >= 3 ? 3 : 2;
+}
+function updateTimeScale() {
+  if (SIM.timeScale == null) { SIM.timeScale = timeScaleTarget(); refreshTimeScaleUI(); return; }
+  if (SIM.timeScaleLock) return;
+  var t = timeScaleTarget();
+  if (t !== SIM.timeScale) {
+    SIM.timeScale = t;
+    showBanner(TIMESCALES[t].name + ' TIME SCALE', TIMESCALES[t].blurb, 'good');
+    refreshTimeScaleUI();
+  }
+}
+function currentDtY() { return TIMESCALES[SIM.timeScale == null ? 1 : SIM.timeScale].dtY; }
+function setTimeScale(i) {
+  if (SIM.timeScale === i && SIM.timeScaleLock) { SIM.timeScaleLock = false; notifyEvent('Time scale back on automatic.', 'good'); }
+  else { SIM.timeScale = i; SIM.timeScaleLock = true; notifyEvent('Time scale locked: ' + TIMESCALES[i].name + ' (' + TIMESCALES[i].short + '). Click again to release.', 'good'); }
+  refreshTimeScaleUI();
+}
+function refreshTimeScaleUI() {
+  var host = document.getElementById('timeScaleStrip');
+  if (!host || !SIM) return;
+  var cur = SIM.timeScale == null ? 1 : SIM.timeScale;
+  host.innerHTML = '';
+  TIMESCALES.forEach(function (ts, i) {
+    var b = document.createElement('button');
+    b.className = 'ts-btn' + (i === cur ? ' active' : '') + (i === cur && SIM.timeScaleLock ? ' locked' : '');
+    b.textContent = ts.name.charAt(0) + ts.name.slice(1).toLowerCase();
+    b.title = ts.short + (i === cur && SIM.timeScaleLock ? ' (locked)' : '');
+    b.addEventListener('click', function () { setTimeScale(i); });
+    host.appendChild(b);
+  });
+}
+
+// ---------- Player energy budget (Omega, E.U.) ----------
+var DIFFICULTIES = {
+  easy:         { max: 5000,     regen: 1,   label: 'Easy' },
+  medium:       { max: 2000,     regen: 1,   label: 'Medium' },
+  hard:         { max: 2000,     regen: 0.5, label: 'Hard' },
+  experimental: { max: Infinity, regen: 1,   label: 'Experimental' }
+};
+function ensureOmega() {
+  if (SIM.omega && SIM.omega.difficulty) return SIM.omega;
+  var dName = (typeof SETTINGS !== 'undefined' && SETTINGS.difficulty) || 'easy';
+  var d = DIFFICULTIES[dName] || DIFFICULTIES.easy;
+  SIM.omega = { pool: d.max === Infinity ? 0 : d.max, difficulty: dName };
+  return SIM.omega;
+}
+function omegaMax() { ensureOmega(); return DIFFICULTIES[SIM.omega.difficulty].max; }
+// Regeneration per simulation cycle, from the manual: 1 in Geologic and
+// Evolution; 2/3/4 in the Stone/Bronze/Iron ages; 5/6/7/8 Industrial..Nanotech.
+function omegaRegen() {
+  ensureOmega();
+  var ts = SIM.timeScale == null ? 1 : SIM.timeScale, age = Math.floor(SIM.civTech || 0);
+  var r = ts <= 1 ? 1 : (ts === 2 ? [2, 3, 4][Math.min(age, 2)] : [5, 6, 7, 8][Math.max(0, Math.min(age - 3, 3))]);
+  return r * DIFFICULTIES[SIM.omega.difficulty].regen;
+}
+function stepOmega() {
+  ensureOmega();
+  var mx = omegaMax();
+  if (mx === Infinity) return;
+  SIM.omega.pool = Math.min(mx, SIM.omega.pool + omegaRegen());
+}
+function spendOmega(cost, what) {
+  ensureOmega();
+  if (omegaMax() === Infinity || cost <= 0) return true;
+  if (SIM.omega.pool >= cost) { SIM.omega.pool -= cost; updateOmegaUI(); return true; }
+  notifyEvent('Not enough energy for ' + what + ': ' + cost + ' Ω needed, ' + Math.floor(SIM.omega.pool) + ' available.', 'warn');
+  var el = document.getElementById('omegaBar'); if (el) { el.classList.add('flash'); setTimeout(function () { el.classList.remove('flash'); }, 600); }
+  return false;
+}
+var TOOL_COST = {
+  raise: 50, lower: 50, water: 50, heat: 50, cool: 50, grass: 50, forest: 50, jungle: 50, deforest: 50, factory: 50,
+  animals: 300, monolith: 2500, meteor: 50, volcano: 50,
+  hurricane: 50, tidalwave: 50, earthquake: 50, atomic: 50, plague: 50, fire: 50,
+  oxygenator: 500, n2gen: 500, vaporator: 500, co2gen: 500, biomefactory: 500, icemeteor: 500
+};
+var AREA_TOOLS = { raise: 1, lower: 1, water: 1, heat: 1, cool: 1, grass: 1, forest: 1, jungle: 1, deforest: 1, factory: 1 };
+function toolCost(tool, radius) {
+  var base = TOOL_COST[tool] || 0;
+  if (AREA_TOOLS[tool]) { var n = 1 + 3 * radius * (radius + 1); base *= Math.max(1, Math.ceil(n / 7)); }   // 50 per seven tiles (one SimEarth "click")
+  return base;
+}
+function updateOmegaUI() {
+  var el = document.getElementById('omegaText'), bar = document.getElementById('omegaFill');
+  if (!el || !SIM) return;
+  ensureOmega();
+  var mx = omegaMax();
+  if (mx === Infinity) { el.textContent = 'Ω unlimited (experimental)'; if (bar) bar.style.width = '100%'; return; }
+  el.textContent = 'Ω ' + Math.floor(SIM.omega.pool).toLocaleString() + ' / ' + mx.toLocaleString() + '  +' + omegaRegen() + '/step';
+  if (bar) bar.style.width = (100 * SIM.omega.pool / mx).toFixed(0) + '%';
+  var cur = document.getElementById('toolCostNote');
+  if (cur) cur.textContent = currentTool === 'info' ? '' : (toolCost(currentTool, brushRadius) + ' Ω per use');
+}
+function labelToolCosts() {
+  document.querySelectorAll('#toolPanel .tool-btn[data-tool]').forEach(function (b) {
+    var t = b.dataset.tool, c = TOOL_COST[t];
+    if (!c || b.querySelector('.cost')) return;
+    var i = document.createElement('i'); i.className = 'cost'; i.textContent = c + 'Ω'; b.appendChild(i);
+  });
+}
+function chargeSlider(what) {   // 30 E.U. per control-panel change
+  return spendOmega(30, what);
+}
+
+// ---------- Civilization energy model ----------
+// Efficiency (%) of each energy source by technology level, from the manual's
+// "Energy efficiency vs technology level" table. Order: bio, solar/wind, hydro/geo, fossil, nuclear.
+var CIV_SOURCES = ['Bioenergy', 'Solar/Wind', 'Hydro/Geo', 'Fossil fuel', 'Nuclear'];
+var CIV_USES = ['Philosophy', 'Science', 'Agriculture', 'Medicine', 'Art/Media'];
+var CIV_EFF = [
+  [40, 20, 10,  0,  0],   // Stone
+  [40, 20, 30, 10,  0],   // Bronze
+  [60, 20, 30, 30,  0],   // Iron
+  [60, 30, 50, 80, 10],   // Industrial
+  [70, 50, 50, 80, 80],   // Atomic
+  [80, 60, 60, 90, 90],   // Information
+  [90, 80, 80, 90, 90],   // Nanotech
+  [90, 80, 80, 90, 90]
+];
+var CIV_AGE_YEARS = [5000, 2500, 2000, 150, 60, 60, 120];      // years per age at balanced science and full supply
+var CIV_ENERGY_NEED = [6, 10, 16, 30, 45, 55, 65, 65];         // energy units/week to run the age at full pace
+var CIV_POP_K = [5, 50, 200, 1500, 4000, 9000, 12000, 12000];  // millions, carrying capacity at balanced agriculture
+var CIV_AUTOPILOT = [[3, 1, 1, 0, 0], [3, 1, 2, 0, 0], [3, 1, 2, 1, 0], [1, 1, 2, 4, 0], [1, 1, 2, 3, 2], [1, 2, 2, 2, 2], [1, 3, 3, 1, 2], [1, 3, 3, 1, 2]];
+var QOL_LEVELS = ['Hellish', 'Miserable', 'Bad', 'Unpleasant', 'Tolerable', 'Pleasant', 'Good', 'Marvelous', 'Heavenly'];
+function ensureCiv() {
+  if (SIM.civ && SIM.civ.invest) return SIM.civ;
+  SIM.civ = { invest: [3, 1, 1, 0, 0], alloc: [2, 2, 2, 2, 2], touched: false, atomicFuel: 500, pollution: 0,
+              population: 0, hours: 0, energy: 0, bySource: [0, 0, 0, 0, 0], supply: 0, qol: 4, plagues: 0, wars: 0, pollutionEvents: 0, lastEvent: 0 };
+  return SIM.civ;
+}
+function civShares() {
+  var c = ensureCiv(), tot = 0;
+  for (var k = 0; k < 5; k++) tot += c.alloc[k];
+  var s = [];
+  for (var k = 0; k < 5; k++) s.push(tot > 0 ? c.alloc[k] / tot : 0.2);
+  return s;
+}
+function findCivClade() {
+  for (var i = 0; i < SIM.clades.length; i++) { var c = SIM.clades[i]; if (!c.extinct && c.hasCiv) return c; }
+  return null;
+}
+function stepCivilization(dtY) {
+  var c = ensureCiv();
+  var civClade = findCivClade();
+  var dtC = Math.min(dtY, 100);   // civilization dynamics are resolved at most a century at a time
+  if (!civClade || SIM.exodus) {
+    if (!civClade && SIM.civTech > 0) SIM.civTech = Math.max(0, SIM.civTech - dtC / 2000);
+    SIM.civIndustrialCO2 = 0; SIM.civBurnGtC = 0; SIM.civCaptureGtC = 0;
+    c.population = Math.max(0, c.population * (1 - 0.01 * dtC)); c.energy = 0; c.hours = 0;
+    return;
+  }
+  var T = SIM.globalTemp;
+  var hostile = (T > 32 || T < -2 || SIM.o2 < 0.12);   // too hot, too cold, or too little oxygen for fire and forges
+  var prevAge = Math.floor(SIM.civTech);
+  var age = Math.min(7, prevAge);
+  if (!c.touched) { c.invest = CIV_AUTOPILOT[age].slice(); }
+  // --- energy production: work hours x efficiency (x resource availability) ---
+  var eff = CIV_EFF[age];
+  var fossilAvail = clamp((SIM.fossilC || 0) / 500, 0, 1);
+  var atomicAvail = clamp(c.atomicFuel / 100, 0, 1);
+  var hours = 0, E = 0, by = [0, 0, 0, 0, 0];
+  for (var k = 0; k < 5; k++) {
+    var h = 16 * clamp(c.invest[k], 0, 4) / 4;
+    var avail = k === 3 ? fossilAvail : (k === 4 ? atomicAvail : 1);
+    by[k] = h * eff[k] / 100 * avail;
+    hours += h; E += by[k];
+  }
+  c.hours = hours; c.energy = E; c.bySource = by;
+  var s = civShares();
+  var supply = Math.min(1.5, E / CIV_ENERGY_NEED[age]);
+  c.supply = supply;
+  // --- technology ---
+  if (hostile) {
+    SIM.civTech = Math.max(0, SIM.civTech - dtC / 200);
+    if (prevAge >= 3 && Math.floor(SIM.civTech) < prevAge) notifyEvent(civClade.name + '’s civilization buckles under a hostile climate.', 'warn');
+  } else if (s[1] > 0) {
+    var rate = supply * Math.pow(s[1] / 0.2, 0.7) / CIV_AGE_YEARS[Math.min(age, 6)];
+    // a wide population base is needed to advance (the manual's warning about the Monolith)
+    var popOK = c.population > 0.25 * CIV_POP_K[age];
+    if (popOK || age === 0) SIM.civTech = Math.min(7, SIM.civTech + rate * dtC);
+  }
+  SIM.civPeakTech = Math.max(SIM.civPeakTech || 0, SIM.civTech);
+  age = Math.floor(SIM.civTech);
+  // --- population (logistic toward an agriculture- and supply-dependent capacity) ---
+  var habitat = clamp((SIM.rockFrac != null ? SIM.rockFrac : SIM.landFrac) / 0.3, 0.2, 1.5) * (hostile ? 0.3 : 1);
+  var K = CIV_POP_K[Math.min(age, 7)] * (0.4 + 3 * s[2]) * (0.5 + 0.5 * supply) * habitat;
+  if (c.population < 0.5) c.population = 0.5;
+  c.population += 0.03 * c.population * (1 - c.population / K) * dtC;
+  // --- plague (medicine), war (philosophy, fuel stress) ---
+  var pPlague = 0.004 * Math.exp(-6 * s[3]) * (age < 3 ? 2 : 1) * dtC;
+  if (SIM.rng() < pPlague) {
+    var kill = 0.05 + 0.25 * SIM.rng() * Math.exp(-3 * s[3]);
+    c.population *= (1 - kill); c.plagues++;
+    notifyEvent('Plague sweeps ' + civClade.name + '’s cities: ' + (kill * 100).toFixed(0) + '% perish.', 'warn');
+    logEvent(-1, 'plague');
+  }
+  var fuelStress = ((c.invest[3] > 0 && fossilAvail < 0.5) || (c.invest[4] > 0 && atomicAvail < 0.5)) ? 2 : 1;
+  var pWar = 0.003 * Math.exp(-6 * s[0]) * fuelStress * (0.5 + c.population / K) * dtC;
+  if (SIM.rng() < pWar) {
+    c.wars++;
+    if (age >= 4 && c.invest[4] > 0 && SIM.rng() < 0.3) {
+      showBanner('NUCLEAR WAR', civClade.name + ' turn their arsenals on themselves.', 'bad');
+      applyHazard('nuclear', 0.22);
+      SIM.dust = Math.min(2, (SIM.dust || 0) + 0.8);            // nuclear winter
+      SIM.co2 = clamp(SIM.co2 + 40, 60, 500000);
+      SIM.civTech = Math.max(0, SIM.civTech - 3);
+      c.population *= 0.4;
+      logEvent(-1, 'war');
+    } else {
+      c.population *= 0.85;
+      notifyEvent((age >= 3 ? 'World war' : 'War') + ' among ' + civClade.name + (fuelStress > 1 ? ' over dwindling fuel.' : '.'), 'warn');
+      logEvent(-1, 'war');
+    }
+    SIM.lastCivEvent = SIM.year;
+  }
+  // --- quality of life: work week and art ---
+  var q = 4 + 12 * (s[4] - 0.2) - (hours - 40) / 12;
+  if (age < 3) q = Math.min(q, 4);
+  c.qol = Math.round(clamp(q, 0, 8));
+  // --- pollution, fuels, carbon ---
+  c.pollution += ((by[3] * 0.6 + by[4] * 0.2 + by[0] * 0.05) * 0.02 - c.pollution * 0.02) * dtC;
+  c.atomicFuel = Math.max(0, c.atomicFuel - by[4] * 0.01 * dtC);
+  if (c.pollution > 30 && SIM.year - c.lastEvent > 50) {
+    c.lastEvent = SIM.year; c.pollutionEvents++;
+    notifyEvent('Pollution reaches dangerous levels. Invest in cleaner energy.', 'warn');
+    applyHazard('pollution', 0.02);
+    logEvent(-1, 'pollution');
+  }
+  SIM.civBurnGtC = by[3] / (16 * 0.9) * 10;                      // full fossil investment at top efficiency = 10 GtC/yr
+  SIM.civIndustrialCO2 = SIM.civBurnGtC;
+  SIM.civCaptureGtC = age >= 6 ? 1 : 0;
+  // --- announcements ---
+  if (age > prevAge && age >= 1 && age <= 7) {
+    var nm = CIV_TECH_AGES[age] || 'Advanced';
+    if (age === 3) showBanner('INDUSTRIAL AGE', civClade.name + ' harness powered machinery. Fossil fuel becomes the cheapest energy there is.', 'warn');
+    else if (age === 4) notifyEvent(civClade.name + ' enter the Atomic Age — a fragile new power.', 'warn');
+    else notifyEvent(civClade.name + ' reach the ' + nm + ' Age.', 'good');
+  }
+  if (SIM.civTech >= 7 && !SIM.exodus && c.population > 0.5 * K) {
+    SIM.exodus = true;
+    SIM.lastCivEvent = SIM.year;
+    SIM.civIndustrialCO2 = 0; SIM.civBurnGtC = 0; SIM.civCaptureGtC = 0;
+    civClade.hasCiv = false;
+    showBanner('EXODUS', civClade.name + ' fit their cities with engines and depart for the stars. The home world becomes a nature preserve.', 'good');
+    notifyEvent(civClade.name + ' achieve Exodus — the planet falls quiet.', 'good');
+    SIM.cladeLog.push({ year: SIM.year, kind: 'exodus', name: civClade.name });
+    logEvent(-1, 'exodus');
+  }
+}
+function civPanelHTML() {
+  var c = ensureCiv();
+  var html = '<div class="civ-grid">';
+  html += '<div class="civ-col"><div class="civ-head">ENERGY INVESTMENT</div>';
+  CIV_SOURCES.forEach(function (n, k) { html += civSlider('inv', k, n, c.invest[k]); });
+  html += '</div><div class="civ-col"><div class="civ-head">ENERGY ALLOCATION</div>';
+  CIV_USES.forEach(function (n, k) { html += civSlider('alloc', k, n, c.alloc[k]); });
+  html += '</div></div>';
+  html += '<div class="civ-note">' + (c.touched ? 'Your priorities. Each change costs 30 Ω.' : 'Autopilot: the civilization invests in what its technology can use. Move a slider to take over.') + '</div>';
+  return html;
+}
+function civSlider(kind, k, name, v) {
+  return '<div class="civ-row"><span>' + name + '</span><input type="range" min="0" max="4" step="1" value="' + v + '" data-kind="' + kind + '" data-k="' + k + '"><b>' + v + '</b></div>';
+}
+function renderCivPanel() {
+  var host = document.getElementById('civPanelBody');
+  if (!host || !SIM) return;
+  if (host.dataset.built === '1' && host.dataset.touched === String(!!ensureCiv().touched)) { syncCivSliders(); return; }
+  host.innerHTML = civPanelHTML();
+  host.dataset.built = '1'; host.dataset.touched = String(!!ensureCiv().touched);
+  host.querySelectorAll('input[type=range]').forEach(function (inp) {
+    inp.addEventListener('change', function () {
+      var c = ensureCiv(), arr = inp.dataset.kind === 'inv' ? c.invest : c.alloc, k = +inp.dataset.k, v = +inp.value;
+      if (arr[k] === v) return;
+      if (!chargeSlider(inp.dataset.kind === 'inv' ? CIV_SOURCES[k] + ' investment' : CIV_USES[k] + ' allocation')) { inp.value = arr[k]; return; }
+      arr[k] = v; c.touched = true;
+      inp.nextElementSibling.textContent = v;
+      host.dataset.built = '0'; renderCivPanel();
+    });
+    inp.addEventListener('input', function () { inp.nextElementSibling.textContent = inp.value; });
+  });
+}
+function syncCivSliders() {
+  var c = ensureCiv();
+  document.querySelectorAll('#civPanelBody input[type=range]').forEach(function (inp) {
+    var arr = inp.dataset.kind === 'inv' ? c.invest : c.alloc, k = +inp.dataset.k;
+    if (+inp.value !== arr[k]) { inp.value = arr[k]; inp.nextElementSibling.textContent = arr[k]; }
+  });
+}
+
+// ---------- Terraformers, dust, pressure ----------
+var TERRAFORMERS = {
+  oxygenator:   { name: 'Oxygenator',    desc: 'splits CO₂ into free oxygen, 2 GtC/yr each' },
+  n2gen:        { name: 'N₂ generator', desc: 'thickens the atmosphere: pressure broadening retains heat' },
+  vaporator:    { name: 'Vaporator',     desc: 'spews water vapour, raising humidity and rainfall' },
+  co2gen:       { name: 'CO₂ generator', desc: 'releases CO₂ from the crust, 2 GtC/yr each' },
+  biomefactory: { name: 'Biome factory', desc: 'plants whatever biome the local climate can carry' }
+};
+function ensureTerra() { if (!SIM.terra) SIM.terra = { oxygenator: 0, n2gen: 0, vaporator: 0, co2gen: 0, biomefactory: 0 }; return SIM.terra; }
+function placeTerraformer(kind) {
+  var t = ensureTerra();
+  if (t[kind] >= 20) { notifyEvent('No room for another ' + TERRAFORMERS[kind].name + '.', 'warn'); return false; }
+  t[kind]++;
+  notifyEvent(TERRAFORMERS[kind].name + ' #' + t[kind] + ' online: ' + TERRAFORMERS[kind].desc + '.', 'good');
+  return true;
+}
+function stepTerraformers(W, dtY) {
+  var t = ensureTerra();
+  var y = Math.min(dtY, 1e4);   // devices are engineered systems: a century-scale machine, not a geological one
+  SIM.terraCapture = 2 * t.oxygenator;                         // GtC/yr removed from the air (to the crust as reduced carbon)
+  SIM.terraCO2 = 2 * t.co2gen * y;                             // GtC added this step
+  if (t.oxygenator) SIM.o2 = clamp(SIM.o2 + 2 * t.oxygenator * y * 8.33e13 / 1.77e20, 0, 0.35);
+  if (t.n2gen) SIM.pressure = Math.min(5, (SIM.pressure || 1) + 0.002 * t.n2gen * y);
+  if (t.vaporator && W.hydro) {
+    var q = W.hydro.q, add = 5.5 * t.vaporator * Math.min(y, 10);
+    for (var i = 0; i < q.length; i++) q[i] += add;
+    SIM.seaLevel = Math.min(0.3, SIM.seaLevel + 0.0001 * t.vaporator * Math.min(y, 100));
+  }
+  if (t.biomefactory) {
+    var d = W.data, n = d.bedrock.length, budget = 50 * t.biomefactory, start = (SIM.rng() * n) | 0;
+    for (var k = 0; k < n && budget > 0; k++) {
+      var i = (start + k) % n;
+      if (d.bedrock[i] <= SIM.seaLevel || d.iceDepth[i] > 0.02) continue;
+      var Tt = d.temperature[i], P = d.precip ? d.precip[i] * 365 : 0;
+      if (Tt < 0 || Tt > 35 || P < 250 || d.vegetation[i] > 0.6) continue;
+      d.vegetation[i] = Math.min(1, d.vegetation[i] + 0.3); budget--;
+    }
+  }
+  // aerosol veil decays on ~1.5 yr (stratospheric residence)
+  if (SIM.dust) { SIM.dust *= Math.exp(-dtY / 1.5); if (SIM.dust < 1e-4) SIM.dust = 0; }
+}
+function iceMeteor(tile) {
+  var d = WORLD.data;
+  SIM.seaLevel = Math.min(0.3, SIM.seaLevel + 0.01);    // ~30 m of global ocean per comet (SimEarth-scale, generous)
+  if (WORLD.hydro) for (var i = 0; i < WORLD.hydro.q.length; i++) WORLD.hydro.q[i] += 10;
+  SIM.dust = Math.min(2, (SIM.dust || 0) + 0.05);
+  tilesInRadius(tile, 2).forEach(function (i) { d.bedrock[i] -= 0.05; });
+  notifyEvent('Ice meteor: a mountain of ice flashes to steam and sea level rises.', 'good');
+  logEvent(tile, 'meteor');
+}
+
+// ---------- Events (tools and natural) ----------
+var EVENT_COLORS = { hurricane: [0.4, 0.8, 1.0], tidalwave: [0.3, 0.5, 1.0], meteor: [1.0, 0.6, 0.2], volcano: [1.0, 0.3, 0.1], atomic: [1.0, 1.0, 0.3], fire: [1.0, 0.5, 0.0], earthquake: [0.8, 0.6, 0.4], plague: [0.6, 1.0, 0.4], war: [1.0, 0.2, 0.2], pollution: [0.6, 0.4, 0.8], exodus: [1.0, 1.0, 1.0] };
+function logEvent(tile, kind) {
+  if (!SIM.eventLog) SIM.eventLog = [];
+  SIM.eventLog.push({ tile: tile, kind: kind, year: SIM.year });
+  if (SIM.eventLog.length > 60) SIM.eventLog.shift();
+}
+function civPopHit(frac, why) {
+  var c = ensureCiv();
+  if (c.population > 1) { c.population *= (1 - frac); if (why) notifyEvent(why, 'warn'); }
+}
+function applyEventTool(tool, tile, radius) {
+  var d = WORLD.data, H = WORLD.hydro;
+  var area = tilesInRadius(tile, Math.max(1, Math.min(radius, 4)));
+  switch (tool) {
+    case 'hurricane':
+      area.forEach(function (i) { d.vegetation[i] *= 0.7; if (H) { H.q[i] += 30; if (!H.isOcean[i]) H.soil[i] = Math.min(400, H.soil[i] + 60); } });
+      civPopHit(0.01, null);
+      notifyEvent('Hurricane: high winds and torrential rain.', 'warn'); break;
+    case 'tidalwave':
+      area.forEach(function (i) { if (d.bedrock[i] > SIM.seaLevel && d.bedrock[i] < SIM.seaLevel + 0.08) { d.vegetation[i] = 0; } });
+      civPopHit(0.03, null);
+      notifyEvent('Tidal wave scours the coast.', 'warn'); break;
+    case 'earthquake':
+      // Directional push: rotate the plate under the tile so its drift turns toward the click's meridian
+      var pid = d.plates[tile], pl = d.plateInfo[pid];
+      if (pl) {
+        var c = WORLD.tiles[tile].center, ax = pl.axis;
+        var nx = ax[0] + 0.35 * c[0], ny = ax[1] + 0.35 * c[1], nz = ax[2] + 0.35 * c[2];
+        var L = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+        pl.axis = [nx / L, ny / L, nz / L]; pl.rate *= 1.15;
+      }
+      area.forEach(function (i) { d.bedrock[i] += (SIM.rng() - 0.5) * 0.06; });
+      if (d.bedrock[tile] <= SIM.seaLevel) notifyEvent('Undersea earthquake: a tidal wave follows.', 'warn');
+      else notifyEvent('Earthquake: the plate lurches and its drift turns.', 'warn');
+      civPopHit(0.02, null); break;
+    case 'atomic':
+      area.forEach(function (i) { d.vegetation[i] = 0; d.temperature[i] += 5; });
+      applyHazard('radiation', 0.04);
+      SIM.dust = Math.min(2, (SIM.dust || 0) + 0.1);
+      civPopHit(0.05, null);
+      notifyEvent('Atomic test: radiation and a pall of dust.', 'warn'); break;
+    case 'plague':
+      if (ensureCiv().population > 1) { civPopHit(0.2, 'Plague released: a fifth of the sentient population dies.'); ensureCiv().plagues++; }
+      else { applyHazard('pandemic', 0.06); notifyEvent('Plague: a pathogen tears through the biosphere.', 'warn'); }
+      break;
+    case 'fire':
+      var burned = 0;
+      area.forEach(function (i) { if (d.vegetation[i] > 0.1) { burned += d.vegetation[i]; d.vegetation[i] = 0.05; } });
+      SIM.fireCarbon = (SIM.fireCarbon || 0) + burned * 0.4;
+      SIM.dust = Math.min(2, (SIM.dust || 0) + 0.002 * burned);
+      notifyEvent(burned > 0.5 ? 'Wildfire: the canopy burns.' : 'Fire: nothing much to burn here.', 'warn'); break;
+  }
+  logEvent(tile, tool);
+}
+function stepNaturalEvents(W, dtY) {
+  if (!W || SIM.timeScale == null || SIM.timeScale < 2) return;   // hurricanes and quakes are visible only at human time scales
+  var d = W.data, n = d.bedrock.length, yrs = Math.min(dtY, 100);
+  // hurricanes are born over warm oceans (> 26 C)
+  if (SIM.rng() < 0.15 * yrs / 10) {
+    for (var tries = 0; tries < 30; tries++) {
+      var i = (SIM.rng() * n) | 0;
+      if (d.bedrock[i] <= SIM.seaLevel && d.temperature[i] > 26) {
+        var nb = W.tiles[i].neighbors, land = -1;
+        for (var k = 0; k < nb.length; k++) if (d.bedrock[nb[k]] > SIM.seaLevel) { land = nb[k]; break; }
+        applyEventTool('hurricane', land >= 0 ? land : i, 2);
+        break;
+      }
+    }
+  }
+  // earthquakes at plate boundaries
+  if (SIM.rng() < 0.08 * yrs / 10) {
+    for (var tries2 = 0; tries2 < 30; tries2++) {
+      var j = (SIM.rng() * n) | 0, nbs = W.tiles[j].neighbors, boundary = false;
+      for (var k2 = 0; k2 < nbs.length; k2++) if (d.plates[nbs[k2]] !== d.plates[j]) { boundary = true; break; }
+      if (boundary) { tilesInRadius(j, 1).forEach(function (t) { d.bedrock[t] += (SIM.rng() - 0.5) * 0.03; }); civPopHit(0.005, null); notifyEvent('Earthquake along a plate boundary.', 'warn'); logEvent(j, 'earthquake'); break; }
+    }
+  }
+}
+
+// ---------- Gaia ----------
+var GAIA = { mouse: [0, 0], mood: 0.5, msg: '' };
+window.addEventListener('mousemove', function (e) { GAIA.mouse = [e.clientX, e.clientY]; });
+function gaiaMood() {
+  if (!SIM || SIM.lifeStage === 0) return null;   // asleep
+  var live = 0; for (var i = 0; i < SIM.clades.length; i++) if (!SIM.clades[i].extinct) live++;
+  var m = 0.35 + 0.25 * Math.min(1, live / 6) + 0.25 * Math.min(1, SIM.vegFrac / 0.15);
+  var o2 = SIM.o2;
+  if (SIM.lifeStage >= 3 && (o2 < 0.15 || o2 > 0.25)) m -= 0.15;
+  if ((SIM.dust || 0) > 0.3) m -= 0.2;
+  if (SIM.globalTemp < -10 || SIM.globalTemp > 40) m -= 0.3;
+  var c = SIM.civ;
+  if (c) { if (c.pollution > 30) m -= 0.15; if (SIM.year - (SIM.lastCivEvent || -1e9) < 30) m -= 0.15; }
+  var lastX = SIM.cladeLog && SIM.cladeLog.length ? SIM.cladeLog[SIM.cladeLog.length - 1] : null;
+  if (lastX && lastX.kind === 'extinct' && SIM.year - lastX.year < 2 * currentDtY()) m -= 0.2;
+  return clamp(m, 0, 1);
+}
+function drawGaia() {
+  var cv = document.getElementById('gaiaFace');
+  if (!cv || !SIM) return;
+  var ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+  var mood = gaiaMood();
+  GAIA.mood += ((mood == null ? 0.5 : mood) - GAIA.mood) * 0.1;
+  var cx = W * 0.42, cy = H * 0.55, r = H * 0.36;
+  // the Sun grows as the star brightens; at 10 Gyr it swallows Gaia
+  var sunR = 6 + 10 * Math.min(1, SIM.age / 10);
+  ctx.fillStyle = '#FFD860'; ctx.beginPath(); ctx.arc(W - 14, 14, sunR, 0, Math.PI * 2); ctx.fill();
+  // face
+  var g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.2, cx, cy, r);
+  g.addColorStop(0, '#5AA0E0'); g.addColorStop(1, '#1C3A70');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(80,160,90,0.7)';
+  ctx.beginPath(); ctx.ellipse(cx - r * 0.35, cy + r * 0.1, r * 0.3, r * 0.2, 0.4, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + r * 0.4, cy - r * 0.35, r * 0.22, r * 0.14, -0.3, 0, Math.PI * 2); ctx.fill();
+  if (mood == null) {
+    ctx.strokeStyle = '#0A1A30'; ctx.lineWidth = 2;
+    [-0.35, 0.35].forEach(function (dx) { ctx.beginPath(); ctx.arc(cx + dx * r, cy - r * 0.15, r * 0.14, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke(); });
+    ctx.beginPath(); ctx.moveTo(cx - r * 0.25, cy + r * 0.35); ctx.lineTo(cx + r * 0.25, cy + r * 0.35); ctx.stroke();
+    GAIA.msg = 'Gaia sleeps. Life has not yet formed.';
+    return;
+  }
+  // eyes follow the pointer
+  var rect = cv.getBoundingClientRect();
+  var ex = GAIA.mouse[0] - (rect.left + cx), ey = GAIA.mouse[1] - (rect.top + cy);
+  var L = Math.sqrt(ex * ex + ey * ey) || 1, look = Math.min(1, L / 300);
+  [-0.35, 0.35].forEach(function (dx) {
+    ctx.fillStyle = '#F4F8FF'; ctx.beginPath(); ctx.arc(cx + dx * r, cy - r * 0.15, r * 0.16, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#0A1A30'; ctx.beginPath(); ctx.arc(cx + dx * r + ex / L * look * r * 0.07, cy - r * 0.15 + ey / L * look * r * 0.07, r * 0.07, 0, Math.PI * 2); ctx.fill();
+  });
+  var curve = (GAIA.mood - 0.5) * 2;   // -1 horror .. +1 bliss
+  ctx.strokeStyle = '#0A1A30'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(cx - r * 0.3, cy + r * 0.35); ctx.quadraticCurveTo(cx, cy + r * 0.35 + curve * r * 0.35, cx + r * 0.3, cy + r * 0.35); ctx.stroke();
+  var moods = ['Horror', 'Misery', 'Worry', 'Unease', 'Calm', 'Content', 'Joy', 'Bliss'];
+  GAIA.msg = moods[Math.min(7, Math.floor(GAIA.mood * 8))] + ' — ' + gaiaComment();
+}
+function gaiaComment() {
+  if (!SIM) return '';
+  if ((SIM.dust || 0) > 0.3) return 'the sky is dark with dust.';
+  if (SIM.globalTemp < -10) return 'the seas are freezing over.';
+  if (SIM.globalTemp > 40) return 'the planet is burning up.';
+  if (SIM.lifeStage >= 3 && SIM.o2 < 0.15) return 'the air is thin of oxygen.';
+  if (SIM.civ && SIM.civ.pollution > 30) return 'the cities are choking on their own waste.';
+  if (SIM.lifeStage >= 7) return 'a thinking species walks the world.';
+  if (SIM.lifeStage >= 4) return 'green spreads across the continents.';
+  return 'life stirs in the seas.';
+}
+
+// ---------- Report window ----------
+function viabilityText() {
+  var o2 = SIM.o2, dust = SIM.dust || 0;
+  var bad = (SIM.lifeStage >= 3 && (o2 < 0.10 || o2 > 0.30)) || dust > 0.5;
+  var marginal = (o2 < 0.15 || o2 > 0.25) || dust > 0.15;
+  var good = o2 >= 0.18 && o2 <= 0.23 && dust < 0.02;
+  return bad ? 'Life cannot exist here' : (marginal ? 'Life can exist, but barely' : (good ? 'Paradise' : 'Life can exist fairly well'));
+}
+function iqRace() {
+  var live = SIM.clades.filter(function (c) { return !c.extinct; });
+  live.sort(function (a, b) { return (b.stage * 10 + b.biomass * 5) - (a.stage * 10 + a.biomass * 5); });
+  return live.slice(0, 3).map(function (c) { return { name: c.name, iq: Math.min(100, Math.round(c.stage * 14 + c.biomass * 40 + (c.isSapient ? 30 : 0))) }; });
+}
+function reportHTML() {
+  var ts = SIM.timeScale == null ? 1 : SIM.timeScale;
+  var rows = [];
+  function row(k, v) { rows.push('<div class="row"><span>' + k + '</span><b>' + v + '</b></div>'); }
+  var top = STAGES[SIM.lifeStage] ? STAGES[SIM.lifeStage].name : '';
+  if (SIM.daisy) {
+    var b = 0, w = 0, nL = 0, d = WORLD.data;
+    for (var i = 0; i < d.bedrock.length; i++) if (d.bedrock[i] > SIM.seaLevel) { b += SIM.daisy.black[i]; w += SIM.daisy.white[i]; nL++; }
+    b /= Math.max(1, nL); w /= Math.max(1, nL);
+    row('Major daisy', b > w ? 'Black (' + (b * 100).toFixed(0) + '%)' : 'White (' + (w * 100).toFixed(0) + '%)');
+    row('Black / white / bare', (b * 100).toFixed(0) + ' / ' + (w * 100).toFixed(0) + ' / ' + ((1 - b - w) * 100).toFixed(0) + '%');
+    row('Solar luminosity', (SIM.sunLum * 100).toFixed(0) + '%');
+    row('Temperature', SIM.globalTemp.toFixed(1) + ' °C (bare planet ' + (SIM.daisyBareT != null ? SIM.daisyBareT.toFixed(1) : '?') + ')');
+    row('Current task', 'Test Gaia’s regulation; fill the world with daisies');
+  } else if (SIM.terraGoal) {
+    var g = SIM.terraGoal;
+    row('Viability', viabilityText());
+    row('Pressure', (SIM.pressure || 1).toFixed(3) + ' bar');
+    row('Ocean', (100 * (1 - SIM.rockFrac)).toFixed(0) + '% of surface');
+    row('Biomass', (SIM.vegFrac * 100).toFixed(1) + '% (goal ' + g.biomass + '%)');
+    row('Population', ensureCiv().population.toFixed(0) + ' M (goal ' + g.population + ' M)');
+    row('Years left', Math.max(0, g.deadline - SIM.year).toFixed(0));
+    row('Current task', SIM.vegFrac * 100 < g.biomass ? 'Warm it, wet it, seed it' : 'Bring the colonists');
+  } else if (ts === 0) {
+    row('Viability', viabilityText());
+    row('Biomass', (SIM.biomass != null ? (SIM.biomass * 100).toFixed(1) + '%' : (SIM.vegFrac * 100).toFixed(1) + '%'));
+    row('Highest life', top);
+    row('Current task', 'Evolve multicellular life');
+  } else if (ts === 1) {
+    var race = iqRace();
+    if (race.length) rows.push('<div class="row" style="display:block"><span>Race to intelligence</span>' + race.map(function (r, i) { return '<div style="display:flex;justify-content:space-between"><span>' + (i + 1) + '. ' + r.name + '</span><b>IQ ' + r.iq + '</b></div>'; }).join('') + '</div>');
+    row('Biomass', (SIM.vegFrac * 100).toFixed(1) + '%');
+    row('Viability', viabilityText());
+    row('Growth (CO₂)', SIM.co2 < 150 ? 'Starved' : (SIM.co2 < 400 ? 'Fair' : 'Lush'));
+    row('Current task', SIM.lifeStage < 6 ? 'Evolve intelligence' : 'Discover fire');
+  } else {
+    var c = ensureCiv(), civ = findCivClade(), age = Math.floor(SIM.civTech || 0);
+    row('Sentient type', civ ? civ.name : '—');
+    row('Highest tech', CIV_TECH_AGES[Math.min(age, 7)] + ' Age');
+    row('Population', c.population >= 1000 ? (c.population / 1000).toFixed(2) + ' billion' : c.population.toFixed(0) + ' million');
+    row('Life quality', QOL_LEVELS[c.qol]);
+    rows.push('<div class="civ-head" style="margin-top:4px">WORK × EFF% = ENERGY</div>');
+    var eff = CIV_EFF[Math.min(age, 7)];
+    for (var k = 0; k < 5; k++) rows.push('<div class="row"><span>' + CIV_SOURCES[k] + '</span><b>' + (16 * c.invest[k] / 4).toFixed(0) + ' × ' + eff[k] + '% = ' + c.bySource[k].toFixed(1) + '</b></div>');
+    row('Work week', c.hours.toFixed(0) + ' hrs → ' + c.energy.toFixed(1) + ' (need ' + CIV_ENERGY_NEED[Math.min(age, 7)] + ')');
+    row('Fossil / atomic fuel', (SIM.fossilC || 0).toFixed(0) + ' GtC / ' + c.atomicFuel.toFixed(0));
+    row('Pollution', c.pollution.toFixed(1) + (c.pollution > 30 ? ' (dangerous)' : ''));
+    row('Wars / plagues', c.wars + ' / ' + c.plagues);
+    row('Current task', age < 3 ? 'Reach the Industrial Revolution' : 'Interstellar migration');
+  }
+  return rows.join('');
+}
+function renderReport() {
+  var host = document.getElementById('reportBody');
+  if (!host || !SIM || !WORLD) return;
+  host.innerHTML = reportHTML();
+  var g = document.getElementById('gaiaMsg'); if (g) g.textContent = GAIA.msg;
+}
+
+// ---------- Daisyworld ----------
+function stepDaisy(W, dtY) {
+  if (!SIM.daisy) return;
+  var d = W.data, n = d.bedrock.length, D = SIM.daisy;
+  var dt = Math.min(dtY, 10);
+  for (var i = 0; i < n; i++) {
+    if (d.bedrock[i] <= SIM.seaLevel) continue;
+    var r = DAISY.step(D.black[i], D.white[i], d.temperature[i], dt);
+    D.black[i] = r[0]; D.white[i] = r[1];
+  }
+  // the scenario's sun brightens steadily: 0.8 -> 1.7 over ~3600 years
+  SIM.sunOverride = Math.min(1.7, (SIM.sunOverride || 0.8) + 0.00025 * dtY);
+  // bare-planet reference temperature (0-D, same albedo assumptions)
+  var p = EBM.DEFAULTS, ap = EBM.planetaryAlbedo(DAISY.DEFAULTS.albGround * SIM.rockFrac + 0.08 * (1 - SIM.rockFrac), p.albAtm);
+  SIM.daisyBareT = (p.S0 * SIM.sunLum / 4 * (1 - ap) - (p.A - EBM.forcing(EBM.params({ co2: SIM.co2, ch4: SIM.ch4 })))) / p.B;
+}
+function daisyAlbedo(i) {
+  var D = SIM.daisy, ap = DAISY.albedo(D.black[i], D.white[i], DAISY.DEFAULTS);
+  // invert alpha_p = a + (1-a)^2 as / (1 - a as) so the tile presents Lovelock's planetary albedo
+  var a = SIM.albAtm != null ? SIM.albAtm : EBM.DEFAULTS.albAtm, t = 1 - a;
+  return clamp((ap - a) / (t * t + a * (ap - a)), 0.02, 0.95);
+}
+
+// ---------- Scenarios added from SimEarth ----------
+function scenarioDaisyworld() {
+  var d = WORLD.data, n = d.bedrock.length;
+  SIM.clades = []; SIM.lifeStage = 0; SIM.exodus = false; SIM.civTech = 0;
+  SIM.co2 = 280; SIM.ch4 = 700; SIM.o2 = 0.21; SIM.age = 4.54;
+  SIM.carbonLock = true; SIM.noSpontaneousLife = true;
+  SIM.sunOverride = 0.8;   // bare planet ~ -19 C here; daisies germinate above 5 C (L ~ 0.9) and die above 40 C (L ~ 1.4)
+  SIM.scenarioTimeScale = 2; SIM.timeScale = 2; SIM.timeScaleLock = false;
+  SIM.daisy = { black: new Float32Array(n), white: new Float32Array(n) };
+  for (var i = 0; i < n; i++) { d.iceDepth[i] = 0; d.vegetation[i] = 0; d.temperature[i] = 10; if (d.bedrock[i] > SIM.seaLevel) { SIM.daisy.black[i] = 0.05; SIM.daisy.white[i] = 0.05; } }
+  notifyEvent('Daisyworld: the sun will brighten steadily. Watch whether the daisies hold the temperature.', 'good');
+}
+function scenarioMars() {
+  var d = WORLD.data, n = d.bedrock.length;
+  SIM.clades = []; SIM.lifeStage = 0; SIM.exodus = false; SIM.civTech = 0;
+  SIM.age = 4.54; SIM.sunOverride = 0.43;          // 1.52 AU
+  SIM.pressure = 0.006; SIM.albAtm = 0.12;          // thin, nearly cloudless
+  SIM.co2 = 5700; SIM.ch4 = 1; SIM.o2 = 0.001;      // 95% of a 6 mbar atmosphere
+  SIM.seaLevel = -0.80;                              // no ocean yet: the deepest basins lie at -0.75
+  SIM.noSpontaneousLife = true;
+  SIM.scenarioTimeScale = 3; SIM.timeScale = 3; SIM.timeScaleLock = false;
+  SIM.terra = { oxygenator: 0, n2gen: 0, vaporator: 0, co2gen: 0, biomefactory: 0 };
+  SIM.terraGoal = { biomass: 5, population: 100, deadline: SIM.year + 500 };
+  for (var i = 0; i < n; i++) { d.iceDepth[i] = Math.abs(WORLD.tiles[i].lat) > 1.3 ? 0.05 : 0; d.vegetation[i] = 0; d.temperature[i] = -60; d.moisture[i] = 0; }
+  showBanner('MARS', 'Your new job is to turn Mars into a planet fit for human life. 500 years. The model control panels are yours; life will not appear on its own.', 'warn');
+}
+function scenarioAquarium() {
+  var d = WORLD.data, n = d.bedrock.length;
+  for (var i = 0; i < n; i++) { d.bedrock[i] = Math.min(d.bedrock[i], SIM.seaLevel - 0.06); d.iceDepth[i] = 0; d.vegetation[i] = 0; }
+  SIM.age = 3.0; SIM.co2 = 2000; SIM.ch4 = 2000; SIM.o2 = 0.05; SIM.sunOverride = 1.0;
+  SIM.scenarioTimeScale = null;
+  SIM.lifeStage = 3;
+  synthesizeCladesForStage(3, 'aquarium');
+  recomputeLifeStage();
+  showBanner('AQUARIUM', 'A world with no continents will never develop sentient life. Create land so civilization can evolve.', 'warn');
+}
+function clearScenarioLocks() {
+  SIM.daisy = null; SIM.carbonLock = false; SIM.noSpontaneousLife = false; SIM.terraGoal = null;
+  SIM.scenarioTimeScale = null; SIM.timeScaleLock = false;
+  SIM.pressure = 1; SIM.albAtm = null; SIM.dust = 0;
+  if (SIM.seaLevel < -0.3) SIM.seaLevel = 0;
+}
+
+// ---------- History (extended) ----------
+var HISTORY_PRESETS = [
+  { name: 'Climate & air', series: [['temp', -20, 40, '#FF9060', 'T'], ['o2', 0, 30, '#80D080', 'O₂ %'], ['logco2', 1.8, 5.5, '#D0A060', 'log CO₂'], ['ice', 0, 0.7, '#80B0FF', 'ice']] },
+  { name: 'Water & life',  series: [['rain', 0, 5, '#60C0FF', 'rain'], ['biomass', 0, 0.4, '#80D080', 'biomass'], ['diversity', 0, 12, '#FFD040', 'clades'], ['pop', 0, 12000, '#FF80C0', 'pop M']] },
+  { name: 'Civilization',  series: [['fossil', 0, 15000, '#D0A060', 'fossil'], ['pollution', 0, 60, '#C080FF', 'pollution'], ['wars', 0, 20, '#FF6060', 'wars'], ['plagues', 0, 20, '#80FF80', 'plagues']] }
+];
+var historyPreset = 0;
+function cycleHistoryPreset() { historyPreset = (historyPreset + 1) % HISTORY_PRESETS.length; drawHistory(); }
+function historyLegendHTML() {
+  var pr = HISTORY_PRESETS[historyPreset];
+  return pr.series.map(function (s) { return '<span style="color:' + s[3] + '">' + s[4] + '</span>'; }).join(' · ') + ' <span style="color:#405070;cursor:pointer" id="histCycle" title="next graph set">⟳ ' + pr.name + '</span>';
 }
 
 // =============================================================
@@ -5915,7 +6759,7 @@ function renderLiveEquations() {
 var SETTINGS_KEY = 'simearth_settings_v1';
 var SETTINGS = {
   vol: 0.22, clouds: true, meteors: true, cities: true, hover: true, autosave: false, sfx: true, fps: false,
-  dayNight: true, aurora: true
+  dayNight: true, aurora: true, difficulty: 'easy'
 };
 function loadSettings() {
   try {

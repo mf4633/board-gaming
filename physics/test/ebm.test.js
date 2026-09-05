@@ -65,6 +65,11 @@ test('CO2 doubling forcing = 3.71 W/m^2 (Myhre 1998)', function () {
   assert.ok(f1000 > 12 && f1000 < 30, '1000 ppm CH4 forcing ' + f1000);
   var below = EBM.forcing(EBM.params({ ch4: 19999 })), above = EBM.forcing(EBM.params({ ch4: 20001 }));
   assert.ok(Math.abs(above - below) < 0.01, 'continuous at the join');
+  // pressure broadening: doubling N2 warms ~4.4 K (Goldblatt 2009) -> ~9 W/m^2; a Martian 6 mbar atmosphere loses ~66
+  assert.ok(Math.abs(EBM.forcing(EBM.params({ pressure: 2 })) - 9.0) < 0.5);
+  assert.ok(Math.abs(EBM.forcing(EBM.params({ pressure: 0.006 })) + 20.9) < 0.5, 'floored at 0.2 bar');
+  // a Pinatubo veil (tau 0.15) is about -4 W/m^2
+  assert.ok(Math.abs(EBM.forcing(EBM.params({ aerosol: 0.15 })) + 4.05) < 0.2);
 });
 
 test('planetary albedo: dark ocean ~0.30, snow ~0.65 through a 0.25 atmosphere', function () {

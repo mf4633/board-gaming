@@ -17,7 +17,7 @@
 //   volcanic      F_v = volc0 * tectonic                             0.1 GtC/yr modern
 //   weathering    F_w = volc0 (pCO2/280)^0.3 exp((T-T0)/13.7)        Walker-Hays-Kasting 1981
 //                       * land/0.29 * (1 + gVeg veg)/(1 + gVeg veg0)  * (1 - 0.85 ice) * liquid(T)
-//   organic burial F_b = burial0 * productivity                      source of O2
+//   organic burial F_b = burial0 * productivity * sqrt(land/0.29)      source of O2 (sediment supply)
 //   oxidative weathering F_ox = oxWeath0 sqrt(O2/0.21) land/0.29 liquid   sink of O2, returns C
 //   fossil burn   F_f = min(fossil/dt, demand)                       civilization
 //   fossil decay  fossil / fossilTau                                  reserves plateau ~ fossilFrac*burial*tau
@@ -48,30 +48,30 @@ var CARBON = (function () {
   // Sea water sits at or above its freezing point whatever the air does, and
   // sea ice seals the exchange: an ice-covered fraction of the ocean holds
   // its carbon but takes no more (the snowball escape mechanism).
-  function oceanC(pco2, T, p, ice) {
+  function oceanC(pco2, T, p, ice, oceanFrac) {
     var Tw = T < -2 ? -2 : T;
-    var open = 1 - (ice || 0);
+    var open = (1 - (ice || 0)) * (oceanFrac == null ? 1 : oceanFrac / 0.7);   // ocean carbon scales with how much ocean there is
     if (open < 0.02) open = 0.02;
     return p.oceanC0 * open * Math.pow(pco2 / (p.pco2_0 * Math.exp(p.solub * (Tw - p.T0))), 1 / p.revelle);
   }
-  function cexFromPco2(pco2, T, pIn, ice) {
+  function cexFromPco2(pco2, T, pIn, ice, oceanFrac) {
     var p = params(pIn);
-    return p.gtcPerPpm * pco2 + oceanC(pco2, T, p, ice);
+    return p.gtcPerPpm * pco2 + oceanC(pco2, T, p, ice, oceanFrac);
   }
   // Bisection: f(pco2) = cex(pco2) - target is monotone increasing.
-  function pco2FromCex(cEx, T, pIn, ice) {
+  function pco2FromCex(cEx, T, pIn, ice, oceanFrac) {
     var p = params(pIn);
     var lo = 1, hi = 1e7;
-    if (cexFromPco2(hi, T, p, ice) < cEx) return hi;
+    if (cexFromPco2(hi, T, p, ice, oceanFrac) < cEx) return hi;
     for (var k = 0; k < 60; k++) {
       var mid = Math.sqrt(lo * hi);              // geometric bisection: pco2 spans 7 decades
-      if (cexFromPco2(mid, T, p, ice) < cEx) lo = mid; else hi = mid;
+      if (cexFromPco2(mid, T, p, ice, oceanFrac) < cEx) lo = mid; else hi = mid;
       if (hi / lo < 1 + 1e-9) break;
     }
     return Math.sqrt(lo * hi);
   }
-  function initState(pco2, T, o2, pIn, ice) {
-    return { cEx: cexFromPco2(pco2, T, pIn, ice), fossil: 0, crust: 0, o2: o2, ch4: 700, co2: pco2, flux: null };
+  function initState(pco2, T, o2, pIn, ice, oceanFrac) {
+    return { cEx: cexFromPco2(pco2, T, pIn, ice, oceanFrac), fossil: 0, crust: 0, o2: o2, ch4: 700, co2: pco2, flux: null };
   }
   function ch4Lifetime(o2, p) {
     var life = p.ch4Life0 * (0.21 / Math.max(o2, 1e-6));
@@ -91,9 +91,12 @@ var CARBON = (function () {
     var nSub = Math.max(1, Math.ceil(dtY / p.subStepYr));
     var dt = dtY / nSub;
     var ice = env.seaIce != null ? env.seaIce : (env.iceFrac || 0);   // fraction of the OCEAN under ice seals the exchange
-    var T0step = env.T, pco2Start = pco2FromCex(st.cEx, T0step, p, ice);
+    var of = env.oceanFrac;
+    var T0step = env.T, pco2Start = pco2FromCex(st.cEx, T0step, p, ice, of);
     var sens = env.climSens != null ? env.climSens : 0.48;
-    var T = T0step, liquid = (T > 0 && T < 100) ? 1 : 0;
+    // liquid-water gate on the global mean: a planet averaging -5 C still weathers in its tropics
+    function liquidAt(Tm) { return Tm < 100 ? Math.max(0, Math.min(1, (Tm + 10) / 15)) : 0; }
+    var T = T0step, liquid = liquidAt(T);
     var landF = (env.landFrac != null ? env.landFrac : p.land0) / p.land0;
     var iceF = Math.max(0.05, 1 - 0.85 * (env.iceFrac || 0)) / (1 - 0.85 * p.ice0);   // normalized to modern ice cover
     var vegF = (1 + p.gVeg * (env.veg || 0)) / (1 + p.gVeg * p.veg0);
@@ -106,12 +109,12 @@ var CARBON = (function () {
     if (env.pulseO2) o2Mol -= env.pulseO2 * p.airMol;
     var done = 0;
     for (var s = 0; done < dtY - 1e-9 && s < 400; s++) {
-      var pco2 = pco2FromCex(st.cEx, T, p, ice);
+      var pco2 = pco2FromCex(st.cEx, T, p, ice, of);
       T = T0step + sens * 5.35 * Math.log(Math.max(1e-3, pco2) / Math.max(1e-3, pco2Start));
-      liquid = (T > 0 && T < 100) ? 1 : 0;
+      liquid = liquidAt(T);
       var Fv = p.volc0 * (env.tectonic != null ? env.tectonic : 1);
       var Fw = liquid * p.volc0 * Math.pow(pco2 / p.pco2_0, p.weathCO2) * Math.exp((T - p.T0) / p.weathT) * landF * vegF * iceF;
-      var Fb = p.burial0 * prod;
+      var Fb = p.burial0 * prod * Math.sqrt(landF);        // burial follows sediment supply, which follows exposed land (Berner)
       var Fox = liquid * p.oxWeath0 * Math.sqrt(Math.max(0, st.o2) / 0.21) * landF;
       var Ff = Math.min(st.fossil / dt, demand);   // dt here is the nominal substep; the reserve floor below keeps it non-negative
       // engineered carbon removal, to the crust; a civilization stops at its
@@ -135,7 +138,7 @@ var CARBON = (function () {
       dt = dtY / nSub;
     }
     for (var k in acc) if (k !== 'reductant') acc[k] /= dtY;   // time-weighted mean fluxes, GtC/yr
-    st.co2 = pco2FromCex(st.cEx, T0step, p, ice);
+    st.co2 = pco2FromCex(st.cEx, T0step, p, ice, of);
     // methane: lifetime << step, so it sits at its steady state
     var life = ch4Lifetime(st.o2, p);
     var ch4Gt = (env.ch4Source || 0) * life;

@@ -13,8 +13,9 @@
 //   OLR  = A' + B*T                            Budyko linearization of sigma*T^4
 //          with water-vapor and lapse-rate feedbacks folded into B
 //          (Planck-only B would be ~3.3; 2.09 is the observed effective slope)
-//   A'   = A - dF,   dF = 5.35 ln(CO2/280) + 0.036 (sqrt(CH4) - sqrt(700))
-//          (Myhre et al. 1998 forcing fits; CH4 in ppb, logarithmic above 20 ppm)
+//   A'   = A - dF,   dF = 5.35 ln(CO2/280) + 0.036 (sqrt(CH4) - sqrt(700)) + 13 ln(P/1 bar) - 27 tau
+//          (Myhre et al. 1998 forcing fits; CH4 in ppb, logarithmic above 20 ppm;
+//           N2 pressure broadening after Goldblatt et al. 2009; aerosol veil scaled to Pinatubo)
 //          Above the Simpson-Nakajima limit OLR flattens (runaway greenhouse),
 //          rolling over smoothly from slope B to slope bHot at olrLim.
 //   geo  = geothermal / internal heat flux, W/m^2
@@ -46,6 +47,8 @@ var EBM = (function () {
     obliquity: 0.4091,  // rad, 23.44 deg
     co2: 280, ch4: 700, // ppm, ppb
     co2Ref: 280, ch4Ref: 700,
+    pressure: 1.0,      // bar; N2 pressure broadening ~ +9 W/m^2 per doubling (Goldblatt et al. 2009: 2x N2 -> +4.4 K)
+    aerosol: 0.0,       // stratospheric aerosol optical depth; Pinatubo tau 0.15 -> -4 W/m^2 (~ -27 W/m^2 per unit tau)
     albAtm: 0.22,       // atmospheric reflectance (clouds + Rayleigh); gives Bond albedo 0.30 and 14.6 degC for modern Earth
     albSnow: 0.55,      // annual-mean surface albedo of snow / sea ice (planetary ~0.62, North 1975)
     snowT: -10.0,       // degC, centre of the snow switch: North (1975) ice line, annual-mean surface T
@@ -104,6 +107,8 @@ var EBM = (function () {
     var m = Math.max(0, p.ch4), m1 = 20000;
     if (m <= m1) f += 0.036 * (Math.sqrt(m) - Math.sqrt(p.ch4Ref));
     else f += 0.036 * (Math.sqrt(m1) - Math.sqrt(p.ch4Ref)) + 4.0 * Math.log(m / m1);
+    f += 13.0 * Math.log(Math.max(0.2, p.pressure));      // pressure broadening of the absorption lines (fit floored at 0.2 bar: below that the absorbers themselves are gone)
+    f -= 27.0 * Math.max(0, p.aerosol);                    // sulfate / dust veil reflects sunlight
     return f;
   }
   function planetaryAlbedo(as, a) {
