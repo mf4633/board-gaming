@@ -4,7 +4,10 @@
   "scripts": {
     "generate": "node scripts/generate-catalog.js",
     "og": "node scripts/generate-og-images.js",
-    "stamp-og": "node scripts/stamp-og-meta.js"
+    "stamp-og": "node scripts/stamp-og-meta.js",
+    "test": "node --test \"physics/test/*.test.js\"",
+    "physics": "node scripts/sync-physics.js",
+    "physics:check": "node scripts/sync-physics.js --check"
   },
   "devDependencies": {
     "sharp": "^0.33.5"
