@@ -85,6 +85,42 @@
   #locResult td { padding: 1px 4px 1px 0; white-space: nowrap; }
   #locResult td:last-child { text-align: right; color: #B0C8E0; }
   #locResult tr.tot td { color: #FFD040; }
+  #locResult .tz-toggle { color: #4080D0; cursor: pointer; text-decoration: underline dotted; }
+  #locResult .tz-toggle:hover { color: #FFD040; }
+  /* Plan (Pro) block */
+  .pro-badge { display: inline-block; margin-left: 6px; padding: 0 5px; border: 1px solid #FFD040; border-radius: 3px; color: #FFD040; font-size: 0.8em; letter-spacing: 1px; vertical-align: middle; }
+  .pro-btn.locked { opacity: 0.6; }
+  .pro-btn.locked::after { content: '  \1F512'; font-size: 0.9em; }
+  .pro-result { font-size: 0.68em; color: #8098B0; line-height: 1.45; margin: 4px 0 2px; }
+  .pro-result b { color: #FFD040; font-weight: normal; }
+  .pro-result .act { color: #40E0FF; cursor: pointer; text-decoration: underline dotted; }
+  .pro-result .act:hover { color: #FFD040; }
+  #proLock { display: none; font-size: 0.66em; color: #B0C8E0; line-height: 1.45; margin-top: 4px; padding: 6px 8px; border: 1px solid #3A3010; background: #14120A; border-radius: 3px; }
+  #proLock a { color: #FFD040; }
+  #proLock.show { display: block; }
+  #cmpTable { width: 100%; border-collapse: collapse; font-family: 'Courier New', monospace; font-size: 0.66em; margin: 4px 0 2px; }
+  #cmpTable td { padding: 2px 3px 2px 0; white-space: nowrap; color: #8098B0; border-top: 1px solid #1A2A40; }
+  #cmpTable td.d { color: #FFD040; text-align: right; }
+  #cmpTable td.x { color: #506880; cursor: pointer; text-align: right; }
+  #cmpTable td.x:hover { color: #FF6040; }
+  #cmpTable td.site { color: #B0C8E0; cursor: pointer; }
+  #cmpTable td.site:hover { color: #40E0FF; }
+  /* Printable viewing card: hidden on screen, the only thing on paper */
+  #printCard { display: none; }
+  @media print {
+    body { background: #fff !important; color: #111 !important; overflow: visible !important; user-select: text; }
+    #globeCanvas, .panel, #titleOverlay, #helpBtn, #panelToggle, #landmarkTip, #helpModal, #mathModal, #loadOverlay, #legend, #controlBar, .seo-content, #about, #about ~ section, .bgh-head { display: none !important; }
+    #printCard { display: block; font-family: Georgia, serif; color: #111; max-width: 720px; margin: 0 auto; padding: 24px; }
+    #printCard h1 { font-size: 1.5em; margin: 0 0 2px; letter-spacing: 1px; }
+    #printCard .sub { color: #555; font-style: italic; margin-bottom: 14px; }
+    #printCard .big { font-size: 2.4em; margin: 6px 0 0; }
+    #printCard .biglbl { color: #555; margin-bottom: 12px; }
+    #printCard table { border-collapse: collapse; width: 100%; font-family: 'Courier New', monospace; font-size: 0.95em; margin: 8px 0 14px; }
+    #printCard th, #printCard td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #ccc; }
+    #printCard th { font-family: Georgia, serif; font-weight: normal; color: #555; letter-spacing: 1px; font-size: 0.85em; }
+    #printCard td.r, #printCard th.r { text-align: right; }
+    #printCard .foot { color: #777; font-size: 0.8em; margin-top: 16px; border-top: 1px solid #ccc; padding-top: 8px; }
+  }
   #drawerLegend { display: none; }   /* shown only inside the mobile drawer */
 
   #viewPanel { top: calc(var(--nav-h, 0px) + 70px); right: 16px; min-width: 180px; max-height: calc(100vh - var(--nav-h, 0px) - 150px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: #1A2A40 transparent; }
@@ -315,6 +351,14 @@
   <button class="view-btn" id="locGeo" style="text-align:center;padding:4px;margin:0 0 2px">USE MY LOCATION</button>
   <div id="locResult" aria-live="polite" style="font-size:0.68em;color:#8098B0;line-height:1.45;margin-top:2px;min-height:2.8em"></div>
   <button class="view-btn" id="openDurMath" style="display:none;text-align:center;padding:4px;margin:4px 0 2px">HOW IS DURATION COMPUTED?</button>
+  <h4 style="margin-top:10px">PLAN <span class="pro-badge" id="proBadge">PRO</span></h4>
+  <button class="view-btn pro-btn" id="proBest" title="Find the nearest centerline point and the longest totality within reach of your pin">BEST SPOT NEAR THIS PIN</button>
+  <div class="pro-result" id="proBestResult"></div>
+  <button class="view-btn pro-btn" id="proCompare" title="Keep this viewpoint in a comparison table that follows you between eclipses">ADD PIN TO COMPARE</button>
+  <div id="proCompareBox"></div>
+  <button class="view-btn pro-btn" id="proIcs" title="Calendar file with C1–C4 for this viewpoint and reminders">EXPORT CALENDAR (.ICS)</button>
+  <button class="view-btn pro-btn" id="proPrint" title="One-page viewing card for this viewpoint">PRINT VIEWING CARD</button>
+  <div id="proLock" aria-live="polite">These planning tools are part of the desktop app — <a id="proLockLink" href="https://hydroengineer.itch.io/eclipse-predictor" target="_blank" rel="noopener">get Eclipse Predictor on itch.io</a>. The globe, paths, and viewpoint durations stay free here.</div>
   <h4 style="margin-top:10px">DETAIL</h4>
   <button class="view-btn" id="openMath">SHOW THE MATH</button>
   <button class="view-btn" id="shareBtn">COPY SHARE LINK</button>
@@ -332,6 +376,7 @@
 </div>
 
 <div id="landmarkTip"></div>
+<div id="printCard" aria-hidden="true"></div>
 
 <div id="mathModal">
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="mathTitle">
@@ -1617,6 +1662,9 @@ const state = {
   showLandmarks: true,
   playing: false,
   playTimer: null,
+  pathInfo: null,          // central-path samples for the current eclipse (Pro tools read it)
+  localTime: false,        // contact times shown in the device's local zone instead of UTC
+  compare: [],             // Pro: saved viewpoints [{lat, lon}]
 };
 
 function loadEclipse(i) {
@@ -1627,6 +1675,7 @@ function loadEclipse(i) {
 
   // Compute path
   const pathInfo = computeCentralPath(jd0, 3.0, 30);
+  state.pathInfo = pathInfo;
   const greatest = pathInfo.greatestIdx >= 0 ? pathInfo.points[pathInfo.greatestIdx] : null;
 
   clearGroup(pathGroup);
@@ -1725,6 +1774,8 @@ function loadEclipse(i) {
   document.getElementById('ecSunAlt').textContent = sunAlt;
   document.getElementById('ecDesc').textContent = e.location;
   updateLocationResult(jd0);
+  renderCompare();
+  document.getElementById('proBestResult').textContent = '';
 
   // Date display + counter
   const dateStr = e.date.toUTCString().replace(' GMT', ' UTC').replace(/^[A-Za-z]{3}, /, '');
@@ -1860,6 +1911,19 @@ function formatTimeS(d) {
   const s = d.getUTCSeconds().toString().padStart(2, '0');
   return `${h}:${m}:${s}`;
 }
+// Device-local wall time for a contact, e.g. "14:26:51"; the zone label is shown once in the footer.
+function formatLocalS(d) {
+  try { return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }); }
+  catch (err) { return formatTimeS(d); }
+}
+function localZoneLabel(d) {
+  try {
+    const parts = new Intl.DateTimeFormat(undefined, { timeZoneName: 'short' }).formatToParts(d);
+    const z = parts.find(p => p.type === 'timeZoneName');
+    return z ? z.value : 'local';
+  } catch (err) { return 'local'; }
+}
+function contactTime(d) { return state.localTime ? formatLocalS(d) : formatTimeS(d); }
 function formatDurationLong(sec) {
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec - h * 3600) / 60);
@@ -1882,6 +1946,7 @@ function updateLocationResult(jd0) {
     drawViewpointMarker(null, null);
     mathBtn.style.display = 'none';
     if (state.idx >= 0) updateHash(ECLIPSES[state.idx]);
+    refreshProButtons();
     return null;
   }
   state.vp = { lat, lon };
@@ -1895,6 +1960,7 @@ function updateLocationResult(jd0) {
       + `<div class="vp-biglbl">The Sun is below the horizon here, or this spot is outside the penumbra. Click nearer the shaded band.</div>`;
     if (meta) meta.textContent = `Your spot: not visible`;
     mathBtn.style.display = 'none';
+    refreshProButtons();
     return `${where} — no eclipse here`;
   }
   const kindLabel = ({ total: 'TOTAL', annular: 'ANNULAR', partial: 'PARTIAL' })[info.kind] || info.kind.toUpperCase();
@@ -1905,7 +1971,7 @@ function updateLocationResult(jd0) {
   const row = (label, ev, strong) => {
     if (!ev) return '';
     const below = ev.altitude < 0 ? ' <span class="dim">(Sun below horizon)</span>' : '';
-    const t = formatTimeS(ev.time.date);
+    const t = contactTime(ev.time.date);
     return `<tr><td>${label}</td><td>${strong ? `<b>${t}</b>` : t}${below}</td></tr>`;
   };
   // Timeline strip: C1..C4 spans the bar; the totality window sits inside it; a cyan tick marks the peak.
@@ -1935,7 +2001,14 @@ function updateLocationResult(jd0) {
     + (central ? `<tr class="tot"><td>${phase[0].toUpperCase() + phase.slice(1)}</td><td><b>${formatDurationLong(totSec)}</b></td></tr>` : '')
     + `<tr><td>Partial phases C1→C4</td><td>${formatDurationLong(parSec)}</td></tr>`
     + `<tr><td>Obscuration</td><td>${(info.obscuration * 100).toFixed(1)}%</td></tr>`
-    + `</table><span class="dim">Times UTC · contacts by astronomy-engine, ±1 s</span>`;
+    + `</table><span class="dim">Times ${state.localTime ? localZoneLabel(info.peak.time.date) : 'UTC'} · <span class="tz-toggle" id="tzToggle" role="button" tabindex="0">show ${state.localTime ? 'UTC' : 'local time'}</span> · contacts ±1 s</span>`;
+  const tz = document.getElementById('tzToggle');
+  if (tz) {
+    const flip = () => { state.localTime = !state.localTime; updateLocationResult(jd0); };
+    tz.onclick = flip;
+    tz.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); flip(); } };
+  }
+  refreshProButtons();
   const summary = central ? `${kindLabel}, ${formatDuration(totSec)} ${phase}` : `partial, ${(info.obscuration * 100).toFixed(0)}% obscured`;
   if (meta) meta.textContent = `Your spot: ${summary}, peak ${formatTimeS(info.peak.time.date)} UTC`;
   mathBtn.style.display = 'block';
@@ -2213,9 +2286,213 @@ document.getElementById('locGeo').onclick = () => {
     { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
   );
 };
-// Default: Hornedo, Cantabria — Aug 2026 eclipse base
-document.getElementById('locLat').value = '43.3872';
-document.getElementById('locLon').value = '-3.7478';
+// No default pin: the empty state invites a click on the globe (a stale default pin reads as
+// "not visible" on most eclipses). Deep links (#date@lat,lon) still populate the inputs.
+
+//==============================================================
+// 9.5 PLAN (PRO) — best spot, compare, calendar export, viewing card
+// Present in every build; unlocked when the host injects window.__PRO__ = true
+// (the desktop app does). Free builds show the tools locked with a store link.
+//==============================================================
+const PRO = window.__PRO__ === true;
+const PRO_STORE_URL = 'https://hydroengineer.itch.io/eclipse-predictor';
+
+function gcDistKm(lat1, lon1, lat2, lon2) {
+  const p1 = lat1 * DEG, p2 = lat2 * DEG, dp = (lat2 - lat1) * DEG, dl = (lon2 - lon1) * DEG;
+  const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+  return 2 * R_EARTH * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+function compassBearing(lat1, lon1, lat2, lon2) {
+  const p1 = lat1 * DEG, p2 = lat2 * DEG, dl = (lon2 - lon1) * DEG;
+  const y = Math.sin(dl) * Math.cos(p2);
+  const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+  const brg = (Math.atan2(y, x) * RAD + 360) % 360;
+  const names = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  return names[Math.round(brg / 22.5) % 16];
+}
+function totalitySec(info) {
+  return (info && info.total_begin && info.total_end) ? (info.total_end.time.ut - info.total_begin.time.ut) * 86400 : 0;
+}
+
+// Nearest centerline sample to the pin, and the longest central phase among path samples
+// within `radiusKm` (subsampled to keep it under ~40 local-eclipse searches).
+function bestSpotNear(lat, lon, radiusKm = 250) {
+  const pts = state.pathInfo ? state.pathInfo.points : [];
+  if (!pts.length || state.idx < 0) return null;
+  const jd0 = dateToJD(ECLIPSES[state.idx].date);
+  let nearest = null, nd = Infinity;
+  pts.forEach(p => { const d = gcDistKm(lat, lon, p.lat, p.lon); if (d < nd) { nd = d; nearest = p; } });
+  const nInfo = localEclipseAt(nearest.lat, nearest.lon, jd0);
+  const cand = pts.filter(p => gcDistKm(lat, lon, p.lat, p.lon) <= radiusKm);
+  const step = Math.max(1, Math.ceil(cand.length / 40));
+  let best = null;
+  for (let i = 0; i < cand.length; i += step) {
+    const p = cand[i];
+    const info = localEclipseAt(p.lat, p.lon, jd0);
+    const dur = totalitySec(info);
+    if (!best || dur > best.dur) best = { lat: p.lat, lon: p.lon, dur, info, dist: gcDistKm(lat, lon, p.lat, p.lon) };
+  }
+  return { nearest: { lat: nearest.lat, lon: nearest.lon, dist: nd, dur: totalitySec(nInfo), info: nInfo }, best, radiusKm };
+}
+
+function movePinTo(lat, lon) {
+  document.getElementById('locLat').value = lat.toFixed(4);
+  document.getElementById('locLon').value = lon.toFixed(4);
+  if (state.idx >= 0) updateLocationResult(dateToJD(ECLIPSES[state.idx].date));
+}
+
+function renderBestSpot() {
+  const out = document.getElementById('proBestResult');
+  if (!state.vp) { out.textContent = 'Set a viewpoint first.'; return; }
+  const r = bestSpotNear(state.vp.lat, state.vp.lon);
+  if (!r) { out.textContent = 'This eclipse has no central path — it is partial everywhere.'; return; }
+  const here = totalitySec(state.vpInfo);
+  const phase = (state.vpInfo && state.vpInfo.kind === 'annular') || (r.nearest.info && r.nearest.info.kind === 'annular') ? 'annularity' : 'totality';
+  const gain = (sec) => sec > here ? ` (+${formatDurationLong(sec - here)})` : sec < here ? ` (−${formatDurationLong(here - sec)})` : '';
+  const n = r.nearest, b = r.best;
+  let html = `Nearest centerline: <b>${n.dist.toFixed(0)} km ${compassBearing(state.vp.lat, state.vp.lon, n.lat, n.lon)}</b> → ${phase} <b>${formatDurationLong(n.dur)}</b>${gain(n.dur)} · <span class="act" data-lat="${n.lat.toFixed(4)}" data-lon="${n.lon.toFixed(4)}">move pin</span>`;
+  if (b) {
+    html += `<br>Longest within ${r.radiusKm} km: <b>${formatDurationLong(b.dur)}</b>${gain(b.dur)} at ${formatLatLon(b.lat, b.lon)}, ${b.dist.toFixed(0)} km ${compassBearing(state.vp.lat, state.vp.lon, b.lat, b.lon)} · <span class="act" data-lat="${b.lat.toFixed(4)}" data-lon="${b.lon.toFixed(4)}">move pin</span>`;
+  } else {
+    html += `<br>No centerline sample within ${r.radiusKm} km of the pin.`;
+  }
+  html += `<br><span class="dim">Centerline samples every 30 s of shadow travel; durations at sea level.</span>`;
+  out.innerHTML = html;
+  out.querySelectorAll('.act').forEach(a => { a.onclick = () => movePinTo(parseFloat(a.dataset.lat), parseFloat(a.dataset.lon)); });
+}
+
+// ---- Compare: saved viewpoints, re-evaluated for whichever eclipse is showing ----
+const compareGroup = new THREE.Group();
+globeGroup.add(compareGroup);
+function loadCompare() {
+  try { const v = JSON.parse(localStorage.getItem('ep_compare') || '[]'); if (Array.isArray(v)) state.compare = v.filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lon)).slice(0, 8); } catch (err) { /* ignore */ }
+}
+function saveCompare() { try { localStorage.setItem('ep_compare', JSON.stringify(state.compare)); } catch (err) { /* ignore */ } }
+function addCompare() {
+  if (!state.vp) return;
+  if (state.compare.some(s => Math.abs(s.lat - state.vp.lat) < 1e-4 && Math.abs(s.lon - state.vp.lon) < 1e-4)) return;
+  if (state.compare.length >= 8) state.compare.shift();
+  state.compare.push({ lat: state.vp.lat, lon: state.vp.lon });
+  saveCompare(); renderCompare();
+}
+function renderCompare() {
+  const box = document.getElementById('proCompareBox');
+  clearGroup(compareGroup);
+  if (!PRO || !state.compare.length || state.idx < 0) { box.innerHTML = ''; return; }
+  const jd0 = dateToJD(ECLIPSES[state.idx].date);
+  const rows = state.compare.map((s, i) => {
+    const info = localEclipseAt(s.lat, s.lon, jd0);
+    const dur = totalitySec(info);
+    const kind = info ? ({ total: 'T', annular: 'A', partial: 'P' })[info.kind] || '?' : '—';
+    const val = !info ? 'not visible' : dur > 0 ? formatDurationLong(dur) : `${(info.obscuration * 100).toFixed(0)}% partial`;
+    const peak = info ? contactTime(info.peak.time.date) : '';
+    compareGroup.add(makePoint(s.lat, s.lon, 0xFF60C0, 70));
+    return `<tr><td class="site" data-i="${i}" title="Move the pin here">${formatLatLon(s.lat, s.lon)}</td><td>${kind}</td><td class="d">${val}</td><td>${peak}</td><td class="x" data-i="${i}" title="Remove">✕</td></tr>`;
+  }).join('');
+  box.innerHTML = `<table id="cmpTable"><tbody>${rows}</tbody></table>`;
+  box.querySelectorAll('td.site').forEach(td => { td.onclick = () => { const s = state.compare[+td.dataset.i]; movePinTo(s.lat, s.lon); }; });
+  box.querySelectorAll('td.x').forEach(td => { td.onclick = () => { state.compare.splice(+td.dataset.i, 1); saveCompare(); renderCompare(); }; });
+}
+
+// ---- Calendar export (.ics) ----
+function icsStamp(d) { return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
+function icsEscape(s) { return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n'); }
+function buildIcs() {
+  const info = state.vpInfo, e = ECLIPSES[state.idx];
+  if (!info || !state.vp) return null;
+  const name = formatEclipseName(e);
+  const where = formatLatLon(state.vp.lat, state.vp.lon);
+  const phase = info.kind === 'annular' ? 'annularity' : 'totality';
+  const contacts = [
+    ['partial_begin', 'C1 — partial eclipse begins', 30],
+    ['total_begin', `C2 — ${phase} begins`, 5],
+    ['peak', 'Maximum eclipse', 0],
+    ['total_end', `C3 — ${phase} ends`, 0],
+    ['partial_end', 'C4 — partial eclipse ends', 0],
+  ].filter(([k]) => info[k]);
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Eclipse Predictor//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+  const now = icsStamp(new Date());
+  const uidBase = `${eclipseKey(e)}-${state.vp.lat.toFixed(4)}-${state.vp.lon.toFixed(4)}@eclipse-predictor`;
+  const tot = totalitySec(info);
+  const summaryAll = tot > 0 ? `${name} — ${formatDurationLong(tot)} of ${phase} at ${where}` : `${name} — ${(info.obscuration * 100).toFixed(0)}% partial at ${where}`;
+  const desc = contacts.map(([k, label]) => `${label}: ${formatTimeS(info[k].time.date)} UTC`).join('\n')
+    + `\nSun altitude at maximum: ${info.peak.altitude.toFixed(1)}°\nObscuration: ${(info.obscuration * 100).toFixed(1)}%\nComputed with astronomy-engine at sea level (±1 s). Cross-check: eclipse.gsfc.nasa.gov`;
+  lines.push('BEGIN:VEVENT', `UID:all-${uidBase}`, `DTSTAMP:${now}`, `DTSTART:${icsStamp(info.partial_begin.time.date)}`, `DTEND:${icsStamp(info.partial_end.time.date)}`,
+    `SUMMARY:${icsEscape(summaryAll)}`, `DESCRIPTION:${icsEscape(desc)}`, `GEO:${state.vp.lat.toFixed(4)};${state.vp.lon.toFixed(4)}`, `LOCATION:${icsEscape(where)}`,
+    'BEGIN:VALARM', 'TRIGGER:-P1D', 'ACTION:DISPLAY', 'DESCRIPTION:Solar eclipse tomorrow — check the forecast and pack the glasses', 'END:VALARM', 'END:VEVENT');
+  contacts.forEach(([k, label, alarmMin]) => {
+    const d = info[k].time.date;
+    lines.push('BEGIN:VEVENT', `UID:${k}-${uidBase}`, `DTSTAMP:${now}`, `DTSTART:${icsStamp(d)}`, `DTEND:${icsStamp(new Date(d.getTime() + 60000))}`,
+      `SUMMARY:${icsEscape(label)} (${where})`, `GEO:${state.vp.lat.toFixed(4)};${state.vp.lon.toFixed(4)}`);
+    if (alarmMin > 0) lines.push('BEGIN:VALARM', `TRIGGER:-PT${alarmMin}M`, 'ACTION:DISPLAY', `DESCRIPTION:${icsEscape(label)} in ${alarmMin} minutes`, 'END:VALARM');
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  return { text: lines.join('\r\n') + '\r\n', filename: `eclipse-${eclipseKey(e)}-${state.vp.lat.toFixed(2)}_${state.vp.lon.toFixed(2)}.ics` };
+}
+async function saveTextFile(filename, text, mime) {
+  const T = window.__TAURI__;
+  if (T && T.dialog && T.fs) {
+    // Desktop app: native save dialog (WebView2 does not honour <a download> for blob: URLs).
+    const path = await T.dialog.save({ defaultPath: filename, filters: [{ name: filename.split('.').pop().toUpperCase(), extensions: [filename.split('.').pop()] }] });
+    if (path) await T.fs.writeTextFile(path, text);
+    return !!path;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: mime }));
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  return true;
+}
+
+// ---- Printable viewing card ----
+function buildPrintCard() {
+  const card = document.getElementById('printCard');
+  const info = state.vpInfo, e = ECLIPSES[state.idx];
+  if (!info || !state.vp) { card.innerHTML = ''; return false; }
+  const phase = info.kind === 'annular' ? 'annularity' : 'totality';
+  const tot = totalitySec(info), par = (info.partial_end.time.ut - info.partial_begin.time.ut) * 86400;
+  const zone = localZoneLabel(info.peak.time.date);
+  const row = (label, k) => info[k] ? `<tr><td>${label}</td><td class="r">${formatTimeS(info[k].time.date)}</td><td class="r">${formatLocalS(info[k].time.date)}</td><td class="r">${info[k].altitude.toFixed(1)}°</td></tr>` : '';
+  const cmp = (PRO && state.compare.length) ? `<h3 style="font-size:1em;margin:14px 0 4px">Other viewpoints, same eclipse</h3><table><tr><th>Site</th><th class="r">Type</th><th class="r">Central phase</th><th class="r">Max (UTC)</th></tr>`
+    + state.compare.map(s => { const i2 = localEclipseAt(s.lat, s.lon, dateToJD(e.date)); const d2 = totalitySec(i2);
+        return `<tr><td>${formatLatLon(s.lat, s.lon)}</td><td class="r">${i2 ? i2.kind : '—'}</td><td class="r">${!i2 ? 'not visible' : d2 > 0 ? formatDurationLong(d2) : (i2.obscuration * 100).toFixed(0) + '% partial'}</td><td class="r">${i2 ? formatTimeS(i2.peak.time.date) : ''}</td></tr>`; }).join('') + '</table>' : '';
+  card.innerHTML = `<h1>${formatEclipseName(e)}</h1>
+<div class="sub">Viewing card for ${formatLatLon(state.vp.lat, state.vp.lon)} (${state.vp.lat.toFixed(4)}, ${state.vp.lon.toFixed(4)}) · ${e.location || ''}</div>
+<div class="big">${tot > 0 ? formatDurationLong(tot) : (info.obscuration * 100).toFixed(0) + '%'}</div>
+<div class="biglbl">${tot > 0 ? `of ${phase} here` : 'of the Sun covered at maximum — partial only here'} · Sun ${info.peak.altitude.toFixed(1)}° above the horizon at maximum · obscuration ${(info.obscuration * 100).toFixed(1)}%</div>
+<table><tr><th>Contact</th><th class="r">UTC</th><th class="r">${zone}</th><th class="r">Sun alt.</th></tr>
+${row('C1 partial begins', 'partial_begin')}${row(`C2 ${phase} begins`, 'total_begin')}${row('Maximum', 'peak')}${row(`C3 ${phase} ends`, 'total_end')}${row('C4 partial ends', 'partial_end')}
+<tr><td>Partial phases C1→C4</td><td class="r" colspan="3">${formatDurationLong(par)}</td></tr></table>
+${cmp}
+<div class="foot">Contacts by astronomy-engine (sea level, ±1 s). Filter every look at the partial phases; unfiltered viewing is safe only during ${phase === 'totality' ? 'totality' : 'no part of an annular eclipse'}. Cross-check with eclipse.gsfc.nasa.gov. Eclipse Predictor · ${new Date().toISOString().slice(0, 10)}</div>`;
+  return true;
+}
+
+function refreshProButtons() {
+  const has = !!(state.vp && state.vpInfo);
+  ['proBest', 'proCompare', 'proIcs', 'proPrint'].forEach(id => {
+    const b = document.getElementById(id);
+    b.classList.toggle('locked', !PRO);
+    b.disabled = PRO && !has;
+    b.style.opacity = PRO && !has ? '0.45' : '';
+  });
+  document.getElementById('proBadge').style.display = PRO ? 'none' : '';
+}
+function proGate(fn) {
+  return () => {
+    const lock = document.getElementById('proLock');
+    if (!PRO) { lock.classList.add('show'); clearTimeout(lock._t); lock._t = setTimeout(() => lock.classList.remove('show'), 6000); return; }
+    fn();
+  };
+}
+document.getElementById('proBest').onclick = proGate(renderBestSpot);
+document.getElementById('proCompare').onclick = proGate(addCompare);
+document.getElementById('proIcs').onclick = proGate(() => { const f = buildIcs(); if (f) saveTextFile(f.filename, f.text, 'text/calendar'); });
+document.getElementById('proPrint').onclick = proGate(() => { if (buildPrintCard()) window.print(); });
+loadCompare();
+refreshProButtons();
 
 function viewpointMathRows(rows) {
   if (!state.vp) return rows([['Viewpoint', 'none set — click the globe or enter lat/lon, then CHECK']]);
@@ -2584,6 +2861,9 @@ generateEclipses(
       else if (qs.get('year') === '2026') idx = findEclipseByKey('2026-08-12');
       else if (qs.get('year') === '2027') idx = findEclipseByKey('2027-08-02');
     }
+    // No deep link: open on the next eclipse after today (what a planner wants to see), falling
+    // back to the 2024 Great American Eclipse, then the catalog midpoint.
+    if (idx < 0) { const now = Date.now(); idx = ECLIPSES.findIndex(e => e.date.getTime() >= now); }
     if (idx < 0) idx = ECLIPSES.findIndex(e => e.year === 2024 && e.month === 4 && e.day === 8);
     if (idx < 0) idx = Math.floor(ECLIPSES.length / 2);
     loadEclipse(idx);
