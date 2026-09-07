@@ -217,9 +217,9 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
 #loanBar button:hover { background: #3A4858; color: #FFD060; border-color: #FFD060; }
 #loanBar .debt-val { color: #E0A040; font-weight: bold; }
 
-#seasonPill { position: absolute; top: 44px; left: 50%; transform: translateX(-50%) translateY(70px); background: rgba(12,18,26,0.85); border: 1px solid #3A4858; border-radius: 4px; padding: 3px 10px; font-family: 'Courier New', monospace; font-size: 0.72em; color: #90B0D0; z-index: 10; white-space: nowrap; cursor: pointer; }
+#seasonPill { position: absolute; top: 44px; left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(12,18,26,0.85); border: 1px solid #3A4858; border-radius: 4px; padding: 3px 10px; font-family: 'Courier New', monospace; font-size: 0.72em; color: #90B0D0; z-index: 10; white-space: nowrap; cursor: pointer; }
 #seasonPill:hover { border-color: #7AB0E0; }
-#weatherPanel { position: absolute; top: 44px; left: 50%; transform: translateX(-50%) translateY(96px); background: rgba(12,18,26,0.94); border: 1.5px solid #5A7898; border-radius: 8px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 0.74em; color: #B0C8E0; z-index: 22; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.55); min-width: 340px; }
+#weatherPanel { position: absolute; top: 44px; left: 50%; transform: translateX(-50%) translateY(126px); background: rgba(12,18,26,0.94); border: 1.5px solid #5A7898; border-radius: 8px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 0.74em; color: #B0C8E0; z-index: 22; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.55); min-width: 340px; }
 #weatherPanel.show { display: block; }
 #weatherPanel h4 { color: #9ADBFF; font-family: Georgia, serif; font-size: 0.95em; margin: 0 0 6px 0; letter-spacing: 1.5px; }
 #weatherPanel .fc-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; border-top: 1px solid #22303E; }
@@ -707,7 +707,7 @@ body { font-family: Georgia, serif; background: #101418; color: #D0D8E0; height:
     </div>
   </div>
   <button id="helpBtn" onclick="toggleInfoOverlay()" style="position:absolute;top:100px;right:200px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">HELP</button>
-  <button id="financeBtn" onclick="showModal('financeModal')" style="position:absolute;top:100px;right:540px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #FFD060;color:#FFD060;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">FINANCE</button>
+  <button id="financeBtn" onclick="showModal('financeModal')" style="position:absolute;top:100px;right:575px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #FFD060;color:#FFD060;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">FINANCE</button>
   <button id="statsBtn" onclick="showModal('statsModal')" style="position:absolute;top:100px;right:260px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">STATS</button>
   <button id="timelineBtn" onclick="showModal('timelineModal')" style="position:absolute;top:100px;right:320px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">GRAPH</button>
   <button id="mailBtn" onclick="showModal('mailModal')" style="position:absolute;top:100px;right:380px;padding:6px 12px;background:rgba(12,18,26,0.92);border:1px solid #3A4858;color:#B0C8E0;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8em;z-index:21;">MAIL</button>
@@ -1089,7 +1089,7 @@ function applyDayWeather(w) {
   if (weather.history.length > 400) weather.history.shift();
 }
 function rollWeather() {
-  if (!weather.upcoming || weather.upcoming.length === 0) { initWeather(); return; }
+  if (!weather.upcoming || weather.upcoming.length === 0 || weather.upcoming[0].day !== state.day) { initWeather(); return; }
   var w = weather.upcoming.shift();
   var last = weather.upcoming.length ? weather.upcoming[weather.upcoming.length - 1] : w;
   while (weather.upcoming.length < 3) { last = genDayWeather(last.day + 1, last); weather.upcoming.push(last); }
@@ -4925,7 +4925,7 @@ function showUnitInfo(uid) {
   var occPct = def.capacity > 0 ? Math.round(u.tenants / def.capacity * 100) : null;
   var cpiNow = cpiMult();
   var rentLine;
-  if (def.salePrice) rentLine = u.sold ? 'SOLD day ' + u.soldDay + ' · HOA $' + Math.round(def.rent * cpiNow) + '/day' : 'Rental $' + Math.round(def.rent * 2.2 * cpiNow * (econ().rentIdx.condo || 1)) + '/day · listed for sale';
+  if (def.salePrice) rentLine = u.sold ? 'Sold' + (u.soldDay ? ' day ' + u.soldDay : '') + ' · HOA $' + Math.round(def.rent * cpiNow) + '/day' : 'Rental $' + Math.round(def.rent * 2.2 * cpiNow * (econ().rentIdx.condo || 1)) + '/day · listed for sale';
   else if (def.rent) rentLine = '$' + Math.round(def.rent * cpiNow * (econ().rentIdx.office || 1)) + '/day (peak)';
   else if (def.nightly) rentLine = '$' + Math.round(def.nightly * (econ().rentIdx.hotel || 1)) + '/night/guest';
   else if (def.perVisit) rentLine = '$' + Math.round(def.perVisit * spendMult()) + '/visit';
@@ -8287,7 +8287,7 @@ function updateHUD() {
   else { incEl.textContent = (inc >= 0 ? '+$' : '-$') + formatMoney(Math.abs(inc)); incEl.className = inc >= 0 ? 'val' : 'err'; }
   document.getElementById('towerNameDisplay').textContent = state.towerName || '—';
   var vEl = document.getElementById('valueDisplay');
-  if (vEl && (state.tickCount || 0) % 30 === 0) { var tv = econ().valuation || towerValuation(); vEl.textContent = '$' + formatMoney(tv); }
+  if (vEl && ((state.tickCount || 0) % 30 === 0 || vEl.textContent === '---')) { var tv = econ().valuation || towerValuation(); vEl.textContent = '$' + formatMoney(tv); }
   document.getElementById('dayDisplay').textContent = state.day;
   var dateEl = document.getElementById('dateDisplay');
   if (dateEl) dateEl.textContent = formatGameDate(state.day) + ', Yr ' + gameYearIdx();
