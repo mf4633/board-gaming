@@ -3839,15 +3839,17 @@ var MONOLITH_H = 0.045;
 var starLayer = null, atmosphere = null;
 var frameCount = 0;
 
+// Height of the hub-site nav bar above the canvas; the standalone (itch/desktop) build removes it.
+function navOffset() { return document.getElementById('gameNav') ? 34 : 0; }
 function init() {
   var canvas = document.getElementById('globeCanvas');
   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight - 34);
+  renderer.setSize(window.innerWidth, window.innerHeight - navOffset());
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x04060E);
 
-  camera = new THREE.PerspectiveCamera(40, window.innerWidth / (window.innerHeight - 34), 0.01, 400);
+  camera = new THREE.PerspectiveCamera(40, window.innerWidth / (window.innerHeight - navOffset()), 0.01, 400);
   camera.position.set(0, 0, 3.4);
 
   scene.add(new THREE.AmbientLight(0xffffff, 0.55));
@@ -4249,7 +4251,7 @@ function addCloudLayer() {
 }
 
 function onResize() {
-  var w = window.innerWidth, h = window.innerHeight - 34;
+  var w = window.innerWidth, h = window.innerHeight - navOffset();
   renderer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
