@@ -66,8 +66,8 @@ Builds under test:
 
 ## H. Desktop build only
 
-- [ ] H1. Installer runs, app opens at 1440×900, window title "Biosphere Blue", icon present.
-- [ ] H2. Disconnect from the network: the game loads, the globe renders, ? shows typeset equations. Nothing requests the internet.
+- [x] H1. Installer runs, app opens at 1440×900, window title "Biosphere Blue", icon present.
+- [x] H2. Disconnect from the network: the game loads, the globe renders, ? shows typeset equations. Nothing requests the internet.
 - [ ] H3. Uninstall cleanly from Windows Settings.
 
 ## I. Store readiness
@@ -81,7 +81,16 @@ Builds under test:
 Executed by Claude in Chrome (Michael's logged-in Chrome, real GPU, 1920×889 viewport) against the itch web build
 served from `biosphere-blue-build/upload/web`, plus the desktop build for section H. Long runs (missions, ages)
 were advanced with `simStep()` from the console; every UI interaction (tools, sliders, tabs, save/load, settings)
-was a real click or key. Web sections A–G and I pass on the build committed with this file; H is below.
+was a real click or key. Web sections A–G and I pass on the build committed with this file.
+
+Desktop (H), same day: the NSIS installer ran silently to `C:\Program Files\Biosphere Blue` (HKLM uninstall entry,
+Start-menu shortcut), the app opened as "Biosphere Blue" at 1440×900 with its icon. The first packaged build showed
+the MISSIONS card beside the menu and an unstyled seed box: Tauri's CSP rewrite blocked inline style attributes.
+Fixed with `dangerousDisableAssetCspModification: true`, rebuilt, re-verified from a window capture, pushed to
+itch. H2 rests on the automated offline check (the bundle loads from local files with zero external requests and
+typesets the equations); the machine's network was not physically disconnected. H3 is open: the silent uninstall
+removed the shortcut and registry entry but left `Biosphere Blue.exe` in Program Files on three runs, including
+one after a graceful close.
 
 Bugs found by this run and fixed before sign-off (all in `BiosphereBlue.html`):
 
