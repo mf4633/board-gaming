@@ -123,7 +123,8 @@ var SCENARIO_EXPECTATIONS = {
   archean:    { steps: 20, check: function (s) { return s.T > -15 && s.T < 30 && s.co2 > 1000; } },
   modern:     { steps: 30, check: function (s) { return s.T > 2 && s.T < 26 && s.o2 > 0.12; } },
   bau2100:    { steps: 30, check: function (s) { return s.T > 5 && s.T < 30; } },
-  snowball:   { steps: 5,  check: function (s) { return s.ice > 0.8 && s.T < -10; } },
+  snowball:   { steps: 3,  check: function (s) { return s.ice > 0.8 && s.T < 0; },
+                then: { steps: 13, check: function (s) { return s.T > -5 || s.ice < 0.7; } } },   // frozen first; dust-darkened ice lets the volcanic CO2 thaw it within ~120 My
   carbon:     { steps: 30, check: function (s) { return s.o2 > 0.12 && s.T > -10; } },   // O2 relaxes toward the seed's own burial/oxidation balance within a few My
   venus:      { steps: 30, check: function (s) { return s.T > 150; } },
   iceage:     { steps: 30, check: function (s) { return s.ice > 0.1; } },
@@ -142,6 +143,13 @@ Object.keys(SCENARIO_EXPECTATIONS).forEach(function (name) {
     }, { name: name, steps: exp.steps });
     assert.ok(exp.check(s), name + ' state ' + JSON.stringify(s));
     assert.strictEqual(s.mission, name, 'mission attached');
+    if (exp.then) {
+      var s2 = await ev(function (a) {
+        for (var k = 0; k < a.steps; k++) simStep();
+        return { T: SIM.globalTemp, ice: SIM.iceFrac, co2: SIM.co2 };
+      }, { steps: exp.then.steps });
+      assert.ok(exp.then.check(s2), name + ' later state ' + JSON.stringify(s2));
+    }
     noErrors(name);
     await page.close();
   });

@@ -1989,7 +1989,10 @@ function resetSim() {
 }
 resetSim();
 
-var STEPS_PER_FRAME = [0, 1, 3, 8, 16];   // a step is ~35 ms of real physics now; 16/frame keeps the UI alive
+var STEPS_PER_FRAME = [0, 1, 3, 8, 16];
+var FRAME_BUDGET_MS = [0, 40, 80, 140, 220];   // ms of stepping per frame at each speed (the loop stops early on heavy scales)
+var STEP_MIN_GAP_MS = [0, 250, 100, 0, 0];     // slow speeds pace the clock (4 and 10 steps/s) so banners and the year counter can be read
+var lastStepAt = 0;
 var SIM_DT_YEARS = 100000;  // 100 Ky per base step
 
 // Scratch buffers reused across hot simulation passes (allocated once per world build)
@@ -2261,9 +2264,18 @@ function reseedEBM(W) {
   W.ebmFresh = true;
 }
 
+// Snow albedo on a snowball darkens as dust and ash accumulate on ice that never
+// melts (Abbot & Pierrehumbert 2010): 0.55 fresh, down to 0.27 after ~15 My of
+// near-total ice cover. Without it a Budyko-type EBM never deglaciates at any
+// plausible CO2 (the log forcing saturates long before the -10 C snow line).
+function albSnowNow() {
+  var my = SIM.snowballMy || 0;
+  return EBM.DEFAULTS.albSnow - 0.28 * Math.min(1, my / 15);
+}
 function climateParams() {
   return {
     S0: EBM.DEFAULTS.S0 * SIM.sunLum,
+    albSnow: albSnowNow(),
     co2: SIM.co2,
     ch4: SIM.ch4,
     obliquity: SIM.axialTilt != null ? SIM.axialTilt : EBM.DEFAULTS.obliquity,
@@ -2297,7 +2309,7 @@ function stepClimate(W, dtY) {
     // Bare surface albedo. Glacial ice is the slow field from hydrology;
     // seasonal snow / sea ice is the fast switch inside the solver.
     var alb;
-    if (ice > 0.02) alb = EBM.DEFAULTS.albSnow;   // ice sheet, annual mean (same as the solver's snow)
+    if (ice > 0.02) alb = albSnowNow();   // ice sheet, annual mean (same as the solver's snow)
     else if (isOcean) alb = 0.08;
     else {
       // Snow-free surface albedo (Bonan 2008 typical values). The Ice biome
@@ -2328,6 +2340,9 @@ function stepClimate(W, dtY) {
   SIM.globalTemp  = r.diagnostics.meanTsurf;
   SIM.landFrac    = landCount / n;
   SIM.iceFrac     = iceCount / n;
+  // Dust on a snowball: accumulate while the planet is nearly all ice, clear quickly otherwise
+  if (SIM.iceFrac > 0.85) SIM.snowballMy = (SIM.snowballMy || 0) + dtY / 1e6;
+  else SIM.snowballMy = Math.max(0, (SIM.snowballMy || 0) - 3 * dtY / 1e6);
   SIM.seaIceFrac  = seaTiles ? seaIce / seaTiles : 0;   // fraction of the ocean under ice (seals air-sea CO2 exchange)
   SIM.rockFrac    = rockTiles / n;                       // continental crust above sea level (weathering), ice or not
   SIM.vegFrac     = vegSum / n;
@@ -2424,6 +2439,7 @@ function stepHydrology(W, dtY) {
   // 6 K above it; thick ice resists melting via a thickness-weighted factor.
   var ICE_FORM_T = EBM.DEFAULTS.snowT, ICE_MELT_T = EBM.DEFAULTS.snowT + 6;
   var stepIce = Math.min(dtY, 1e5) / 1e5;   // ice sheets equilibrate on ~100 kyr: a longer step does not grow them further
+  var stepMelt = Math.min(dtY, 4e6) / 1e5;  // ablation is a surface process (metres a year): a warm 10 My step strips kilometres of ice
   for (var i = 0; i < n; i++) {
     var T2v = d.temperature[i];
     var isLand = d.bedrock[i] > SEA;
@@ -2432,8 +2448,8 @@ function stepHydrology(W, dtY) {
       var growth = (0.04 * (-(T2v - ICE_FORM_T) / 20) * waterAvail + (P[i] / 5) * 0.02) * stepIce;   // P in mm/day; accumulation is ablation-limited
       ice[i] = clamp(prev + growth, 0, isLand ? 0.6 : 0.12);
     } else if (T2v > ICE_MELT_T) {
-      var thicknessResist = 1 / (1 + 3.5 * prev);  // 1 at 0m, ~0.22 at 0.1m
-      var melt = 0.06 * (T2v - ICE_MELT_T) / 20 * stepIce * thicknessResist;
+      var thicknessResist = 1 / (1 + 1.5 * prev);  // 1 at 0m, ~0.53 at 0.6 units (thick sheets shade their own base)
+      var melt = 0.06 * (T2v - ICE_MELT_T) / 20 * stepMelt * thicknessResist;
       ice[i] = Math.max(0, prev - melt);
     }
     if (isLand) iceVolNew += ice[i];
@@ -2799,7 +2815,14 @@ function applyHazard(tag, baseHit) {
     }
     if (resists)    hit *= 0.25;
     if (vulnerable) hit *= 1.8;
-    c.biomass = Math.max(0, c.biomass - hit);
+    // Proportional loss: a hazard removes a fraction of a clade, not an absolute
+    // slab of biomass (which wiped every small clade, microbes included, in one
+    // pandemic). 0.04 -> 40%, 0.10 -> 80% (97% for the mass-extinction tool);
+    // the microbial substrate is hardier.
+    var frac = Math.min(tag === 'extinct' ? 0.97 : 0.9, hit * 10);
+    var cbp = bodyPlan(c.bodyPlan);
+    if (cbp && cbp.id === 'microbe') frac *= 0.3;
+    c.biomass = Math.max(0, c.biomass * (1 - frac));
     if (c.biomass < 0.0008) {
       c.extinct = true;
       SIM.cladeLog.push({ year: SIM.year, kind: 'extinct', name: c.name, cause: tag });
@@ -3257,8 +3280,18 @@ function monolithPush() {
     recomputeLifeStage();
     return;
   }
-  // Find the clade closest to next stage (highest stage living)
-  live.sort(function(a,b){ return b.stage - a.stage; });
+  // Find the clade closest to next stage: prefer a sapient clade, then the highest
+  // stage that can still advance within its body plan. Picking the highest stage
+  // alone kept choosing ceiling-bound clades (avian, fungal...) and speciating
+  // instead of carrying the sapients from "discover fire" to a civilization.
+  live.sort(function(a,b){
+    var sa = a.isSapient ? 1 : 0, sb = b.isSapient ? 1 : 0;
+    if (sa !== sb) return sb - sa;
+    var ca = bodyPlan(a.bodyPlan), cb = bodyPlan(b.bodyPlan);
+    var ra = ca && a.stage >= ca.maxStage ? 1 : 0, rb = cb && b.stage >= cb.maxStage ? 1 : 0;
+    if (ra !== rb) return ra - rb;
+    return b.stage - a.stage;
+  });
   var top = live[0];
   var bp = bodyPlan(top.bodyPlan);
   // Relax atmospheric thresholds so the next tick's gates pass
@@ -3460,6 +3493,10 @@ function applyScenario(name) {
   if (!WORLD) return;
   var d = WORLD.data, n = d.bedrock.length;
   clearScenarioLocks();
+  // A scenario is a fresh world: drop the previous civilization's state, tech and
+  // pollution, and let the carbon kernel restart the fossil reserve (cases below
+  // override for the scenarios that begin with an established civilization).
+  SIM.civ = null; SIM.civTech = 0; SIM.civPeakTech = 0; SIM.exodus = false; SIM.fossilC = null;
   switch (name) {
     case 'daisyworld': scenarioDaisyworld(); break;
     case 'mars': scenarioMars(); break;
@@ -3491,6 +3528,8 @@ function applyScenario(name) {
       SIM.sunOverride = 1.0;
       SIM.co2Forcing = 100;   // 10 GtC/yr, today's rate, until the fossil reserve is gone
       SIM.lifeStage = 7;
+      SIM.civTech = 4.5; SIM.civPeakTech = 4.5; SIM.fossilC = 3000;   // an Information-age world that has burnt a quarter of its reserve
+      ensureCiv().population = 8000;                                  // millions: a full planet, not a founding village
       seedWarmTemperature();
       for (var i = 0; i < n; i++) d.iceDepth[i] = Math.abs(WORLD.tiles[i].lat) > 1.45 ? 0.15 : 0;
       break;
@@ -4905,7 +4944,7 @@ function _phClamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
 function _phTdot(T, I, CO2, sun) {
   var p = EBM.DEFAULTS;
   var bare = 0.14;                                       // area-mean snow-free surface (70% ocean 0.08, 30% land ~0.28)
-  var as = bare + (p.albSnow - bare) * _phClamp(I, 0, 1);
+  var as = bare + (albSnowNow() - bare) * _phClamp(I, 0, 1);
   var ap = EBM.planetaryAlbedo(as, p.albAtm);
   var asr = p.S0 * sun / 4 * (1 - ap);
   var Aeff = p.A - EBM.forcing(EBM.params({ co2: CO2, ch4: SIM ? SIM.ch4 : 700 }));
@@ -5444,7 +5483,13 @@ function animate() {
   frameCount++;
   if (SETTINGS.fps) tickFps(performance.now());
   var steps = STEPS_PER_FRAME[SIM.speed] || 0;
-  for (var s = 0; s < steps; s++) simStep();
+  // Time-box the frame so the UI stays responsive on the heavy scales: always
+  // one step, then stop when this speed's budget is spent.
+  var budget = FRAME_BUDGET_MS[SIM.speed] || 0, tFrame = performance.now();
+  if (steps > 0 && tFrame - lastStepAt >= (STEP_MIN_GAP_MS[SIM.speed] || 0)) {
+    for (var s = 0; s < steps; s++) { simStep(); if (performance.now() - tFrame > budget) break; }
+    lastStepAt = performance.now();
+  }
 
   if (WORLD && SIM) {
     // Heavy updates only a few times per second AND only when dirty —
@@ -6384,7 +6429,7 @@ function stepCivilization(dtY) {
     c.wars++;
     if (age >= 4 && c.invest[4] > 0 && SIM.rng() < 0.3) {
       showBanner('NUCLEAR WAR', civClade.name + ' turn their arsenals on themselves.', 'bad');
-      applyHazard('nuclear', 0.22);
+      applyHazard('nuclear', 0.06);   // ~60% of every clade (proportional hazard); the civilization itself loses 60% below
       SIM.dust = Math.min(2, (SIM.dust || 0) + 0.8);            // nuclear winter
       SIM.co2 = clamp(SIM.co2 + 40, 60, 500000);
       SIM.civTech = Math.max(0, SIM.civTech - 3);
@@ -6932,6 +6977,8 @@ function toggleSettings(open) {
 }
 function wireSettings() {
   loadSettings();
+  // the main-menu difficulty row was painted before the stored settings arrived
+  document.querySelectorAll('#mmDifficulty button').forEach(function (b) { b.classList.toggle('active', b.dataset.d === (SETTINGS.difficulty || 'easy')); });
   var vol = document.getElementById('setVol');
   var volL = document.getElementById('setVolLabel');
   var cl = document.getElementById('setClouds');
@@ -6985,7 +7032,7 @@ setInterval(function() {
   if (SETTINGS && SETTINGS.autosave && WORLD) saveWorld();
 }, 5 * 60 * 1000);
 
-window.addEventListener('load', function() { init(); wireMusicButton(); wireSaveLoadButtons(); });
+window.addEventListener('load', function() { init(); wireMusicButton(); wireSaveLoadButtons(); wireSettings(); });   // wireSettings loads + applies the stored settings and wires the dialog
 </script>
 <div id="phaseOverlay" aria-hidden="true">
   <canvas id="phaseCanvas" width="340" height="260"></canvas>
