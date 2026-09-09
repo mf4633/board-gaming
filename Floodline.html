@@ -42,6 +42,9 @@
   #toolpanel { background: var(--panel); border-radius: 6px; padding: 12px; overflow-y: auto; }
   #canvaswrap { background: #000; border-radius: 6px; position: relative; overflow: hidden; }
   #canvas { display: block; width: 100%; height: 100%; cursor: crosshair; image-rendering: pixelated; }
+  /* Cursor preview layer. Separate canvas so the pointer highlight does not
+     wait on the terrain redraw -- see floodline_hover_layer_patch. */
+  #hoverCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
   #infopanel { background: var(--panel); border-radius: 6px; padding: 12px; overflow-y: auto; }
   #timeline { grid-column: 1 / 4; background: var(--panel); border-radius: 6px; padding: 10px; position: relative; }
 
@@ -230,6 +233,7 @@
 
   <div id="canvaswrap">
     <canvas id="canvas"></canvas>
+    <canvas id="hoverCanvas"></canvas>
     <div id="canvasOverlay"></div>
   </div>
 
@@ -859,6 +863,8 @@ const state = {
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+const hoverCanvas = document.getElementById('hoverCanvas');
+const hoverCtx = hoverCanvas.getContext('2d');
 const hydroCanvas = document.getElementById('hydrograph');
 const hctx = hydroCanvas.getContext('2d');
 
@@ -2032,6 +2038,53 @@ function getCellColor(i) {
 }
 
 // ---------- Rendering ----------
+// ---------- Cursor preview layer ----------
+// Drawn on its own canvas, straight from the pointer handler, so the highlight
+// tracks the cursor at pointer rate instead of at whatever the terrain redraw
+// can manage (40 ms on the smallest map, 100 ms+ on the big ones).
+function drawHover() {
+  const w = hoverCanvas.clientWidth, h = hoverCanvas.clientHeight;
+  if (hoverCanvas.width !== w || hoverCanvas.height !== h) {
+    hoverCanvas.width = w; hoverCanvas.height = h;
+  }
+  hoverCtx.clearRect(0, 0, w, h);
+  if (!state.scenario || !state.elev || !state.mouseCell) return;
+  const tool = TOOLS[state.tool];
+  if (!tool) return;
+  const { x, y } = state.mouseCell;
+  if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return;
+
+  const c = effCost(state.tool);
+  const affordable = state.budget >= c;
+  hoverCtx.strokeStyle = affordable ? tool.color : '#ef4444';
+  hoverCtx.lineWidth = 2;
+  hoverCtx.font = 'bold 10px Segoe UI';
+
+  if (state.view === 'iso') {
+    const i = idx(x, y);
+    const e = state.elev[i] + state.structH[i] + state.water[i];
+    const p1 = isoProject(x, y, e + 0.08);
+    const p2 = isoProject(x + 1, y, e + 0.08);
+    const p3 = isoProject(x + 1, y + 1, e + 0.08);
+    const p4 = isoProject(x, y + 1, e + 0.08);
+    hoverCtx.beginPath();
+    hoverCtx.moveTo(p1.x, p1.y); hoverCtx.lineTo(p2.x, p2.y);
+    hoverCtx.lineTo(p3.x, p3.y); hoverCtx.lineTo(p4.x, p4.y);
+    hoverCtx.closePath(); hoverCtx.stroke();
+    hoverCtx.fillStyle = affordable ? 'rgba(15,23,42,0.9)' : 'rgba(239,68,68,0.9)';
+    hoverCtx.fillRect(p2.x + 4, p2.y - 6, 44, 14);
+    hoverCtx.fillStyle = '#fbbf24';
+    hoverCtx.fillText(fmt$(c), p2.x + 8, p2.y + 5);
+  } else {
+    const cw = w / COLS, ch = h / ROWS;
+    hoverCtx.strokeRect(x * cw, y * ch, cw, ch);
+    hoverCtx.fillStyle = affordable ? 'rgba(15,23,42,0.85)' : 'rgba(239,68,68,0.85)';
+    hoverCtx.fillRect(x * cw + cw + 2, y * ch - 2, 44, 14);
+    hoverCtx.fillStyle = '#fbbf24';
+    hoverCtx.fillText(fmt$(c), x * cw + cw + 6, y * ch + 9);
+  }
+}
+
 function render() {
   // Size canvas from its layout
   const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -2149,23 +2202,6 @@ function renderTop(w, h) {
     ctx.fillRect(0, 0, w, h);
   }
 
-  // Cursor preview
-  if (state.mouseCell) {
-    const tool = TOOLS[state.tool];
-    if (tool) {
-      const { x, y } = state.mouseCell;
-      const c = effCost(state.tool);
-      const affordable = state.budget >= c;
-      ctx.strokeStyle = affordable ? tool.color : '#ef4444';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x * cw, y * ch, cw, ch);
-      ctx.fillStyle = affordable ? 'rgba(15,23,42,0.85)' : 'rgba(239,68,68,0.85)';
-      ctx.fillRect(x * cw + cw + 2, y * ch - 2, 44, 14);
-      ctx.fillStyle = '#fbbf24';
-      ctx.font = 'bold 10px Segoe UI';
-      ctx.fillText(fmt$(c), x * cw + cw + 6, y * ch + 9);
-    }
-  }
 
   // Building sprites: little roofs and doors on town/hospital/school tiles.
   // Iterates the cached buildingCells sparse index rather than scanning the
@@ -2559,34 +2595,6 @@ function renderIso(w, h) {
   ctx.globalAlpha = 1;
   state.breachEvents = state.breachEvents.filter(b => state.time - b.t < 3);
 
-  // Cursor preview diamond
-  if (state.mouseCell) {
-    const { x, y } = state.mouseCell;
-    if (x >= 0 && x < COLS && y >= 0 && y < ROWS) {
-      const i = idx(x, y);
-      const e = state.elev[i] + state.structH[i] + state.water[i];
-      const tool = TOOLS[state.tool];
-      if (tool) {
-        const c = effCost(state.tool);
-        const affordable = state.budget >= c;
-        const p1 = isoProject(x, y, e + 0.08);
-        const p2 = isoProject(x + 1, y, e + 0.08);
-        const p3 = isoProject(x + 1, y + 1, e + 0.08);
-        const p4 = isoProject(x, y + 1, e + 0.08);
-        ctx.strokeStyle = affordable ? tool.color : '#ef4444';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
-        ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y);
-        ctx.closePath(); ctx.stroke();
-        ctx.fillStyle = affordable ? 'rgba(15,23,42,0.9)' : 'rgba(239,68,68,0.9)';
-        ctx.fillRect(p2.x + 4, p2.y - 6, 44, 14);
-        ctx.fillStyle = '#fbbf24';
-        ctx.font = 'bold 10px Segoe UI';
-        ctx.fillText(fmt$(c), p2.x + 8, p2.y + 5);
-      }
-    }
-  }
 
   // Cloud shadows drifting with wind direction (iso)
   if (state.storming && state.currentRain > 5) {
@@ -3261,9 +3269,25 @@ canvas.addEventListener('pointermove', e => {
   state.mouseCell = mouseToCell(e, pin);
   if (primaryPointerDown) {
     const useRemove = (primaryPointerBtn === 2) || removeMode;
-    if (useRemove) removeCell(e); else place(e);
+    // A fast drag arrives as one pointermove spanning many pixels of travel.
+    // The browser keeps the intermediate points, so paint through those rather
+    // than leaving gaps between samples. Dedupe by cell: without it a single
+    // cell would be re-placed (and re-click the sfx) once per coalesced point.
+    const pts = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : null;
+    const seq = pts && pts.length > 1 ? pts : [e];
+    let lastI = state._dragLastIdx ?? -1;
+    for (const p of seq) {
+      const cell = mouseToCell(p, pin);
+      if (cell.x < 0 || cell.x >= COLS || cell.y < 0 || cell.y >= ROWS) continue;
+      const ci = idx(cell.x, cell.y);
+      if (ci === lastI) continue;
+      lastI = ci;
+      if (useRemove) removeCell(p); else place(p);
+    }
+    state._dragLastIdx = lastI;
   }
   state._lastMouseClient = { x: e.clientX, y: e.clientY };
+  drawHover();
   updateTooltip(e);
 });
 
@@ -3274,6 +3298,7 @@ function endPointer(e) {
     primaryPointerDown = false;
     panning = false;
     state.dragZ = null;
+    state._dragLastIdx = -1;
     canvas.style.cursor = 'crosshair';
   }
   // Cancel any pending long-press
@@ -3285,6 +3310,7 @@ canvas.addEventListener('pointercancel', endPointer);
 canvas.addEventListener('pointerleave', e => {
   endPointer(e);
   state.mouseCell = null;
+  drawHover();
   const tt = document.getElementById('cellTooltip');
   if (tt) tt.style.display = 'none';
 });
@@ -4613,6 +4639,7 @@ function loop(t) {
   }
 
   render();
+  drawHover();
   renderHydrograph();
   if (state.scenario) updateHUD();
   // Refresh hover tooltip each frame so depth/damage/stress readouts track
