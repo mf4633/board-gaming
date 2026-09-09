@@ -126,6 +126,12 @@
       "file": "guides/pente-grammai.html",
       "title": "Pente Grammai — the Ancient Greek Game of Five Lines",
       "description": "Movement, the sacred line, capturing, and bearing off in the Greek race game."
+    },
+    {
+      "slug": "abacus-soroban",
+      "file": "guides/abacus-soroban.html",
+      "title": "How to Use a Soroban — Japanese Abacus Technique",
+      "description": "Reading and setting numbers, the 5- and 10-complements, carries, and worked addition and subtraction."
     }
   ],
   "games": [

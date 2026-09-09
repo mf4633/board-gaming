@@ -845,6 +845,74 @@ const pages = [
     <p><a class="play-cta" href="/pentegrammai">Play Pente Grammai now</a></p>
 `,
   },
+  {
+    slug: 'abacus-soroban',
+    file: 'abacus-soroban.html',
+    title: 'How to Use a Soroban &mdash; Japanese Abacus Technique',
+    description: 'Reading and setting numbers, the 5- and 10-complements, carries, and worked addition and subtraction.',
+    body: `
+    <p>The <a href="/abacus">soroban</a> is the Japanese abacus: one <b>heaven bead</b> worth 5 above the bar, four <b>earth beads</b> worth 1 below it, on each rod. A bead counts only when pushed against the bar. That much you can read off the device in a minute. What takes practice &mdash; and what almost no page actually explains &mdash; is the technique that makes it fast: you never &ldquo;think&rdquo; an addition, you execute a fixed rule about which beads to move.</p>
+
+    <h2>Setting a number</h2>
+    <p>Each rod is one decimal place, ones on the right. To set 7, push the heaven bead down (5) and two earth beads up (2). To set 3, push three earth beads up. There is no ambiguity: every digit 0&ndash;9 has exactly one bead configuration.</p>
+
+    <div class="callout">
+      <b>The unit rod.</b> Pick a rod and call it the ones column &mdash; on most sorobans it is marked with a dot. Everything else follows from it. Beginners who do not fix a unit rod lose their place the first time they carry.</div>
+
+    <h2>The whole skill: complements</h2>
+    <p>You add by moving beads. The problem is that sometimes the beads you need are not free &mdash; you want to add 4 but only two earth beads remain. Rather than pause and think, the soroban operator applies a <b>complement</b>: add the larger unit, take back the difference. There are only two families to learn.</p>
+
+    <h3>Five-complements (within one rod)</h3>
+    <p>When you need to add 1&ndash;4 but lack the earth beads, add the heaven bead (5) and remove the complement to 5:</p>
+    <table class="scenario-table">
+      <tr><th>To add</th><th>Do this</th><th>Because</th></tr>
+      <tr><td>1</td><td>+5, then &minus;4</td><td>1 = 5 &minus; 4</td></tr>
+      <tr><td>2</td><td>+5, then &minus;3</td><td>2 = 5 &minus; 3</td></tr>
+      <tr><td>3</td><td>+5, then &minus;2</td><td>3 = 5 &minus; 2</td></tr>
+      <tr><td>4</td><td>+5, then &minus;1</td><td>4 = 5 &minus; 1</td></tr>
+    </table>
+    <p>The pairs are simply 1&ndash;4, 2&ndash;3 and their reverses. Subtraction runs the same table backwards: to subtract 4 when you cannot, remove the heaven bead and add 1.</p>
+
+    <h3>Ten-complements (carrying to the next rod)</h3>
+    <p>When a whole rod cannot absorb the digit, carry: add 1 to the rod on the left and remove the complement to 10 from the current rod.</p>
+    <table class="scenario-table">
+      <tr><th>To add</th><th>Do this</th><th>To add</th><th>Do this</th></tr>
+      <tr><td>1</td><td>carry 1, &minus;9</td><td>6</td><td>carry 1, &minus;4</td></tr>
+      <tr><td>2</td><td>carry 1, &minus;8</td><td>7</td><td>carry 1, &minus;3</td></tr>
+      <tr><td>3</td><td>carry 1, &minus;7</td><td>8</td><td>carry 1, &minus;2</td></tr>
+      <tr><td>4</td><td>carry 1, &minus;6</td><td>9</td><td>carry 1, &minus;1</td></tr>
+      <tr><td>5</td><td>carry 1, &minus;5</td><td></td><td></td></tr>
+    </table>
+
+    <h2>Worked example: 8 + 7</h2>
+    <ol>
+      <li>Set <b>8</b> on the unit rod &mdash; heaven bead down (5) plus three earth beads up (3).</li>
+      <li>You want to add 7. There is no room: only one earth bead is free.</li>
+      <li>Apply the ten-complement for 7 &mdash; <b>carry 1</b> to the tens rod, then <b>subtract 3</b> from the unit rod.</li>
+      <li>Subtracting 3 from 8 within the rod needs its own five-complement: remove the heaven bead (&minus;5) and add two earth beads (+2), leaving 5.</li>
+      <li>Read the board: 1 on the tens rod, 5 on the units. <b>15.</b></li>
+    </ol>
+    <p>Notice you never computed 8 + 7. You applied two lookup rules. That is the entire trick, and it is why a trained operator keeps pace with someone typing.</p>
+
+    <h2>Worked example: 23 &minus; 8</h2>
+    <ol>
+      <li>Set <b>23</b> &mdash; two earth beads on the tens rod, three on the units.</li>
+      <li>Subtract 8 from the unit rod: 3 is not enough, so borrow. Take <b>1 from the tens rod</b> and <b>add the complement, 2</b>, to the units.</li>
+      <li>Units: 3 + 2 = 5 &mdash; clear the three earth beads and push the heaven bead down.</li>
+      <li>Tens now reads 1, units reads 5. <b>15.</b></li>
+    </ol>
+
+    <h2>Why it stays faster than it should be</h2>
+    <p>The answer is half-formed while you enter the numbers. There is no separate &ldquo;compute&rdquo; step &mdash; by the time the last digit is set, the board already holds the total. Japanese schools still teach it, and advanced students graduate to <i>anzan</i>: visualising the board and moving imaginary beads, with no device at all. Competitive anzan practitioners add ten three-digit numbers in a couple of seconds.</p>
+
+    <div class="callout">
+      <b>Practice order that works:</b> set random digits until the bead patterns are automatic, then drill the four five-complements, then the ten-complements, and only then attempt multi-rod sums. Skipping straight to arithmetic is the usual reason people bounce off the soroban.</div>
+
+    <p>The <a href="/abacus">Board Gaming Hub soroban</a> has a practice mode where you slide the beads yourself, plus live conversion to Arabic and Roman numerals so you can check yourself as you go.</p>
+
+    <p><a class="play-cta" href="/abacus">Try the soroban now</a></p>
+`,
+  },
 ];
 
 for (const g of pages) {
