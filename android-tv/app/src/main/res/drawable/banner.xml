@@ -42,11 +42,11 @@
         android:strokeWidth="2"
         android:pathData="M150,72 H296" />
     <path
+        android:fillColor="#141C28"
+        android:pathData="M150,124 C178,124 186,96 214,96 C242,96 250,120 278,120 C288,120 292,116 296,112 L296,148 L150,148 Z" />
+    <path
         android:strokeColor="#F0D89C"
         android:strokeWidth="4"
         android:strokeLineCap="round"
         android:pathData="M150,124 C178,124 186,96 214,96 C242,96 250,120 278,120 C288,120 292,116 296,112" />
-    <path
-        android:fillColor="#141C28"
-        android:pathData="M150,124 C178,124 186,96 214,96 C242,96 250,120 278,120 C288,120 292,116 296,112 L296,148 L150,148 Z" />
 </vector>

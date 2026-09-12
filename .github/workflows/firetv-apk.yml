@@ -98,13 +98,26 @@ jobs:
       - name: Verify Fire TV manifest requirements
         run: |
           set -eu
+          apk="$GITHUB_WORKSPACE/out/boardgaminghub-tv.apk"
           aapt2=$(find "$ANDROID_HOME/build-tools" -name aapt2 -type f | sort -V | tail -1)
-          dump=$("$aapt2" dump badging "$GITHUB_WORKSPACE/out/boardgaminghub-tv.apk")
-          echo "$dump" | grep -E "package:|launchable-activity|uses-feature|uses-permission" || true
-          echo "$dump" | grep -q "android.intent.category.LEANBACK_LAUNCHER" \
-            || { echo "::error::no LEANBACK_LAUNCHER category — the app will not show on the Fire TV home row"; exit 1; }
-          echo "$dump" | grep -q "uses-feature-not-required:'android.hardware.touchscreen'" \
+          dump=$("$aapt2" dump badging "$apk")
+          tree=$("$aapt2" dump xmltree --file AndroidManifest.xml "$apk")
+          echo "$dump" | grep -E "package:|application:|launchable-activity|uses-feature|uses-permission" || true
+
+          # Match aapt2's actual badging vocabulary, which is not the manifest's:
+          # the LEANBACK_LAUNCHER category is reported as its own activity line,
+          # and a not-required feature prints as "uses-feature-not-required: name='x'".
+          # Asserting the manifest spelling instead fails on a correct APK.
+          { echo "$dump" | grep -q "leanback-launchable-activity" \
+            || echo "$tree" | grep -q "LEANBACK_LAUNCHER"; } \
+            || { echo "::error::no LEANBACK_LAUNCHER entry — the app will not show on the Fire TV home row"; exit 1; }
+
+          echo "$dump" | grep -q "uses-feature-not-required: name='android.hardware.touchscreen'" \
             || { echo "::error::touchscreen is not marked not-required — Fire TV will treat this as a phone-only app"; exit 1; }
+
+          # A leanback app with no banner gets a blank tile on the home row.
+          echo "$tree" | grep -q "banner" \
+            || { echo "::error::no application banner — the Fire TV home row tile will be blank"; exit 1; }
           echo "Fire TV manifest requirements OK."
 
       - uses: actions/upload-artifact@v4
