@@ -120,6 +120,23 @@ jobs:
             || { echo "::error::no application banner — the Fire TV home row tile will be blank"; exit 1; }
           echo "Fire TV manifest requirements OK."
 
+      # A debug build is a fine thing to hand a developer and a bad thing to put
+      # behind a public download link: it carries android:debuggable, so anyone
+      # with adb on the device can attach to the process. CI still builds and
+      # verifies it — it just never becomes the published artifact.
+      - name: Refuse to publish a debuggable build
+        id: publishable
+        run: |
+          set -eu
+          aapt2=$(find "$ANDROID_HOME/build-tools" -name aapt2 -type f | sort -V | tail -1)
+          if "$aapt2" dump badging "$GITHUB_WORKSPACE/out/boardgaminghub-tv.apk" | grep -q "application-debuggable"; then
+            echo "publishable=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::APK is debuggable and will NOT be published. Set the BGHTV_* secrets (see FIRETV.md) to build a signed release."
+          else
+            echo "publishable=true" >> "$GITHUB_OUTPUT"
+            echo "Release-signed, not debuggable — publishable."
+          fi
+
       - uses: actions/upload-artifact@v4
         with:
           name: boardgaminghub-tv-apk
@@ -131,8 +148,9 @@ jobs:
       # click Run workflow. Manual dispatch still forces a publish from any branch.
       - name: Publish to the firetv-v1 release
         if: >-
-          github.ref == 'refs/heads/main' ||
-          (github.event_name == 'workflow_dispatch' && inputs.publish)
+          steps.publishable.outputs.publishable == 'true' &&
+          (github.ref == 'refs/heads/main' ||
+           (github.event_name == 'workflow_dispatch' && inputs.publish))
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

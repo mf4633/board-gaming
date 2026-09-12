@@ -77,11 +77,25 @@ Locally, with an Android SDK installed:
 cd android-tv && ./gradlew assembleDebug
 ```
 
-### Signing
+### Signing — required before public distribution
 
-Without secrets the workflow produces a **debug-signed** APK. That sideloads
-onto a Fire TV perfectly well; it just cannot go to the Amazon Appstore. For a
-release-signed build, set four repository secrets:
+Without secrets the workflow produces a **debug-signed** APK. It sideloads onto
+a Fire TV perfectly well, but it carries `android:debuggable`, which means
+anyone with adb access to the device can attach to the process. CI therefore
+builds and verifies it but **refuses to publish it** to the `firetv-v1`
+release, and the Amazon Appstore will not take it either.
+
+Create a keystore once — and keep it safe, because losing it means you can
+never update the app in place:
+
+```sh
+keytool -genkeypair -v \
+  -keystore bghtv-release.jks -alias bghtv \
+  -keyalg RSA -keysize 4096 -validity 10000 -storetype PKCS12
+base64 -w0 bghtv-release.jks   # the value for BGHTV_KEYSTORE_BASE64
+```
+
+Then set four repository secrets (Settings → Secrets and variables → Actions):
 
 | Secret | Value |
 |---|---|
@@ -91,7 +105,11 @@ release-signed build, set four repository secrets:
 | `BGHTV_KEY_PASSWORD` | key password |
 
 The workflow switches to `assembleRelease` automatically once the first one is
-present.
+present, and the publish guard then lets the build reach the release.
+
+Note that a debug-signed install cannot be upgraded in place by a signed build
+— Android rejects a signing-key change — so anyone who sideloaded the debug APK
+must uninstall it before installing the signed one.
 
 ## Known limits
 
