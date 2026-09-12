@@ -132,12 +132,27 @@ must uninstall it before installing the signed one.
   Bundling assets is a deliberate non-choice: it would pin all 36 games to the
   APK version.
 
-## Testing the catalogue
+## Testing
 
-`tests/tv.e2e.js` drives `tv.html` at 1920×1080 with arrow keys only, and fails
-if spatial navigation stalls, a tile loses its `tvinput` hint, any text drops
-below 20px, or the page overflows horizontally:
+Three checks, none of which need a device:
 
 ```sh
-npm run e2e:tv
+npm run e2e:tv          # the 10-foot catalogue
+npm run e2e:tv-input    # the input layer against real games
+npm run e2e:nav-tv      # the site header is hidden in the app, shown elsewhere
 ```
+
+`tv.e2e.js` drives `tv.html` at 1920×1080 and 1280×720 with arrow keys only, and
+fails if spatial navigation stalls, a tile loses its `tvinput` hint, any text
+drops below 20px, or the page overflows horizontally.
+
+`tv-input.e2e.js` tests the assumption the whole app rests on: that a synthesised
+touch gesture reaches handlers written for a mouse. At the television's viewport
+and user agent it taps real controls in Floodline, Chess, Solitaire, Go and
+Bonneville, presses ArrowLeft in 2048 (a D-pad-mode game), and checks Go's
+hover preview lights up under the pointer — covering cursor mode, D-pad mode and
+the hover path. It is not hardware and cannot prove Fire OS's older WebView
+behaves identically, but it exercises the same event chain.
+
+`nav-tv.e2e.js` pins the `nav.js` guard in both directions, because a wrong
+regex there would strip navigation for every visitor to the site.

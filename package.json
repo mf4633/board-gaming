@@ -11,7 +11,8 @@
     "e2e:biosphere": "node --test tests/biosphere.e2e.js",
     "e2e:tv": "node tests/tv.e2e.js",
     "store:firetv": "node scripts/generate-firetv-store.js",
-    "e2e:nav-tv": "node tests/nav-tv.e2e.js"
+    "e2e:nav-tv": "node tests/nav-tv.e2e.js",
+    "e2e:tv-input": "node tests/tv-input.e2e.js"
   },
   "devDependencies": {
     "playwright": "^1.61.0",
