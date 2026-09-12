@@ -66,7 +66,7 @@ Simulation
 Web (HTML5), Windows (download)
 
 ## Price
-$2.00  *(or $1 at launch with early access framing)*
+$0.99
 
 ## Links
 - Play free preview: https://boardgaminghub.com/BonnevilleSpillwayOperator.html
@@ -86,6 +86,6 @@ $2.00  *(or $1 at launch with early access framing)*
 - [ ] Upload BonnevilleSpillwayOperator.html as game file ("play in browser")
 - [ ] Upload cover image (bonneville-cover.png, 630×500)
 - [ ] Upload screenshots
-- [ ] Set price: $2.00
+- [ ] Set price: $0.99
 - [ ] Add tags
 - [ ] Run: butler push BonnevilleSpillwayOperator.html hydroengineer/bonneville-spillway-operator:html-web

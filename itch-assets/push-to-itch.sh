@@ -7,6 +7,9 @@
 #   Floodline    → create page at itch.io, slug: floodline
 #   Bonneville   → create page at itch.io, slug: bonneville-spillway-operator
 #   (SKYSTACK is already live — no page creation needed)
+#
+# Price for all three is $0.99 (see PRICING.md). butler does not set price —
+# it has to be set on each itch page.
 
 BUTLER=~/bin/butler/butler
 PUBLIC=C:/Users/michael.flynn/board-gaming

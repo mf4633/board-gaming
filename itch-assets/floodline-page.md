@@ -67,7 +67,7 @@ Simulation
 Web (HTML5), Windows (download)
 
 ## Price
-$2.00
+$0.99
 
 ## Links
 - Play free preview (2 scenarios): https://boardgaminghub.com/Floodline.html
@@ -87,7 +87,7 @@ $2.00
 - [ ] Upload Floodline.html as the game file (mark "This file will be played in the browser")
 - [ ] Upload cover image (floodline-cover.png, 630×500)
 - [ ] Upload screenshots
-- [ ] Set price: $2.00
+- [ ] Set price: $0.99
 - [ ] Add tags
 - [ ] Set "Demo" label for boardgaminghub version link
 - [ ] Run: butler push Floodline.html hydroengineer/floodline:html-web
