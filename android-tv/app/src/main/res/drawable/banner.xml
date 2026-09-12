@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Leanback banner. Fire TV's home row wants 320x180; a vector keeps it crisp on
+  a 4K panel without shipping four PNG densities. Motif: the board-game grid on
+  the left, the flood line running through it on the right.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+
+    <path
+        android:fillColor="#0C1016"
+        android:pathData="M0,0 H320 V180 H0 Z" />
+
+    <path
+        android:strokeColor="#2A3540"
+        android:strokeWidth="2"
+        android:pathData="M10,10 H310 V170 H10 Z" />
+
+    <!-- 3x3 board grid -->
+    <path
+        android:strokeColor="#3A5060"
+        android:strokeWidth="2"
+        android:pathData="M34,54 H118 M34,90 H118 M34,126 H118 M34,54 V126 M76,54 V126 M118,54 V126" />
+
+    <!-- Two gold stones on the grid -->
+    <path
+        android:fillColor="#F0D89C"
+        android:pathData="M76,54 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 Z" />
+    <path
+        android:fillColor="#F0D89C"
+        android:pathData="M34,126 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 Z" />
+    <path
+        android:fillColor="#8098A8"
+        android:pathData="M118,90 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 Z" />
+
+    <!-- The flood line: a rising crest under a level datum -->
+    <path
+        android:strokeColor="#3A5060"
+        android:strokeWidth="2"
+        android:pathData="M150,72 H296" />
+    <path
+        android:strokeColor="#F0D89C"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M150,124 C178,124 186,96 214,96 C242,96 250,120 278,120 C288,120 292,116 296,112" />
+    <path
+        android:fillColor="#141C28"
+        android:pathData="M150,124 C178,124 186,96 214,96 C242,96 250,120 278,120 C288,120 292,116 296,112 L296,148 L150,148 Z" />
+</vector>

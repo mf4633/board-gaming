@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Board Gaming Hub</string>
+    <string name="hint_first_run">D-pad moves the pointer · OK taps · ☰ switches to D-pad controls</string>
+    <string name="mode_cursor">Pointer controls</string>
+    <string name="mode_dpad">D-pad controls</string>
+    <string name="offline_title">No connection</string>
+    <string name="offline_body">Board Gaming Hub needs the internet to load games. Check the network, then press OK to retry.</string>
+    <string name="offline_retry">Retry</string>
+    <string name="external_blocked">That link lives outside the app.</string>
+</resources>

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Single source of truth: games.json → index.html, play.html, sitemap.xml, nav.js GAMES block.
+ * Single source of truth: games.json → index.html, play.html, sitemap.xml, nav.js GAMES block,
+ * guides/ and tv.html (the 10-foot Fire TV hub).
  * Usage: node scripts/generate-catalog.js
  */
 const fs = require('fs');
@@ -439,6 +440,7 @@ fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sitemapXml);
 fs.writeFileSync(navPath, navSrc);
 
 require('./generate-guides.js');
+require('./generate-tv.js');
 
 console.log(`Generated catalog for ${count} games:`);
-console.log('  play.html, index.html, sitemap.xml, nav.js, guides/');
+console.log('  play.html, index.html, sitemap.xml, nav.js, tv.html, guides/');

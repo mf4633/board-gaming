@@ -8,7 +8,8 @@
     "test": "node --test \"physics/test/*.test.js\"",
     "physics": "node scripts/sync-physics.js",
     "physics:check": "node scripts/sync-physics.js --check",
-    "e2e:biosphere": "node --test tests/biosphere.e2e.js"
+    "e2e:biosphere": "node --test tests/biosphere.e2e.js",
+    "e2e:tv": "node tests/tv.e2e.js"
   },
   "devDependencies": {
     "playwright": "^1.61.0",

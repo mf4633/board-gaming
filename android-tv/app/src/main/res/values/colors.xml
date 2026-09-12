@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Lifted from the site's palette so the app and the pages agree. -->
+    <color name="bg">#FF0C1016</color>
+    <color name="gold">#FFF0D89C</color>
+    <color name="slate">#FF8098A8</color>
+    <color name="panel">#FF141C28</color>
+</resources>

@@ -28,6 +28,12 @@
   to = "/apps.html"
   status = 200
 
+# 10-foot hub loaded by the Fire TV app. noindex; not in the sitemap.
+[[redirects]]
+  from = "/tv"
+  to = "/tv.html"
+  status = 200
+
 [[redirects]]
   from = "/privacy"
   to = "/privacy.html"

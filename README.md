@@ -4,6 +4,8 @@ Browser games — single HTML file each, no build step, no accounts. Built by a 
 
 **Live:** [boardgaminghub.com](https://boardgaminghub.com) · [ad-supported catalog](https://boardgaminghub.com/play) · [guides](https://boardgaminghub.com/guides/) · [itch.io](https://hydroengineer.itch.io)
 
+**On a television:** all 36 games ship as one sideloadable Fire TV app — see [FIRETV.md](FIRETV.md).
+
 ## The 36 games
 
 ### Classic Puzzles
@@ -90,7 +92,7 @@ Real-time physics, engineering, and management sims.
 ```bash
 node scripts/generate-og-images.js   # 1200x630 OG cards (needs sharp)
 node scripts/stamp-og-meta.js        # og:image tags into each game page
-node scripts/generate-catalog.js     # index.html, play.html, sitemap.xml, nav.js, guides/
+node scripts/generate-catalog.js     # index.html, play.html, sitemap.xml, nav.js, tv.html, guides/
 ```
 
 Edit the generators, never the generated files.
@@ -101,6 +103,19 @@ Edit the generators, never the generated files.
 2. Add an entry to `games.json` (`slug`, `sourceHtml`, `category`, `description`, `searchKeys`, `priority`, `ogImage`, `addedOn`).
 3. Add a card to `scripts/generate-og-images.js` and a `[[redirects]]` slug in `netlify.toml`.
 4. Run the three scripts above. `git push origin main` deploys via Netlify.
+
+## Fire TV
+
+`android-tv/` is a leanback app: one WebView on `boardgaminghub.com/tv`, plus the
+part that matters — a translation layer from a five-button remote to the pointer
+input the games were written for. The D-pad drives an on-screen pointer and OK
+synthesises a touch gesture, so every click-driven game works unmodified; games
+whose controls *are* the arrows are marked `?tvinput=dpad` by the catalogue
+generator and get the arrows raw.
+
+`tv.html` is generated from `games.json` alongside the rest of the catalogue.
+Build, install and signing are in [FIRETV.md](FIRETV.md); the APK is built by
+`.github/workflows/firetv-apk.yml`, never locally committed.
 
 ## Premium demos
 

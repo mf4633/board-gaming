@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280, initial-scale=1">
+<meta name="robots" content="noindex, follow">
+<title>Board Gaming Hub — TV</title>
+<link rel="canonical" href="https://boardgaminghub.com/tv">
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #0c1016; color: #d8d0c0;
+    font-family: Georgia, "Times New Roman", serif;
+    overflow-x: hidden;
+  }
+  /* Televisions overscan. Keep everything inside the title-safe area. */
+  #wrap { padding: 4vh 4vw 6vh 4vw; }
+  header { display: flex; align-items: baseline; gap: 24px; margin-bottom: 3vh; }
+  header h1 { font-size: 44px; letter-spacing: 10px; color: #f0d89c; margin: 0; }
+  header .tag { color: #8098a8; letter-spacing: 4px; font-size: 22px; }
+  header .count { margin-left: auto; color: #5a6874; font-size: 22px; letter-spacing: 3px; }
+
+  .row { margin-bottom: 4vh; }
+  .row h2 {
+    font-size: 26px; letter-spacing: 7px; color: #f0d89c;
+    text-transform: uppercase; margin: 0 0 16px 0; font-weight: normal;
+  }
+  .strip {
+    display: flex; gap: 22px; overflow-x: auto; overflow-y: hidden;
+    padding: 14px 6px 22px 6px; scroll-behavior: smooth;
+    scrollbar-width: none;
+  }
+  .strip::-webkit-scrollbar { display: none; }
+
+  .tile {
+    flex: 0 0 360px; width: 360px;
+    background: #141c28; border: 2px solid #2a3540; border-radius: 8px;
+    text-decoration: none; overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+    outline: none;
+  }
+  .tart { display: block; width: 100%; aspect-ratio: 1200 / 630; object-fit: cover; background: #0c1016; }
+  .tbody { display: block; padding: 14px 18px 18px 18px; }
+  .tname { display: block; color: #f0d89c; font-size: 28px; letter-spacing: 2px; margin-bottom: 6px; }
+  .tdesc { display: block; color: #a8b0c0; font-size: 22px; line-height: 1.35; min-height: 60px; }
+  .tdaily {
+    display: inline-block; margin-left: 10px; vertical-align: middle;
+    font-size: 16px; letter-spacing: 2px; text-transform: uppercase;
+    color: #a8c878; border: 1px solid #3d5a2e; border-radius: 3px; padding: 2px 7px;
+  }
+
+  /* Focus and hover are the same state on purpose: the remote drives focus,
+     the app's virtual cursor drives hover, and both must look identical. */
+  .tile:focus, .tile:hover {
+    border-color: #f0d89c; background: #1e2838;
+    transform: scale(1.06);
+    box-shadow: 0 0 0 4px rgba(240, 216, 156, 0.28), 0 14px 34px rgba(0, 0, 0, 0.6);
+  }
+
+  footer {
+    margin-top: 2vh; color: #5a6874; font-size: 20px; letter-spacing: 2px;
+    border-top: 1px solid #2a3540; padding-top: 18px; line-height: 1.8;
+  }
+  footer b { color: #8098a8; font-weight: normal; }
+  @media (prefers-reduced-motion: reduce) {
+    .tile { transition: none; }
+    .tile:focus, .tile:hover { transform: none; }
+    .strip { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <header>
+    <h1>BOARD GAMING HUB</h1>
+    <span class="tag">FIRE TV</span>
+    <span class="count">36 GAMES</span>
+  </header>
+
+  <section class="row">
+    <h2>Classic Puzzles</h2>
+    <div class="strip" tabindex="-1">
+      <a class="tile" href="/solitaire?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/solitaire.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Solitaire</span>
+          <span class="tdesc">Klondike — the classic card game</span>
+        </span>
+      </a>
+      <a class="tile" href="/wordform?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/wordform.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Wordform<span class="tdaily">Daily</span></span>
+          <span class="tdesc">Daily 5-letter word puzzle</span>
+        </span>
+      </a>
+      <a class="tile" href="/drift?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/drift.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Drift<span class="tdaily">Daily</span></span>
+          <span class="tdesc">Daily word ladder — original</span>
+        </span>
+      </a>
+      <a class="tile" href="/sudoku?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/sudoku.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Sudoku<span class="tdaily">Daily</span></span>
+          <span class="tdesc">Place 1–9, easy to expert</span>
+        </span>
+      </a>
+      <a class="tile" href="/mahjong?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/mahjong.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Mahjong</span>
+          <span class="tdesc">Solitaire tile matching</span>
+        </span>
+      </a>
+      <a class="tile" href="/chess?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/chess.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Chess</span>
+          <span class="tdesc">The royal game</span>
+        </span>
+      </a>
+      <a class="tile" href="/2048?tvinput=dpad" data-idx="0" autofocus>
+        <img class="tart" src="/og/2048.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">2048</span>
+          <span class="tdesc">Slide &amp; merge tiles</span>
+        </span>
+      </a>
+      <a class="tile" href="/minesweeper?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/minesweeper.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Minesweeper<span class="tdaily">Daily</span></span>
+          <span class="tdesc">Find the mines — no-guess boards, daily challenge, hex &amp; knight variants</span>
+        </span>
+      </a>
+      <a class="tile" href="/abacus?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/abacus.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Abacus</span>
+          <span class="tdesc">Soroban calculator with Arabic &amp; Roman numerals</span>
+        </span>
+      </a>
+      <a class="tile" href="/lovedwords/?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/lovedwords.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">LovedWords</span>
+          <span class="tdesc">First-words flashcards with your photos &amp; voice</span>
+        </span>
+      </a>
+      <a class="tile" href="/tictactoe?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/tictactoe.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Tic-Tac-Toe</span>
+          <span class="tdesc">Noughts and crosses with a genuinely unbeatable AI</span>
+        </span>
+      </a>
+      <a class="tile" href="/flappybird?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/flappybird.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Flappy Bird<span class="tdaily">Daily</span></span>
+          <span class="tdesc">One-tap flight through the pipes — three gap sizes, a shared daily run, medals</span>
+        </span>
+      </a>
+    </div>
+  </section>
+  <section class="row">
+    <h2>Board Games</h2>
+    <div class="strip" tabindex="-1">
+      <a class="tile" href="/agora?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/agora.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Agora</span>
+          <span class="tdesc">The Mediterranean Trade</span>
+        </span>
+      </a>
+      <a class="tile" href="/aresia?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/aresia.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Aresia</span>
+          <span class="tdesc">Colonize the Red Frontier</span>
+        </span>
+      </a>
+      <a class="tile" href="/backgammon?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/backgammon.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Backgammon</span>
+          <span class="tdesc">Classic dice &amp; race</span>
+        </span>
+      </a>
+      <a class="tile" href="/bisque?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/bisque.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Bisque</span>
+          <span class="tdesc">Battle for the Bay</span>
+        </span>
+      </a>
+      <a class="tile" href="/convergence?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/convergence.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Convergence</span>
+          <span class="tdesc">Rival Civilizations, Shared Economy</span>
+        </span>
+      </a>
+      <a class="tile" href="/go?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/go.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Go</span>
+          <span class="tdesc">Territory &amp; influence, 19×19</span>
+        </span>
+      </a>
+      <a class="tile" href="/mancala?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/mancala.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Mancala</span>
+          <span class="tdesc">Ancient count-and-capture</span>
+        </span>
+      </a>
+      <a class="tile" href="/odyssey?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/odyssey.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Odyssey</span>
+          <span class="tdesc">Upon the Wine-Dark Sea</span>
+        </span>
+      </a>
+      <a class="tile" href="/othello?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/othello.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Othello</span>
+          <span class="tdesc">Flip to claim the board</span>
+        </span>
+      </a>
+      <a class="tile" href="/pentegrammai?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/pentegrammai.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Pente Grammai</span>
+          <span class="tdesc">Ancient Greek Game of Five Lines</span>
+        </span>
+      </a>
+      <a class="tile" href="/senet?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/senet.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Senet</span>
+          <span class="tdesc">Ancient Egyptian racing game</span>
+        </span>
+      </a>
+      <a class="tile" href="/tidelands?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/tidelands.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Tidelands</span>
+          <span class="tdesc">Bronze-age maritime trade</span>
+        </span>
+      </a>
+      <a class="tile" href="/ur?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/ur.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Ur</span>
+          <span class="tdesc">The Royal Game of Ur</span>
+        </span>
+      </a>
+      <a class="tile" href="/ultimatetictactoe?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/ultimatetictactoe.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Ultimate Tic-Tac-Toe</span>
+          <span class="tdesc">Nine nested boards; your move picks your opponent’s board</span>
+        </span>
+      </a>
+    </div>
+  </section>
+  <section class="row">
+    <h2>Simulations</h2>
+    <div class="strip" tabindex="-1">
+      <a class="tile" href="/apoapsis?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/apoapsis.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Apoapsis</span>
+          <span class="tdesc">3D rocket flight sim</span>
+        </span>
+      </a>
+      <a class="tile" href="/biosphereblue?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/biosphereblue.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Biosphere Blue</span>
+          <span class="tdesc">Planet-scale geosim</span>
+        </span>
+      </a>
+      <a class="tile" href="/bonnevillespillwayoperator?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/bonneville.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Bonneville Spillway</span>
+          <span class="tdesc">Columbia River dam operator</span>
+        </span>
+      </a>
+      <a class="tile" href="/cliffwalkers?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/cliffwalkers.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Cliffwalkers</span>
+          <span class="tdesc">Save the wee folk</span>
+        </span>
+      </a>
+      <a class="tile" href="/doctrine?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/doctrine.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Doctrine</span>
+          <span class="tdesc">Geopolitical sim, 1990–2050</span>
+        </span>
+      </a>
+      <a class="tile" href="/eclipsepredictor?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/eclipse.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Eclipse Predictor</span>
+          <span class="tdesc">3D solar eclipse paths on globe (1900–2200)</span>
+        </span>
+      </a>
+      <a class="tile" href="/floodline?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/floodline.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Floodline</span>
+          <span class="tdesc">California flood defense</span>
+        </span>
+      </a>
+      <a class="tile" href="/metropolis2k?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/metropolis2k.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Metropolis 2K</span>
+          <span class="tdesc">City-building sim with districts &amp; bonds</span>
+        </span>
+      </a>
+      <a class="tile" href="/tower?tvinput=cursor" data-idx="0" autofocus>
+        <img class="tart" src="/og/tower.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Tower</span>
+          <span class="tdesc">High-rise operations (SKYSTACK)</span>
+        </span>
+      </a>
+      <a class="tile" href="/hellcat?tvinput=dpad" data-idx="0" autofocus>
+        <img class="tart" src="/og/hellcat.png" alt="" loading="lazy">
+        <span class="tbody">
+          <span class="tname">Hellcat</span>
+          <span class="tdesc">WWII carrier flight sim with real aerodynamics</span>
+        </span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <b>OK</b> plays &middot; <b>Back</b> returns here &middot; <b>&#9776; Menu</b> switches a game between pointer and D-pad controls
+  </footer>
+</div>
+<script>
+(function () {
+  'use strict';
+  // Spatial navigation. Chromium does not move focus on arrow keys by itself,
+  // and this page is driven by a four-way remote, so we do it geometrically:
+  // pick whichever tile's centre is nearest in the requested direction. That
+  // handles ragged row lengths without hard-coding a grid.
+  var tiles = Array.prototype.slice.call(document.querySelectorAll('.tile'));
+  if (!tiles.length) return;
+
+  function centre(el) {
+    var r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+
+  function nearest(from, dir) {
+    var a = centre(from), best = null, bestScore = Infinity;
+    for (var i = 0; i < tiles.length; i++) {
+      var t = tiles[i];
+      if (t === from) continue;
+      var b = centre(t);
+      var dx = b.x - a.x, dy = b.y - a.y;
+      // Require genuine travel in the requested direction, with a tolerance
+      // band so a slightly misaligned neighbour still counts.
+      var along, across;
+      if (dir === 'left')       { along = -dx; across = Math.abs(dy); }
+      else if (dir === 'right') { along =  dx; across = Math.abs(dy); }
+      else if (dir === 'up')    { along = -dy; across = Math.abs(dx); }
+      else                      { along =  dy; across = Math.abs(dx); }
+      if (along <= 8) continue;
+      // Weight cross-axis drift heavily so we prefer the true neighbour.
+      var score = along + across * 2.2;
+      if (score < bestScore) { bestScore = score; best = t; }
+    }
+    return best;
+  }
+
+  function focusTile(t) {
+    if (!t) return;
+    t.focus();
+    // block:'nearest' keeps vertical movement calm; inline:'center' keeps the
+    // focused tile away from the overscan edge as a strip scrolls.
+    if (t.scrollIntoView) t.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+
+  var DIRS = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
+
+  document.addEventListener('keydown', function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    var dir = DIRS[e.key];
+    if (dir) {
+      e.preventDefault();
+      var active = document.activeElement;
+      if (!active || tiles.indexOf(active) === -1) { focusTile(tiles[0]); return; }
+      var next = nearest(active, dir);
+      if (next) focusTile(next);
+      return;
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
+      var cur = document.activeElement;
+      if (cur && tiles.indexOf(cur) !== -1) { e.preventDefault(); cur.click(); }
+    }
+  });
+
+  // Land on something focusable immediately so the first arrow press moves a
+  // highlight rather than doing nothing.
+  if (!document.activeElement || tiles.indexOf(document.activeElement) === -1) {
+    focusTile(tiles[0]);
+  }
+
+  // Tell the host app this page wants raw arrow keys. The app also recognises
+  // the /tv path, so this is belt and braces for Silk and for future hosts.
+  if (window.BGHTV && typeof window.BGHTV.setInputMode === 'function') {
+    try { window.BGHTV.setInputMode('dpad'); } catch (err) {}
+  }
+})();
+</script>
+</body>
+</html>
