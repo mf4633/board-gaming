@@ -404,7 +404,14 @@ class MainActivity : Activity() {
      * the pointer.
      */
     private fun modeForUrl(url: String?): InputMode {
-        if (url.isNullOrBlank()) return InputMode.CURSOR
+        // Our own generated pages — currently just the offline screen — are
+        // loaded with no base URL and contain a single autofocused button. They
+        // must be D-pad mode: in cursor mode OK taps wherever the pointer
+        // happens to be, so the button would be unreachable and the screen's
+        // own "press OK to retry" instruction would be a lie.
+        if (url.isNullOrBlank() || url.startsWith("about:") || url.startsWith("data:")) {
+            return InputMode.DPAD
+        }
         val uri = try { Uri.parse(url) } catch (e: Exception) { return InputMode.CURSOR }
 
         val hint = try { uri.getQueryParameter("tvinput") } catch (e: UnsupportedOperationException) { null }
