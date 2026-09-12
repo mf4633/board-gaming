@@ -126,8 +126,13 @@ jobs:
           path: out/boardgaminghub-tv.apk
           if-no-files-found: error
 
+      # firetv-v1 is the stable sideload URL apps.html and FIRETV.md point at, so
+      # a green build of main keeps it current instead of waiting on someone to
+      # click Run workflow. Manual dispatch still forces a publish from any branch.
       - name: Publish to the firetv-v1 release
-        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        if: >-
+          github.ref == 'refs/heads/main' ||
+          (github.event_name == 'workflow_dispatch' && inputs.publish)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

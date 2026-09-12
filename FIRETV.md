@@ -62,8 +62,10 @@ There is no Android SDK in this repo and none is vendored. CI does the build:
 
 * Runs on pull requests and pushes that touch `android-tv/`, and on demand via
   **Actions → firetv-apk → Run workflow**.
-* Ticking **publish** on a manual run uploads the APK to the `firetv-v1` release,
-  which is the URL `apps.html` and step 3 above point at.
+* A green build of `main` publishes the APK to the `firetv-v1` release, which is
+  the stable URL `apps.html` and step 3 above point at — so that link always
+  serves the current build. Ticking **publish** on a manual run does the same
+  from any branch.
 * Every build asserts the two manifest facts a Fire TV install depends on: the
   `LEANBACK_LAUNCHER` category and `touchscreen` marked not-required. Get either
   wrong and the app installs cleanly and then never appears on the home row,
