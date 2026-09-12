@@ -19,8 +19,9 @@ on:
     paths:
       - 'android-tv/**'
       - '.github/workflows/firetv-apk.yml'
+  # Any branch that touches the app, not just main: the APK is the only way to
+  # find out whether a change to the input layer actually compiles.
   push:
-    branches: [main]
     paths:
       - 'android-tv/**'
       - '.github/workflows/firetv-apk.yml'
