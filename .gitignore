@@ -7,3 +7,9 @@ dist/
 
 # Generated
 index.html   # if you prefer to generate it in CI only (currently committed)
+
+# Signing keys — never commit these. scripts/make-firetv-keystore.sh writes
+# them next to the repo and losing OR leaking one is unrecoverable.
+*.jks
+*.keystore
+*.base64.txt

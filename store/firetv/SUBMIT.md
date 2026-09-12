@@ -9,8 +9,10 @@ The APK currently on the `firetv-v1` release is debug-signed and carries
 `android:debuggable`. Amazon will not take it, and it should not be distributed
 publicly in any case. Fix it once:
 
-1. Create a keystore and set the four `BGHTV_*` repository secrets — the exact
-   `keytool` command is in [`../../FIRETV.md`](../../FIRETV.md#signing--required-before-public-distribution).
+1. Run `bash scripts/make-firetv-keystore.sh` on your own machine. It creates
+   the key, prints the four `BGHTV_*` secret values and the `gh secret set`
+   commands, and will not overwrite an existing keystore. Details in
+   [`../../FIRETV.md`](../../FIRETV.md#signing--required-before-public-distribution).
 2. Push to `main` (or run **Actions → firetv-apk → Run workflow** with
    *publish* ticked).
 3. CI builds `assembleRelease`, the publish guard passes, and `firetv-v1` gets

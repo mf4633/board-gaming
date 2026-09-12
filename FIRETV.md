@@ -85,8 +85,17 @@ anyone with adb access to the device can attach to the process. CI therefore
 builds and verifies it but **refuses to publish it** to the `firetv-v1`
 release, and the Amazon Appstore will not take it either.
 
-Create a keystore once — and keep it safe, because losing it means you can
-never update the app in place:
+Create a keystore once — on your own machine, so the key stays with you — and
+keep it safe, because losing it means you can never update the app in place:
+
+```sh
+bash scripts/make-firetv-keystore.sh
+```
+
+That generates the keystore, writes its base64, prints the exact secret names
+(with `gh secret set` one-liners), and refuses to clobber an existing key.
+`*.jks`, `*.keystore` and `*.base64.txt` are gitignored so a signing key cannot
+be committed by accident. By hand it is:
 
 ```sh
 keytool -genkeypair -v \
@@ -95,7 +104,7 @@ keytool -genkeypair -v \
 base64 -w0 bghtv-release.jks   # the value for BGHTV_KEYSTORE_BASE64
 ```
 
-Then set four repository secrets (Settings → Secrets and variables → Actions):
+Either way, set four repository secrets (Settings → Secrets and variables → Actions):
 
 | Secret | Value |
 |---|---|
