@@ -315,7 +315,15 @@
     return rail;
   }
 
+  // The Fire TV app brings its own navigation — Back returns to the 10-foot
+  // catalogue — and this header is a search field and hover menus built for a
+  // mouse. On a television it is unreachable clutter that also pushes every
+  // game down the screen. The app announces itself in the user agent; see
+  // android-tv/.../MainActivity.kt.
+  const IS_TV_APP = / BoardGamingHubTV\//.test(navigator.userAgent || '');
+
   function inject() {
+    if (IS_TV_APP) return;
     if (document.querySelector('.bgh-head')) return;     // idempotent
     const header = buildHeader();
     document.body.insertBefore(header, document.body.firstChild);
