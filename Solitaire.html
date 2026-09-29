@@ -362,8 +362,9 @@
           const card = t[i];
           const wrap = document.createElement('div'); wrap.className = 'pile-slot';
           wrap.style.position = 'relative'; wrap.style.minHeight = '0';
-          wrap.style.height = (i === t.length-1 ? '100px' : '24px');
-          wrap.style.marginTop = i === 0 ? '0' : '-78px';
+          // Every card is full height; each one after the first overlaps the previous so a 24px strip shows.
+          wrap.style.height = '100px';
+          wrap.style.marginTop = i === 0 ? '0' : '-76px';
           wrap.style.zIndex = i + 1;
           const e = cardEl(card);
           e.style.position = 'absolute'; e.style.inset = '0';
