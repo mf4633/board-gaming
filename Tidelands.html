@@ -660,7 +660,7 @@
     /* Mobile game nav */
   </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Board Games","item":"https://boardgaminghub.com/#board"},{"@type":"ListItem","position":3,"name":"Tidelands","item":"https://boardgaminghub.com/tidelands"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why do tides matter?","acceptedAnswer":{"@type":"Answer","text":"Poseidon's tide rises and falls along a 1-2-3-4-5-4-3-2-1 cycle each round. A hex floods when the tide climbs above its elevation, losing its resources and leaving any camp on it dormant until it re-emerges. Timing your builds and harvests around the tide — and raising temples that shield a hex permanently — is the core puzzle."}},{"@type":"Question","name":"How do I score victory points?","acceptedAnswer":{"@type":"Answer","text":"Camps are worth 1 VP, temples and triremes 2 VP each, and every 5 trade coins converts to 1 VP. The largest connected network of structures grants a 3 VP bonus (2 VP in 2-player games). First player to 15 VP reaches Ithaca and wins."}},{"@type":"Question","name":"What can I do on my turn?","acceptedAnswer":{"@type":"Answer","text":"Each round you take 2 actions during your active phase — build a camp, temple, or trireme, trade with Hermes or another player, move Hermes, or appease Poseidon. Afterward, every other player gets one optional Special Build. Camps must be anchored to your existing network of structures."}},{"@type":"Question","name":"How many players is it for?","acceptedAnswer":{"@type":"Answer","text":"Tidelands supports 2 to 6 players, and the board scales with the count: 37 hexes for 2–3 players, 61 for 4, and 91 for 5–6. Empty seats can be run by the built-in AI."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why do tides matter?","acceptedAnswer":{"@type":"Answer","text":"Poseidon's tide rises and falls along a 1-2-3-4-5-4-3-2-1 cycle each round. A hex floods when the tide climbs above its elevation, losing its resources and leaving any camp on it dormant until it re-emerges. Timing your builds and harvests around the tide — and raising temples that shield a hex permanently — is the core puzzle."}},{"@type":"Question","name":"How do I score victory points?","acceptedAnswer":{"@type":"Answer","text":"Camps are worth 1 VP, temples and triremes 2 VP each, and every 5 trade coins converts to 1 VP. The largest connected network of structures grants a 3 VP bonus (2 VP in 2-player games); camps drowned by the tide score nothing until they re-emerge. Once someone reaches 15 VP the round is finished and the highest score wins."}},{"@type":"Question","name":"What can I do on my turn?","acceptedAnswer":{"@type":"Answer","text":"Each round you take 2 actions during your active phase — build a camp, temple, or trireme, trade with Hermes or another player, move Hermes, or appease Poseidon. Afterward, every other player gets one optional Special Build. Camps must be anchored to your existing network of structures."}},{"@type":"Question","name":"How many players is it for?","acceptedAnswer":{"@type":"Answer","text":"Tidelands supports 2 to 6 players, and the board scales with the count: 37 hexes for 2–3 players, 61 for 4, and 91 for 5–6. Empty seats can be run by the built-in AI."}}]}</script>
 </head>
 <body>
 <h1>TIDELANDS</h1>
@@ -769,6 +769,8 @@
       <h2 id="council-title">Poseidon&rsquo;s Council</h2>
       <p id="council-text"></p>
       <button id="council-roll-btn" onclick="councilRoll()">Pay 2 coins &amp; roll</button>
+      <button id="council-up-btn" onclick="councilPush(1)" style="display:none">Pay 2 coins: raise &uarr;</button>
+      <button id="council-down-btn" onclick="councilPush(-1)" style="display:none">Pay 2 coins: lower &darr;</button>
       <button onclick="councilPass()">Pass</button>
     </div>
   </div>
@@ -786,13 +788,13 @@
 
     <h4>Poseidon's Wrath (the Tide)</h4>
     The tide level cycles each round: 1&rarr;2&rarr;3&rarr;4&rarr;5&rarr;4&rarr;3&rarr;2&rarr;1&rarr;2... A hex is <b>flooded</b> when the tide rises strictly above its elevation (elevation &lt; tide level). So at tide 1 nothing floods; at tide 5 only highland (elevation 5) hexes remain dry.<br><br>
-    <b>Poseidon&rsquo;s Council</b> (optional, on by default): At the start of each round, before harvest, the <b>cycle</b> proposes a tide step (+1 while rising, &minus;1 while falling). Each player may spend <b>2 coins once</b> to roll <b>1d3</b>: &uarr; +1, &darr; &minus;1, or &minus; 0. The tide moves by the <b>net</b> of the cycle plus all rolls (clamped 1&ndash;5). If no one influences, the cycle alone applies.<br><br>
+    <b>Poseidon&rsquo;s Council</b> (optional, on by default): At the start of each round, before harvest, the <b>cycle</b> proposes a tide step (+1 while rising, &minus;1 while falling). In turn order, each player may spend <b>2 coins once</b> to push the tide <b>one step up or down</b> &mdash; your choice. The tide moves by the <b>net</b> of the cycle plus all pushes (clamped 1&ndash;5), so a rival can cancel your push. If no one influences, the cycle alone applies.<br><br>
     <b>Omen Cards</b> (optional, on by default): Each round, Hermes reveals one Omen before the Council. The Omen affects <b>everyone</b> for that round. Players whose camps, temples, or triremes are <b>linked to Hermes&rsquo; Ship</b> when the round begins also receive the Omen&rsquo;s <b>Hermes bonus</b> &mdash; another reason to reach the golden merchant.<br><br>
     Flooded hexes:
     <ul>
       <li>Lose all uncollected resources.</li>
       <li>Cannot harvest, host trade, or be built on.</li>
-      <li>Camps on them are <i>dormant</i> &mdash; they reappear when the hex emerges again.</li>
+      <li>Camps on them are <i>dormant</i> &mdash; they score <b>no VP</b> while underwater and come back when the hex emerges again.</li>
       <li>Temples are immune (see below).</li>
     </ul>
 
@@ -805,11 +807,11 @@
       <li>&#x2694; <b>Bronze</b> &mdash; needed for triremes.</li>
       <li>&#x2728; <b>Ambrosia</b> &mdash; rarest; food of the gods, fuels Hermes' redirection.</li>
     </ul>
-    Resources decay after a few turns if uncollected. You harvest <i>automatically</i> at the start of your turn from every non-flooded hex within 1 step of one of your camps (the camp's hex itself plus its 6 neighbors).
+    Resources decay after a few turns if uncollected. Everyone harvests <i>automatically</i> at the start of each round from every non-flooded hex within 1 step of one of your camps (the camp's hex itself plus its 6 neighbors).
 
     <h4>Structures</h4>
     <b>Camp</b> (2 Timber + 1 Olives) &mdash; <b>1 VP</b><br>
-    Beachhead for harvesting. Must be built on a non-flooded hex adjacent to one of your existing camps, temples, or triremes (your starting camp seeds your first build). When the hex floods, the camp is dormant; it returns automatically when the hex re-emerges.<br><br>
+    Beachhead for harvesting. Must be built on a non-flooded hex adjacent to one of your existing camps, temples, or triremes (your starting camp seeds your first build). When the hex floods, the camp is dormant and scores nothing; it returns automatically when the hex re-emerges.<br><br>
 
     <b>Temple</b> (1 Stone + 2 Wine) &mdash; <b>2 VP</b><br>
     A divine refuge. Built on a non-highland hex (elevation 1&ndash;4) that you own or that is adjacent to one of your structures. Temples <b>permanently protect</b> their hex from Poseidon's wrath &mdash; flooding skips it forever. Temples also count as connection points for trade with Hermes.<br><br>
@@ -844,6 +846,8 @@
 
     <b>Move Hermes (Redirect):</b> Spend 1 Ambrosia and 1 action to <b>push Hermes onto an adjacent non-flooded hex</b>. This is how you bring him to your network when he drifts away &mdash; or how you yank him out from under an opponent who is mid-trade. Movement is one hex at a time; you cannot teleport him across the map.
 
+    <h4>Athena&rsquo;s Favor</h4>
+    At the start of each round, after harvest, if the player in last place is <b>2 or more VP</b> behind the leader, Athena hands them the one resource they most need for their next build (tied last places each get one). Nobody stays out of the race for long.<br><br>
     <h4>Appeasing Poseidon</h4>
     Once per round, the active player may spend <b>1 action + 1 Ambrosia + 2 Wine</b> to offer libations to Poseidon. The next round <b>skips Council entirely</b> &mdash; no cycle step, no influence rolls, tide holds (direction preserved). At most one player per round may appease; the first to act gets it. Use this when low-elevation camps are about to drown and you can't build temples in time.
 
@@ -862,7 +866,7 @@
     Then the next player becomes active and the round continues. At the start of each new round, Poseidon&rsquo;s Council resolves (cycle + optional coin influence), then harvest and Hermes drift.
 
     <h4>Victory</h4>
-    First player to <b>15 VP</b> reaches Ithaca and wins. VP sources:
+    When anyone reaches <b>15 VP</b>, the round is finished and the player with the most VP reaches Ithaca and wins (ties: most coins, then most camps). If no one gets there, the voyage ends after round 30 and the highest score wins. VP sources:
     <ul>
       <li>Camps: 1 VP each</li>
       <li>Temples &amp; Triremes: 2 VP each</li>
@@ -932,7 +936,7 @@
     <h4>The Tide Cycle</h4>
     <ul>
       <li>The tide cycle is 1&rarr;5&rarr;1, 8 turns total. Plan in 4-turn arcs.</li>
-      <li>At <b>tide 5</b>, only highland (elevation 5) hexes remain dry. At <b>tide 4</b>, elevation 4&ndash;5 hexes survive. This is when temples shine and dormant camps are most painful.</li>
+      <li>At <b>tide 5</b>, only highland (elevation 5) hexes remain dry. At <b>tide 4</b>, elevation 4&ndash;5 hexes survive. This is when temples shine &mdash; a drowned camp scores nothing until the water drops.</li>
       <li>At <b>tide 1&ndash;2</b>, freshly emerged hexes drop new resources. Sweep them up before they decay.</li>
       <li>Your second camp should be on a hex of elevation 3+ so it survives most of the cycle.</li>
     </ul>
@@ -989,6 +993,15 @@
     var PLAYER_LABELS = ['Gold', 'Teal', 'Coral', 'Violet', 'Jade', 'Rose'];
     var PLAYER_NAMES = ['Odysseus', 'Circe', 'Achilles', 'Athena', 'Ajax', 'Penelope'];
     var WIN_VP = 15;
+
+    /* ===== BALANCE KNOBS (tuned headlessly with tidelands-sim/sim-par.js) ===== */
+    var TRIREME_VP = 2;               // VP per trireme
+    var FLOODED_CAMPS_SCORE = false;  // false: a drowned camp scores 0 until its hex re-emerges
+    var COUNCIL_CHOOSE = true;        // true: Council payers pick +1 or -1 instead of rolling 1d3
+    var UNDERDOG_FAVOR = true;        // true: trailing player(s) get Athena's Favor each round
+    var UNDERDOG_GAP = 2;             // ...when at least this many VP behind the leader
+    var STONE_CHANCE = 0.15;          // share of spawns that wash up as Stone (temples need it)
+    var MAX_ROUNDS = 30;              // the voyage ends after this round even if no one reached WIN_VP
 
     /* Board sizing - computed from player count */
     var numPlayers = 2;
@@ -1589,7 +1602,7 @@
       if (roll < 0.68) return 'Wine';
       if (roll < 0.80) return 'Bronze';
       if (roll < 0.85) return 'Ambrosia';
-      if (roll < 0.92) return 'Stone';
+      if (roll < 0.85 + STONE_CHANCE) return 'Stone';
       return null;
     }
 
@@ -1739,12 +1752,23 @@
           infStr += PLAYER_LABELS[cr.player] + ' ' + (cr.paid ? cr.label + councilDeltaLabel(cr.delta) : 'pass') + '; ';
         }
         document.getElementById('council-title').textContent = 'Poseidon\u2019s Council';
+        var howStr = COUNCIL_CHOOSE
+          ? 'Spend <b>' + COUNCIL_COST + ' coins</b> (you have ' + players[p].coins + ') to push the tide one step up or down.'
+          : 'Spend <b>' + COUNCIL_COST + ' coins</b> (you have ' + players[p].coins + ') to roll 1d3: \u2191 +1, \u2193 \u22121, \u2212 hold.';
         document.getElementById('council-text').innerHTML =
-          playerName(p) + ', the cycle would move <b>' + cycleStr + '</b>.<br>' +
-          (infStr ? 'So far: ' + infStr + '<br>' : '') +
-          'Spend <b>' + COUNCIL_COST + ' coins</b> (you have ' + players[p].coins + ') to roll 1d3: \u2191 +1, \u2193 \u22121, \u2212 hold.';
+          playerName(p) + ', the cycle would move <b>' + cycleStr + '</b>' +
+          (COUNCIL_CHOOSE ? ' (net so far <b>' + councilDeltaLabel(councilNetSoFar()) + '</b>)' : '') + '.<br>' +
+          (infStr ? 'So far: ' + infStr + '<br>' : '') + howStr;
+        var broke = players[p].coins < COUNCIL_COST;
         var rollBtn = document.getElementById('council-roll-btn');
-        rollBtn.disabled = players[p].coins < COUNCIL_COST;
+        var upBtn = document.getElementById('council-up-btn');
+        var downBtn = document.getElementById('council-down-btn');
+        rollBtn.style.display = COUNCIL_CHOOSE ? 'none' : '';
+        upBtn.style.display = COUNCIL_CHOOSE ? '' : 'none';
+        downBtn.style.display = COUNCIL_CHOOSE ? '' : 'none';
+        rollBtn.disabled = broke;
+        upBtn.disabled = broke;
+        downBtn.disabled = broke;
         document.getElementById('council-overlay').classList.add('show');
         render();
       } else {
@@ -1771,6 +1795,24 @@
       advanceCouncilStep();
     }
 
+    function councilNetSoFar() {
+      var d = councilCycleDelta;
+      for (var i = 0; i < councilRolls.length; i++) d += councilRolls[i].delta;
+      return d;
+    }
+
+    // Chosen-direction Council: pay to push the tide one step either way.
+    function councilPush(delta) {
+      if (phase !== 'council' || gameOver || !COUNCIL_CHOOSE) return;
+      var p = councilOrder[councilStep];
+      if (!isHumanPlayer(p)) return;
+      if (players[p].coins < COUNCIL_COST) return;
+      players[p].coins -= COUNCIL_COST;
+      recordCouncilChoice(p, true, { delta: delta, label: delta > 0 ? '↑' : '↓' });
+      setMessage(playerName(p) + ' paid ' + COUNCIL_COST + ' coins to ' + (delta > 0 ? 'raise' : 'lower') + ' the tide.');
+      advanceCouncilStep();
+    }
+
     function councilPass() {
       if (phase !== 'council' || gameOver) return;
       var p = councilOrder[councilStep];
@@ -1782,6 +1824,30 @@
 
     function aiCouncilChoice(p) {
       if (phase !== 'council' || gameOver) return;
+      if (COUNCIL_CHOOSE) {
+        // Push only when a step saves (or re-floats) at least one of our camps.
+        var net = councilNetSoFar();
+        var here = scoreTideDeltaForPlayer(p, net);
+        var up = scoreTideDeltaForPlayer(p, net + 1);
+        var down = scoreTideDeltaForPlayer(p, net - 1);
+        var dir = 0;
+        if (players[p].coins >= COUNCIL_COST) {
+          if (down > here && down >= up) dir = -1;
+          else if (up > here) dir = 1;
+        }
+        if (dir) {
+          players[p].coins -= COUNCIL_COST;
+          recordCouncilChoice(p, true, { delta: dir, label: dir > 0 ? '↑' : '↓' });
+          setMessage(playerName(p) + ' paid ' + COUNCIL_COST + ' coins to ' + (dir > 0 ? 'raise' : 'lower') + ' the tide.');
+        } else {
+          recordCouncilChoice(p, false, { delta: 0, label: 'pass' });
+          setMessage(playerName(p) + ' declined to influence the Council.');
+        }
+        councilStep++;
+        render();
+        promptCouncilPlayer();
+        return;
+      }
       if (aiWantsCouncilRoll(p)) {
         players[p].coins -= COUNCIL_COST;
         var roll = rollCouncilDie();
@@ -2082,9 +2148,9 @@
       var vp = 0;
       for (var i = 0; i < players[playerIdx].structures.length; i++) {
         var s = players[playerIdx].structures[i];
-        if (s.type === 'camp') vp += 1;
+        if (s.type === 'camp') { if (FLOODED_CAMPS_SCORE || !hexes[s.hex].flooded) vp += 1; }
         else if (s.type === 'temple') vp += 2;
-        else if (s.type === 'trireme') vp += 2;
+        else if (s.type === 'trireme') vp += TRIREME_VP;
       }
       vp += Math.floor(players[playerIdx].coins / 5);
       return vp;
@@ -2450,7 +2516,13 @@
         for (var s = 0; s < players[p].structures.length; s++) {
           counts[players[p].structures[s].type]++;
         }
-        var structStr = 'Camps:' + counts.camp + ' Temples:' + counts.temple + ' Triremes:' + counts.trireme;
+        var drowned = 0;
+        for (var s = 0; s < players[p].structures.length; s++) {
+          var st = players[p].structures[s];
+          if (st.type === 'camp' && hexes[st.hex].flooded) drowned++;
+        }
+        var campStr = 'Camps:' + counts.camp + (drowned && !FLOODED_CAMPS_SCORE ? ' (' + drowned + ' drowned, 0 VP)' : '');
+        var structStr = campStr + ' Temples:' + counts.temple + ' Triremes:' + counts.trireme;
         var netSize = largestNetwork(p);
         structStr += ' Net:' + netSize;
         if (calcNetworkBonus(p) > 0) structStr += '(+' + getNetworkBonusVP() + 'VP)';
@@ -2604,6 +2676,8 @@
         if (hMsg) harvestMsgs.push(hMsg);
       }
 
+      if (UNDERDOG_FAVOR) harvestMsgs = harvestMsgs.concat(applyAthenasFavor());
+
       var msg = prefixMsg || '';
       if (omenCards && currentOmen) {
         msg += 'Omen \u2014 ' + currentOmen.icon + ' ' + currentOmen.name + '. ';
@@ -2633,6 +2707,56 @@
       if (!isHumanPlayer(currentPlayer)) {
         scheduleAi();
       }
+    }
+
+    /* ===== ATHENA'S FAVOR (catch-up) ===== */
+    var BUILD_COSTS = {
+      camp: { Timber: 2, Olives: 1 },
+      temple: { Stone: 1, Wine: 2 },
+      trireme: { Timber: 1, Bronze: 1, Wine: 1 }
+    };
+
+    // The single resource that gets this player closest to a build they have room for.
+    function neededResource(p) {
+      var r = players[p].resources;
+      var room = {
+        camp: validCampHexes(p).length > 0,
+        temple: validTempleHexes(p).length > 0,
+        trireme: validTriremeStartHexes(p).length > 0
+      };
+      var best = null, bestMissing = 99;
+      var order = ['camp', 'trireme', 'temple'];
+      for (var t = 0; t < order.length; t++) {
+        var type = order[t];
+        if (!room[type]) continue;
+        var cost = BUILD_COSTS[type], missing = 0, first = null;
+        for (var k in cost) {
+          var short = cost[k] - (r[k] || 0);
+          if (short > 0) { missing += short; if (!first) first = k; }
+        }
+        if (first && missing < bestMissing) { bestMissing = missing; best = first; }
+      }
+      return best || 'Timber';
+    }
+
+    // Players at least UNDERDOG_GAP VP behind the leader, and tied for last,
+    // each receive the one resource they most need.
+    function applyAthenasFavor() {
+      var msgs = [];
+      var vps = [], lead = -1, low = 999;
+      for (var p = 0; p < numPlayers; p++) {
+        vps[p] = totalVP(p);
+        if (vps[p] > lead) lead = vps[p];
+        if (vps[p] < low) low = vps[p];
+      }
+      if (lead - low < UNDERDOG_GAP) return msgs;
+      for (var q = 0; q < numPlayers; q++) {
+        if (vps[q] !== low) continue;
+        var rk = neededResource(q);
+        players[q].resources[rk] = (players[q].resources[rk] || 0) + 1;
+        msgs.push('Athena favors ' + PLAYER_LABELS[q] + ': +1 ' + rk + '.');
+      }
+      return msgs;
     }
 
     function formatHarvest(harvested, player) {
@@ -3314,13 +3438,14 @@
     }
 
     function resolveEndOfRoundWin() {
-      if (!winTriggered) return;
+      var timeUp = turnNumber >= MAX_ROUNDS;
+      if (!winTriggered && !timeUp) return;
       // Highest total VP wins; ties broken by coins, then camps, then player index
       var best = -1;
       var bestIdx = -1;
       for (var p = 0; p < numPlayers; p++) {
         var vp = totalVP(p);
-        if (vp < WIN_VP) continue;
+        if (vp < WIN_VP && !timeUp) continue;
         if (vp > best) { best = vp; bestIdx = p; }
         else if (vp === best) {
           // Tie-break: coins, then camp count, then lower player index (kept implicitly).
@@ -3341,7 +3466,8 @@
       for (var q = 0; q < numPlayers; q++) {
         parts.push(PLAYER_LABELS[q] + ' ' + totalVP(q) + ' VP');
       }
-      var text = 'Final: ' + parts.join(', ') + ' after ' + turnNumber + ' turns.';
+      var text = (timeUp && best < WIN_VP ? 'The voyage ends after ' + MAX_ROUNDS + ' rounds. ' : '') +
+        'Final: ' + parts.join(', ') + ' after ' + turnNumber + ' turns.';
       var titleEl = document.getElementById('overlay-title');
       var textEl = document.getElementById('overlay-text');
       var ovEl = document.getElementById('overlay');
@@ -3424,7 +3550,7 @@
       }
       if (canBuild(playerIdx, 'trireme')) {
         var br = aiBestTrireme(playerIdx);
-        if (br) opts.push({ type: 'trireme', start: br.start, end: br.end, vp: 2, score: 2.3 });
+        if (br) opts.push({ type: 'trireme', start: br.start, end: br.end, vp: TRIREME_VP, score: TRIREME_VP + 0.3 });
       }
       if (!opts.length) return null;
       var vpNow = totalVP(playerIdx);
@@ -3759,7 +3885,7 @@
 
   <h3>Frequently asked questions</h3>
   <details><summary>Why do tides matter?</summary><p>Poseidon's tide cycles 1-2-3-4-5-4-3-2-1 each round. A hex floods when the tide climbs above its elevation, losing its resources and leaving camps dormant until it re-emerges. Temples permanently shield a hex, so timing builds around the tide is the core puzzle.</p></details>
-  <details><summary>How do I score victory points?</summary><p>Camps score 1 VP, temples and triremes 2 VP each, and every 5 trade coins converts to 1 VP. The largest connected network adds a 3 VP bonus (2 VP in 2-player games). First to 15 VP reaches Ithaca and wins.</p></details>
+  <details><summary>How do I score victory points?</summary><p>Camps score 1 VP, temples and triremes 2 VP each, and every 5 trade coins converts to 1 VP; camps drowned by the tide score nothing until they re-emerge. The largest connected network adds a 3 VP bonus (2 VP in 2-player games). Once someone reaches 15 VP the round is finished and the highest score wins.</p></details>
   <details><summary>What can I do on my turn?</summary><p>You get 2 actions per round: build a camp, temple, or trireme; trade with Hermes or another player; move Hermes; or appease Poseidon. Then every other player may take one optional Special Build.</p></details>
   <details><summary>How many players is it for?</summary><p>2 to 6. The board scales with the count — 37 hexes for 2–3 players, 61 for 4, and 91 for 5–6 — and the AI can fill any empty seat.</p></details>
 
