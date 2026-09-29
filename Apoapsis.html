@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0c1016">
 <title>Apoapsis — Free 3D Rocket & Orbital Flight Sim | Board Gaming Hub</title>
-<meta name="description" content="Real Tsiolkovsky physics, 3D orbital mechanics, Mun landings, maneuver nodes. Free in-browser KSP-style rocket and spaceflight simulator. Single HTML file.">
+<meta name="description" content="Real Tsiolkovsky physics, 3D orbital mechanics, Luma landings, maneuver nodes. Free in-browser rocket and spaceflight simulator. Single HTML file.">
 <link rel="canonical" href="https://boardgaminghub.com/apoapsis">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://boardgaminghub.com/apoapsis">
 <meta property="og:title" content="Apoapsis — Free 3D Rocket Sim">
-<meta property="og:description" content="Real Tsiolkovsky physics, 3D orbital mechanics, Mun landings — free in-browser rocket simulator.">
+<meta property="og:description" content="Real Tsiolkovsky physics, 3D orbital mechanics, Luma landings — free in-browser rocket simulator.">
 <meta property="og:image" content="https://boardgaminghub.com/og/apoapsis.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -18,7 +18,7 @@
 <meta name="twitter:image" content="https://boardgaminghub.com/og/apoapsis.png">
 <script type="application/ld+json">
 { "@context": "https://schema.org", "@type": "VideoGame", "name": "Apoapsis",
-  "description": "3D rocket and orbital mechanics simulator with Tsiolkovsky physics, patched-conic SOI transitions, and Mun landings.",
+  "description": "3D rocket and orbital mechanics simulator with Tsiolkovsky physics, patched-conic SOI transitions, and Luma landings.",
   "url": "https://boardgaminghub.com/apoapsis", "genre": "Simulation",
   "applicationCategory": "Game", "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
@@ -301,14 +301,14 @@ body.touch .help-btn { top: 52px; left: auto; right: 8px; }
       <summary>All controls</summary>
       <p><kbd>W</kbd>/<kbd>S</kbd> throttle &nbsp; <kbd>A</kbd>/<kbd>D</kbd> pitch &nbsp; <kbd>Q</kbd>/<kbd>E</kbd> yaw &nbsp; <kbd>Space</kbd> stage</p>
       <p><kbd>0</kbd>-<kbd>9</kbd> SAS modes (prograde, retrograde, maneuver, target&hellip;)</p>
-      <p><kbd>L</kbd> autopilot &mdash; ascent on Earth, landing once in Mun/Minmus SOI</p>
+      <p><kbd>L</kbd> autopilot &mdash; ascent on Earth, landing once in Luma/Pebble SOI</p>
       <p><kbd>M</kbd> map &nbsp; <kbd>N</kbd> maneuver node &nbsp; <kbd>,</kbd>/<kbd>.</kbd> time warp &nbsp; <kbd>G</kbd> chute</p>
       <p><kbd>Shift</kbd>+WASDQE = RCS translate (precision docking) &nbsp; <kbd>X</kbd> abort</p>
       <p>Builder: click catalog parts to stack them; <kbd>S0</kbd>/<kbd>S1</kbd> assign stages, highest number fires first.</p>
     </details>
     <details class="tut-more">
-      <summary>Getting to the Mun</summary>
-      <p>From a stable orbit, open the maneuver panel and click <b>&rarr; Mun</b>. Warp with <kbd>.</kbd> to the burn window, press <kbd>8</kbd> for SAS MANEUVER, then throttle up with <kbd>W</kbd>.</p>
+      <summary>Getting to Luma</summary>
+      <p>From a stable orbit, open the maneuver panel and click <b>&rarr; Luma</b>. Warp with <kbd>.</kbd> to the burn window, press <kbd>8</kbd> for SAS MANEUVER, then throttle up with <kbd>W</kbd>.</p>
     </details>
     <button class="btn tut-go" onclick="dismissTutorial()">Start flying</button>
   </div>
@@ -324,7 +324,7 @@ body.touch .help-btn { top: 52px; left: auto; right: 8px; }
       <button class="btn" onclick="loadPreset('sounding')">Sounding</button>
       <button class="btn" onclick="loadPreset('orbital')">Orbital</button>
       <button class="btn" onclick="loadPreset('heavy')">Heavy</button>
-      <button class="btn" onclick="loadPreset('munship')">MunShip</button>
+      <button class="btn" onclick="loadPreset('munship')">LumaShip</button>
       <button class="btn" onclick="saveCraft()">Save</button>
       <button class="btn" onclick="clearRocket()">Clear</button>
       <button class="btn launch" onclick="startFlight()">LAUNCH</button>
@@ -370,8 +370,8 @@ body.touch .help-btn { top: 52px; left: auto; right: 8px; }
     <div class="man-row"><label>Radial</label><input type="range" id="manRad" min="-1500" max="1500" step="5" value="0"><span class="man-val" id="manRadVal">0</span></div>
     <div class="man-info" id="manInfo"></div>
     <button class="man-btn go" onclick="alignToNode()">Align SAS</button>
-    <button class="man-btn" onclick="planMunTransfer()">&rarr; Mun</button>
-    <button class="man-btn" onclick="planMinmusTransfer()">&rarr; Minmus</button>
+    <button class="man-btn" onclick="planMunTransfer()">&rarr; Luma</button>
+    <button class="man-btn" onclick="planMinmusTransfer()">&rarr; Pebble</button>
     <button class="man-btn clear" onclick="clearNode()">Clear</button>
   </div>
   <div class="map-hud" id="mapInfoTL" style="top:78px;left:8px;color:#B0C8E0;display:none;"></div>
@@ -421,12 +421,12 @@ body.touch .help-btn { top: 52px; left: auto; right: 8px; }
 var ENV = { R: 6371000, g0: 9.80665, KARMAN: 100000, P0: 101325, T0: 288.15, LAPSE: 0.0065, M_ATM: 0.029, R_GAS: 8.314 };
 var MU = ENV.g0 * ENV.R * ENV.R;
 
-// Multi-body system. Mun is scaled KSP-like for playable Hohmann transfer times.
-// Earth-centered inertial frame = world. Mun orbits Earth in XZ plane.
+// Multi-body system. Luma is scaled down for playable Hohmann transfer times.
+// Earth-centered inertial frame = world. Luma orbits Earth in XZ plane.
 var BODIES = {
   'earth':  { name:'Earth', mu: MU,       radius: ENV.R,  atm: true,  color: 0x1a5533, markerColor:'#40D080', parent: null,    soiRadius: Infinity, orbitR: 0,        period: 0,     phase: 0,   inclination: 0 },
-  'mun':    { name:'Mun',   mu: 2.7e10,   radius: 300000, atm: false, color: 0x9CA0A5, markerColor:'#9CA0A5', parent: 'earth', soiRadius: 1500000,  orbitR: 10033000, period: 10000, phase: 0,   inclination: 0 },
-  'minmus': { name:'Minmus',mu: 1.766e9,  radius: 60000,  atm: false, color: 0xAAE8C0, markerColor:'#AAE8C0', parent: 'earth', soiRadius: 2000000,  orbitR: 14500000, period: 17000, phase: 1.2, inclination: 0.105 }
+  'mun':    { name:'Luma',   mu: 2.7e10,   radius: 300000, atm: false, color: 0x9CA0A5, markerColor:'#9CA0A5', parent: 'earth', soiRadius: 1500000,  orbitR: 10033000, period: 10000, phase: 0,   inclination: 0 },
+  'minmus': { name:'Pebble',mu: 1.766e9,  radius: 60000,  atm: false, color: 0xAAE8C0, markerColor:'#AAE8C0', parent: 'earth', soiRadius: 2000000,  orbitR: 14500000, period: 17000, phase: 1.2, inclination: 0.105 }
 };
 var PARTS = {
   'pod':       { type:'pod',    name:'Command Pod',    mass:1.2,  h:30, w:24, color:'#8090A0' },
@@ -434,13 +434,13 @@ var PARTS = {
   'tank-md':   { type:'tank',   name:'Tank M (3.5t)',   mass:0.30, fuel:3.5, h:40, w:24, color:'#C0C8D0' },
   'tank-lg':   { type:'tank',   name:'Tank L (8.0t)',   mass:0.70, fuel:8.0, h:60, w:24, color:'#C0C8D0' },
   'tank-xl':   { type:'tank',   name:'Tank XL (28t)',   mass:2.30, fuel:28.0, h:80, w:28, color:'#C0C8D0' },
-  'eng-sm':    { type:'engine', name:'Terrier (60kN)',  mass:0.5,  thrust:60,  isp:345, h:18, w:18, color:'#606870' },
-  'eng-md':    { type:'engine', name:'Reliant (215kN)', mass:1.25, thrust:215, isp:310, h:22, w:24, color:'#606870' },
-  'eng-lg':    { type:'engine', name:'Mainsail (1.5MN)',mass:4.0,  thrust:1500,isp:285, h:30, w:30, color:'#606870' },
-  'srb-sm':    { type:'srb',    name:'Flea SRB',       mass:0.45, fuel:3.3, thrust:192, isp:140, h:40, w:18, color:'#8A7050' },
-  'srb-lg':    { type:'srb',    name:'Hammer SRB',     mass:0.75, fuel:7.2, thrust:227, isp:170, h:55, w:20, color:'#8A7050' },
-  'srb-rd-2':  { type:'srb',    name:'Hammer x2 (radial)', mass:1.5, fuel:14.4, thrust:454, isp:170, h:55, w:20, color:'#8A7050', radial:2 },
-  'srb-rd-4':  { type:'srb',    name:'Hammer x4 (radial)', mass:3.0, fuel:28.8, thrust:908, isp:170, h:55, w:20, color:'#8A7050', radial:4 },
+  'eng-sm':    { type:'engine', name:'Kestrel (60kN)',  mass:0.5,  thrust:60,  isp:345, h:18, w:18, color:'#606870' },
+  'eng-md':    { type:'engine', name:'Stalwart (215kN)', mass:1.25, thrust:215, isp:310, h:22, w:24, color:'#606870' },
+  'eng-lg':    { type:'engine', name:'Colossus (1.5MN)',mass:4.0,  thrust:1500,isp:285, h:30, w:30, color:'#606870' },
+  'srb-sm':    { type:'srb',    name:'Gnat SRB',       mass:0.45, fuel:3.3, thrust:192, isp:140, h:40, w:18, color:'#8A7050' },
+  'srb-lg':    { type:'srb',    name:'Mallet SRB',     mass:0.75, fuel:7.2, thrust:227, isp:170, h:55, w:20, color:'#8A7050' },
+  'srb-rd-2':  { type:'srb',    name:'Mallet x2 (radial)', mass:1.5, fuel:14.4, thrust:454, isp:170, h:55, w:20, color:'#8A7050', radial:2 },
+  'srb-rd-4':  { type:'srb',    name:'Mallet x4 (radial)', mass:3.0, fuel:28.8, thrust:908, isp:170, h:55, w:20, color:'#8A7050', radial:4 },
   'fin':       { type:'fin',    name:'Aero Fin',        mass:0.08, h:12, w:36, color:'#7080A0' },
   'chute':     { type:'chute',  name:'Parachute',       mass:0.15, h:8,  w:20, color:'#FFE080' },
   'leg':       { type:'leg',    name:'Landing Legs',    mass:0.20, h:14, w:30, color:'#606570' },
@@ -453,12 +453,12 @@ var MISSIONS = [
   { id:'rookie',   name:'Rookie Launch',    desc:'Reach altitude &ge; 50 km',   reward: 500,   check:function(s) { return s.maxAlt >= 50000; } },
   { id:'karman',   name:'Cross Karman',     desc:'Reach altitude &ge; 100 km',  reward: 1000,  check:function(s) { return s.maxAlt >= 100000; } },
   { id:'orbit',    name:'First Orbit',      desc:'Earth orbit, PE > 70 km',      reward: 3000,  check:function(s) { return s.parent==='earth' && s.periapsis > 70000 && s.eccentricity < 1; } },
-  { id:'munflyby', name:'Mun Flyby',        desc:'Enter the Mun SOI',            reward: 5000,  check:function(s) { return s._everInMun; } },
-  { id:'munorbit', name:'Mun Orbit',        desc:'Bound orbit around Mun (PE>5km)', reward: 10000, check:function(s) { return s.parent==='mun' && s.periapsis > 5000 && s.eccentricity < 1; } },
-  { id:'munland',  name:'Mun Landing',      desc:'Soft-land on Mun (&lt;12 m/s)', reward: 25000, check:function(s) { return s.munLanded; } },
-  { id:'return',   name:'Safe Return',      desc:'Return home from Mun',         reward: 40000, check:function(s) { return s._everInMun && s.parent==='earth' && s.altitude < 500 && s.speed < 12 && s.maxAlt > 100000; } },
-  { id:'minflyby', name:'Minmus Flyby',     desc:'Enter the Minmus SOI',         reward: 7000,  check:function(s) { return s._everInMinmus; } },
-  { id:'minland',  name:'Minmus Landing',   desc:'Soft-land on Minmus',          reward: 30000, check:function(s) { return s.minmusLanded; } },
+  { id:'munflyby', name:'Luma Flyby',        desc:'Enter Luma SOI',            reward: 5000,  check:function(s) { return s._everInMun; } },
+  { id:'munorbit', name:'Luma Orbit',        desc:'Bound orbit around Luma (PE>5km)', reward: 10000, check:function(s) { return s.parent==='mun' && s.periapsis > 5000 && s.eccentricity < 1; } },
+  { id:'munland',  name:'Luma Landing',      desc:'Soft-land on Luma (&lt;12 m/s)', reward: 25000, check:function(s) { return s.munLanded; } },
+  { id:'return',   name:'Safe Return',      desc:'Return home from Luma',         reward: 40000, check:function(s) { return s._everInMun && s.parent==='earth' && s.altitude < 500 && s.speed < 12 && s.maxAlt > 100000; } },
+  { id:'minflyby', name:'Pebble Flyby',     desc:'Enter Pebble SOI',         reward: 7000,  check:function(s) { return s._everInMinmus; } },
+  { id:'minland',  name:'Pebble Landing',   desc:'Soft-land on Pebble',          reward: 30000, check:function(s) { return s.minmusLanded; } },
   { id:'rendez',   name:'Rendezvous',       desc:'Approach target within 1 km',  reward: 8000,  check:function(s) { var tm = targetMetrics(s); return !!tm && tm.d < 1000; } },
   { id:'dock',     name:'Docking',          desc:'Approach target &lt;30 m at &lt;2 m/s', reward: 25000, check:function(s) { var tm = targetMetrics(s); return !!tm && tm.d < 30 && tm.vRel < 2; } }
 ];
@@ -1825,19 +1825,19 @@ function updatePlasmaOverlay(s) {
 }
 
 function checkWinLose() {
-  if (sim.munLanded) { showResult(true, 'Mun Landing!'); return true; }
-  if (sim.minmusLanded) { showResult(true, 'Minmus Landing!'); return true; }
-  if (sim.landed && sim.parent === 'earth' && sim._everInMun) { showResult(true, 'Safe Return from Mun!'); return true; }
+  if (sim.munLanded) { showResult(true, 'Luma Landing!'); return true; }
+  if (sim.minmusLanded) { showResult(true, 'Pebble Landing!'); return true; }
+  if (sim.landed && sim.parent === 'earth' && sim._everInMun) { showResult(true, 'Safe Return from Luma!'); return true; }
   if (sim.landed && sim.parent === 'earth' && sim.maxAlt > 50000 && !sim.landedShown) {
     sim.landedShown = true; showToast('Landed safely.');
   }
   if (sim.parent === 'earth' && sim.periapsis > 70000 && sim.orbitalEnergy < 0 && sim.eccentricity < 1 && !sim.orbitAchieved) {
     sim.orbitAchieved = true;
-    showToast('Orbit achieved! Keep going to Mun &rarr;');
+    showToast('Orbit achieved! Keep going to Luma &rarr;');
     return false;
   }
   if (sim.crashed) {
-    var title = sim.crashBody === 'mun' ? 'Crashed on Mun' : (sim.maxAlt > 1000 ? 'Crashed on Return' : 'Launch Failure');
+    var title = sim.crashBody === 'mun' ? 'Crashed on Luma' : (sim.maxAlt > 1000 ? 'Crashed on Return' : 'Launch Failure');
     showResult(false, title);
     return true;
   }
@@ -1976,7 +1976,7 @@ function renderFlight3D() {
     trailGeom.setDrawRange(0, 0);
   }
 
-  // KSP-style orbit-cam: frame the whole rocket, positioned behind-and-above in the local (radial=up) frame
+  // Orbit-cam: frame the whole rocket, positioned behind-and-above in the local (radial=up) frame
   var radial = sim.pos.clone().normalize();
   var shipFwd = new THREE.Vector3(0, 1, 0).applyQuaternion(rocketGroup.quaternion);
 
@@ -2950,7 +2950,7 @@ function renderMapView() {
   }
   if (sim.parent === 'earth') {
     var dMun = shipInertialPos.clone().sub(munPos).length();
-    info += '<br><b>MUN D</b> ' + fmtAlt(dMun - BODIES.mun.radius);
+    info += '<br><b>LUMA D</b> ' + fmtAlt(dMun - BODIES.mun.radius);
   }
   document.getElementById('mapInfoTL').innerHTML = info;
   // After map render, un-hide rocket so flight view next frame works
@@ -3448,7 +3448,7 @@ maybeShowTutorial();
   </ul>
 
   <h3>What's simplified</h3>
-  <p>Within the active body's sphere of influence gravity is integrated numerically from the single primary — genuine Newtonian motion, not a precomputed two-body conic. Transitions between bodies use the standard <strong>patched-conic / SOI hand-off</strong> (only one gravitating body at a time; no n-body perturbations). The Mun and Minmus and their SOI radii are <strong>KSP-scaled toy bodies</strong> (Mun radius 300 km, SOI 1500 km, etc.), deliberately shrunk so a transfer fits in a short play session rather than matching the real Earth-Moon system.</p>
+  <p>Within the active body's sphere of influence gravity is integrated numerically from the single primary — genuine Newtonian motion, not a precomputed two-body conic. Transitions between bodies use the standard <strong>patched-conic / SOI hand-off</strong> (only one gravitating body at a time; no n-body perturbations). Luma and Pebble and their SOI radii are <strong>scaled-down toy bodies</strong> (Luma radius 300 km, SOI 1500 km, etc.), deliberately shrunk so a transfer fits in a short play session rather than matching the real Earth-Moon system.</p>
 
   <h3>Related games</h3>
   <ul>
