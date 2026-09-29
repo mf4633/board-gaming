@@ -219,6 +219,7 @@ body { font-family: 'Courier New', monospace; background: #04060E; color: #B0C8E
 
 #firstRun { position: fixed; inset: 0; z-index: 9996; background: rgba(2,4,10,0.65); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 30px; }
 #firstRun.open { display: flex; }
+@media (max-width: 700px), (max-height: 700px) { #firstRun { padding: 12px; } #firstRun .fr-card { max-height: calc(100vh - 24px); overflow-y: auto; padding: 18px 16px; box-sizing: border-box; } }
 #firstRun .fr-card { background: #0A0F20; border: 1px solid #4080D0; border-radius: 10px; padding: 28px 36px; max-width: 560px; color: #B0C8E0; box-shadow: 0 12px 60px rgba(64,128,208,0.3); }
 #firstRun h2 { color: #FFD040; font-family: Georgia, serif; font-size: 1.5em; letter-spacing: 2px; margin-bottom: 6px; }
 #firstRun .fr-sub { color: #6080A0; font-size: 0.85em; margin-bottom: 18px; font-style: italic; }
@@ -4298,6 +4299,12 @@ function onResize() {
 
 // ---------- Input ----------
 var camYaw = 0, camPitch = 0.35, camDist = 3.4;
+// 3.4 frames the globe vertically (40deg vfov). On a portrait screen the horizontal view is
+// narrower, so start far enough back that the whole planet fits across the width too.
+(function () {
+  var aspect = window.innerWidth / Math.max(1, window.innerHeight - navOffset());
+  if (aspect < 1) camDist = Math.min(8, 3.4 / aspect);
+})();
 var dragging = false, lastX = 0, lastY = 0, dragDX = 0, dragDY = 0;
 
 // Reused across hover + click. Allocating a fresh Raycaster on every mousemove
