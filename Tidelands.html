@@ -660,7 +660,7 @@
     /* Mobile game nav */
   </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Board Games","item":"https://boardgaminghub.com/#board"},{"@type":"ListItem","position":3,"name":"Tidelands","item":"https://boardgaminghub.com/tidelands"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why do tides matter?","acceptedAnswer":{"@type":"Answer","text":"Poseidon's tide rises and falls along a 1-2-3-4-5-4-3-2-1 cycle each round. A hex floods when the tide climbs above its elevation, losing its resources and leaving any camp on it dormant until it re-emerges. Timing your builds and harvests around the tide — and raising temples that shield a hex permanently — is the core puzzle."}},{"@type":"Question","name":"How do I score victory points?","acceptedAnswer":{"@type":"Answer","text":"Camps are worth 1 VP, temples and triremes 2 VP each, and every 5 trade coins converts to 1 VP. The largest connected network of structures grants a 3 VP bonus (2 VP in 2-player games); camps drowned by the tide score nothing until they re-emerge. Once someone reaches 15 VP the round is finished and the highest score wins."}},{"@type":"Question","name":"What can I do on my turn?","acceptedAnswer":{"@type":"Answer","text":"Each round you take 2 actions during your active phase — build a camp, temple, or trireme, trade with Hermes or another player, move Hermes, or appease Poseidon. Afterward, every other player gets one optional Special Build. Camps must be anchored to your existing network of structures."}},{"@type":"Question","name":"How many players is it for?","acceptedAnswer":{"@type":"Answer","text":"Tidelands supports 2 to 6 players, and the board scales with the count: 37 hexes for 2–3 players, 61 for 4, and 91 for 5–6. Empty seats can be run by the built-in AI."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why do tides matter?","acceptedAnswer":{"@type":"Answer","text":"Poseidon's tide rises and falls along a 1-2-3-4-5-4-3-2-1 cycle each round. A hex floods when the tide climbs above its elevation, losing its resources and leaving any camp on it dormant until it re-emerges. Timing your builds and harvests around the tide — and raising temples that shield a hex permanently — is the core puzzle."}},{"@type":"Question","name":"How do I score victory points?","acceptedAnswer":{"@type":"Answer","text":"Camps and temples are worth 1 VP each, triremes 2 VP, and every 5 trade coins converts to 1 VP. The largest connected network of structures grants a 3 VP bonus (2 VP in 2-player games); camps drowned by the tide score nothing until they re-emerge. Once someone reaches 13 VP the round is finished and the highest score wins."}},{"@type":"Question","name":"What can I do on my turn?","acceptedAnswer":{"@type":"Answer","text":"Each round you take 2 actions during your active phase — build a camp, temple, or trireme, trade with Hermes or another player, move Hermes, or appease Poseidon. Afterward, every other player gets one optional Special Build. Camps must be anchored to your existing network of structures."}},{"@type":"Question","name":"How many players is it for?","acceptedAnswer":{"@type":"Answer","text":"Tidelands supports 2 to 6 players, and the board scales with the count: 37 hexes for 2–3 players, 61 for 4, and 91 for 5–6. Empty seats can be run by the built-in AI."}}]}</script>
 </head>
 <body>
 <h1>TIDELANDS</h1>
@@ -781,7 +781,7 @@
   <button class="rules-toggle" onclick="toggleStrategy()">Strategy</button>
   <div class="rules" id="rules-panel">
     <h4>Overview</h4>
-    Sail the wine-dark sea of Homer's epic. Poseidon's wrath causes the waters to rise and fall, drowning islands and revealing new ones bearing treasures from shipwrecks and gifts of the gods. Hermes' merchant ship drifts between the islands. Establish camps, raise temples, and launch triremes to harvest resources and trade your way to 15 Victory Points.
+    Sail the wine-dark sea of Homer's epic. Poseidon's wrath causes the waters to rise and fall, drowning islands and revealing new ones bearing treasures from shipwrecks and gifts of the gods. Hermes' merchant ship drifts between the islands. Establish camps, raise temples, and launch triremes to harvest resources and trade your way to 13 Victory Points.
 
     <h4>The Map</h4>
     Hexagonal islands form an archipelago. Each hex has an elevation from 1 (shoreline) to 5 (highland). The board scales with player count: 37 hexes for 2&ndash;3 players, 61 for 4, 91 for 5&ndash;6.
@@ -813,7 +813,7 @@
     <b>Camp</b> (2 Timber + 1 Olives) &mdash; <b>1 VP</b><br>
     Beachhead for harvesting. Must be built on a non-flooded hex adjacent to one of your existing camps, temples, or triremes (your starting camp seeds your first build). When the hex floods, the camp is dormant and scores nothing; it returns automatically when the hex re-emerges.<br><br>
 
-    <b>Temple</b> (1 Stone + 2 Wine) &mdash; <b>2 VP</b><br>
+    <b>Temple</b> (1 Stone + 2 Wine) &mdash; <b>1 VP</b><br>
     A divine refuge. Built on a non-highland hex (elevation 1&ndash;4) that you own or that is adjacent to one of your structures. Temples <b>permanently protect</b> their hex from Poseidon's wrath &mdash; flooding skips it forever. Temples also count as connection points for trade with Hermes.<br><br>
 
     <b>Trireme</b> (1 Timber + 1 Bronze + 1 Wine) &mdash; <b>2 VP</b><br>
@@ -866,10 +866,11 @@
     Then the next player becomes active and the round continues. At the start of each new round, Poseidon&rsquo;s Council resolves (cycle + optional coin influence), then harvest and Hermes drift.
 
     <h4>Victory</h4>
-    When anyone reaches <b>15 VP</b>, the round is finished and the player with the most VP reaches Ithaca and wins (ties: most coins, then most camps). If no one gets there, the voyage ends after round 30 and the highest score wins. VP sources:
+    When anyone reaches <b>13 VP</b>, the round is finished and the player with the most VP reaches Ithaca and wins (ties: most coins, then most camps). If no one gets there, the voyage ends after round 30 and the highest score wins. VP sources:
     <ul>
       <li>Camps: 1 VP each</li>
-      <li>Temples &amp; Triremes: 2 VP each</li>
+      <li>Temples: 1 VP each</li>
+      <li>Triremes: 2 VP each</li>
       <li>Coins: 1 VP per 5 coins</li>
       <li>Largest connected network: 3 VP bonus (2 VP in 2-player games)</li>
     </ul>
@@ -961,7 +962,7 @@
 
     <h4>Endgame (12+ VP)</h4>
     <ul>
-      <li>Count to 15. Once you can see the win, switch from VP-per-action math to <b>defense</b>: deny opponents trireme links, redirect Hermes away from rivals.</li>
+      <li>Count to 13. Once you can see the win, switch from VP-per-action math to <b>defense</b>: deny opponents trireme links, redirect Hermes away from rivals.</li>
       <li>Coins are slow VP (5:1) but they're <b>uncontested</b>. If you have a big trade network, sell surplus &mdash; but keep enough coin to <b>buy back</b> a missing resource from Hermes at 2&times; price when you're stuck.</li>
       <li>The largest-network 3 VP bonus often decides close games. In a tied 14-vs-14 race, a single extra trireme wins.</li>
     </ul>
@@ -992,10 +993,11 @@
     var PLAYER_COLORS = ['#E8C840', '#60C0B0', '#D06040', '#9070D0', '#50B050', '#E080A0'];
     var PLAYER_LABELS = ['Gold', 'Teal', 'Coral', 'Violet', 'Jade', 'Rose'];
     var PLAYER_NAMES = ['Odysseus', 'Circe', 'Achilles', 'Athena', 'Ajax', 'Penelope'];
-    var WIN_VP = 15;
+    var WIN_VP = 13;
 
     /* ===== BALANCE KNOBS (tuned headlessly with tidelands-sim/sim-par.js) ===== */
     var TRIREME_VP = 2;               // VP per trireme
+    var TEMPLE_VP = 1;                // VP per temple (was 2: temple-first won 55% of 3-way strategy games; 1 VP + WIN_VP 13 -> 38%)
     var FLOODED_CAMPS_SCORE = false;  // false: a drowned camp scores 0 until its hex re-emerges
     var COUNCIL_CHOOSE = true;        // true: Council payers pick +1 or -1 instead of rolling 1d3
     var UNDERDOG_FAVOR = true;        // true: trailing player(s) get Athena's Favor each round
@@ -2149,7 +2151,7 @@
       for (var i = 0; i < players[playerIdx].structures.length; i++) {
         var s = players[playerIdx].structures[i];
         if (s.type === 'camp') { if (FLOODED_CAMPS_SCORE || !hexes[s.hex].flooded) vp += 1; }
-        else if (s.type === 'temple') vp += 2;
+        else if (s.type === 'temple') vp += TEMPLE_VP;
         else if (s.type === 'trireme') vp += TRIREME_VP;
       }
       vp += Math.floor(players[playerIdx].coins / 5);
@@ -3518,7 +3520,7 @@
         var st = hexes[h].structure;
         var ownCampHere = st && st.owner === playerIdx && st.type === 'camp';
         var protect = ownCampHere && hexes[h].elevation < 3; // flood-proof a low camp
-        var netVp = ownCampHere ? 1 : 2; // upgrading a camp is net +1 VP
+        var netVp = ownCampHere ? TEMPLE_VP - 1 : TEMPLE_VP; // the camp is consecrated into the temple, so it stops scoring
         var sc = adj * 4 + (5 - hexes[h].elevation) + (protect ? 6 : 0);
         if (!best || sc > best.sc) best = { hex: h, adj: adj, protect: protect, netVp: netVp, sc: sc };
       }
@@ -3878,14 +3880,14 @@
 <script src="/analytics.js"></script>
 <section class="seo-content">
   <h2>About Tidelands</h2>
-  <p>Tidelands is an original hex-based strategy game set on Homer's wine-dark sea. Poseidon's wrath raises and lowers the tide across an archipelago, drowning low islands and revealing new treasures. Establish camps, raise temples, and launch triremes to harvest resources, trade with Hermes' drifting ship, and race to 15 victory points. Designed for 2–6 players, with a board that scales to the count.</p>
+  <p>Tidelands is an original hex-based strategy game set on Homer's wine-dark sea. Poseidon's wrath raises and lowers the tide across an archipelago, drowning low islands and revealing new treasures. Establish camps, raise temples, and launch triremes to harvest resources, trade with Hermes' drifting ship, and race to 13 victory points. Designed for 2–6 players, with a board that scales to the count.</p>
 
   <h3>How to play</h3>
-  <p>Each round the tide steps along a 1-2-3-4-5-4-3-2-1 cycle; a hex floods when the tide rises above its elevation, wiping its resources and leaving camps dormant until it re-emerges. On your active turn you take 2 actions — build a camp (1 VP), temple (2 VP, permanently shields its hex), or trireme (2 VP, bridges and extends your network); trade with Hermes when your network connects to his ship; barter with a neighbor; move Hermes; or appease Poseidon. After you finish, every other player gets one optional Special Build. Camps and structures must anchor to your existing network. First to 15 victory points wins.</p>
+  <p>Each round the tide steps along a 1-2-3-4-5-4-3-2-1 cycle; a hex floods when the tide rises above its elevation, wiping its resources and leaving camps dormant until it re-emerges. On your active turn you take 2 actions — build a camp (1 VP), temple (1 VP, permanently shields its hex), or trireme (2 VP, bridges and extends your network); trade with Hermes when your network connects to his ship; barter with a neighbor; move Hermes; or appease Poseidon. After you finish, every other player gets one optional Special Build. Camps and structures must anchor to your existing network. First to 13 victory points wins.</p>
 
   <h3>Frequently asked questions</h3>
   <details><summary>Why do tides matter?</summary><p>Poseidon's tide cycles 1-2-3-4-5-4-3-2-1 each round. A hex floods when the tide climbs above its elevation, losing its resources and leaving camps dormant until it re-emerges. Temples permanently shield a hex, so timing builds around the tide is the core puzzle.</p></details>
-  <details><summary>How do I score victory points?</summary><p>Camps score 1 VP, temples and triremes 2 VP each, and every 5 trade coins converts to 1 VP; camps drowned by the tide score nothing until they re-emerge. The largest connected network adds a 3 VP bonus (2 VP in 2-player games). Once someone reaches 15 VP the round is finished and the highest score wins.</p></details>
+  <details><summary>How do I score victory points?</summary><p>Camps and temples score 1 VP each, triremes 2 VP, and every 5 trade coins converts to 1 VP; camps drowned by the tide score nothing until they re-emerge. The largest connected network adds a 3 VP bonus (2 VP in 2-player games). Once someone reaches 13 VP the round is finished and the highest score wins.</p></details>
   <details><summary>What can I do on my turn?</summary><p>You get 2 actions per round: build a camp, temple, or trireme; trade with Hermes or another player; move Hermes; or appease Poseidon. Then every other player may take one optional Special Build.</p></details>
   <details><summary>How many players is it for?</summary><p>2 to 6. The board scales with the count — 37 hexes for 2–3 players, 61 for 4, and 91 for 5–6 — and the AI can fill any empty seat.</p></details>
 
