@@ -25,7 +25,7 @@
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Sudoku","item":"https://boardgaminghub.com/sudoku"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What are the rules of sudoku?","acceptedAnswer":{"@type":"Answer","text":"Fill the 9×9 grid with digits 1–9 so that every row, every column, and every 3×3 box contains each digit exactly once. The puzzle starts with some cells already filled (clues); a well-formed puzzle has exactly one solution reachable by logic alone — no guessing required."}},{"@type":"Question","name":"What's the difference between a naked single and a hidden single?","acceptedAnswer":{"@type":"Answer","text":"Naked single: a cell where only one digit is still possible after eliminating digits already in its row, column, and box. Hidden single: a digit that has only one possible cell in a particular row, column, or box, even if that cell could in principle hold other digits. Both are the easiest deductions; expert puzzles require chains of these plus advanced techniques (X-Wing, Swordfish)."}},{"@type":"Question","name":"How do pencil marks work?","acceptedAnswer":{"@type":"Answer","text":"Pencil marks (or candidates) are small notes inside an empty cell listing the digits still possible there. As you fill cells and eliminate possibilities, you erase pencil marks accordingly. They make advanced techniques tractable — most expert puzzles are unsolvable without them."}},{"@type":"Question","name":"Can every sudoku be solved by logic alone?","acceptedAnswer":{"@type":"Answer","text":"Every well-formed (single-solution) sudoku CAN be solved by some logical chain — but the chain may require techniques most humans don't use (forcing chains, nishio, etc.). Most published \"expert\" puzzles are solvable with X-Wing, swordfish, and unique-rectangle techniques. The minimum number of clues for a unique-solution sudoku is 17 (proven 2012)."}},{"@type":"Question","name":"What's the difference between easy and expert difficulty?","acceptedAnswer":{"@type":"Answer","text":"Easy puzzles solve with naked-singles and hidden-singles only. Medium adds naked pairs and pointing pairs. Hard requires X-Wings and swordfish. Expert requires chains and unique-rectangle reasoning. The clue count is a poor proxy for difficulty — a 30-clue \"expert\" can be much harder than a 24-clue \"hard\"."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What are the rules of sudoku?","acceptedAnswer":{"@type":"Answer","text":"Fill the 9×9 grid with digits 1–9 so that every row, every column, and every 3×3 box contains each digit exactly once. The puzzle starts with some cells already filled (clues); a well-formed puzzle has exactly one solution reachable by logic alone — no guessing required."}},{"@type":"Question","name":"What's the difference between a naked single and a hidden single?","acceptedAnswer":{"@type":"Answer","text":"Naked single: a cell where only one digit is still possible after eliminating digits already in its row, column, and box. Hidden single: a digit that has only one possible cell in a particular row, column, or box, even if that cell could in principle hold other digits. Both are the easiest deductions; expert puzzles require chains of these plus advanced techniques (X-Wing, Swordfish)."}},{"@type":"Question","name":"How do pencil marks work?","acceptedAnswer":{"@type":"Answer","text":"Pencil marks (or candidates) are small notes inside an empty cell listing the digits still possible there. As you fill cells and eliminate possibilities, you erase pencil marks accordingly. They make advanced techniques tractable — most expert puzzles are unsolvable without them."}},{"@type":"Question","name":"Can every sudoku be solved by logic alone?","acceptedAnswer":{"@type":"Answer","text":"Every well-formed (single-solution) sudoku CAN be solved by some logical chain — but the chain may require techniques most humans don't use (forcing chains, nishio, etc.). Most published \"expert\" puzzles are solvable with X-Wing, swordfish, and unique-rectangle techniques. The minimum number of clues for a unique-solution sudoku is 17 (proven 2012)."}},{"@type":"Question","name":"What's the difference between easy and expert difficulty?","acceptedAnswer":{"@type":"Answer","text":"On this site difficulty sets the number of starting clues: 40 on Easy, 32 on Medium, 28 on Hard and 24 on Expert, and every puzzle has exactly one solution. Fewer clues usually means harder deductions. The clue count is a poor proxy for difficulty — a 30-clue \"expert\" can be much harder than a 24-clue \"hard\"."}}]}</script>
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0;
@@ -391,7 +391,7 @@
   <details><summary>Naked single vs hidden single?</summary><p>Naked single: a cell has only one possible digit. Hidden single: a digit has only one possible cell in a row, column, or box. Both are the easiest deductions.</p></details>
   <details><summary>How do pencil marks work?</summary><p>Small notes inside an empty cell listing the digits still possible there. As you fill cells and eliminate possibilities, erase marks accordingly. Most expert puzzles are unsolvable without them.</p></details>
   <details><summary>Can every sudoku be solved by logic alone?</summary><p>Every well-formed (single-solution) sudoku is logically solvable in principle. In practice, expert puzzles may require techniques most humans don't use day-to-day.</p></details>
-  <details><summary>Easy vs Expert difficulty?</summary><p>Easy = naked + hidden singles only. Medium adds naked pairs and pointing pairs. Hard requires X-Wings and swordfish. Expert requires chains and unique-rectangle reasoning.</p></details>
+  <details><summary>Easy vs Expert difficulty?</summary><p>Difficulty sets the number of starting clues: 40 on Easy, 32 on Medium, 28 on Hard and 24 on Expert. Every puzzle has exactly one solution. Fewer clues usually means harder deductions, though the technique needed varies from puzzle to puzzle.</p></details>
 
   <h3>Related games</h3>
   <ul>
@@ -401,6 +401,33 @@
     <li><a href="/mahjong">Mahjong Solitaire</a> — pattern-matching puzzle.</li>
   </ul>
 </section>
+
+<!-- draft: review --><section class="seo-content how-it-works">
+  <h2>How this version works</h2>
+  <h3>How puzzles are generated</h3>
+  <p>Each puzzle is built in your browser. The generator fills a complete, valid grid at random, then visits the cells in random order and tries removing each clue. After every removal it counts solutions, stopping as soon as it finds a second one. If the grid no longer has exactly one solution, the clue goes back. Because of this check, every puzzle here has a single unique solution.</p>
+  <h3>What the difficulty levels change</h3>
+  <p>Difficulty only sets how many clues the generator aims to leave: about 40 on Easy, 32 on Medium, 28 on Hard and 24 on Expert. Puzzles are not graded by the techniques they need, so two puzzles at the same level can feel quite different. If no more clues can be removed without breaking uniqueness, a puzzle can end with a few more clues than its target.</p>
+  <h3>The daily puzzle</h3>
+  <p>Daily uses the same generator with a fixed number sequence seeded from the current UTC date, aiming for 34 clues. Everyone gets the same grid on the same UTC day. Each daily is numbered from January 1, 2025. Solving it records your daily solve count and streak of consecutive days in your browser, and offers a Share button with the daily number, your time and your mistake count, but not the grid. Links ending in #daily open straight into that day's puzzle.</p>
+  <h3>Mistakes, hints and checking</h3>
+  <ul>
+    <li>A digit that does not match the solution turns red right away and adds one to the mistake counter.</li>
+    <li>Hint fills the selected cell with its correct digit. Hints are not counted or penalized.</li>
+    <li>Check reports how many wrong entries are on the board.</li>
+    <li>Undo has no limit and also rolls back the mistake counter.</li>
+    <li>Entering a digit clears the notes in that cell only, not in its row, column or box.</li>
+  </ul>
+  <h3>Controls and saving</h3>
+  <p>Selecting a cell shades its row, column and box and highlights every cell with the same digit. On a keyboard, 1 to 9 enter a digit (the same digit again clears it), Backspace, Delete or 0 erase, N toggles notes, and arrow keys move the selection, wrapping at the edges. Only the daily streak and solve count are stored; a puzzle in progress is lost on reload.</p>
+  <h3>Recent changes</h3>
+  <ul>
+    <li>2026-07-08 — The daily puzzle now has a number, a streak, a spoiler-free shareable result and a direct #daily link.</li>
+    <li>2026-06-23 — Fixed how the daily puzzle swaps in its seeded number sequence, so it always hands back the browser's real random generator afterwards.</li>
+    <li>2026-05-11 — Puzzle generation got faster by removing a redundant extra solve on every clue removal.</li>
+  </ul>
+</section><!-- /draft -->
+
 <!-- merged from /guides/sudoku-tips -->
 <section class="seo-content guide-merged" id="guide">
   <h2>Sudoku Tips for Beginners</h2>
@@ -426,6 +453,7 @@
     <p>An <b>X-Wing</b> appears when a digit&rsquo;s candidates in two rows align in the same two columns (or vice versa), letting you remove that digit from other cells in those columns. Expert puzzles on the hub may require X-Wing, swordfish, or simple coloring — if stuck, step back and re-check for hidden singles after a fresh mark pass.</p>
 
     <h3>Choosing a difficulty</h3>
+    <p>Levels differ only in how many clues you start with (40, 32, 28 or 24), so treat these as typical experiences rather than rules.</p>
     <ul>
       <li><b>Easy</b> — singles only; good first week of play.</li>
       <li><b>Medium</b> — occasional pairs; still relaxing.</li>

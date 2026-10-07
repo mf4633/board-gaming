@@ -472,10 +472,10 @@
 <script src="/analytics.js"></script>
 <section class="seo-content">
   <h2>About Drift</h2>
-  <p>Drift is a daily word-ladder puzzle. Transform a starting word into an ending word by changing one letter at a time — every intermediate must itself be a real word. Word ladders were invented by Lewis Carroll in 1877 (he called them "doublets"); Drift gives you a fresh start-end pair every day.</p>
+  <p>Drift is a daily word-ladder puzzle. Transform a starting word into an ending word by changing one letter at a time — every intermediate must itself be a real word. Word ladders were invented by Lewis Carroll in 1877 (he called them "doublets"); Drift sets one start-end pair per day from a rotating set of 30.</p>
 
   <h3>How to play</h3>
-  <p>Each step swaps one letter of your current word to form a new valid word. Continue until you reach the target. The daily seed has a known shortest length, but multiple paths can match it.</p>
+  <p>Each step swaps one letter of your current word to form a new valid word. Continue until you reach the target. Every pair has a known shortest route, and several paths can match it.</p>
 
   <h3>Frequently asked questions</h3>
   <details><summary>How does Drift work?</summary><p>Start word and end word are given. Change one letter per step; every intermediate must be a valid word. Reach the target in as few steps as possible.</p></details>
@@ -491,6 +491,30 @@
     <li><a href="/chess">Chess</a> — two-player strategy.</li>
   </ul>
 </section>
+
+<!-- draft: review --><section class="seo-content how-it-works">
+  <h2>How this version works</h2>
+  <h3>Where the puzzles come from</h3>
+  <p>Drift uses a hand-picked list of 30 four-letter start and target pairs, each with a theme shown above the ladder. Daily mode picks the pair from the number of days since January 1, 2026, counted in UTC, so everyone gets the same ladder and it changes at midnight UTC. With 30 pairs, the daily list repeats every 30 days. Random mode picks one at random.</p>
+  <p>Every pair can be connected with the game's own dictionary within the 7-step maximum. The shortest routes range from 2 steps (east to west) to 7 steps (paid to cash).</p>
+  <h3>What counts as a valid rung</h3>
+  <p>Middle words must come from a built-in list of 698 common four-letter words and differ from the rung above in exactly one letter. A valid rung turns green with the changed letter in amber; an invalid one turns red. You win when every middle rung is valid and the last one is one letter from the target. Any route counts.</p>
+  <h3>Ladder length</h3>
+  <p>The ladder starts with three empty rungs (four steps). + Add Step goes up to six empty rungs (seven steps) and Remove Step down to one. Some pairs need more than four steps, so you will have to add rungs. Your result is the steps used.</p>
+  <h3>Hints</h3>
+  <p>Hint works on the first incomplete rung, once the rung above it is filled. It runs a breadth-first search from that word to the target and fills in one letter of the next word on a shortest route. Hints are added to your result. If no route exists from your word, it suggests adding a step.</p>
+  <h3>Controls and saving</h3>
+  <p>Type on the on-screen or physical keyboard. Enter or Tab moves to the next cell, Backspace deletes, and arrow keys move between middle rungs. Daily progress is saved in your browser for that day; random puzzles are not. Your daily solve count and streak of consecutive days are stored locally too. Share copies a grid of squares marking which letter changed on each rung, without the words.</p>
+  <h3>Recent changes</h3>
+  <ul>
+    <li>2026-07-07 — Replaced 13 daily pairs that could not be solved with the game's dictionary or needed more rungs than the ladder allows.</li>
+    <li>2026-07-07 — Hint now reveals one letter from a shortest route, instead of filling a whole rung with a word that might lead nowhere.</li>
+    <li>2026-07-07 — The daily puzzle now changes at midnight UTC, so every time zone shares the same ladder.</li>
+    <li>2026-07-01 — After a daily solve, a prompt offers to share your result through your device's share menu where available.</li>
+    <li>2026-06-23 — Shared results from Random mode are labeled as random instead of showing a daily number.</li>
+  </ul>
+</section><!-- /draft -->
+
 <!-- merged from /guides/drift-word-ladder -->
 <section class="seo-content guide-merged" id="guide">
   <h2>Drift Word Ladder Guide</h2>

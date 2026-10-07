@@ -25,7 +25,7 @@
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Solitaire","item":"https://boardgaminghub.com/solitaire"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I win Klondike Solitaire?","acceptedAnswer":{"@type":"Answer","text":"Build all four foundations from Ace to King by suit. The tableau is built downward with alternating colors; foundations are built upward by suit. Use the stock and waste pile to feed cards you cannot place directly on the tableau. The game is won when all 52 cards have moved to the foundations."}},{"@type":"Question","name":"What does smart-click do?","acceptedAnswer":{"@type":"Answer","text":"Smart-click (also called auto-move) sends a card to its best legal destination automatically — a foundation if it can go there, or the most useful tableau slot otherwise. Saves time once many cards are in play."}},{"@type":"Question","name":"What's the difference between Draw 1 and Draw 3?","acceptedAnswer":{"@type":"Answer","text":"Draw 1 deals one card from the stock to the waste at a time and lets you play it directly. Draw 3 deals three cards face-up but only the top is playable, making the game considerably harder. Draw 1 wins about 80% of deals with perfect play; Draw 3 closer to 5%."}},{"@type":"Question","name":"Are all Klondike deals winnable?","acceptedAnswer":{"@type":"Answer","text":"No. With perfect play and Draw 1 rules, an estimated 80–82% of deals are solvable. Draw 3 falls to roughly 4–5%. Some deals are mathematically unwinnable from the start; the rate is higher when undo is permitted."}},{"@type":"Question","name":"What is the talon (stock and waste)?","acceptedAnswer":{"@type":"Answer","text":"After dealing the tableau, the remaining 24 cards form the stock pile, face-down. Clicking the stock turns the top card (or three) onto the waste pile, where the top card is playable. When the stock empties you can usually recycle the waste back into the stock."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I win Klondike Solitaire?","acceptedAnswer":{"@type":"Answer","text":"Build all four foundations from Ace to King by suit. The tableau is built downward with alternating colors; foundations are built upward by suit. Use the stock and waste pile to feed cards you cannot place directly on the tableau. The game is won when all 52 cards have moved to the foundations."}},{"@type":"Question","name":"What does smart-click do?","acceptedAnswer":{"@type":"Answer","text":"Smart-click (also called auto-move) sends a card to its best legal destination automatically — a foundation if it can go there, or otherwise the first tableau column, from the left, where it can legally go. Saves time once many cards are in play."}},{"@type":"Question","name":"What's the difference between Draw 1 and Draw 3?","acceptedAnswer":{"@type":"Answer","text":"Draw 1 deals one card from the stock to the waste at a time and lets you play it directly. Draw 3 deals three cards face-up but only the top is playable, making the game considerably harder. Draw 1 is estimated to allow a win in about 80% of deals with perfect play."}},{"@type":"Question","name":"Are all Klondike deals winnable?","acceptedAnswer":{"@type":"Answer","text":"No. With perfect play and Draw 1 rules, an estimated 80–82% of deals are solvable. Draw 3 falls to roughly 4–5%. Some deals are mathematically unwinnable from the start; the rate is higher when undo is permitted."}},{"@type":"Question","name":"What is the talon (stock and waste)?","acceptedAnswer":{"@type":"Answer","text":"After dealing the tableau, the remaining 24 cards form the stock pile, face-down. Clicking the stock turns the top card (or three) onto the waste pile, where the top card is playable. When the stock empties you can usually recycle the waste back into the stock."}}]}</script>
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0;
@@ -426,7 +426,7 @@
 
   <h3>Frequently asked questions</h3>
   <details><summary>How do I win Klondike?</summary><p>Build all four foundations from Ace to King by suit. Use the tableau (down, alternating colors) and the stock-waste cycle to feed cards onto the foundations. The game ends when all 52 cards have moved up.</p></details>
-  <details><summary>What does smart-click do?</summary><p>Auto-moves the clicked card to its best legal destination — usually a foundation if eligible, otherwise the most useful tableau column.</p></details>
+  <details><summary>What does smart-click do?</summary><p>Auto-moves the clicked card to its best legal destination — a foundation if eligible, otherwise the first legal tableau column from the left.</p></details>
   <details><summary>Draw 1 vs Draw 3?</summary><p>Draw 1 deals one stock card at a time, directly playable. Draw 3 deals three face-up but only the top is playable, making the game far harder. Draw 1 wins ~80% of deals; Draw 3 ~5%.</p></details>
   <details><summary>Are all deals winnable?</summary><p>No. With perfect Draw 1 play, ~80–82% of random deals are solvable. Some are mathematically dead from the deal.</p></details>
   <details><summary>What is the talon?</summary><p>The combined stock + waste pile. Stock starts with 24 face-down cards; clicking deals to the waste. When stock empties, the waste typically recycles back — usually unlimited times.</p></details>
@@ -439,6 +439,36 @@
     <li><a href="/chess">Chess</a> — two-player abstract strategy.</li>
   </ul>
 </section>
+
+<!-- draft: review --><section class="seo-content how-it-works">
+  <h2>How this version works</h2>
+  <h3>How deals are made</h3>
+  <p>Every new deal shuffles a full 52-card deck with a Fisher-Yates shuffle driven by your browser's random number generator. There is no seed and no solvability check, so some deals cannot be won. The game starts in Draw 1, and switching between Draw 1 and Draw 3 starts a fresh deal.</p>
+  <h3>Click to move</h3>
+  <p>There is no dragging. You click a face-up card and the game picks where it goes:</p>
+  <ul>
+    <li>A single card (the waste card or the last card of a column) tries the foundations first, then the tableau columns from left to right, and takes the first legal spot.</li>
+    <li>Clicking a card higher up a column moves it and everything below it as one run, to another tableau column only.</li>
+    <li>An empty column accepts only a King.</li>
+    <li>Clicking the top card of a foundation sends it back to the first tableau column that will take it.</li>
+    <li>If a card has nowhere to go, nothing happens.</li>
+  </ul>
+  <p>When a column's last face-up card leaves, the face-down card underneath turns over by itself.</p>
+  <h3>Stock and waste</h3>
+  <p>The stock turns over one card (Draw 1) or three (Draw 3), and only the top waste card is shown and playable. Clicking the empty stock turns the waste back over, with no limit on passes.</p>
+  <h3>Undo and auto-complete</h3>
+  <p>Undo steps back one action at a time and remembers the last 200 actions. Auto-complete only works once the stock is empty and every tableau card is face-up. It then sweeps every playable card onto the foundations, and a single Undo reverses the whole sweep.</p>
+  <h3>Scoring and saving</h3>
+  <p>There are no points, just moves and time. Every action counts as a move, including turning the stock and recycling the waste, and each card placed by auto-complete counts separately. The only thing stored in your browser is your win count. A game in progress is not saved, so reloading deals a new hand. On screens 820 pixels wide or less, the board keeps its size and scrolls sideways within its own area.</p>
+  <h3>Recent changes</h3>
+  <ul>
+    <li>2026-09-29 — Tableau columns now stack downward. Before, face-down cards were pulled upward and tall columns could run off the top of the board.</li>
+    <li>2026-08-27 — On phones, the board scrolls sideways within its own area instead of making the whole page wider than the screen.</li>
+    <li>2026-06-23 — Fixed leftover shading on the stock slot after the waste was recycled.</li>
+    <li>2026-05-11 — Clicking an empty stock and waste no longer creates a blank undo step, and auto-complete now undoes in one step instead of card by card.</li>
+  </ul>
+</section><!-- /draft -->
+
 <!-- merged from /guides/solitaire-klondike -->
 <section class="seo-content guide-merged" id="guide">
   <h2>How to Play Klondike Solitaire (and Win More Often)</h2>
@@ -469,7 +499,7 @@
     </ol>
 
     <h3>Use smart-click and auto-complete</h3>
-    <p>Click any card to auto-move it to its best legal destination — foundation first, then the most useful tableau column. Once every card is face-up, use <b>AUTO-COMPLETE</b> to finish the deal in a single tap instead of clicking each card home.</p>
+    <p>Click any card to auto-move it to its best legal destination — foundation first, then the first legal tableau column from the left. Once every card is face-up, use <b>AUTO-COMPLETE</b> to finish the deal in a single tap instead of clicking each card home.</p>
 
     <p>Prefer a puzzle with no luck at all? Try <a href="/sudoku">Sudoku</a> or its companion <a href="/sudoku#guide">Sudoku tips guide</a>. For a similar solo pace with tiles instead of cards, see <a href="/mahjong">Mahjong Solitaire</a>.</p>
 </section>

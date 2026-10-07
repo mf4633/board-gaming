@@ -2010,8 +2010,8 @@
   <ul>
     <li><strong>Checkmate</strong> — king in check with no legal escape (win for the checkmating side).</li>
     <li><strong>Stalemate</strong> — side to move has no legal moves but is NOT in check (draw).</li>
-    <li><strong>50-move rule</strong> — 50 consecutive moves with no capture and no pawn move (draw can be claimed).</li>
-    <li><strong>Threefold repetition</strong> — the same position occurs three times with the same player to move (draw can be claimed).</li>
+    <li><strong>50-move rule</strong> — 50 consecutive moves with no capture and no pawn move (this version ends the game as a draw automatically).</li>
+    <li><strong>Threefold repetition</strong> — the same position occurs three times with the same player to move (this version ends the game as a draw automatically).</li>
     <li><strong>Insufficient material</strong> — neither side has enough pieces to force checkmate (automatic draw).</li>
   </ul>
 
@@ -2070,6 +2070,37 @@
     <li><a href="/mancala">Mancala</a> — ancient count-and-capture, fast learning curve.</li>
   </ul>
 </section>
+
+<!-- draft: review --><section class="seo-content how-it-works">
+  <h2>How this version works</h2>
+
+  <h3>How the engine picks a move</h3>
+  <p>The computer runs a minimax search with alpha-beta pruning. Every level searches one ply deeper at a time and keeps the best move from the last depth it finished, inside a fixed time budget: 0.4 seconds for Novice, 0.9 for Club, 2 for Expert and 3 for Master (which goes up to 5 ply).</p>
+  <p>Captures are tried first, ordered most-valuable-victim, least-valuable-attacker. It prefers the shortest forced mate. Legal moves are shuffled before each search, so equally scored moves vary from game to game.</p>
+  <p>Novice and Club do not always search. On 35% (Novice) or 8% (Club) of moves they play a random legal move instead, chosen from moves that do not put a rook or queen on an attacked square without capturing. Expert and Master never take a random move.</p>
+
+  <h3>What the engine values</h3>
+  <p>Material is counted as pawn 100, knight 320, bishop 330, rook 500, queen 900, plus a piece-square table for each piece type. On top of that it adds mobility, its knights, bishops, rooks and queen within four squares of your king (the queen counts double), the pawn shield in front of its own king, penalties for doubled and isolated pawns, a bonus for passed pawns that grows as they advance, a bishop-pair bonus, and a bonus for having castled. The playing style changes how much each of those terms weighs; material weights never change.</p>
+
+  <h3>Rules as implemented</h3>
+  <ul>
+    <li>When your pawn promotes you choose a queen, rook, bishop or knight. The engine always promotes to a queen.</li>
+    <li>Draws are applied automatically rather than claimed: the game ends after 50 moves by each side with no capture or pawn move, on the third occurrence of the same position (same side to move, castling rights and en passant square), or when only kings remain, a single bishop or knight remains, or each side has one bishop on the same square colour.</li>
+    <li>There is no undo, and the game is not saved; reloading the page starts a new game.</li>
+  </ul>
+
+  <h3>Controls</h3>
+  <p>Click a piece to see its legal moves, then click the destination; clicking it again cancels. Two-player mode is for two people sharing one screen, shown from White's side.</p>
+
+  <h3>Recent changes</h3>
+  <ul>
+    <li>2026-09-01 — Engine rebuilt: a single fixed-depth opponent became four strength levels combined with three playing styles, all running on a time budget.</li>
+    <li>2026-07-07 — Added the missing draw rules (insufficient material, 50-move rule, threefold repetition) and a promotion picker instead of an automatic queen.</li>
+    <li>2026-06-23 — Fixed the engine judging castling from the live game rather than from the position it was analysing.</li>
+    <li>2026-04-09 — Chess first added to the site with a computer opponent.</li>
+  </ul>
+</section><!-- /draft -->
+
 <!-- merged from /guides/free-browser-chess -->
 <section class="seo-content guide-merged" id="guide">
   <h2>Play Chess Free in Your Browser</h2>

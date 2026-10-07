@@ -1623,6 +1623,36 @@
     <li><a href="/senet">Senet</a> — ancient Egyptian race.</li>
   </ul>
 </section>
+
+<!-- draft: review --><section class="seo-content how-it-works">
+  <h2>How this version works</h2>
+
+  <h3>Setup and turns</h3>
+  <p>You play Ivory, moving from point 24 down to point 1 and bearing off from points 1 to 6. The computer plays Walnut in the opposite direction. Ivory always takes the first turn with an ordinary roll of both dice; there is no opening roll-off. Doubles give four moves. If a roll has no legal move at all, the game says so and passes the turn automatically.</p>
+
+  <h3>Rules the move checker enforces</h3>
+  <ul>
+    <li>Checkers on the bar must re-enter before anything else can move.</li>
+    <li>You must use as many dice as the position allows. If only one die can be played, you must play the higher one when it has a legal move.</li>
+    <li>Before you pick a checker, the game works out every complete way to play your roll. Only first moves that belong to one of those full-length plays are highlighted, so you cannot start a move that would leave a die unusable when another order uses both.</li>
+    <li>Bearing off with a higher number than needed is allowed only from your rearmost checker.</li>
+    <li>A game ends as soon as one side has borne off all 15 checkers. There is no gammon or backgammon scoring; a win is a win.</li>
+  </ul>
+
+  <h3>How the computer plays</h3>
+  <p>Walnut scores the position left by every complete legal way to play its roll. It does not look ahead to your next roll; it simply picks the highest-scoring result, so with the same position and dice it makes the same choice. The score rewards checkers borne off and opponent checkers on the bar, and penalises its own checkers on the bar. It prefers a lower pip count for itself (weighted 0.5 per pip) over a higher one for you (0.3 per pip), gives a bonus for every point holding two or more checkers (more inside its home board, and for anchors in yours), penalises single exposed checkers (most heavily when they sit in your home board), and adds a bonus for three or more consecutive made points, with an extra reward for a full six-point prime.</p>
+
+  <h3>Undo and display</h3>
+  <p>Within your own turn, Undo takes back moves one at a time and returns the die. Once your last die is used the turn ends automatically, so the final move of a turn cannot be undone. Games are not saved; reloading the page starts over.</p>
+
+  <h3>Recent changes</h3>
+  <ul>
+    <li>2026-07-07 — Corrected the page text, which wrongly said a doubling cube was available.</li>
+    <li>2026-06-23 — Fixed the legal-move generator so it reads the position it is given rather than always the live board.</li>
+    <li>2026-04-09 — Backgammon added to the site with a computer opponent.</li>
+  </ul>
+</section><!-- /draft -->
+
 <!-- merged from /guides/backgammon-rules -->
 <section class="seo-content guide-merged" id="guide">
   <h2>Backgammon Rules &amp; Opening Strategy</h2>

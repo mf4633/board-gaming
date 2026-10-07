@@ -33,7 +33,7 @@
 }
 </script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"2048","item":"https://boardgaminghub.com/2048"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do you play 2048?","acceptedAnswer":{"@type":"Answer","text":"Use arrow keys (or swipe on touch devices) to slide every tile in one direction. When two adjacent tiles with the same number meet, they merge into a single tile of double value. After every move a new 2 (90% of the time) or 4 (10%) appears in a random empty cell. The game ends when no moves are possible."}},{"@type":"Question","name":"What's the best 2048 strategy?","acceptedAnswer":{"@type":"Answer","text":"Pin the largest tile in one corner (most players use bottom-right) and never move it. Build a snake-pattern descending row that feeds into that corner: e.g., bottom row left-to-right increasing, second row right-to-left, etc. Avoid pressing the direction that would shift the corner — typically Up if your corner is bottom-right. With perfect play this strategy reaches 2048 reliably and 4096 often."}},{"@type":"Question","name":"What's the highest tile possible in 2048?","acceptedAnswer":{"@type":"Answer","text":"Theoretical maximum is 131,072 (2^17), achieved by merging tiles up to that value on a 4×4 grid. Practically the cap is far lower because once tiles fill the board and the highest tile cannot be merged, you lose. The 2048 tile (the win condition) is reached by ~5–10% of casual players; 4096 by perhaps 1%."}},{"@type":"Question","name":"How is the score calculated?","acceptedAnswer":{"@type":"Answer","text":"Each merge adds the value of the new tile to your score. Two 2s → 4 (+4). Two 8s → 16 (+16). Two 1024s → 2048 (+2048). Total score after reaching 2048 from a fresh game is around 20,000; reaching 4096 around 50,000."}},{"@type":"Question","name":"Why does the same tile keep spawning in the wrong place?","acceptedAnswer":{"@type":"Answer","text":"Spawn position is uniformly random among empty cells. It feels biased after a streak but isn't. The 2 vs 4 spawn is weighted 90/10 — getting a 4 spawn is meaningful because it skips a doubling step (and slightly accelerates filling the board)."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do you play 2048?","acceptedAnswer":{"@type":"Answer","text":"Use arrow keys (or swipe on touch devices) to slide every tile in one direction. When two adjacent tiles with the same number meet, they merge into a single tile of double value. After every move a new 2 (90% of the time) or 4 (10%) appears in a random empty cell. The game ends when no moves are possible."}},{"@type":"Question","name":"What's the best 2048 strategy?","acceptedAnswer":{"@type":"Answer","text":"Pin the largest tile in one corner (most players use bottom-right) and never move it. Build a snake-pattern descending row that feeds into that corner: e.g., bottom row left-to-right increasing, second row right-to-left, etc. Avoid pressing the direction that would shift the corner — typically Up if your corner is bottom-right. With perfect play this strategy reaches 2048 reliably and 4096 often."}},{"@type":"Question","name":"What's the highest tile possible in 2048?","acceptedAnswer":{"@type":"Answer","text":"Theoretical maximum is 131,072 (2^17), achieved by merging tiles up to that value on a 4×4 grid. Practically the cap is far lower because once tiles fill the board and the highest tile cannot be merged, you lose."}},{"@type":"Question","name":"How is the score calculated?","acceptedAnswer":{"@type":"Answer","text":"Each merge adds the value of the new tile to your score. Two 2s → 4 (+4). Two 8s → 16 (+16). Two 1024s → 2048 (+2048). Total score after reaching 2048 from a fresh game is around 20,000; reaching 4096 around 50,000."}},{"@type":"Question","name":"Why does the same tile keep spawning in the wrong place?","acceptedAnswer":{"@type":"Answer","text":"Spawn position is uniformly random among empty cells. It feels biased after a streak but isn't. The 2 vs 4 spawn is weighted 90/10 — getting a 4 spawn is meaningful because it skips a doubling step (and slightly accelerates filling the board)."}}]}</script>
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background:
@@ -284,7 +284,7 @@
   <h3>Frequently asked questions</h3>
   <details><summary>How do you play 2048?</summary><p>Arrow keys or swipe to slide all tiles in one direction. Adjacent matching tiles merge into one of double value. A new 2 or 4 spawns each move. Reach 2048 to win; keep going for higher tiles.</p></details>
   <details><summary>Best strategy?</summary><p>Pin the largest tile in a corner; never move it. Build a snake-pattern row that feeds into it. Avoid pressing the direction that would shift the corner.</p></details>
-  <details><summary>Highest tile possible?</summary><p>Theoretically 131,072 (2¹⁷). Practically the game ends earlier when the board fills. The 2048 win tile is reached by ~5–10% of casual players; 4096 by ~1%.</p></details>
+  <details><summary>Highest tile possible?</summary><p>Theoretically 131,072 (2¹⁷). Practically the game ends earlier when the board fills.</p></details>
   <details><summary>How is the score calculated?</summary><p>Each merge adds the value of the new tile to your score. Reaching 2048 from a fresh game scores ~20,000; reaching 4096 ~50,000.</p></details>
   <details><summary>Why does the same spot keep spawning?</summary><p>Spawn position is uniformly random among empty cells. It feels biased after a streak but isn't. The 2-vs-4 spawn is weighted 90/10.</p></details>
 
@@ -296,6 +296,36 @@
     <li><a href="/mahjong">Mahjong Solitaire</a> — solo pattern matching.</li>
   </ul>
 </section>
+
+<!-- draft: review --><section class="seo-content how-it-works">
+  <h2>How this version works</h2>
+
+  <h3>Moves and merges</h3>
+  <p>Each slide first packs the tiles toward the wall you pushed, then merges matching pairs starting from that wall. A tile that has just been created by a merge cannot merge again in the same move, so a row of 2, 2, 2, 2 pushed left becomes 4, 4, not 8, and a row of 2, 2, 4 becomes 4, 4. If a slide would not change the board at all, nothing happens: no new tile appears and the move is not added to your undo history.</p>
+  <p>A new game starts with two tiles placed the same way as every later spawn. When the 2048 tile first appears you get a single "keep going" message and play continues; the game only ends when the board is full and no two neighbouring tiles match.</p>
+
+  <h3>Undo</h3>
+  <p>The Undo button steps back one move at a time, restoring both the board and the score, up to the last 20 moves. Undo is still available after a game-over message, so you can back out of a losing position and try a different direction.</p>
+
+  <h3>What is saved</h3>
+  <p>Your game is stored in your browser's local storage on this device. The page saves the current board, score, the last 20 undo steps and whether you have already reached 2048 after every move, so closing the tab or reloading picks up exactly where you left off. Your best score is kept separately and updates whenever your current score passes it. New Game clears the board and undo history but keeps your best score.</p>
+
+  <h3>Controls</h3>
+  <ul>
+    <li>Arrow keys or W, A, S, D slide the tiles.</li>
+    <li>On a phone or tablet, swipe on the board. Swipes shorter than about 24 pixels are ignored so a tap does not count as a move, and the longer of the horizontal or vertical distance decides the direction.</li>
+    <li>New Game and Undo are the two buttons above the board.</li>
+  </ul>
+
+  <h3>Recent changes</h3>
+  <ul>
+    <li>2026-06-23 — The "you reached 2048" message now appears only once per game, including after a reload, instead of repeating on every move.</li>
+    <li>2026-04-29 — Added the tile value and scoring reference and the FAQ below the game.</li>
+    <li>2026-04-27 — New tile colour palette.</li>
+    <li>2026-04-27 — 2048 added to the site.</li>
+  </ul>
+</section><!-- /draft -->
+
 <!-- merged from /guides/2048-strategy -->
 <section class="seo-content guide-merged" id="guide">
   <h2>2048 Strategy: How to Reach 2048 (and Beyond)</h2>

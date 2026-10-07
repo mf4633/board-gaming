@@ -1410,7 +1410,7 @@
   <p>Go is a two-player abstract strategy game played on a 19×19 grid (with smaller 9×9 and 13×13 variants for shorter games). Each player places stones to surround territory and capture enemy groups. Despite simple rules, Go has more legal positions than atoms in the observable universe — it's widely considered the deepest abstract strategy game ever invented.</p>
 
   <h3>How to play</h3>
-  <p>Black plays first, then players alternate placing one stone of their color on any empty intersection. A stone or group with no adjacent empty points (no liberties) is captured. Score by counting territory (empty points surrounded by your stones) plus captured stones. Komi (a points adjustment) compensates White for going second.</p>
+  <p>Black plays first, then players alternate placing one stone of their color on any empty intersection. A stone or group with no adjacent empty points (no liberties) is captured. This version uses area scoring: your stones on the board plus the empty points they surround. Captured stones are not added separately. Komi (a points adjustment) compensates White for going second.</p>
 
   <h3>Frequently asked questions</h3>
   <details><summary>How is Go different from chess?</summary><p>Both are abstract strategy with perfect information, but Go favors positional accumulation over tactical exchange. The game tree is far larger; computer mastery only arrived in 2016 with AlphaGo.</p></details>
@@ -1426,6 +1426,38 @@
     <li><a href="/mancala">Mancala</a> — ancient count-and-capture.</li>
   </ul>
 </section>
+
+<!-- draft: review --><section class="seo-content how-it-works">
+  <h2>How this version works</h2>
+
+  <h3>Rules as implemented</h3>
+  <ul>
+    <li>Board sizes are 9×9, 13×13 and 19×19.</li>
+    <li>You play Black and move first. There are no handicap stones.</li>
+    <li>Scoring is Chinese-style area scoring: each side's stones on the board plus the empty points that touch only that side's stones. Empty areas that touch both colours count for nobody. Captured stones are shown but do not add to the score.</li>
+    <li>Komi is 6.5 points for White on every board size.</li>
+    <li>Suicide is illegal. A move that captures first is checked after the captured stones are removed, so a capturing move that would otherwise have no liberties is allowed.</li>
+    <li>Ko is the simple rule: you cannot play a move that recreates the board exactly as it was one move ago. A pass clears this restriction.</li>
+  </ul>
+
+  <h3>Ending the game and marking dead stones</h3>
+  <p>Two passes in a row open a marking step. Click any group to mark it dead; the whole group toggles together and the score updates straight away, with dead stones treated as empty points for the side that surrounds them. Confirm locks in the final score. Resume Play restores the position exactly as it was before the passes, gives the move to the correct player and needs two new passes before scoring again.</p>
+
+  <h3>How the computer plays White</h3>
+  <p>The computer looks one move ahead. It tries every legal point, gives each a score and then picks at random among the moves within 2 points of the best, so it does not repeat the same game. The score rewards capturing (20 per stone), rescuing its own group from atari, and putting your groups in atari. It penalises moves that leave its own group in atari, and strongly penalises filling one of its own eyes. Smaller bonuses go to touching its own stones, having more liberties, playing nearer the centre, star points and the third and fourth lines, with a penalty for the first and second lines. Early in the game it also avoids playing far away from every existing stone.</p>
+  <p>It waits about 0.6 seconds before each move. It passes only when it has no legal move left.</p>
+
+  <h3>What this version does not have</h3>
+  <p>There is no undo, no saved games and no difficulty setting; reloading the page starts a new game.</p>
+
+  <h3>Recent changes</h3>
+  <ul>
+    <li>2026-07-07 — Added the dead-stone marking step with live score, Confirm and Resume Play. Before this, a dead stone left on the board stopped the territory around it from counting for either side.</li>
+    <li>2026-06-23 — Fixed the computer throwing away legal moves that carried a heavy self-atari penalty on large boards.</li>
+    <li>2026-04-09 — Go added to the site with 9×9, 13×13 and 19×19 boards and a computer opponent.</li>
+  </ul>
+</section><!-- /draft -->
+
 <!-- merged from /guides/go-rules-beginners -->
 <section class="seo-content guide-merged" id="guide">
   <h2>Go Rules for Beginners (Baduk / Weiqi)</h2>

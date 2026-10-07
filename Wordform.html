@@ -143,7 +143,7 @@
     <h2>How to play Wordform</h2>
     <p>Guess the hidden 5-letter word in six tries. After each guess, the tiles flip:</p>
     <p class="legend"><span style="background:linear-gradient(160deg,#2a8050,#084028)"></span> right letter, right spot &nbsp;·&nbsp; <span style="background:linear-gradient(160deg,#e0a040,#704808)"></span> right letter, wrong spot &nbsp;·&nbsp; <span style="background:linear-gradient(160deg,#2a2820,#181612)"></span> not in the word</p>
-    <p>One puzzle per day on <strong>DAILY</strong> mode (resets at midnight local). Use <strong>RANDOM</strong> for unlimited play, or <strong>SHARE</strong> to copy your daily result as an emoji grid.</p>
+    <p>One puzzle per day on <strong>DAILY</strong> mode (resets at midnight UTC). Use <strong>RANDOM</strong> for unlimited play, or <strong>SHARE</strong> to copy your daily result as an emoji grid.</p>
   </div>
 </div>
 <script>
@@ -340,6 +340,34 @@
     <li><a href="/chess">Chess</a> — two-player strategy.</li>
   </ul>
 </section>
+
+<!-- draft: review --><section class="seo-content how-it-works">
+  <h2>How this version works</h2>
+  <h3>Where the words come from</h3>
+  <p>Answers come from a list of 984 common five-letter words. Guesses are checked against a larger list of 14,855 five-letter words, and every answer is also accepted. A guess that is not in the list is rejected and does not use up a row.</p>
+  <p>Daily mode picks the answer from the number of days since January 1, 2026, counted in UTC. Everyone gets the same word, and it changes at midnight UTC, not your local midnight. Random mode picks from the same answer list and can be played as often as you like.</p>
+  <h3>How repeated letters are scored</h3>
+  <p>Each guess is scored in two passes. First, every letter in the right spot turns green. Then, left to right, each remaining letter turns yellow only if the answer still has an unclaimed copy of it. So if you guess two Es and the answer has one E, only one of your Es lights up, and if one E is already green, the other turns gray.</p>
+  <p>The on-screen keyboard keeps the best result for each letter: a key that has been green stays green.</p>
+  <h3>Stats and saving</h3>
+  <ul>
+    <li>Only daily games count toward Played, Wins and Streak. Random games never change your stats.</li>
+    <li>Your streak goes up by one for each daily win and resets to zero when you fail a daily word. Skipping a day does not reset it.</li>
+    <li>Today's daily guesses are saved in your browser, so a reload brings you back where you left off. The save also records the answer and is discarded if it does not match today's word.</li>
+    <li>Random games are not saved.</li>
+  </ul>
+  <h3>Controls and sharing</h3>
+  <p>Type on a physical keyboard (letters, Enter, Backspace) or tap the on-screen keys. When a daily game ends, win or lose, a prompt offers to share your result through your device's share menu, or copies it to the clipboard. The shared text shows the daily number, your guess count (X if you missed) and a grid of colored squares without any letters.</p>
+  <h3>Recent changes</h3>
+  <ul>
+    <li>2026-07-07 — Guesses are now checked against a 14,855-word dictionary. Before this, any five letters were accepted.</li>
+    <li>2026-07-07 — The daily word now changes at midnight UTC, so players in every time zone get the same word on the same day.</li>
+    <li>2026-06-23 — Random games no longer count toward your daily stats and streak.</li>
+    <li>2026-06-19 — Sharing now uses your device's share menu where available, with a prompt after you finish the daily.</li>
+    <li>2026-05-11 — Saved progress is discarded if the daily word has changed, instead of being scored against the wrong answer.</li>
+  </ul>
+</section><!-- /draft -->
+
 <!-- merged from /guides/wordform-tips -->
 <section class="seo-content guide-merged" id="guide">
   <h2>Wordform Tips &amp; Daily Strategy</h2>

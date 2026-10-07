@@ -25,7 +25,7 @@
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Board Gaming Hub","item":"https://boardgaminghub.com/"},{"@type":"ListItem","position":2,"name":"Puzzles & Classics","item":"https://boardgaminghub.com/#puzzles"},{"@type":"ListItem","position":3,"name":"Minesweeper","item":"https://boardgaminghub.com/minesweeper"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What do the numbers in Minesweeper mean?","acceptedAnswer":{"@type":"Answer","text":"A number on a revealed cell shows how many mines lie among the cells immediately surrounding it — 8 neighbors on a square grid, 6 on a hex grid, and the 8 knight's-move cells in the Knight variant. A blank revealed cell has 0 adjacent mines and the game auto-opens its neighbors."}},{"@type":"Question","name":"What is no-guess Minesweeper?","acceptedAnswer":{"@type":"Answer","text":"A no-guess board is generated so that it can be cleared by logic alone from the opened start cell, with no forced 50/50. This page runs a constraint solver over every candidate board and reshuffles the unresolved mines until the solver can clear the whole grid, so a stuck position always has a deduction available."}},{"@type":"Question","name":"How does the Minesweeper daily challenge work?","acceptedAnswer":{"@type":"Answer","text":"Every UTC day there is one seeded 16×16, 40-mine, no-guess board that is identical for everyone. Your first attempt is the one that counts toward your streak; you can replay it for practice. The share button copies a spoiler-free result line with your time, 3BV and streak."}},{"@type":"Question","name":"What is 3BV in Minesweeper?","acceptedAnswer":{"@type":"Answer","text":"3BV (Bechtel's Board Benchmark Value) is the minimum number of left-clicks needed to clear a board: one per open region plus one per numbered cell that does not touch an open region. 3BV per second is the speed measure the Minesweeper community uses because it corrects for easy versus hard boards."}},{"@type":"Question","name":"What's the difference between Beginner, Intermediate, and Expert?","acceptedAnswer":{"@type":"Answer","text":"Beginner is 9×9 with 10 mines (~12% density). Intermediate is 16×16 with 40 mines (~16%). Expert is 30×16 with 99 mines (~21%). Higher density makes deductions harder and, in classic mode, more likely to require a 50/50 guess."}},{"@type":"Question","name":"What is a chord click?","acceptedAnswer":{"@type":"Answer","text":"A chord (left+right click together, middle-click, or simply clicking a revealed number) automatically opens all unflagged neighbors — but only if the number of flagged neighbors equals the number on the cell."}},{"@type":"Question","name":"Can every Minesweeper game be solved without guessing?","acceptedAnswer":{"@type":"Answer","text":"Not in classic mode: only about one in six random Expert boards can be cleared by pure logic from the first opening. Switch on No-Guess and every board is guaranteed solvable; the optional guess alert tells you in classic mode when no safe deduction remains."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What do the numbers in Minesweeper mean?","acceptedAnswer":{"@type":"Answer","text":"A number on a revealed cell shows how many mines lie among the cells immediately surrounding it — 8 neighbors on a square grid, 6 on a hex grid, and the 8 knight's-move cells in the Knight variant. A blank revealed cell has 0 adjacent mines and the game auto-opens its neighbors."}},{"@type":"Question","name":"What is no-guess Minesweeper?","acceptedAnswer":{"@type":"Answer","text":"A no-guess board is generated so that it can be cleared by logic alone from the opened start cell, with no forced 50/50. This page runs a constraint solver over every candidate board and reshuffles the unresolved mines and tries again, up to 600 times, until the solver can clear the whole grid."}},{"@type":"Question","name":"How does the Minesweeper daily challenge work?","acceptedAnswer":{"@type":"Answer","text":"Every UTC day there is one seeded 16×16, 40-mine, no-guess board that is identical for everyone. Your first attempt is the one that counts toward your streak; you can replay it for practice. The share button copies a spoiler-free result line with your time, 3BV and streak."}},{"@type":"Question","name":"What is 3BV in Minesweeper?","acceptedAnswer":{"@type":"Answer","text":"3BV (Bechtel's Board Benchmark Value) is the minimum number of left-clicks needed to clear a board: one per open region plus one per numbered cell that does not touch an open region. 3BV per second is the speed measure the Minesweeper community uses because it corrects for easy versus hard boards."}},{"@type":"Question","name":"What's the difference between Beginner, Intermediate, and Expert?","acceptedAnswer":{"@type":"Answer","text":"Beginner is 9×9 with 10 mines (~12% density). Intermediate is 16×16 with 40 mines (~16%). Expert is 30×16 with 99 mines (~21%). Higher density makes deductions harder and, in classic mode, more likely to require a 50/50 guess."}},{"@type":"Question","name":"What is a chord click?","acceptedAnswer":{"@type":"Answer","text":"A chord (left+right click together, middle-click, or simply clicking a revealed number) automatically opens all unflagged neighbors — but only if the number of flagged neighbors equals the number on the cell."}},{"@type":"Question","name":"Can every Minesweeper game be solved without guessing?","acceptedAnswer":{"@type":"Answer","text":"Not in classic mode: random boards, especially on Expert, often reach a point where no safe deduction exists. Switch on No-Guess and the generator searches for a board its solver can clear by logic alone; the optional guess alert tells you in classic mode when no safe deduction remains."}}]}</script>
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0;
@@ -679,7 +679,7 @@ const MSW = (() => {
   <p>Minesweeper is a single-player logic puzzle: uncover every safe cell on a grid without detonating any of the hidden mines. Numbers on revealed cells tell you exactly how many mines lie among the surrounding cells. It originated as a 1980s mainframe game and went worldwide when Microsoft bundled it with Windows 3.1 in 1992. This version keeps the classic three grids and adds the features the community has asked for ever since: guaranteed no-guess boards, a shared daily challenge, alternative geometries, seed sharing and honest speed metrics.</p>
 
   <h3>No-guess mode: how the boards are built</h3>
-  <p>Classic Minesweeper places mines at random, so many boards end in a coin flip. In No-Guess mode the page runs a constraint solver on every candidate board: single-cell rules first, then the subset rule (if one number's unknown cells are contained in another's, the difference is determined), then exact enumeration of each connected frontier, and finally a global mine-count check in the endgame. Wherever the solver stalls, the mines it could not resolve are reshuffled and the solve is repeated. A board is only handed to you once the solver can clear it from the opened start cell, which means that every time you are stuck there is a deduction available. Generation takes a few milliseconds on Beginner and typically well under a tenth of a second on Expert. Measured over random classic boards, the same solver clears about 84% of Beginner, 72% of Intermediate and 16% of Expert boards without a guess, which is why the mode matters most on the large grid.</p>
+  <p>Classic Minesweeper places mines at random, so many boards end in a coin flip. In No-Guess mode the page runs a constraint solver on every candidate board: single-cell rules first, then the subset rule (if one number's unknown cells are contained in another's, the difference is determined), then exact enumeration of each connected frontier, and finally a global mine-count check in the endgame. Wherever the solver stalls, the mines it could not resolve are reshuffled and the solve is repeated. The generator keeps trying, up to 600 attempts, until the solver can clear the board from the opened start cell, so in practice a stuck position almost always has a deduction available. The mode matters most on Expert, where random boards most often end in a forced guess.</p>
 
   <h3>Daily challenge</h3>
   <p>Each UTC day produces one 16×16, 40-mine no-guess board from a fixed seed, so everyone plays the same puzzle. The start cell is pre-opened, the timer starts on your first click, and only your first attempt counts toward the streak; replays are for practice. The share line reports your time, the board's 3BV and your streak without giving away any of the layout.</p>
@@ -739,6 +739,42 @@ const MSW = (() => {
     <li><a href="/chess">Chess</a> — two-player strategic logic.</li>
   </ul>
 </section>
+
+<!-- draft: review --><section class="seo-content how-it-works">
+  <h2>How this version works</h2>
+
+  <h3>The first click</h3>
+  <p>On a fresh random board no mines exist until you click. The board is then built around that cell: the cell you clicked and every one of its neighbours (the six hexes in Hex, the eight knight's-move cells in Knight) are kept mine-free, so your first click always opens an area rather than a lone number. On a shared link or the Daily, the board is fixed in advance and its start cell is already open when the page loads.</p>
+
+  <h3>How No-Guess generation gives up</h3>
+  <p>The generator makes up to 600 attempts per board. Most attempts only reshuffle the mines the solver could not resolve, but every 60th attempt throws the layout away and places all mines fresh. If no attempt is solvable within that limit, the last layout is used.</p>
+
+  <h3>Hints and the guess alert</h3>
+  <p>A hint runs the solver on what you can see and answers in this order: a flag you placed on a cell it can prove is safe, then a provably safe cell to open, then a provable mine you have not flagged. Only a hint that points at a cell adds the 10-second penalty; if there is no logical move it says so for free. A win that used any hint is recorded but never sets your best time. The guess alert uses the same check after every move and is switched off automatically in No-Guess mode and the Daily.</p>
+
+  <h3>What is saved on this device</h3>
+  <ul>
+    <li>Settings: variant, size, your custom grid, No-Guess, guess alert and zoom level.</li>
+    <li>Stats for each combination of variant, size and mode: games played, games won, best hint-free time, best 3BV per second and current win streak (a loss resets it).</li>
+    <li>Your first result on each Daily; the Daily streak counts consecutive won days and is not broken until a day passes unplayed or lost.</li>
+  </ul>
+
+  <h3>Controls</h3>
+  <ul>
+    <li>N starts a new game, H asks for a hint, F toggles Flag Mode (clicks and taps place flags instead of opening cells).</li>
+    <li>On touch, a press of about a third of a second flags a hidden cell or chords a number; moving your finger more than about 10 pixels cancels it, so scrolling does not drop flags.</li>
+    <li>Zoom buttons change the cell size between 14 and 44 pixels; Fit returns to automatic sizing for your screen.</li>
+  </ul>
+
+  <h3>Recent changes</h3>
+  <ul>
+    <li>2026-09-04 — Minesweeper 2.0: No-Guess boards, the Daily challenge, Hex and Knight variants, board sharing, hints and the guess alert.</li>
+    <li>2026-06-23 — Fixed a left+right-click chord sometimes also placing a flag.</li>
+    <li>2026-05-11 — Moving your finger now cancels a long-press, so scrolling no longer flags cells by accident.</li>
+    <li>2026-04-27 — Minesweeper added to the site.</li>
+  </ul>
+</section><!-- /draft -->
+
 <!-- merged from /guides/minesweeper-strategy -->
 <section class="seo-content guide-merged" id="guide">
   <h2>Minesweeper Strategy for Beginners</h2>

@@ -307,6 +307,32 @@
     <li><a href="/2048">2048</a> — solo number puzzle.</li>
   </ul>
 </section>
+
+<!-- draft: review --><section class="seo-content how-it-works">
+  <h2>How this version works</h2>
+  <h3>The layout</h3>
+  <p>All 72 tiles sit in a four-layer stepped pyramid. The bottom layer is 8 tiles wide and 4 rows deep (32 tiles). The next layer is 6 by 4 (24 tiles), then 4 by 3 (12 tiles), and the top is a 2 by 2 block of 4 tiles. Every layer sits on the same grid as the one below, so a tile counts as covered only when another tile sits exactly on top of it. Upper layers are drawn shifted slightly up and to the left so you can see the depth. Tiles that are not currently free are dimmed.</p>
+  <h3>How boards are dealt</h3>
+  <p>The 18 designs go into a deck of four copies each, which is shuffled with a Fisher-Yates shuffle using your browser's random number generator and laid onto the pyramid in order, bottom layer first. There is no seed and no daily board; every New press deals a fresh random layout.</p>
+  <h3>Selecting and matching</h3>
+  <p>Click a free tile to select it, click it again to deselect it. If the second tile you click does not match, it simply becomes the new selection. Matching two identical tiles removes both.</p>
+  <h3>Hint, Undo and Shuffle</h3>
+  <ul>
+    <li>Hint highlights one free matching pair. It scans tiles from the bottom layer up, row by row, so it always points to the first pair it finds rather than the best one. Hints are unlimited and do not affect anything.</li>
+    <li>Undo puts back the last removed pair. You can undo all the way to the start of the board.</li>
+    <li>Shuffle mixes the designs of all remaining tiles without moving their positions. It tries up to 50 times to produce at least one free pair. If none of those attempts works, it tells you no moves are possible and suggests Undo.</li>
+  </ul>
+  <p>When no free pair is left on the board, a message appears suggesting Shuffle or Undo.</p>
+  <h3>What is tracked</h3>
+  <p>There is no score. The counter shows how many pairs are left, and a timer runs until the board is cleared. Nothing is stored in your browser, so reloading the page deals a new board.</p>
+  <h3>Recent changes</h3>
+  <ul>
+    <li>2026-07-07 — The tile-set description on this page was corrected to match the real 72-tile, two-suit set, and the claim that every board is solvable was removed.</li>
+    <li>2026-05-11 — Shuffle no longer freezes the page when the remaining tiles cannot form any free pair; it now stops after 50 attempts and suggests Undo.</li>
+    <li>2026-04-27 — Mahjong Solitaire added to the site with a 72-tile pyramid, hint, undo and shuffle.</li>
+  </ul>
+</section><!-- /draft -->
+
 <!-- merged from /guides/mahjong-solitaire -->
 <section class="seo-content guide-merged" id="guide">
   <h2>How to Play Mahjong Solitaire</h2>
