@@ -307,6 +307,41 @@
     <li><a href="/2048">2048</a> — solo number puzzle.</li>
   </ul>
 </section>
+<!-- merged from /guides/mahjong-solitaire -->
+<section class="seo-content guide-merged" id="guide">
+  <h2>How to Play Mahjong Solitaire</h2>
+<p><a href="/mahjong">Mahjong Solitaire</a> is a single-player tile-matching game — not the four-player gambling game of the same name. You clear a layered layout of tiles by matching identical pairs until the board is empty. The Board Gaming Hub build uses a compact <b>72-tile set</b> drawn from two mahjong suits: <b>Bamboo</b> and <b>Characters</b>, nine faces each, four copies of every face. It runs in one HTML page with hint, undo, and shuffle.</p>
+
+    <h3>Free vs blocked tiles</h3>
+    <p>You can only remove a tile that is <b>free</b>. A tile is free when two conditions are both true:</p>
+    <ul>
+      <li><b>Uncovered</b> — nothing rests on top of it in a higher layer.</li>
+      <li><b>Open edge</b> — its left OR its right side is unblocked. A tile with a neighbor on both its left and right is locked, even if nothing sits on top.</li>
+    </ul>
+    <p>Blocked tiles are dimmed. Freeing them is the whole puzzle: every pair you remove may open the tiles that were leaning on it.</p>
+
+    <h3>Exact-glyph matching</h3>
+    <p>Two free tiles match only if they show the <b>exact same glyph</b>. In this build there are no flower or season groups — a 3-Bamboo pairs only with another 3-Bamboo, never with a Character tile that merely looks similar. Because every face has four copies, each glyph forms two possible pairs on a full board.</p>
+
+    <div class="callout">
+      <b>The four-of-a-kind rule:</b> when all four copies of a face are free at once, clear all four immediately. Leaving two behind risks stranding them under later tiles with no partner reachable.
+    </div>
+
+    <h3>Plan from the top down</h3>
+    <p>The fastest way to lose is matching the first pair you see. A greedy match can bury a tile whose only partner is now locked. Instead:</p>
+    <ol>
+      <li><b>Clear the top layers first.</b> Upper tiles cover the most cells below them, so removing them opens the widest set of future moves.</li>
+      <li><b>Look before you match.</b> If a glyph has all four copies visible but you only need to open one specific tile, match the pair that frees the most blocked tiles.</li>
+      <li><b>Keep a spare pair.</b> Avoid clearing both pairs of a face early if one of those tiles is the only thing you will be able to match later.</li>
+    </ol>
+
+    <h3>Hint, undo, and shuffle</h3>
+    <p>Use <b>HINT</b> to highlight a legal pair when you are stuck, and <b>UNDO</b> to step back after a match that locked the board. If no legal moves remain among the free tiles, <b>SHUFFLE</b> reassigns the faces on the remaining tiles so the game can continue. A clean solve uses shuffle sparingly — treat it as a rescue, not a strategy.</p>
+
+    <p>For another relaxed solo game with a similar pace, try <a href="/solitaire">Klondike Solitaire</a> — the <a href="/solitaire#guide">Klondike guide</a> covers its strategy. Prefer numbers? <a href="/2048">2048</a> is a quick palate cleanser.</p>
+</section>
+<style>.guide-merged .callout{background:#141c28;border:1px solid #3a5060;border-radius:4px;padding:14px 18px;margin:20px 0}.guide-merged .scenario-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.92em}.guide-merged .scenario-table th,.guide-merged .scenario-table td{border:1px solid #2a3540;padding:8px 10px;text-align:left;vertical-align:top}</style>
+
 
 <section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
   <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>

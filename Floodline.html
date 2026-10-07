@@ -5241,6 +5241,40 @@ requestAnimationFrame(loop);
     <li><a href="/apoapsis">Apoapsis</a> — 3D rocket flight.</li>
   </ul>
 </section>
+<!-- merged from /guides/floodline-scenarios -->
+<section class="seo-content guide-merged" id="guide">
+  <h2>Floodline Scenarios Explained</h2>
+<p><a href="/floodline">Floodline</a> is a flood-defense simulation built by a licensed water-resources engineer. You place levees, channels, pumps, and sandbags to keep town damage below a scenario threshold while storms raise river stages and saturate soils. The browser demo includes a training sandbox and Cedar Rapids 2008; the full release on <a href="https://hydroengineer.itch.io/floodline">itch.io</a> adds the complete historical campaign described below.</p>
+
+    <h3>Why scenarios matter</h3>
+    <p>Each scenario ships with a storm hydrograph, terrain derived from real valley geometry, budget constraints, and win conditions tied to damage percentage. Parameters are simplified for play but grounded in post-event reports from agencies such as California DWR, USACE, and USGS multi-hazard studies.</p>
+
+    <table class="scenario-table">
+      <thead><tr><th>Scenario</th><th>Event basis</th><th>What you manage</th></tr></thead>
+      <tbody>
+        <tr><td><b>Training Ground</b></td><td>Synthetic tutorial basin</td><td>Learn levee stress, pumps, and channel routing without time pressure.</td></tr>
+        <tr><td><b>1986 Yuba</b></td><td>Yuba County levee failures</td><td>Fast-rising Sacramento Valley flows; sandbag windows are short.</td></tr>
+        <tr><td><b>1997 New Year's</b></td><td>California statewide flood</td><td>Multi-day rain on saturated soils; duration stress on levees.</td></tr>
+        <tr><td><b>2006 Sacramento</b></td><td>Sacramento River high flows</td><td>Urban ring levees and pump capacity under prolonged stage.</td></tr>
+        <tr><td><b>2017 Oroville</b></td><td>Oroville Dam spillway crisis</td><td>Spillway erosion, auxiliary spillway risk, evacuation timing — widely considered the hardest scenario.</td></tr>
+        <tr><td><b>ARkStorm West / East</b></td><td>USGS synthetic atmospheric river</td><td>Hypothetical megastorm footprints used in California resilience planning.</td></tr>
+        <tr><td><b>Cedar Rapids 2008</b></td><td>Midwest slow crest</td><td>Gradual rise over days — a endurance scenario for pumps and pre-positioning.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Core mechanics across all scenarios</h3>
+    <ul>
+      <li><b>Levee stress</b> accumulates when water sits high against a segment; breached levees redirect flow unpredictably.</li>
+      <li><b>Pumps</b> buy time but cannot defeat physics if inflow exceeds system capacity.</li>
+      <li><b>Wallet money</b> carries between scenarios in campaign mode — spend on upgrades or save for harder storms.</li>
+      <li><b>Evacuation tools</b> appear in urban scenarios where population risk is part of the score.</li>
+    </ul>
+
+    <h3>Is it an engineering tool?</h3>
+    <p>No. Floodline uses first-order hydrology appropriate for gameplay: routing, storage, and simplified gate curves. It is faithful in shape to real events, not a replacement for HEC-RAS or dam safety modeling. Treat it as an interactive way to understand why flood managers obsess over freeboard, spillway capacity, and forecast lead time.</p>
+</section>
+<style>.guide-merged .callout{background:#141c28;border:1px solid #3a5060;border-radius:4px;padding:14px 18px;margin:20px 0}.guide-merged .scenario-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.92em}.guide-merged .scenario-table th,.guide-merged .scenario-table td{border:1px solid #2a3540;padding:8px 10px;text-align:left;vertical-align:top}</style>
+
 
 <script src="/analytics.js"></script>
 

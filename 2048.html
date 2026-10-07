@@ -296,6 +296,36 @@
     <li><a href="/mahjong">Mahjong Solitaire</a> — solo pattern matching.</li>
   </ul>
 </section>
+<!-- merged from /guides/2048-strategy -->
+<section class="seo-content guide-merged" id="guide">
+  <h2>2048 Strategy: How to Reach 2048 (and Beyond)</h2>
+<p><a href="/2048">2048</a> is a slide-and-merge puzzle on a 4×4 grid. Every move slides all tiles one direction; equal tiles that collide merge into their sum, and a new <b>2</b> or <b>4</b> spawns in a random empty cell (weighted about 90/10 toward the 2). You win when a tile reaches <b>2048</b> — then you can keep going for 4096 and higher. Reaching 2048 is not luck; it is one disciplined pattern.</p>
+
+    <h3>The one rule that wins: anchor a corner</h3>
+    <p>Pick a corner — bottom-right is a common choice — and keep your largest tile pinned there for the entire game. In practice this means using only two or three of the four directions and almost never pressing the fourth. If your big tile lives in the bottom-right, drive with <b>Down</b> and <b>Right</b>, use <b>Left</b> sparingly, and treat <b>Up</b> as forbidden except in emergencies.</p>
+
+    <div class="callout">
+      <b>Why the anchor works:</b> the moment your biggest tile leaves its corner, smaller tiles slide under it and it can be stranded in the middle, blocking merges on all sides. A tile in the center is a liability; a tile in the corner is a foundation.
+    </div>
+
+    <h3>Build a monotonic chain</h3>
+    <p>Keep the values in your anchor row (or column) descending in order — for example 2048, 1024, 512, 256 lined up along the bottom edge. This is called a <b>monotonic</b> layout. When the chain is intact, one push collapses it like dominoes: the 256 feeds the 512, the 512 feeds the 1024, and so on.</p>
+    <ul>
+      <li>Fill the anchor row first, largest at the corner.</li>
+      <li>Feed new small tiles from the opposite side so they queue up behind the chain.</li>
+      <li>Only merge upward into the chain, never break it apart to grab a stray pair.</li>
+    </ul>
+
+    <h3>Avoid the shuffle</h3>
+    <p>The fastest way to lose is pressing all four arrows in a panic. Each wasted direction scatters tiles and spawns another blocker. If a move would not merge anything and would only shuffle the board, look for a better one. Plan two moves ahead: ask what the board looks like <em>after</em> the new tile spawns, not just after your slide.</p>
+
+    <h3>Past 2048</h3>
+    <p>The win tile is only the halfway point of a good board. To chase 4096 and 8192, the same rules apply with tighter margins — a full board with a broken chain is a dead end. Keep at least one empty cell as breathing room and never let the anchor drift.</p>
+
+    <p>Like number puzzles? <a href="/minesweeper">Minesweeper</a> and <a href="/sudoku">Sudoku</a> scratch the same solo-logic itch — the <a href="/minesweeper#guide">Minesweeper strategy guide</a> is a good next read.</p>
+</section>
+<style>.guide-merged .callout{background:#141c28;border:1px solid #3a5060;border-radius:4px;padding:14px 18px;margin:20px 0}.guide-merged .scenario-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.92em}.guide-merged .scenario-table th,.guide-merged .scenario-table td{border:1px solid #2a3540;padding:8px 10px;text-align:left;vertical-align:top}</style>
+
 
 <section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
   <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>

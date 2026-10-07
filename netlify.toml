@@ -44,97 +44,241 @@
   to = "/contact.html"
   status = 200
 
-[[redirects]]
-  from = "/guides"
-  to = "/guides/index.html"
-  status = 200
-
+# Strategy guides were merged into their game pages (#guide) on 2026-10-07.
 [[redirects]]
   from = "/guides/wordform-tips"
-  to = "/guides/wordform-tips.html"
-  status = 200
+  to = "/wordform#guide"
+  status = 301
+  force = true
 
 [[redirects]]
-  from = "/guides/eclipse-2026"
-  to = "/guides/eclipse-2026.html"
-  status = 200
-
-[[redirects]]
-  from = "/guides/floodline-scenarios"
-  to = "/guides/floodline-scenarios.html"
-  status = 200
-
-[[redirects]]
-  from = "/guides/free-browser-chess"
-  to = "/guides/free-browser-chess.html"
-  status = 200
+  from = "/guides/wordform-tips.html"
+  to = "/wordform#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/drift-word-ladder"
-  to = "/guides/drift-word-ladder.html"
-  status = 200
+  to = "/drift#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/drift-word-ladder.html"
+  to = "/drift#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/sudoku-tips"
-  to = "/guides/sudoku-tips.html"
-  status = 200
+  to = "/sudoku#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/sudoku-tips.html"
+  to = "/sudoku#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/eclipse-2026"
+  to = "/eclipsepredictor#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/eclipse-2026.html"
+  to = "/eclipsepredictor#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/floodline-scenarios"
+  to = "/floodline#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/floodline-scenarios.html"
+  to = "/floodline#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/bonneville-dam-guide"
-  to = "/guides/bonneville-dam-guide.html"
-  status = 200
+  to = "/bonnevillespillwayoperator#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/bonneville-dam-guide.html"
+  to = "/bonnevillespillwayoperator#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/free-browser-chess"
+  to = "/chess#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/free-browser-chess.html"
+  to = "/chess#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/solitaire-klondike"
-  to = "/guides/solitaire-klondike.html"
-  status = 200
+  to = "/solitaire#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/solitaire-klondike.html"
+  to = "/solitaire#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/2048-strategy"
-  to = "/guides/2048-strategy.html"
-  status = 200
+  to = "/2048#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/2048-strategy.html"
+  to = "/2048#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/minesweeper-strategy"
-  to = "/guides/minesweeper-strategy.html"
-  status = 200
+  to = "/minesweeper#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/minesweeper-strategy.html"
+  to = "/minesweeper#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/backgammon-rules"
-  to = "/guides/backgammon-rules.html"
-  status = 200
+  to = "/backgammon#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/backgammon-rules.html"
+  to = "/backgammon#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/go-rules-beginners"
-  to = "/guides/go-rules-beginners.html"
-  status = 200
+  to = "/go#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/go-rules-beginners.html"
+  to = "/go#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/mahjong-solitaire"
-  to = "/guides/mahjong-solitaire.html"
-  status = 200
+  to = "/mahjong#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/mahjong-solitaire.html"
+  to = "/mahjong#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/othello-reversi"
-  to = "/guides/othello-reversi.html"
-  status = 200
+  to = "/othello#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/othello-reversi.html"
+  to = "/othello#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/royal-game-of-ur"
-  to = "/guides/royal-game-of-ur.html"
-  status = 200
+  to = "/ur#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/royal-game-of-ur.html"
+  to = "/ur#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/senet-rules"
-  to = "/guides/senet-rules.html"
-  status = 200
+  to = "/senet#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/senet-rules.html"
+  to = "/senet#guide"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/guides/pente-grammai"
-  to = "/guides/pente-grammai.html"
-  status = 200
+  to = "/pentegrammai#guide"
+  status = 301
+  force = true
 
-# Game slugs (lowercase from games.json)
+[[redirects]]
+  from = "/guides/pente-grammai.html"
+  to = "/pentegrammai#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/abacus-soroban"
+  to = "/abacus#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/abacus-soroban.html"
+  to = "/abacus#guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guides/index.html"
+  to = "/"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "/solitaire"
   to = "/Solitaire.html"

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Single source of truth: games.json → index.html, play.html, sitemap.xml, nav.js GAMES block,
- * guides/ and tv.html (the 10-foot Fire TV hub).
+ * and tv.html (the 10-foot Fire TV hub). Strategy guides live on the game pages (#guide).
  * Usage: node scripts/generate-catalog.js
  */
 const fs = require('fs');
@@ -192,7 +192,7 @@ ${guides.map(g => `      <a href="${g.file}">${esc(g.title)}</a>`).join('\n')}
 const eclipseStrip = `  <div class="eclipse-strip" id="eclipse-strip" style="display:none">
     <b>🌒 TOTAL SOLAR ECLIPSE</b> — <span id="eclipse-when"></span>
     <a href="/eclipsepredictor">Watch the path in 3D</a> ·
-    <a href="/guides/eclipse-2026">Viewing guide</a>
+    <a href="/eclipsepredictor#guide">Viewing guide</a>
   </div>
   <script>
   (function () {
@@ -276,7 +276,6 @@ ${sharedCss}
 
   <nav class="hub">
     <a href="/">Clean version</a>
-    <a href="guides/">Guides</a>
     <a href="/apps">Android apps</a>
     <a href="/about">About</a>
     <a href="/contact">Contact</a>
@@ -361,7 +360,6 @@ ${sharedCss.replace(/header \.free-tag[^}]+\}/g, '').replace(/\.ad-slot[^}]+\}/g
 
   <nav class="hub">
     <a href="/play">Ad-supported catalog</a>
-    <a href="guides/">Guides</a>
     <a href="/apps">Android apps</a>
     <a href="/about">About</a>
     <a href="/contact">Contact</a>
@@ -397,8 +395,6 @@ function sitemapEntry(loc, priority, changefreq = 'monthly') {
 const sitemapUrls = [
   sitemapEntry(`${BASE}/`, 1.0, 'weekly'),
   sitemapEntry(`${BASE}/play`, 0.95, 'weekly'),
-  sitemapEntry(`${BASE}/guides/`, 0.85, 'weekly'),
-  ...guides.map(g => sitemapEntry(`${BASE}/guides/${g.slug}`, 0.8, 'monthly')),
   ...games.map(g => sitemapEntry(`${BASE}${gameUrl(g)}`, g.priority || 0.8)),
   sitemapEntry(`${BASE}/about`, 0.6, 'yearly'),
   sitemapEntry(`${BASE}/contact`, 0.5, 'yearly'),
@@ -440,8 +436,7 @@ fs.writeFileSync(path.join(ROOT, 'index.html'), indexHtml);
 fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sitemapXml);
 fs.writeFileSync(navPath, navSrc);
 
-require('./generate-guides.js');
 require('./generate-tv.js');
 
 console.log(`Generated catalog for ${count} games:`);
-console.log('  play.html, index.html, sitemap.xml, nav.js, tv.html, guides/');
+console.log('  play.html, index.html, sitemap.xml, nav.js, tv.html');

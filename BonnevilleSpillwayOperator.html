@@ -3127,6 +3127,46 @@ requestAnimationFrame(loop);
     <li><a href="/apoapsis">Apoapsis</a> — 3D rocket flight.</li>
   </ul>
 </section>
+<!-- merged from /guides/bonneville-dam-guide -->
+<section class="seo-content guide-merged" id="guide">
+  <h2>Bonneville Dam Operator Guide</h2>
+<p><a href="/bonnevillespillwayoperator">Bonneville Spillway Operator</a> puts you in charge of a Columbia River dam stylized after the real Bonneville complex. Balance electrical generation, spillway releases, fish ladder operations, navigation lockages, and total dissolved gas (TDG) limits — all while inflow swings with season and weather. The browser build is a demo; the full career campaign is on <a href="https://hydroengineer.itch.io/bonneville-spillway-operator">itch.io</a>.</p>
+
+    <h3>What you are optimizing</h3>
+    <ul>
+      <li><b>Grid demand</b> — keep turbines generating when the Pacific Northwest load calls for power.</li>
+      <li><b>Reservoir stage</b> — too high risks overtopping; too low kills head and revenue.</li>
+      <li><b>TDG (% saturation)</b> — spillway air entrainment supersaturates water; aim below 115% to protect salmon.</li>
+      <li><b>Salmon passage</b> — ladder throughput and juvenile bypass affect both score and regulatory standing.</li>
+      <li><b>Lockages</b> — river commerce earns income but competes with spill and generation schedules.</li>
+    </ul>
+
+    <h3>Spillway vs turbines</h3>
+    <p>Turbines pass water profitably with lower TDG impact. Spillways dump excess fast but spike TDG proportional to flow (roughly √Q until deflector upgrades). Spring snowmelt forces ugly tradeoffs: you must spill to protect the dam, but fish managers cap how much high-TDG water the tailrace can carry.</p>
+
+    <h3>Key upgrades (career mode)</h3>
+    <table class="scenario-table">
+      <thead><tr><th>Upgrade</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr><td><b>Flip-lip deflectors</b></td><td>Lowers TDG per unit spill — often the first fish-friendly purchase.</td></tr>
+        <tr><td><b>Fish ladder</b></td><td>Unlocks salmon income and reduces regulatory penalties.</td></tr>
+        <tr><td><b>Juvenile bypass</b></td><td>Routes smolts around the spillway; dramatically cuts TDG harm.</td></tr>
+        <tr><td><b>Extra turbine</b></td><td>More generation capacity to avoid spill during moderate peaks.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Controls cheat sheet</h3>
+    <p><b>Q/A</b> adjust turbines · <b>W/S</b> spillway gates · <b>E/D</b> fish ladder · <b>Space</b> pause. Drag panel titles to rearrange the dashboard on ultrawide screens.</p>
+
+    <h3>Hardest season</h3>
+    <p>Spring snowmelt with high salmon-run requirements is the canonical pain point: inflow climbs, spill becomes mandatory, and the regulatory floor for fish passage limits how aggressively you can open gates. Anticipate inflow from forecast panels rather than chasing stage after it rises — career gold medals reward planning.</p>
+
+    <div class="callout">
+      <b>Real-world note:</b> Capacities and tradeoffs follow public USACE data for Bonneville, simplified for play. This is a game, not a license to operate a federal dam.
+    </div>
+</section>
+<style>.guide-merged .callout{background:#141c28;border:1px solid #3a5060;border-radius:4px;padding:14px 18px;margin:20px 0}.guide-merged .scenario-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.92em}.guide-merged .scenario-table th,.guide-merged .scenario-table td{border:1px solid #2a3540;padding:8px 10px;text-align:left;vertical-align:top}</style>
+
 
 <script src="/analytics.js"></script>
 

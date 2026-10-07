@@ -2,7 +2,7 @@
 
 Browser games — single HTML file each, no build step, no accounts. Built by a dam-safety engineer, so the simulations run on real formulas.
 
-**Live:** [boardgaminghub.com](https://boardgaminghub.com) · [ad-supported catalog](https://boardgaminghub.com/play) · [guides](https://boardgaminghub.com/guides/) · [itch.io](https://hydroengineer.itch.io)
+**Live:** [boardgaminghub.com](https://boardgaminghub.com) · [ad-supported catalog](https://boardgaminghub.com/play) · [itch.io](https://hydroengineer.itch.io)
 
 **On a television:** all 36 games ship as one sideloadable Fire TV app — see [FIRETV.md](FIRETV.md).
 
@@ -65,25 +65,9 @@ Real-time physics, engineering, and management sims.
 | [Tower](https://boardgaminghub.com/tower) | High-rise operations (SKYSTACK) | `Tower.html` |
 | [Hellcat](https://boardgaminghub.com/hellcat) | WWII carrier flight sim with real aerodynamics | `Hellcat.html` |
 
-## Guides
+## Strategy guides
 
-- [Wordform Tips & Daily Strategy](https://boardgaminghub.com/guides/wordform-tips) — Opening words, color feedback, daily vs random mode, and how to share your grid.
-- [Drift Word Ladder Guide](https://boardgaminghub.com/guides/drift-word-ladder) — How word ladders work, daily puzzle tips, and shortest-path strategy.
-- [Sudoku Tips for Beginners](https://boardgaminghub.com/guides/sudoku-tips) — Scanning, pencil marks, X-Wing, and difficulty levels on the free browser grid.
-- [2026 & 2027 Solar Eclipse Guide](https://boardgaminghub.com/guides/eclipse-2026) — Paths of totality, timing, and how to use the free 3D eclipse predictor.
-- [Floodline Scenarios Explained](https://boardgaminghub.com/guides/floodline-scenarios) — Real California and US flood events behind the simulation scenarios.
-- [Bonneville Dam Operator Guide](https://boardgaminghub.com/guides/bonneville-dam-guide) — TDG, salmon passage, spillway vs turbines, and career mode strategy.
-- [Play Chess Free in Your Browser](https://boardgaminghub.com/guides/free-browser-chess) — Rules refresher, special moves, and tips for the Board Gaming Hub chess board.
-- [How to Play Klondike Solitaire](https://boardgaminghub.com/guides/solitaire-klondike) — Rules, draw-1 vs draw-3, foundations and tableau, and the strategy that wins more deals.
-- [2048 Strategy: How to Reach 2048](https://boardgaminghub.com/guides/2048-strategy) — Corner strategy, anchoring your biggest tile, monotonic chains, and pushing past 2048.
-- [Minesweeper Strategy for Beginners](https://boardgaminghub.com/guides/minesweeper-strategy) — First-click safety, reading numbers, 1-2-1 patterns, flagging vs chording, and the three grids.
-- [Backgammon Rules & Opening Strategy](https://boardgaminghub.com/guides/backgammon-rules) — Board setup, hitting and the bar, bearing off, blocking points, and a simple opening plan.
-- [Go Rules for Beginners (Baduk / Weiqi)](https://boardgaminghub.com/guides/go-rules-beginners) — Liberties, capture, ko, territory vs area scoring, the pass-pass endgame, and board sizes.
-- [How to Play Mahjong Solitaire](https://boardgaminghub.com/guides/mahjong-solitaire) — Free vs blocked tiles, exact-glyph matching, the 72-tile set, and top-down planning.
-- [Othello (Reversi) Rules & Strategy](https://boardgaminghub.com/guides/othello-reversi) — Rules, why corners win, and the mobility and edge tactics that beat the computer.
-- [The Royal Game of Ur — Rules, History & Strategy](https://boardgaminghub.com/guides/royal-game-of-ur) — How to play the 4,500-year-old Mesopotamian race game: rosettes, capturing, and winning tactics.
-- [Senet — Rules of the Ancient Egyptian Game](https://boardgaminghub.com/guides/senet-rules) — Throwing sticks, the special houses, sending pieces back, and bearing off to win.
-- [Pente Grammai — the Ancient Greek Game of Five Lines](https://boardgaminghub.com/guides/pente-grammai) — Movement, the sacred line, capturing, and bearing off in the Greek race game.
+Each game page carries its own strategy section (`/<game>#guide`); the old `/guides/` pages 301 there.
 
 ## Catalog pipeline
 
@@ -92,7 +76,7 @@ Real-time physics, engineering, and management sims.
 ```bash
 node scripts/generate-og-images.js   # 1200x630 OG cards (needs sharp)
 node scripts/stamp-og-meta.js        # og:image tags into each game page
-node scripts/generate-catalog.js     # index.html, play.html, sitemap.xml, nav.js, tv.html, guides/
+node scripts/generate-catalog.js     # index.html, play.html, sitemap.xml, nav.js, tv.html
 ```
 
 Edit the generators, never the generated files.

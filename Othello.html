@@ -779,6 +779,45 @@ newGame();
     <li><a href="/mancala">Mancala</a> — ancient count-and-capture.</li>
   </ul>
 </section>
+<!-- merged from /guides/othello-reversi -->
+<section class="seo-content guide-merged" id="guide">
+  <h2>Othello (Reversi) Rules &amp; Winning Strategy</h2>
+<p><a href="/othello">Othello</a> — also known as Reversi — is a two-player disc-flipping game on an 8×8 board. It takes a minute to learn and years to master: the rules are trivial, but the strategy is deep enough that top play looks almost paradoxical. This guide covers the rules and the handful of ideas that will beat a casual opponent or the browser AI.</p>
+
+    <h3>The rules in a minute</h3>
+    <ul>
+      <li>The board starts with four discs in the center — two black, two white, placed diagonally.</li>
+      <li>On your turn you place a disc so that it <b>flanks</b> one or more of the opponent&rsquo;s discs in a straight line (horizontal, vertical, or diagonal) between your new disc and another of your discs.</li>
+      <li>Every flanked disc <b>flips to your color</b>. You must flip at least one disc — if you cannot, you pass.</li>
+      <li>The game ends when neither player can move (usually when the board is full). Whoever has more discs wins.</li>
+    </ul>
+
+    <h3>The beginner&rsquo;s trap: don&rsquo;t grab discs early</h3>
+    <p>New players flip as many discs as possible every turn. This loses. Because any disc can be flipped again later, a big early lead means nothing — and having more discs mid-game often means you have <em>fewer</em> safe moves. The real currency of Othello is not discs; it is <b>stable squares</b> and <b>mobility</b>.</p>
+
+    <h3>Corners win games</h3>
+    <p>A disc in a corner can never be flipped — there is no square beyond it to flank from. Corners anchor entire edges and rows of stability. The whole game is really a fight to take corners and to force your opponent into giving them to you.</p>
+    <h4>Avoid the X-squares and C-squares</h4>
+    <p>The square diagonally adjacent to a corner (the <b>X-square</b>) is the most dangerous square on the board — playing there early usually hands your opponent the corner. The squares orthogonally next to a corner (<b>C-squares</b>) are risky for the same reason. Leave the region around empty corners alone until you can take the corner itself.</p>
+
+    <h3>Mobility: the counter-intuitive core</h3>
+    <p>Good Othello players try to have <b>many</b> moves while their opponent has <b>few</b>. Fewer discs of your own, placed compactly in the center early on, often gives you more flanking options later. If your opponent runs out of safe moves, they are forced to play an X-square or C-square and surrender a corner. Aim to end the midgame with your opponent nearly out of good options.</p>
+
+    <h3>Edges and parity</h3>
+    <ul>
+      <li><b>Edge discs</b> are harder to flip than interior discs and support corner captures — but only take an edge when it does not expose a corner.</li>
+      <li><b>Parity</b> — who plays the last disc in a region — decides many close endgames. Late in the game, count empty squares in each isolated region; playing last in a region often lets you flip without reply.</li>
+    </ul>
+
+    <div class="callout">
+      <b>Practical plan vs. the AI:</b> keep your discs central and few for the first dozen moves, refuse the squares next to empty corners, take corners when offered, then convert corners into stable edges and flip aggressively only in the final ten moves.
+    </div>
+
+    <h3>Also try</h3>
+    <p>If you like the pure-abstract tension of Othello, <a href="/go">Go</a> (see the <a href="/go#guide">beginner&rsquo;s guide</a>) rewards the same territorial thinking on a bigger canvas, and <a href="/chess">Chess</a> scratches the tactical itch.</p>
+</section>
+<style>.guide-merged .callout{background:#141c28;border:1px solid #3a5060;border-radius:4px;padding:14px 18px;margin:20px 0}.guide-merged .scenario-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.92em}.guide-merged .scenario-table th,.guide-merged .scenario-table td{border:1px solid #2a3540;padding:8px 10px;text-align:left;vertical-align:top}</style>
+
 
 <section style="max-width:900px;margin:60px auto 40px;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#d8d0c0;">
   <h2 style="color:#f0d89c;letter-spacing:4px;font-size:1.0em;text-transform:uppercase;border-bottom:1px solid #2a3540;padding-bottom:8px;margin-bottom:16px;">Discussion</h2>
