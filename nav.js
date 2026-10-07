@@ -43,7 +43,6 @@
     { slug:'metropolis2k', url:'/metropolis2k', name:'Metropolis 2K', cat:'sims', desc:'City-building sim with districts & bonds', keys:['city','building','simulation','tycoon','urban'] },
     { slug:'tower', url:'/tower', name:'Tower', cat:'sims', desc:'High-rise operations (SKYSTACK)', keys:['tower','building','simulation','tycoon','skyscraper'] },
     { slug:'hellcat', url:'/hellcat', name:'Hellcat', cat:'sims', desc:'WWII carrier flight sim with real aerodynamics', keys:['flight simulator','hellcat','f6f','wwii','aircraft carrier','aviation','plane','flying'] },
-    { slug:'flappybird', url:'/flappybird', name:'Flappy Bird', cat:'puzzles', desc:'One-tap flight through the pipes — three gap sizes, a shared daily run, medals', keys:['flappy bird','flappy','bird','pipes','arcade','one tap','reflex','daily','endless'], daily:true },
     // END GAMES
   ];
 

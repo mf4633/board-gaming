@@ -278,7 +278,8 @@
       ],
       "hasSteam": false,
       "admob": false,
-      "ogImage": "/og/lovedwords.png"
+      "ogImage": "/og/lovedwords.png",
+      "noindex": true
     },
     {
       "slug": "tictactoe",
@@ -744,7 +745,8 @@
       ],
       "hasSteam": false,
       "admob": true,
-      "ogImage": "/og/cliffwalkers.png"
+      "ogImage": "/og/cliffwalkers.png",
+      "noindex": true
     },
     {
       "slug": "doctrine",
@@ -876,7 +878,8 @@
       ],
       "hasSteam": true,
       "admob": true,
-      "ogImage": "/og/tower.png"
+      "ogImage": "/og/tower.png",
+      "noindex": true
     },
     {
       "slug": "hellcat",
@@ -931,7 +934,9 @@
       "hasSteam": false,
       "admob": false,
       "ogImage": "/og/flappybird.png",
-      "addedOn": "2026-09-04"
+      "addedOn": "2026-09-04",
+      "noindex": true,
+      "unlisted": true
     }
   ]
 }

@@ -51,7 +51,7 @@ function card(g, opts = {}) {
 }
 
 function indexSection(cat) {
-  const list = games.filter(g => g.category === cat.id);
+  const list = games.filter(g => g.category === cat.id && !g.unlisted);
   const essay = cat.essay ? `\n    <p class="essay">${esc(cat.essay)}</p>` : '';
   return `
   <section>
@@ -219,7 +219,7 @@ const eclipseStrip = `  <div class="eclipse-strip" id="eclipse-strip" style="dis
   })();
   </script>`;
 
-const newGames = games.filter(isNewGame).sort((a, b) => b.addedOn.localeCompare(a.addedOn));
+const newGames = games.filter(g => isNewGame(g) && !g.unlisted).sort((a, b) => b.addedOn.localeCompare(a.addedOn));
 const newStrip = newGames.length
   ? `  <div class="new-strip" id="new-strip">
     <b>✦ NEW THIS WEEK</b> —
@@ -241,7 +241,7 @@ const newStrip = newGames.length
   </script>`
   : '';
 
-const dailyGames = games.filter(g => g.daily);
+const dailyGames = games.filter(g => g.daily && !g.unlisted);
 const dailyStrip = dailyGames.length
   ? `  <div class="daily-strip">
     <b>TODAY'S DAILY PUZZLES</b> —
@@ -336,7 +336,8 @@ function sitemapEntry(loc, priority, changefreq = 'monthly') {
 
 const sitemapUrls = [
   sitemapEntry(`${BASE}/`, 1.0, 'weekly'),
-  ...games.map(g => sitemapEntry(`${BASE}${gameUrl(g)}`, g.priority || 0.8)),
+  // games.json `noindex` pages carry <meta name="robots" content="noindex"> and stay out of the sitemap
+  ...games.filter(g => !g.noindex).map(g => sitemapEntry(`${BASE}${gameUrl(g)}`, g.priority || 0.8)),
   sitemapEntry(`${BASE}/about`, 0.6, 'yearly'),
   sitemapEntry(`${BASE}/contact`, 0.5, 'yearly'),
   sitemapEntry(`${BASE}/apps`, 0.7, 'monthly'),
@@ -360,7 +361,8 @@ function navGameLine(g) {
   return `    { slug:'${slug}', url:'${url}', name:'${name}', cat:'${g.category}', desc:'${desc}', keys:[${keys}]${daily} },`;
 }
 
-const navGamesBlock = games.map(navGameLine).join('\n');
+// `unlisted` games stay playable at their URL but drop out of the hub and site search.
+const navGamesBlock = games.filter(g => !g.unlisted).map(navGameLine).join('\n');
 
 const navPath = path.join(ROOT, 'nav.js');
 let navSrc = fs.readFileSync(navPath, 'utf8');
