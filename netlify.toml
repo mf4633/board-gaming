@@ -52,6 +52,11 @@
   to = "/contact.html"
   status = 200
 
+[[redirects]]
+  from = "/terms"
+  to = "/terms.html"
+  status = 200
+
 # Strategy guides were merged into their game pages (#guide) on 2026-10-07.
 [[redirects]]
   from = "/guides/wordform-tips"
