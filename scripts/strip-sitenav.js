@@ -18,7 +18,7 @@ const PAT_MOBILE_HTML = /<div id="mobileNav">[\s\S]*?<\/div>\s*<\/div>\s*/g;
 const PAT_ADSENSE = /<script async src="https:\/\/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js[^>]*><\/script>\s*/g;
 
 const GAME_FILES = data.games.map(g => g.sourceHtml);
-const HUB_FILES = ['about.html', 'privacy.html', 'apps.html', 'index.html', 'play.html'];
+const HUB_FILES = ['about.html', 'privacy.html', 'apps.html', 'index.html'];
 
 function ensureScripts(src, fname) {
   if (!src.includes('nav.js')) {
@@ -44,7 +44,7 @@ function processFile(fname) {
   src = src.replace(PAT_MOBILE_CSS, '');
   src = src.replace(PAT_MOBILE_RULE, '');
 
-  // Ads only on listing pages (play.html, apps.html)
+  // Legacy static loader only; the <!-- adsense --> block from stamp-adsense.js is untouched
   if (GAME_FILES.includes(fname)) {
     src = src.replace(PAT_ADSENSE, '');
   }

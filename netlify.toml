@@ -13,10 +13,18 @@
   status = 200
 
 # Clean URLs → PascalCase HTML files (sitemap uses slug form)
+# /play was the ad-supported twin of the homepage; merged 2026-10-07.
 [[redirects]]
   from = "/play"
-  to = "/play.html"
-  status = 200
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/play.html"
+  to = "/"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/about"

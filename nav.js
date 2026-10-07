@@ -297,7 +297,7 @@
 
     const more = elt('div', { class:'bgh-rail-more' });
     more.appendChild(document.createTextNode('Browse the '));
-    more.appendChild(elt('a', { href:'/play' }, 'full catalog →'));
+    more.appendChild(elt('a', { href:'/' }, 'full catalog →'));
     const dailies = GAMES.filter(g => g.daily);
     if (dailies.length) {
       more.appendChild(document.createTextNode('   ·   Daily puzzles: '));

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Single source of truth: games.json → index.html, play.html, sitemap.xml, nav.js GAMES block,
+ * Single source of truth: games.json → index.html, sitemap.xml, nav.js GAMES block,
  * and tv.html (the 10-foot Fire TV hub). Strategy guides live on the game pages (#guide).
  * Usage: node scripts/generate-catalog.js
  */
@@ -9,7 +9,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'games.json'), 'utf8'));
-const { site, categories, games, guides = [] } = data;
+const { site, categories, games } = data;
 const BASE = site.baseUrl.replace(/\/$/, '');
 const PUB = site.publisherId;
 const AD_SLOT = String(site.adSlot || '').trim();
@@ -48,22 +48,6 @@ function card(g, opts = {}) {
       <div class="gname">${esc(g.title)}${newBadge}${daily}</div>
       <div class="gsub">${esc(g.description)}${badge ? '<br>' + badge : ''}</div>
     </a>`;
-}
-
-function section(catId, opts = {}) {
-  const cat = categories.find(c => c.id === catId);
-  const list = games.filter(g => g.category === catId);
-  if (!list.length) return '';
-  const sectionClass = opts.highlightPuzzles && catId === 'puzzles' ? 'featured' : '';
-  const essay = cat.essay ? `\n    <p class="essay">${esc(cat.essay)}</p>` : '';
-  return `
-  <section${sectionClass ? ` class="${sectionClass}"` : ''}>
-    <h2>${esc(cat.label)}</h2>
-    <div class="blurb">${esc(cat.blurb)}</div>${essay}
-    <div class="grid">
-${list.map(g => card(g, { featured: g.featured && opts.highlightPuzzles })).join('\n')}
-    </div>
-  </section>`;
 }
 
 function indexSection(cat) {
@@ -129,11 +113,6 @@ const sharedCss = `  * { box-sizing: border-box; }
   .editorial h2 { font-size: 1.0em; letter-spacing: 5px; color: #f0d89c; text-transform: uppercase; margin: 0 0 16px; border: none; padding: 0; }
   .editorial p { color: #b8c0c8; font-size: 0.96em; margin: 0 0 16px; }
   .editorial p:last-child { margin-bottom: 0; }
-  .guides-strip { margin: 0 0 32px; padding: 20px 22px; background: #111820; border: 1px solid #2a3540; border-radius: 4px; }
-  .guides-strip h2 { font-size: 0.82em; letter-spacing: 4px; color: #8098a8; text-transform: uppercase; margin: 0 0 14px; }
-  .guides-strip .guide-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
-  .guides-strip a { display: block; color: #94c3e8; text-decoration: none; font-size: 0.92em; padding: 8px 10px; border: 1px solid #2a3540; border-radius: 3px; background: #141c28; }
-  .guides-strip a:hover { color: #f0d89c; border-color: #3a5060; background: #1a2434; }
   section .essay { color: #9aa8b8; font-size: 0.9em; line-height: 1.7; margin: -8px 0 22px; max-width: 900px; }`;
 
 function adUnit(style) {
@@ -170,22 +149,48 @@ const adInitScript = ADS_ENABLED ? `<script>
 })();
 </script>` : '';
 
+// "Recently updated": last commit date per game file, straight from git, so
+// the hub shows real maintenance rather than a hand-kept list.
+const { execFileSync } = require('child_process');
+// Sitewide sweeps (ads, nav, OG stamps) touch every page; only commits that
+// changed a handful of files count as an update to a game.
+function lastCommitDate(file) {
+  try {
+    const log = execFileSync('git', ['log', '--format=@%cs', '--name-only', '--full-diff', '--', file], { cwd: ROOT, encoding: 'utf8' });
+    for (const chunk of log.split('@').slice(1)) {
+      const [date, ...names] = chunk.trim().split('\n').filter(Boolean);
+      if (names.length <= 6) return date;
+    }
+  } catch (e) { /* not a git checkout */ }
+  return '';
+}
+const recentlyUpdated = games
+  .filter(g => !g.unlisted)
+  .map(g => ({ g, date: lastCommitDate(g.sourceHtml) }))
+  .filter(x => x.date)
+  .sort((a, b) => b.date.localeCompare(a.date))
+  .slice(0, 6);
+
+const link = (slug, text) => {
+  const g = games.find(x => x.slug === slug);
+  return `<a href="${gameUrl(g)}">${esc(text || g.title)}</a>`;
+};
+
 const hubEditorial = `  <article class="editorial">
     <h2>What is Board Gaming Hub?</h2>
-    <p>Board Gaming Hub is a free collection of ${count} browser games maintained by Michael Flynn, PE — a dam-safety and hydrology engineer who builds simulations with real formulas behind them. Every game is a single HTML file: open the page and play. No accounts, no installers, no tracking on gameplay screens.</p>
-    <p>The catalog mixes beloved classics (Chess, Go, Sudoku, Solitaire, Mahjong) with original strategy designs (Agora, Bisque, Aresia, Convergence) and engineering-grade simulations (Floodline, Bonneville Spillway Operator, Eclipse Predictor, Tower). Ads appear only on this catalog page — never during play — so sessions stay uninterrupted.</p>
-    <p>New here? Start with <a href="/wordform" style="color:#94c3e8">Wordform</a> or <a href="/drift" style="color:#94c3e8">Drift</a> for a two-minute daily puzzle, explore the <a href="guides/" style="color:#94c3e8">guides</a> for strategy and science write-ups, or jump straight into <a href="/floodline" style="color:#94c3e8">Floodline</a> if you want to see what engineer-built physics feels like in a game.</p>
-  </article>`;
+    <p>Board Gaming Hub is a free collection of browser games built and maintained by one person, Michael Flynn, a licensed civil engineer who works on dams and flood hydrology. Every game is a single HTML file: open the page and play, with no account and no install. Each game page has the rules, a strategy section and notes on how that particular version works, including what the computer opponent does and which rule variants were chosen.</p>
+    <p><b>The originals are the reason the site exists.</b> ${link('tidelands')} is a Bronze Age maritime trade game whose scoring was rebalanced after 1,000-game simulation runs. ${link('bisque')} is a battle for a bay, ${link('agora')} is Mediterranean trade, ${link('aresia')} colonizes Mars, ${link('odyssey')} sails the wine-dark sea, ${link('convergence')} pits rival civilizations against a shared economy, and ${link('doctrine')} is a geopolitical simulation running from 1990 to 2050. None of them exist anywhere else.</p>
+    <p><b>The classics are here because people play them every day.</b> ${link('solitaire')}, ${link('sudoku')}, ${link('mahjong')}, ${link('minesweeper')}, ${link('chess')} and ${link('go')} sit next to two original daily word puzzles, ${link('wordform')} and ${link('drift')}, and four games that are thousands of years old: ${link('ur', 'the Royal Game of Ur')}, ${link('senet')}, ${link('pentegrammai', 'Pente Grammai')} and ${link('mancala')}.</p>
+    <p><b>The simulations use real engineering.</b> ${link('floodline')} and ${link('bonnevillespillwayoperator')} come from the author's day job in flood and dam work, and ${link('eclipsepredictor')} computes eclipse paths from 1900 to 2200 with the open-source astronomy-engine library.</p>
+    <p>The site is free and supported by Google ads. Many of the games also have Android versions; see the <a href="/apps">app list</a>.</p>
+  </article>
+  <section class="recent">
+    <h2>Recently updated</h2>
+    <ul>
+${recentlyUpdated.map(x => `      <li><a href="${gameUrl(x.g)}">${esc(x.g.title)}</a> <span>${x.date}</span></li>`).join('\n')}
+    </ul>
+  </section>`;
 
-const guidesStrip = guides.length
-  ? `  <nav class="guides-strip" aria-label="Guides">
-    <h2>Guides &amp; articles</h2>
-    <div class="guide-links">
-${guides.map(g => `      <a href="${g.file}">${esc(g.title)}</a>`).join('\n')}
-      <a href="guides/">All guides →</a>
-    </div>
-  </nav>`
-  : '';
 
 // Eclipse-season banner: client-side countdown that auto-rolls from the
 // Aug 12 2026 eclipse to the Aug 2 2027 eclipse once 2026 has passed.
@@ -245,96 +250,21 @@ const dailyStrip = dailyGames.length
   </div>`
   : '';
 
-const playHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="theme-color" content="#0c1016">
-<title>Play Free — Solitaire, Sudoku, Mahjong, 2048, Chess | Board Gaming Hub</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Play ${count} free strategy and puzzle games in your browser — Solitaire, Sudoku, Mahjong, Wordform, 2048, Minesweeper, Chess, Go, plus original designs and physics sims. Single-file HTML, ad-supported.">
-<meta name="keywords" content="free online games, solitaire, sudoku, mahjong, 2048, minesweeper, chess, go, browser games">
-<link rel="canonical" href="${BASE}/play">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Board Gaming Hub">
-<meta property="og:url" content="${BASE}/play">
-<meta property="og:title" content="Play ${count} free in-browser puzzle &amp; strategy games">
-<meta property="og:description" content="Solitaire, Sudoku, Mahjong, Wordform, 2048, Chess, Go, plus original designs and physics sims. Free, ad-supported, no signup.">
-<meta name="twitter:card" content="summary">
-${adsenseHeadScript}
-<style>
-${sharedCss}
-</style>
-</head>
-<body>
-<div id="wrap">
-  <header>
-    <h1>BOARD GAMING</h1>
-    <div class="tag">Free in-browser puzzle, board, and strategy games</div>
-    <div class="free-tag">FREE · AD-SUPPORTED</div>
-  </header>
-
-  <nav class="hub">
-    <a href="/">Clean version</a>
-    <a href="/apps">Android apps</a>
-    <a href="/about">About</a>
-    <a href="/contact">Contact</a>
-    <a href="/privacy">Privacy</a>
-  </nav>
-
-${hubEditorial}
-${guidesStrip}
-
-${adUnit()}
-
-${newStrip}
-${eclipseStrip}
-${dailyStrip}
-${section('puzzles', { highlightPuzzles: true })}
-${adUnit('margin:32px 0')}
-${section('board')}
-${section('sims')}
-
-${adUnit('margin:32px 0')}
-
-  <p class="disclosure">
-    This page is supported by Google AdSense advertisements. Ads help keep the games free.
-    Advertisers do not influence game design or content. Cookies are used by Google and its partners
-    to serve ads based on your prior visits to this and other sites — see the
-    <a href="/privacy">privacy notice</a> for opt-out details.
-  </p>
-
-  <footer>
-    <p style="margin-bottom:10px;font-size:0.95em;">Enjoying the games? <a href="https://buymeacoffee.com/mf4633" style="color:#f0c060;" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
-    <p style="color:#7090a0;margin-bottom:10px;font-size:0.95em;">Engineering tools by the same author at <a href="https://pe-calc.com/" style="color:#a8c0d8;">pe-calc.com</a> · Stormwater design SaaS at <a href="https://hydrocomplete.com/" style="color:#a8c0d8;">hydrocomplete.com</a></p>
-    <a href="/">Clean version</a> ·
-    <a href="/apps">Android apps</a> ·
-    <a href="/about">About</a> ·
-    <a href="/contact">Contact</a> ·
-    <a href="/privacy">Privacy</a> ·
-    <a href="https://github.com/mf4633/board-gaming">github.com/mf4633/board-gaming</a>
-  </footer>
-</div>
-${adInitScript}
-<script src="/analytics.js"></script>
-<script src="/nav.js" defer></script>
-</body>
-</html>
-`;
-
+// One hub. /play (the old ad catalog) 301s here — see netlify.toml.
 const indexHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="theme-color" content="#0c1016">
-<title>Board Gaming &amp; Simulations — ${count} Free Browser Games</title>
+<title>Board Gaming Hub — Free Browser Board, Puzzle &amp; Strategy Games</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="${count} free browser games — classics, original strategy, and simulations. Single HTML file each, no signup, no ads on gameplay.">
+<meta name="description" content="Free browser games by one engineer: original strategy designs (Tidelands, Bisque, Agora), classics (Solitaire, Sudoku, Chess, Go), ancient games, daily word puzzles and engineering simulations. No signup.">
 <link rel="canonical" href="${BASE}/">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="Board Gaming Hub">
 <meta property="og:url" content="${BASE}/">
-<meta property="og:title" content="Board Gaming Hub — ${count} free browser games">
-<meta property="og:description" content="Classics, original strategy games, and simulations — all in a single HTML file each.">
+<meta property="og:title" content="Board Gaming Hub — free browser games">
+<meta property="og:description" content="Original strategy games, classics, ancient games and engineering simulations, each in a single HTML file.">
 <meta property="og:image" content="${BASE}/og/home.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -342,45 +272,57 @@ const indexHtml = `<!DOCTYPE html>
 <meta name="twitter:image" content="${BASE}/og/home.png">
 ${adsenseHeadScript}
 <style>
-${sharedCss.replace(/header \.free-tag[^}]+\}/g, '').replace(/\.ad-slot[^}]+\}/g, '').replace(/\.disclosure[^}]+\}/g, '')}
-  #wrap { padding: 40px 24px 80px 24px; }
-  header { margin-bottom: 40px; }
-  header h1 { font-size: 2.2em; }
-  header .tag { font-size: 0.85em; }
-  section { margin-top: 46px; }
-  section h2 { margin-bottom: 20px; }
+${sharedCss}
+  .recent { margin: 0 0 32px; }
+  .recent ul { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px 18px; }
+  .recent a { color: #94c3e8; text-decoration: none; }
+  .recent a:hover { color: #f0d89c; }
+  .recent span { color: #5a6874; font-size: 0.82em; margin-left: 6px; }
+  .editorial a { color: #94c3e8; }
 </style>
 </head>
 <body>
 <div id="wrap">
   <header>
-    <h1>BOARD GAMING</h1>
-    <div class="tag">Classics, original strategy games, and simulations — all in a single HTML file each.</div>
+    <h1>BOARD GAMING HUB</h1>
+    <div class="tag">Original strategy games, classics and simulations, each in a single HTML file</div>
   </header>
 
   <nav class="hub">
-    <a href="/play">Ad-supported catalog</a>
     <a href="/apps">Android apps</a>
     <a href="/about">About</a>
     <a href="/contact">Contact</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/terms">Terms</a>
   </nav>
 
 ${hubEditorial}
-${guidesStrip}
 
 ${newStrip}
 ${eclipseStrip}
 ${dailyStrip}
+${adUnit()}
 ${categories.map(c => indexSection(c)).join('\n')}
+${adUnit('margin:32px 0')}
+
+  <p class="disclosure">
+    This site is supported by Google AdSense advertisements. Advertisers do not influence game design or content.
+    Google and its partners use cookies to serve ads based on prior visits to this and other sites; see the
+    <a href="/privacy">privacy notice</a> for opt-out details.
+  </p>
 
   <footer>
     <p style="margin-bottom:10px;font-size:0.95em;">Enjoying the games? <a href="https://buymeacoffee.com/mf4633" style="color:#f0c060;" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
     <p style="color:#7090a0;margin-bottom:10px;font-size:0.95em;">Engineering tools by the same author at <a href="https://pe-calc.com/" style="color:#a8c0d8;">pe-calc.com</a> · Stormwater design SaaS at <a href="https://hydrocomplete.com/" style="color:#a8c0d8;">hydrocomplete.com</a></p>
-    <a href="/play">Ad-supported catalog</a> ·
     <a href="/apps">Android apps</a> ·
+    <a href="/about">About</a> ·
+    <a href="/contact">Contact</a> ·
+    <a href="/privacy">Privacy</a> ·
+    <a href="/terms">Terms</a> ·
     <a href="https://github.com/mf4633/board-gaming">github.com/mf4633/board-gaming</a>
   </footer>
 </div>
+${adInitScript}
 <script src="/analytics.js"></script>
 <script src="/nav.js" defer></script>
 </body>
@@ -394,12 +336,12 @@ function sitemapEntry(loc, priority, changefreq = 'monthly') {
 
 const sitemapUrls = [
   sitemapEntry(`${BASE}/`, 1.0, 'weekly'),
-  sitemapEntry(`${BASE}/play`, 0.95, 'weekly'),
   ...games.map(g => sitemapEntry(`${BASE}${gameUrl(g)}`, g.priority || 0.8)),
   sitemapEntry(`${BASE}/about`, 0.6, 'yearly'),
   sitemapEntry(`${BASE}/contact`, 0.5, 'yearly'),
   sitemapEntry(`${BASE}/apps`, 0.7, 'monthly'),
   sitemapEntry(`${BASE}/privacy`, 0.3, 'yearly'),
+  sitemapEntry(`${BASE}/terms`, 0.3, 'yearly'),
 ];
 
 const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -431,7 +373,6 @@ if (!re.test(navSrc)) {
 }
 navSrc = navSrc.replace(re, `${begin}\n${navGamesBlock}\n  ${end}`);
 
-fs.writeFileSync(path.join(ROOT, 'play.html'), playHtml);
 fs.writeFileSync(path.join(ROOT, 'index.html'), indexHtml);
 fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sitemapXml);
 fs.writeFileSync(navPath, navSrc);
@@ -439,4 +380,4 @@ fs.writeFileSync(navPath, navSrc);
 require('./generate-tv.js');
 
 console.log(`Generated catalog for ${count} games:`);
-console.log('  play.html, index.html, sitemap.xml, nav.js, tv.html');
+console.log('  index.html, sitemap.xml, nav.js, tv.html');
