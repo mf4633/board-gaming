@@ -150,9 +150,9 @@ function adUnit(style) {
   </div>`;
 }
 
-const adsenseHeadScript = ADS_ENABLED
-  ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${PUB}" crossorigin="anonymous"></script>`
-  : '';
+// Always emitted: ownership meta + host-gated loader (see scripts/adsense-snippet.js).
+// The <ins> units below still wait for a real site.adSlot.
+const adsenseHeadScript = require('./adsense-snippet').block;
 
 const adInitScript = ADS_ENABLED ? `<script>
 (function () {
@@ -341,6 +341,7 @@ const indexHtml = `<!DOCTYPE html>
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${BASE}/og/home.png">
+${adsenseHeadScript}
 <style>
 ${sharedCss.replace(/header \.free-tag[^}]+\}/g, '').replace(/\.ad-slot[^}]+\}/g, '').replace(/\.disclosure[^}]+\}/g, '')}
   #wrap { padding: 40px 24px 80px 24px; }

@@ -14,7 +14,21 @@
 <meta property="og:title" content="Play 36 free in-browser puzzle &amp; strategy games">
 <meta property="og:description" content="Solitaire, Sudoku, Mahjong, Wordform, 2048, Chess, Go, plus original designs and physics sims. Free, ad-supported, no signup.">
 <meta name="twitter:card" content="summary">
-
+<!-- adsense -->
+<meta name="google-adsense-account" content="ca-pub-2835365593874464">
+<script>
+(function () {
+  var h = location.hostname, ua = navigator.userAgent || '';
+  if (h !== 'boardgaminghub.com' && h !== 'www.boardgaminghub.com') return;
+  if (window.Capacitor || / BoardGamingHubTV\//.test(ua) || /; wv\)/.test(ua)) return;
+  var s = document.createElement('script');
+  s.async = true;
+  s.crossOrigin = 'anonymous';
+  s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2835365593874464';
+  document.head.appendChild(s);
+})();
+</script>
+<!-- /adsense -->
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; }
@@ -124,24 +138,7 @@
 
   <div class="ad-slot ad-slot--pending" aria-hidden="true"></div>
 
-  <div class="new-strip" id="new-strip">
-    <b>✦ NEW THIS WEEK</b> —
-    <a href="/flappybird" data-added="2026-09-04">Flappy Bird</a> · <a href="/tictactoe" data-added="2026-09-01">Tic-Tac-Toe</a> · <a href="/ultimatetictactoe" data-added="2026-09-01">Ultimate Tic-Tac-Toe</a> · <a href="/hellcat" data-added="2026-09-01">Hellcat</a>
-    <span class="when">· fresh from the workshop</span>
-  </div>
-  <script>
-  (function () {
-    // Hide "new" markers older than 14 days even if the site isn't regenerated.
-    var cutoff = Date.now() - 14 * 86400000, live = 0;
-    var els = document.querySelectorAll('[data-added]');
-    for (var i = 0; i < els.length; i++) {
-      if (Date.parse(els[i].getAttribute('data-added') + 'T00:00:00Z') < cutoff) els[i].style.display = 'none';
-      else if (els[i].tagName === 'A') live++;
-    }
-    var strip = document.getElementById('new-strip');
-    if (strip && !live) strip.style.display = 'none';
-  })();
-  </script>
+
   <div class="eclipse-strip" id="eclipse-strip" style="display:none">
     <b>🌒 TOTAL SOLAR ECLIPSE</b> — <span id="eclipse-when"></span>
     <a href="/eclipsepredictor">Watch the path in 3D</a> ·
@@ -218,11 +215,11 @@
       <div class="gsub">First-words flashcards with your photos &amp; voice</div>
     </a>
     <a class="gcard" href="/tictactoe">
-      <div class="gname">Tic-Tac-Toe<span class="new-badge" data-added="2026-09-01">New</span></div>
+      <div class="gname">Tic-Tac-Toe</div>
       <div class="gsub">Noughts and crosses with a genuinely unbeatable AI</div>
     </a>
     <a class="gcard" href="/flappybird">
-      <div class="gname">Flappy Bird<span class="new-badge" data-added="2026-09-04">New</span><span class="daily-badge">Daily</span></div>
+      <div class="gname">Flappy Bird<span class="daily-badge">Daily</span></div>
       <div class="gsub">One-tap flight through the pipes — three gap sizes, a shared daily run, medals</div>
     </a>
     </div>
@@ -287,7 +284,7 @@
       <div class="gsub">The Royal Game of Ur</div>
     </a>
     <a class="gcard" href="/ultimatetictactoe">
-      <div class="gname">Ultimate Tic-Tac-Toe<span class="new-badge" data-added="2026-09-01">New</span></div>
+      <div class="gname">Ultimate Tic-Tac-Toe</div>
       <div class="gsub">Nine nested boards; your move picks your opponent’s board</div>
     </a>
     </div>
@@ -335,7 +332,7 @@
       <div class="gsub">High-rise operations (SKYSTACK)<br><span class="demo-badge">Demo — full version on itch.io</span></div>
     </a>
     <a class="gcard" href="/hellcat">
-      <div class="gname">Hellcat<span class="new-badge" data-added="2026-09-01">New</span></div>
+      <div class="gname">Hellcat</div>
       <div class="gsub">WWII carrier flight sim with real aerodynamics</div>
     </a>
     </div>
@@ -352,7 +349,7 @@
 
   <footer>
     <p style="margin-bottom:10px;font-size:0.95em;">Enjoying the games? <a href="https://buymeacoffee.com/mf4633" style="color:#f0c060;" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
-    <p style="color:#7090a0;margin-bottom:10px;font-size:0.95em;">Engineering tools by the same author at <a href="https://pe-calc.com/" style="color:#a8c0d8;">pe-calc.com</a> · Stormwater design SaaS at <a href="https://hydrocomplete.com/" style="color:#a8c0d8;">hydrocomplete.com</a> · Free SWMM storm sewer modeling at <a href="https://mf4633.github.io/stormsewer/?utm_source=boardgaminghub&amp;utm_medium=footer&amp;utm_campaign=crosslink" style="color:#a8c0d8;">AquaSWMM</a> · AR dam-breach flood visualization at <a href="https://floodtruth.com/?utm_source=boardgaminghub&amp;utm_medium=footer&amp;utm_campaign=crosslink" style="color:#a8c0d8;">floodtruth.com</a></p>
+    <p style="color:#7090a0;margin-bottom:10px;font-size:0.95em;">Engineering tools by the same author at <a href="https://pe-calc.com/" style="color:#a8c0d8;">pe-calc.com</a> · Stormwater design SaaS at <a href="https://hydrocomplete.com/" style="color:#a8c0d8;">hydrocomplete.com</a></p>
     <a href="/">Clean version</a> ·
     <a href="/apps">Android apps</a> ·
     <a href="/about">About</a> ·
