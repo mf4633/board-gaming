@@ -31,6 +31,10 @@ let html = fs.readFileSync(path.join(SRC, 'index.html'), 'utf8');
 if (html.indexOf('rel="canonical"') === -1) {
   html = html.replace('</title>', '</title>\n<link rel="canonical" href="' + CANONICAL + '" />');
 }
+// games.json marks lovedwords `noindex` (children's app page, kept out of search).
+if (html.indexOf('name="robots"') === -1) {
+  html = html.replace('</title>', '</title>\n<meta name="robots" content="noindex, follow">');
+}
 if (html.indexOf('src="/nav.js"') === -1) {
   html = html.replace('</body>', '<script src="/nav.js" defer></script>\n</body>');
 }
