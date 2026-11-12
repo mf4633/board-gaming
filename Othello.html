@@ -615,7 +615,7 @@ function newGame() {
   aiThinking = false;
   lastMove = null;
   document.getElementById('overlay').classList.remove('show');
-  setMessage(turnLabel() + "'s turn.");
+  setMessage(turnLabel() + " turn.");
   render();
 }
 
@@ -654,7 +654,7 @@ function advanceTurn() {
 
   if (oppMoves.length > 0) {
     turn = opp;
-    setMessage(turnLabel() + "'s turn.");
+    setMessage(turnLabel() + " turn.");
     render();
     if (mode === 1 && turn === WHITE) scheduleAI();
     return;
