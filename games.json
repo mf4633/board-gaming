@@ -598,6 +598,32 @@
       "ogImage": "/og/tidelands.png"
     },
     {
+      "slug": "pax",
+      "title": "PAX Chess",
+      "sourceHtml": "pax/index.html",
+      "assetDir": "pax",
+      "category": "board",
+      "featured": false,
+      "daily": false,
+      "priority": 0.8,
+      "description": "A tribute to Len Dorfman's learning chess program",
+      "searchKeys": [
+        "chess",
+        "pax",
+        "dorfman",
+        "learning",
+        "tribute",
+        "engine"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "hasSteam": false,
+      "admob": false,
+      "ogImage": "/og/pax.png",
+      "addedOn": "2026-11-14"
+    },
+    {
       "slug": "ur",
       "title": "Ur",
       "sourceHtml": "Ur.html",

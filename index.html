@@ -118,16 +118,33 @@
   <section class="recent">
     <h2>Recently updated</h2>
     <ul>
+      <li><a href="/othello">Othello</a> <span>2026-11-12</span></li>
       <li><a href="/tidelands">Tidelands</a> <span>2026-10-01</span></li>
       <li><a href="/solitaire">Solitaire</a> <span>2026-09-29</span></li>
       <li><a href="/lovedwords/">LovedWords</a> <span>2026-09-29</span></li>
       <li><a href="/apoapsis">Apoapsis</a> <span>2026-09-29</span></li>
       <li><a href="/biosphereblue">Biosphere Blue</a> <span>2026-09-29</span></li>
-      <li><a href="/hellcat">Hellcat</a> <span>2026-09-29</span></li>
     </ul>
   </section>
 
-
+  <div class="new-strip" id="new-strip">
+    <b>✦ NEW THIS WEEK</b> —
+    <a href="/pax/" data-added="2026-11-14">PAX Chess</a>
+    <span class="when">· fresh from the workshop</span>
+  </div>
+  <script>
+  (function () {
+    // Hide "new" markers older than 14 days even if the site isn't regenerated.
+    var cutoff = Date.now() - 14 * 86400000, live = 0;
+    var els = document.querySelectorAll('[data-added]');
+    for (var i = 0; i < els.length; i++) {
+      if (Date.parse(els[i].getAttribute('data-added') + 'T00:00:00Z') < cutoff) els[i].style.display = 'none';
+      else if (els[i].tagName === 'A') live++;
+    }
+    var strip = document.getElementById('new-strip');
+    if (strip && !live) strip.style.display = 'none';
+  })();
+  </script>
   <div class="eclipse-strip" id="eclipse-strip" style="display:none">
     <b>🌒 TOTAL SOLAR ECLIPSE</b> — <span id="eclipse-when"></span>
     <a href="/eclipsepredictor">Watch the path in 3D</a> ·
@@ -263,6 +280,10 @@
     <a class="gcard" href="/tidelands">
       <div class="gname">Tidelands</div>
       <div class="gsub">Bronze-age maritime trade</div>
+    </a>
+    <a class="gcard" href="/pax/">
+      <div class="gname">PAX Chess<span class="new-badge" data-added="2026-11-14">New</span></div>
+      <div class="gsub">A tribute to Len Dorfman's learning chess program</div>
     </a>
     <a class="gcard" href="/ur">
       <div class="gname">Ur</div>

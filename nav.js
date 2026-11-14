@@ -31,6 +31,7 @@
     { slug:'pentegrammai', url:'/pentegrammai', name:'Pente Grammai', cat:'board', desc:'Ancient Greek Game of Five Lines', keys:['ancient','greek','classic','five lines'] },
     { slug:'senet', url:'/senet', name:'Senet', cat:'board', desc:'Ancient Egyptian racing game', keys:['egyptian','ancient','classic','race'] },
     { slug:'tidelands', url:'/tidelands', name:'Tidelands', cat:'board', desc:'Bronze-age maritime trade', keys:['ancient','bronze','sea','original','trade'] },
+    { slug:'pax', url:'/pax/', name:'PAX Chess', cat:'board', desc:'A tribute to Len Dorfman\'s learning chess program', keys:['chess','pax','dorfman','learning','tribute','engine'] },
     { slug:'ur', url:'/ur', name:'Ur', cat:'board', desc:'The Royal Game of Ur', keys:['mesopotamian','royal','ancient','race','classic'] },
     { slug:'ultimatetictactoe', url:'/ultimatetictactoe', name:'Ultimate Tic-Tac-Toe', cat:'board', desc:'Nine nested boards; your move picks your opponent’s board', keys:['ultimate tic tac toe','super tic tac toe','meta tic tac toe','nested','strategy'] },
     { slug:'apoapsis', url:'/apoapsis', name:'Apoapsis', cat:'sims', desc:'3D rocket flight sim', keys:['rocket','space','3d','simulation','orbital'] },
