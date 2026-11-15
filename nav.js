@@ -310,6 +310,8 @@
     const coffee = elt('a', { href:'https://buymeacoffee.com/mf4633', target:'_blank', rel:'noopener' }, '☕ Buy me a coffee');
     coffee.style.color = '#f0c060';
     more.appendChild(coffee);
+    more.appendChild(document.createTextNode('   ·   Friends: '));
+    more.appendChild(elt('a', { href:'https://antgames.ai/play/chinesechess/' }, 'Chinese Chess at Ant Games'));
 
     rail.appendChild(more);
     return rail;
