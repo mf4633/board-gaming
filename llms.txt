@@ -2,7 +2,7 @@
 
 > Free, single-file browser games and engineering simulations. 32 titles, no installs, no accounts, no signup. The simulations implement real published methods — NRCS TR-55 hydrology, total-dissolved-gas dam operations, Tsiolkovsky and patched-conic orbital mechanics, sub-arcsecond eclipse ephemeris — and each documents its model on the page.
 
-Every title is one self-contained HTML file with no server-side dependency: open the page and play, offline included. The site is built and maintained by Michael Flynn, PE, a dam-safety and stormwater engineer, which is why the simulations use the same methods as professional practice rather than arcade approximations. Source for the whole collection is public at https://github.com/mf4633/board-gaming (MIT).
+Every title is one self-contained HTML file with no server-side dependency: open the page and play, offline included. The site is built and maintained by Hydro Engineer, a civil engineer working in hydrology and stormwater, which is why the simulations use the same methods as professional practice rather than arcade approximations. Source for the whole collection is public at https://github.com/mf4633/board-gaming (MIT).
 
 ## Engineering & science simulations
 
