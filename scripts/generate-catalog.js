@@ -38,30 +38,55 @@ function isNewGame(g) {
   return age >= 0 && age <= NEW_WINDOW_DAYS;
 }
 
+// Gameplay thumbnails (480x300 webp) live in /thumbs/<slug>.webp. They are
+// screenshots of the game in play, refreshed with tidelands-sim/bgh-thumbs.js (+ bgh-thumb-steps.js, bgh-thumbs-crop.py).
+// A game without one falls back to a text-only card.
+function thumbFor(g) {
+  return fs.existsSync(path.join(ROOT, 'thumbs', g.slug + '.webp')) ? `/thumbs/${g.slug}.webp` : '';
+}
+
 function card(g, opts = {}) {
   const demo = g.demo && g.storeUrl;
-  const badge = demo ? `<span class="demo-badge">Demo — full version on itch.io</span>` : '';
+  const badge = demo ? `<span class="demo-badge">Demo, full version on itch.io</span>` : '';
   const daily = g.daily ? `<span class="daily-badge">Daily</span>` : '';
   const newBadge = isNewGame(g) ? `<span class="new-badge" data-added="${g.addedOn}">New</span>` : '';
-  const cls = opts.featured ? 'gcard featured-card' : 'gcard';
-  return `    <a class="${cls}" href="${gameUrl(g)}">
-      <div class="gname">${esc(g.title)}${newBadge}${daily}</div>
-      <div class="gsub">${esc(g.description)}${badge ? '<br>' + badge : ''}</div>
+  const thumb = thumbFor(g);
+  const cls = ['gcard', thumb ? 'has-thumb' : '', opts.featured ? 'featured-card' : ''].filter(Boolean).join(' ');
+  const img = thumb ? `\n      <img class="gthumb" src="${thumb}" width="480" height="300" loading="lazy" decoding="async" alt="">` : '';
+  return `    <a class="${cls}" href="${gameUrl(g)}">${img}
+      <div class="gbody">
+        <div class="gname">${esc(g.title)}${newBadge}${daily}</div>
+        <div class="gsub">${esc(g.description)}${badge ? '<br>' + badge : ''}</div>
+      </div>
     </a>`;
 }
 
+// Homepage section order follows what visitors actually play: the sims and
+// the original board games draw the traffic, the classics come after.
+const SECTION_ORDER = ['sims', 'board', 'puzzles'];
+const orderedCategories = [...categories].sort((a, b) => {
+  const ia = SECTION_ORDER.indexOf(a.id), ib = SECTION_ORDER.indexOf(b.id);
+  return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+});
+
 function indexSection(cat) {
   const list = games.filter(g => g.category === cat.id && !g.unlisted);
-  const essay = cat.essay ? `\n    <p class="essay">${esc(cat.essay)}</p>` : '';
   return `
-  <section>
-    <h2>${esc(cat.label)}</h2>
-    <div class="blurb">${esc(cat.blurb)}</div>${essay}
+  <section class="shelf" id="${esc(cat.id)}">
+    <div class="shelf-head">
+      <h2>${esc(cat.label)}</h2>
+      <p class="blurb">${esc(cat.blurb)}</p>
+    </div>
     <div class="grid">
 ${list.map(g => card(g)).join('\n')}
     </div>
   </section>`;
 }
+
+// The longer category essays stay on the page (they describe the catalog for
+// readers and reviewers) but sit below the games instead of in front of them.
+const essaysBlock = orderedCategories.filter(c => c.essay).map(c =>
+  `    <h3>${esc(c.label)}</h3>\n    <p>${esc(c.essay)}</p>`).join('\n');
 
 const sharedCss = `  * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #0c1016; color: #d8d0c0; font-family: Georgia, "Times New Roman", serif; }
@@ -86,12 +111,15 @@ const sharedCss = `  * { box-sizing: border-box; }
   section h2 { font-size: 1.0em; letter-spacing: 6px; color: #f0d89c; text-transform: uppercase; border-bottom: 1px solid #2a3540; padding-bottom: 8px; margin-bottom: 18px; }
   section .blurb { color: #8098a8; font-size: 0.92em; margin-bottom: 22px; line-height: 1.6; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
-  .gcard { display: block; background: #141c28; border: 1px solid #2a3540; border-radius: 4px; padding: 16px 18px; text-decoration: none; transition: background 0.12s, border-color 0.12s, transform 0.12s; }
-  .gcard:hover { background: #1e2838; border-color: #3a5060; transform: translateY(-2px); }
-  .gcard .gname { color: #f0d89c; font-size: 1.08em; letter-spacing: 2px; font-weight: bold; margin-bottom: 4px; }
-  .gcard .gsub { color: #a8b0c0; font-size: 0.85em; line-height: 1.4; }
-  .featured .gcard, .featured-card { background: #1a2434; border-color: #3a5060; }
-  .featured .gcard:hover, .featured-card:hover { background: #243044; border-color: #5a7090; }
+  .gcard { display: block; background: #141c28; border: 1px solid #2a3540; border-radius: 4px; padding: 16px 18px; text-decoration: none; color: inherit; }
+  .gcard:hover { background: #1a2434; border-color: #4a6478; }
+  .gcard:focus-visible { outline: 2px solid #f0d89c; outline-offset: 3px; }
+  .gcard.has-thumb { padding: 0; overflow: hidden; }
+  .gcard .gthumb { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; background: #0a0e14; border-bottom: 1px solid #2a3540; filter: saturate(0.9) brightness(0.92); transition: filter 0.15s; }
+  .gcard:hover .gthumb, .gcard:focus-visible .gthumb { filter: none; }
+  .gcard.has-thumb .gbody { padding: 12px 14px 14px; }
+  .gcard .gname { color: #f0d89c; font-size: 1.08em; letter-spacing: 0.5px; font-weight: bold; margin-bottom: 4px; }
+  .gcard .gsub { color: #a8b0c0; font-size: 0.85em; line-height: 1.45; }
   .demo-badge { display: inline-block; margin-top: 6px; font-size: 0.78em; color: #a0c8a8; letter-spacing: 1px; }
   .demo-badge a { color: #94c3e8; }
   .daily-badge { display: inline-block; margin-left: 8px; font-size: 0.65em; color: #a0d0a8; letter-spacing: 2px; vertical-align: middle; font-weight: normal; }
@@ -242,13 +270,40 @@ const newStrip = newGames.length
   : '';
 
 const dailyGames = games.filter(g => g.daily && !g.unlisted);
-const dailyStrip = dailyGames.length
-  ? `  <div class="daily-strip">
-    <b>TODAY'S DAILY PUZZLES</b> —
-    ${dailyGames.map(g => `<a href="${gameUrl(g)}#daily">${esc(g.title)}</a>`).join(' · ')}
-    <span style="color:#5a6874;font-size:0.85em"> · add to home screen for quick access</span>
-  </div>`
-  : '';
+
+const listed = games.filter(g => !g.unlisted);
+const HERO_SLUG = 'apoapsis';
+const heroGame = games.find(g => g.slug === HERO_SLUG);
+const heroBlock = `  <section class="hero">
+    <div class="hero-copy">
+      <h1>Strategy games, ancient games and simulations built on real physics.</h1>
+      <p class="lede">${listed.length} free games that run in your browser tab. No account and nothing to install.</p>
+      <div class="hero-actions">
+        <a class="btn-primary" href="${gameUrl(heroGame)}">Play ${esc(heroGame.title)}</a>
+        <button type="button" class="btn-ghost" id="randomGame">Pick a random game</button>
+      </div>
+      <p class="hero-jump">Jump to <a href="#sims">Simulations</a><a href="#board">Board games</a><a href="#puzzles">Classic puzzles</a></p>
+    </div>
+    <a class="hero-shot" href="${gameUrl(heroGame)}">
+      <img src="/thumbs/hero-apoapsis.webp" width="960" height="600" fetchpriority="high" alt="Apoapsis in flight: a two-stage rocket climbing through the upper atmosphere with altitude, velocity and orbit readouts around it">
+      <span class="hero-cap"><b>${esc(heroGame.title)}</b>: build a rocket, fly it to orbit on real orbital mechanics, then try for the moon.</span>
+    </a>
+  </section>`;
+
+const dailyBlock = dailyGames.length ? `  <section class="daily">
+    <h2>Today's puzzles</h2>
+    <ul>
+${dailyGames.map(g => `      <li><a href="${gameUrl(g)}#daily">${thumbFor(g) ? `<img src="${thumbFor(g)}" width="72" height="45" alt="">` : ''}<span>${esc(g.title)}<small>New puzzle every day</small></span></a></li>`).join('\n')}
+    </ul>
+  </section>` : '';
+
+const randomScript = `<script>
+(function () {
+  var urls = ${JSON.stringify(listed.filter(g => !g.noindex).map(gameUrl))};
+  var b = document.getElementById('randomGame');
+  if (b) b.addEventListener('click', function () { location.href = urls[Math.floor(Math.random() * urls.length)]; });
+})();
+</script>`;
 
 // One hub. /play (the old ad catalog) 301s here — see netlify.toml.
 const indexHtml = `<!DOCTYPE html>
@@ -279,36 +334,75 @@ ${sharedCss}
   .recent a:hover { color: #f0d89c; }
   .recent span { color: #5a6874; font-size: 0.82em; margin-left: 6px; }
   .editorial a { color: #94c3e8; }
+  .editorial h3 { color: #d8c08c; font-size: 1.0em; margin: 26px 0 8px; font-weight: bold; }
+  #wrap { padding-top: 36px; }
+  .hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: center; margin: 0 0 44px; }
+  .hero h1 { font-size: clamp(1.9em, 3.4vw, 2.75em); line-height: 1.12; font-weight: normal; color: #f3e6c4; margin: 0 0 18px; letter-spacing: -0.3px; }
+  .hero .lede { color: #b8c0c8; font-size: 1.08em; line-height: 1.6; margin: 0 0 26px; max-width: 34em; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+  .btn-primary, .btn-ghost { font: inherit; font-size: 1.0em; padding: 12px 20px; border-radius: 4px; text-decoration: none; cursor: pointer; }
+  .btn-primary { background: #f0d89c; color: #14100a; border: 1px solid #f0d89c; font-weight: bold; }
+  .btn-primary:hover { background: #fbe8b8; }
+  .btn-ghost { background: transparent; color: #f0d89c; border: 1px solid #5a6a78; }
+  .btn-ghost:hover { border-color: #f0d89c; }
+  .btn-primary:focus-visible, .btn-ghost:focus-visible, .hero-shot:focus-visible, .hero-jump a:focus-visible, .daily a:focus-visible { outline: 2px solid #94c3e8; outline-offset: 3px; }
+  .hero-jump { color: #6a7a88; font-size: 0.9em; margin: 0; }
+  .hero-jump a { color: #94c3e8; text-decoration: none; margin-left: 12px; }
+  .hero-jump a:hover { color: #f0d89c; }
+  .hero-shot { display: block; position: relative; border-radius: 6px; overflow: hidden; border: 1px solid #3a5060; box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.8); text-decoration: none; }
+  .hero-shot img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; }
+  .hero-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 18px 14px; background: linear-gradient(180deg, transparent, rgba(5, 8, 12, 0.92)); color: #e8eef4; font-size: 0.95em; }
+  .hero-cap b { color: #f0d89c; }
+  .daily { margin: 0 0 22px; }
+  .daily h2 { font-size: 1.15em; color: #f0d89c; margin: 0 0 12px; font-weight: normal; letter-spacing: 0; text-transform: none; border: 0; padding: 0; }
+  .daily ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .daily a { display: flex; align-items: center; gap: 12px; padding: 8px; background: #141c28; border: 1px solid #2a3540; border-radius: 4px; text-decoration: none; color: #f0d89c; }
+  .daily a:hover { border-color: #4a6478; background: #1a2434; }
+  .daily img { width: 72px; height: 45px; object-fit: cover; border-radius: 2px; flex: none; }
+  .daily small { display: block; color: #7a8a98; font-size: 0.78em; margin-top: 2px; }
+  .shelf { margin-top: 48px; }
+  .shelf-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; border-bottom: 1px solid #2a3540; padding-bottom: 10px; margin-bottom: 18px; }
+  .shelf-head h2 { font-size: 1.5em; font-weight: normal; letter-spacing: 0; text-transform: none; color: #f3e6c4; border: 0; padding: 0; margin: 0; }
+  .shelf-head .blurb { margin: 0; color: #8098a8; font-size: 0.92em; }
+  .shelf .grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px; }
+  .below { margin-top: 64px; }
+  @media (max-width: 820px) {
+    #wrap { padding: 22px 16px 60px; }
+    .hero { grid-template-columns: 1fr; gap: 24px; margin-bottom: 32px; }
+    .hero-actions a, .hero-actions button { flex: 1 1 auto; text-align: center; }
+    .daily ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .daily a { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .daily img { width: 100%; height: auto; aspect-ratio: 16 / 10; }
+    .shelf .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .gcard .gsub { font-size: 0.8em; }
+    .gcard.has-thumb .gbody { padding: 9px 10px 11px; }
+    .gcard .gname { font-size: 0.98em; }
+  }
+  @media (prefers-reduced-motion: reduce) { .gcard .gthumb { transition: none; } }
 </style>
 </head>
 <body>
 <div id="wrap">
-  <header>
-    <h1>BOARD GAMING HUB</h1>
-    <div class="tag">Original strategy games, classics and simulations, each in a single HTML file</div>
-  </header>
+${heroBlock}
 
-  <nav class="hub">
-    <a href="/apps">Android apps</a>
-    <a href="/about">About</a>
-    <a href="/contact">Contact</a>
-    <a href="/privacy">Privacy</a>
-    <a href="/terms">Terms</a>
-  </nav>
-
-${hubEditorial}
-
+${dailyBlock}
 ${newStrip}
 ${eclipseStrip}
-${dailyStrip}
 ${adUnit()}
-${categories.map(c => indexSection(c)).join('\n')}
+${orderedCategories.map(c => indexSection(c)).join('\n')}
 ${adUnit('margin:32px 0')}
+
+  <div class="below">
+${hubEditorial.replace('</article>', `    <h2 style="margin-top:30px">About the collections</h2>
+${essaysBlock}
+  </article>`)}
+  </div>
+${randomScript}
 
   <p class="disclosure">
     This site is supported by Google AdSense advertisements. Advertisers do not influence game design or content.
     Google and its partners use cookies to serve ads based on prior visits to this and other sites; see the
-    <a href="/privacy">privacy notice</a> for opt-out details.
+    <a href="/privacy" style="color:#8098a8">privacy notice</a> for opt-out details.
   </p>
 
   <footer>

@@ -56,12 +56,15 @@
   section h2 { font-size: 1.0em; letter-spacing: 6px; color: #f0d89c; text-transform: uppercase; border-bottom: 1px solid #2a3540; padding-bottom: 8px; margin-bottom: 18px; }
   section .blurb { color: #8098a8; font-size: 0.92em; margin-bottom: 22px; line-height: 1.6; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
-  .gcard { display: block; background: #141c28; border: 1px solid #2a3540; border-radius: 4px; padding: 16px 18px; text-decoration: none; transition: background 0.12s, border-color 0.12s, transform 0.12s; }
-  .gcard:hover { background: #1e2838; border-color: #3a5060; transform: translateY(-2px); }
-  .gcard .gname { color: #f0d89c; font-size: 1.08em; letter-spacing: 2px; font-weight: bold; margin-bottom: 4px; }
-  .gcard .gsub { color: #a8b0c0; font-size: 0.85em; line-height: 1.4; }
-  .featured .gcard, .featured-card { background: #1a2434; border-color: #3a5060; }
-  .featured .gcard:hover, .featured-card:hover { background: #243044; border-color: #5a7090; }
+  .gcard { display: block; background: #141c28; border: 1px solid #2a3540; border-radius: 4px; padding: 16px 18px; text-decoration: none; color: inherit; }
+  .gcard:hover { background: #1a2434; border-color: #4a6478; }
+  .gcard:focus-visible { outline: 2px solid #f0d89c; outline-offset: 3px; }
+  .gcard.has-thumb { padding: 0; overflow: hidden; }
+  .gcard .gthumb { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; background: #0a0e14; border-bottom: 1px solid #2a3540; filter: saturate(0.9) brightness(0.92); transition: filter 0.15s; }
+  .gcard:hover .gthumb, .gcard:focus-visible .gthumb { filter: none; }
+  .gcard.has-thumb .gbody { padding: 12px 14px 14px; }
+  .gcard .gname { color: #f0d89c; font-size: 1.08em; letter-spacing: 0.5px; font-weight: bold; margin-bottom: 4px; }
+  .gcard .gsub { color: #a8b0c0; font-size: 0.85em; line-height: 1.45; }
   .demo-badge { display: inline-block; margin-top: 6px; font-size: 0.78em; color: #a0c8a8; letter-spacing: 1px; }
   .demo-badge a { color: #94c3e8; }
   .daily-badge { display: inline-block; margin-left: 8px; font-size: 0.65em; color: #a0d0a8; letter-spacing: 2px; vertical-align: middle; font-weight: normal; }
@@ -90,43 +93,80 @@
   .recent a:hover { color: #f0d89c; }
   .recent span { color: #5a6874; font-size: 0.82em; margin-left: 6px; }
   .editorial a { color: #94c3e8; }
+  .editorial h3 { color: #d8c08c; font-size: 1.0em; margin: 26px 0 8px; font-weight: bold; }
+  #wrap { padding-top: 36px; }
+  .hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: center; margin: 0 0 44px; }
+  .hero h1 { font-size: clamp(1.9em, 3.4vw, 2.75em); line-height: 1.12; font-weight: normal; color: #f3e6c4; margin: 0 0 18px; letter-spacing: -0.3px; }
+  .hero .lede { color: #b8c0c8; font-size: 1.08em; line-height: 1.6; margin: 0 0 26px; max-width: 34em; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+  .btn-primary, .btn-ghost { font: inherit; font-size: 1.0em; padding: 12px 20px; border-radius: 4px; text-decoration: none; cursor: pointer; }
+  .btn-primary { background: #f0d89c; color: #14100a; border: 1px solid #f0d89c; font-weight: bold; }
+  .btn-primary:hover { background: #fbe8b8; }
+  .btn-ghost { background: transparent; color: #f0d89c; border: 1px solid #5a6a78; }
+  .btn-ghost:hover { border-color: #f0d89c; }
+  .btn-primary:focus-visible, .btn-ghost:focus-visible, .hero-shot:focus-visible, .hero-jump a:focus-visible, .daily a:focus-visible { outline: 2px solid #94c3e8; outline-offset: 3px; }
+  .hero-jump { color: #6a7a88; font-size: 0.9em; margin: 0; }
+  .hero-jump a { color: #94c3e8; text-decoration: none; margin-left: 12px; }
+  .hero-jump a:hover { color: #f0d89c; }
+  .hero-shot { display: block; position: relative; border-radius: 6px; overflow: hidden; border: 1px solid #3a5060; box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.8); text-decoration: none; }
+  .hero-shot img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; }
+  .hero-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 18px 14px; background: linear-gradient(180deg, transparent, rgba(5, 8, 12, 0.92)); color: #e8eef4; font-size: 0.95em; }
+  .hero-cap b { color: #f0d89c; }
+  .daily { margin: 0 0 22px; }
+  .daily h2 { font-size: 1.15em; color: #f0d89c; margin: 0 0 12px; font-weight: normal; letter-spacing: 0; text-transform: none; border: 0; padding: 0; }
+  .daily ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .daily a { display: flex; align-items: center; gap: 12px; padding: 8px; background: #141c28; border: 1px solid #2a3540; border-radius: 4px; text-decoration: none; color: #f0d89c; }
+  .daily a:hover { border-color: #4a6478; background: #1a2434; }
+  .daily img { width: 72px; height: 45px; object-fit: cover; border-radius: 2px; flex: none; }
+  .daily small { display: block; color: #7a8a98; font-size: 0.78em; margin-top: 2px; }
+  .shelf { margin-top: 48px; }
+  .shelf-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; border-bottom: 1px solid #2a3540; padding-bottom: 10px; margin-bottom: 18px; }
+  .shelf-head h2 { font-size: 1.5em; font-weight: normal; letter-spacing: 0; text-transform: none; color: #f3e6c4; border: 0; padding: 0; margin: 0; }
+  .shelf-head .blurb { margin: 0; color: #8098a8; font-size: 0.92em; }
+  .shelf .grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px; }
+  .below { margin-top: 64px; }
+  @media (max-width: 820px) {
+    #wrap { padding: 22px 16px 60px; }
+    .hero { grid-template-columns: 1fr; gap: 24px; margin-bottom: 32px; }
+    .hero-actions a, .hero-actions button { flex: 1 1 auto; text-align: center; }
+    .daily ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .daily a { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .daily img { width: 100%; height: auto; aspect-ratio: 16 / 10; }
+    .shelf .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .gcard .gsub { font-size: 0.8em; }
+    .gcard.has-thumb .gbody { padding: 9px 10px 11px; }
+    .gcard .gname { font-size: 0.98em; }
+  }
+  @media (prefers-reduced-motion: reduce) { .gcard .gthumb { transition: none; } }
 </style>
 </head>
 <body>
 <div id="wrap">
-  <header>
-    <h1>BOARD GAMING HUB</h1>
-    <div class="tag">Original strategy games, classics and simulations, each in a single HTML file</div>
-  </header>
-
-  <nav class="hub">
-    <a href="/apps">Android apps</a>
-    <a href="/about">About</a>
-    <a href="/contact">Contact</a>
-    <a href="/privacy">Privacy</a>
-    <a href="/terms">Terms</a>
-  </nav>
-
-  <article class="editorial">
-    <h2>What is Board Gaming Hub?</h2>
-    <p>Board Gaming Hub is a free collection of browser games built and maintained by one person, Michael Flynn, a licensed civil engineer who works on dams and flood hydrology. Every game is a single HTML file: open the page and play, with no account and no install. Game pages cover the rules and strategy, and the most-played games also explain how that particular version works, including what the computer opponent does and which rule variants were chosen.</p>
-    <p><b>The originals are the reason the site exists.</b> <a href="/tidelands">Tidelands</a> is a Bronze Age maritime trade game whose scoring was rebalanced after 1,000-game simulation runs. <a href="/bisque">Bisque</a> is a battle for a bay, <a href="/agora">Agora</a> is Mediterranean trade, <a href="/aresia">Aresia</a> colonizes Mars, <a href="/odyssey">Odyssey</a> sails the wine-dark sea, <a href="/convergence">Convergence</a> pits rival civilizations against a shared economy, and <a href="/doctrine">Doctrine</a> is a geopolitical simulation running from 1990 to 2050. None of them exist anywhere else.</p>
-    <p><b>The classics are here because people play them every day.</b> <a href="/solitaire">Solitaire</a>, <a href="/sudoku">Sudoku</a>, <a href="/mahjong">Mahjong</a>, <a href="/minesweeper">Minesweeper</a>, <a href="/chess">Chess</a> and <a href="/go">Go</a> sit next to two original daily word puzzles, <a href="/wordform">Wordform</a> and <a href="/drift">Drift</a>, and four games that are thousands of years old: <a href="/ur">the Royal Game of Ur</a>, <a href="/senet">Senet</a>, <a href="/pentegrammai">Pente Grammai</a> and <a href="/mancala">Mancala</a>.</p>
-    <p><b>The simulations use real engineering.</b> <a href="/floodline">Floodline</a> and <a href="/bonnevillespillwayoperator">Bonneville Spillway</a> come from the author's day job in flood and dam work, and <a href="/eclipsepredictor">Eclipse Predictor</a> computes eclipse paths from 1900 to 2200 with the open-source astronomy-engine library.</p>
-    <p>The site is free and supported by Google ads. Many of the games also have Android versions; see the <a href="/apps">app list</a>.</p>
-  </article>
-  <section class="recent">
-    <h2>Recently updated</h2>
-    <ul>
-      <li><a href="/othello">Othello</a> <span>2026-11-12</span></li>
-      <li><a href="/tidelands">Tidelands</a> <span>2026-10-01</span></li>
-      <li><a href="/solitaire">Solitaire</a> <span>2026-09-29</span></li>
-      <li><a href="/lovedwords/">LovedWords</a> <span>2026-09-29</span></li>
-      <li><a href="/apoapsis">Apoapsis</a> <span>2026-09-29</span></li>
-      <li><a href="/biosphereblue">Biosphere Blue</a> <span>2026-09-29</span></li>
-    </ul>
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>Strategy games, ancient games and simulations built on real physics.</h1>
+      <p class="lede">36 free games that run in your browser tab. No account and nothing to install.</p>
+      <div class="hero-actions">
+        <a class="btn-primary" href="/apoapsis">Play Apoapsis</a>
+        <button type="button" class="btn-ghost" id="randomGame">Pick a random game</button>
+      </div>
+      <p class="hero-jump">Jump to <a href="#sims">Simulations</a><a href="#board">Board games</a><a href="#puzzles">Classic puzzles</a></p>
+    </div>
+    <a class="hero-shot" href="/apoapsis">
+      <img src="/thumbs/hero-apoapsis.webp" width="960" height="600" fetchpriority="high" alt="Apoapsis in flight: a two-stage rocket climbing through the upper atmosphere with altitude, velocity and orbit readouts around it">
+      <span class="hero-cap"><b>Apoapsis</b>: build a rocket, fly it to orbit on real orbital mechanics, then try for the moon.</span>
+    </a>
   </section>
 
+  <section class="daily">
+    <h2>Today's puzzles</h2>
+    <ul>
+      <li><a href="/wordform#daily"><img src="/thumbs/wordform.webp" width="72" height="45" alt=""><span>Wordform<small>New puzzle every day</small></span></a></li>
+      <li><a href="/drift#daily"><img src="/thumbs/drift.webp" width="72" height="45" alt=""><span>Drift<small>New puzzle every day</small></span></a></li>
+      <li><a href="/sudoku#daily"><img src="/thumbs/sudoku.webp" width="72" height="45" alt=""><span>Sudoku<small>New puzzle every day</small></span></a></li>
+      <li><a href="/minesweeper#daily"><img src="/thumbs/minesweeper.webp" width="72" height="45" alt=""><span>Minesweeper<small>New puzzle every day</small></span></a></li>
+    </ul>
+  </section>
   <div class="new-strip" id="new-strip">
     <b>✦ NEW THIS WEEK</b> —
     <a href="/pax/" data-added="2026-11-14">PAX Chess</a>
@@ -169,186 +209,328 @@
     }
   })();
   </script>
-  <div class="daily-strip">
-    <b>TODAY'S DAILY PUZZLES</b> —
-    <a href="/wordform#daily">Wordform</a> · <a href="/drift#daily">Drift</a> · <a href="/sudoku#daily">Sudoku</a> · <a href="/minesweeper#daily">Minesweeper</a>
-    <span style="color:#5a6874;font-size:0.85em"> · add to home screen for quick access</span>
-  </div>
   <div class="ad-slot ad-slot--pending" aria-hidden="true"></div>
 
-  <section>
-    <h2>Classic Puzzles</h2>
-    <div class="blurb">The most-played puzzle games on the web — free, no signup, mobile-friendly.</div>
-    <p class="essay">This section collects the puzzles people actually return to: Klondike solitaire, Sudoku grids from easy through expert, Mahjong tile matching, Minesweeper, and 2048. Wordform and Drift are original daily word games — one hidden five-letter word per day on Wordform, one word-ladder chain on Drift — both designed for sharing results without spoilers. Every title runs in a single HTML file with no account and no install.</p>
+  <section class="shelf" id="sims">
+    <div class="shelf-head">
+      <h2>Simulations</h2>
+      <p class="blurb">Real-time physics, engineering, and management sims.</p>
+    </div>
     <div class="grid">
-    <a class="gcard" href="/solitaire">
-      <div class="gname">Solitaire</div>
-      <div class="gsub">Klondike — the classic card game</div>
+    <a class="gcard has-thumb" href="/apoapsis">
+      <img class="gthumb" src="/thumbs/apoapsis.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Apoapsis</div>
+        <div class="gsub">3D rocket flight sim</div>
+      </div>
     </a>
-    <a class="gcard" href="/wordform">
-      <div class="gname">Wordform<span class="daily-badge">Daily</span></div>
-      <div class="gsub">Daily 5-letter word puzzle</div>
+    <a class="gcard has-thumb" href="/biosphereblue">
+      <img class="gthumb" src="/thumbs/biosphereblue.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Biosphere Blue</div>
+        <div class="gsub">Planet-scale geosim</div>
+      </div>
     </a>
-    <a class="gcard" href="/drift">
-      <div class="gname">Drift<span class="daily-badge">Daily</span></div>
-      <div class="gsub">Daily word ladder — original</div>
+    <a class="gcard has-thumb" href="/bonnevillespillwayoperator">
+      <img class="gthumb" src="/thumbs/bonnevillespillwayoperator.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Bonneville Spillway</div>
+        <div class="gsub">Columbia River dam operator<br><span class="demo-badge">Demo, full version on itch.io</span></div>
+      </div>
     </a>
-    <a class="gcard" href="/sudoku">
-      <div class="gname">Sudoku<span class="daily-badge">Daily</span></div>
-      <div class="gsub">Place 1–9, easy to expert</div>
+    <a class="gcard has-thumb" href="/cliffwalkers">
+      <img class="gthumb" src="/thumbs/cliffwalkers.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Cliffwalkers</div>
+        <div class="gsub">Save the wee folk</div>
+      </div>
     </a>
-    <a class="gcard" href="/mahjong">
-      <div class="gname">Mahjong</div>
-      <div class="gsub">Solitaire tile matching</div>
+    <a class="gcard has-thumb" href="/doctrine">
+      <img class="gthumb" src="/thumbs/doctrine.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Doctrine</div>
+        <div class="gsub">Geopolitical sim, 1990–2050</div>
+      </div>
     </a>
-    <a class="gcard" href="/chess">
-      <div class="gname">Chess</div>
-      <div class="gsub">The royal game</div>
+    <a class="gcard has-thumb" href="/eclipsepredictor">
+      <img class="gthumb" src="/thumbs/eclipsepredictor.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Eclipse Predictor</div>
+        <div class="gsub">3D solar eclipse paths on globe (1900–2200)</div>
+      </div>
     </a>
-    <a class="gcard" href="/2048">
-      <div class="gname">2048</div>
-      <div class="gsub">Slide &amp; merge tiles</div>
+    <a class="gcard has-thumb" href="/floodline">
+      <img class="gthumb" src="/thumbs/floodline.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Floodline</div>
+        <div class="gsub">California flood defense<br><span class="demo-badge">Demo, full version on itch.io</span></div>
+      </div>
     </a>
-    <a class="gcard" href="/minesweeper">
-      <div class="gname">Minesweeper<span class="daily-badge">Daily</span></div>
-      <div class="gsub">Find the mines — no-guess boards, daily challenge, hex &amp; knight variants</div>
+    <a class="gcard has-thumb" href="/metropolis2k">
+      <img class="gthumb" src="/thumbs/metropolis2k.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Metropolis 2K</div>
+        <div class="gsub">City-building sim with districts &amp; bonds</div>
+      </div>
     </a>
-    <a class="gcard" href="/abacus">
-      <div class="gname">Abacus</div>
-      <div class="gsub">Soroban calculator with Arabic &amp; Roman numerals</div>
+    <a class="gcard has-thumb" href="/tower">
+      <img class="gthumb" src="/thumbs/tower.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Tower</div>
+        <div class="gsub">High-rise operations (SKYSTACK)<br><span class="demo-badge">Demo, full version on itch.io</span></div>
+      </div>
     </a>
-    <a class="gcard" href="/lovedwords/">
-      <div class="gname">LovedWords</div>
-      <div class="gsub">First-words flashcards with your photos &amp; voice</div>
-    </a>
-    <a class="gcard" href="/tictactoe">
-      <div class="gname">Tic-Tac-Toe</div>
-      <div class="gsub">Noughts and crosses with a genuinely unbeatable AI</div>
+    <a class="gcard has-thumb" href="/hellcat">
+      <img class="gthumb" src="/thumbs/hellcat.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Hellcat</div>
+        <div class="gsub">WWII carrier flight sim with real aerodynamics</div>
+      </div>
     </a>
     </div>
   </section>
 
-  <section>
-    <h2>Board Games</h2>
-    <div class="blurb">Turn-based strategy: ancient games, classic perfects, and original designs.</div>
-    <p class="essay">Alongside Chess, Go, Backgammon, Othello, and Mancala sit original strategy designs: Agora (Mediterranean trade), Aresia (Mars colonization), Bisque (naval area control), Convergence (rival civilizations), Odyssey (wine-dark sea voyages), and more. Ancient games Senet, Ur, and Pente Grammai are included because their rules are short but their decision trees are not. Each page includes how-to-play notes and strategy FAQs so you can learn the game without leaving the site.</p>
+  <section class="shelf" id="board">
+    <div class="shelf-head">
+      <h2>Board Games</h2>
+      <p class="blurb">Turn-based strategy: ancient games, classic perfects, and original designs.</p>
+    </div>
     <div class="grid">
-    <a class="gcard" href="/agora">
-      <div class="gname">Agora</div>
-      <div class="gsub">The Mediterranean Trade</div>
+    <a class="gcard has-thumb" href="/agora">
+      <img class="gthumb" src="/thumbs/agora.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Agora</div>
+        <div class="gsub">The Mediterranean Trade</div>
+      </div>
     </a>
-    <a class="gcard" href="/aresia">
-      <div class="gname">Aresia</div>
-      <div class="gsub">Colonize the Red Frontier</div>
+    <a class="gcard has-thumb" href="/aresia">
+      <img class="gthumb" src="/thumbs/aresia.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Aresia</div>
+        <div class="gsub">Colonize the Red Frontier</div>
+      </div>
     </a>
-    <a class="gcard" href="/backgammon">
-      <div class="gname">Backgammon</div>
-      <div class="gsub">Classic dice &amp; race</div>
+    <a class="gcard has-thumb" href="/backgammon">
+      <img class="gthumb" src="/thumbs/backgammon.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Backgammon</div>
+        <div class="gsub">Classic dice &amp; race</div>
+      </div>
     </a>
-    <a class="gcard" href="/bisque">
-      <div class="gname">Bisque</div>
-      <div class="gsub">Battle for the Bay</div>
+    <a class="gcard has-thumb" href="/bisque">
+      <img class="gthumb" src="/thumbs/bisque.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Bisque</div>
+        <div class="gsub">Battle for the Bay</div>
+      </div>
     </a>
-    <a class="gcard" href="/convergence">
-      <div class="gname">Convergence</div>
-      <div class="gsub">Rival Civilizations, Shared Economy</div>
+    <a class="gcard has-thumb" href="/convergence">
+      <img class="gthumb" src="/thumbs/convergence.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Convergence</div>
+        <div class="gsub">Rival Civilizations, Shared Economy</div>
+      </div>
     </a>
-    <a class="gcard" href="/go">
-      <div class="gname">Go</div>
-      <div class="gsub">Territory &amp; influence, 19×19</div>
+    <a class="gcard has-thumb" href="/go">
+      <img class="gthumb" src="/thumbs/go.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Go</div>
+        <div class="gsub">Territory &amp; influence, 19×19</div>
+      </div>
     </a>
-    <a class="gcard" href="/mancala">
-      <div class="gname">Mancala</div>
-      <div class="gsub">Ancient count-and-capture</div>
+    <a class="gcard has-thumb" href="/mancala">
+      <img class="gthumb" src="/thumbs/mancala.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Mancala</div>
+        <div class="gsub">Ancient count-and-capture</div>
+      </div>
     </a>
-    <a class="gcard" href="/odyssey">
-      <div class="gname">Odyssey</div>
-      <div class="gsub">Upon the Wine-Dark Sea</div>
+    <a class="gcard has-thumb" href="/odyssey">
+      <img class="gthumb" src="/thumbs/odyssey.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Odyssey</div>
+        <div class="gsub">Upon the Wine-Dark Sea</div>
+      </div>
     </a>
-    <a class="gcard" href="/othello">
-      <div class="gname">Othello</div>
-      <div class="gsub">Flip to claim the board</div>
+    <a class="gcard has-thumb" href="/othello">
+      <img class="gthumb" src="/thumbs/othello.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Othello</div>
+        <div class="gsub">Flip to claim the board</div>
+      </div>
     </a>
-    <a class="gcard" href="/pentegrammai">
-      <div class="gname">Pente Grammai</div>
-      <div class="gsub">Ancient Greek Game of Five Lines</div>
+    <a class="gcard has-thumb" href="/pentegrammai">
+      <img class="gthumb" src="/thumbs/pentegrammai.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Pente Grammai</div>
+        <div class="gsub">Ancient Greek Game of Five Lines</div>
+      </div>
     </a>
-    <a class="gcard" href="/senet">
-      <div class="gname">Senet</div>
-      <div class="gsub">Ancient Egyptian racing game</div>
+    <a class="gcard has-thumb" href="/senet">
+      <img class="gthumb" src="/thumbs/senet.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Senet</div>
+        <div class="gsub">Ancient Egyptian racing game</div>
+      </div>
     </a>
-    <a class="gcard" href="/tidelands">
-      <div class="gname">Tidelands</div>
-      <div class="gsub">Bronze-age maritime trade</div>
+    <a class="gcard has-thumb" href="/tidelands">
+      <img class="gthumb" src="/thumbs/tidelands.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Tidelands</div>
+        <div class="gsub">Bronze-age maritime trade</div>
+      </div>
     </a>
-    <a class="gcard" href="/pax/">
-      <div class="gname">PAX Chess<span class="new-badge" data-added="2026-11-14">New</span></div>
-      <div class="gsub">A tribute to Len Dorfman's learning chess program</div>
+    <a class="gcard has-thumb" href="/pax/">
+      <img class="gthumb" src="/thumbs/pax.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">PAX Chess<span class="new-badge" data-added="2026-11-14">New</span></div>
+        <div class="gsub">A tribute to Len Dorfman's learning chess program</div>
+      </div>
     </a>
-    <a class="gcard" href="/ur">
-      <div class="gname">Ur</div>
-      <div class="gsub">The Royal Game of Ur</div>
+    <a class="gcard has-thumb" href="/ur">
+      <img class="gthumb" src="/thumbs/ur.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Ur</div>
+        <div class="gsub">The Royal Game of Ur</div>
+      </div>
     </a>
-    <a class="gcard" href="/ultimatetictactoe">
-      <div class="gname">Ultimate Tic-Tac-Toe</div>
-      <div class="gsub">Nine nested boards; your move picks your opponent’s board</div>
+    <a class="gcard has-thumb" href="/ultimatetictactoe">
+      <img class="gthumb" src="/thumbs/ultimatetictactoe.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Ultimate Tic-Tac-Toe</div>
+        <div class="gsub">Nine nested boards; your move picks your opponent’s board</div>
+      </div>
     </a>
     </div>
   </section>
 
-  <section>
-    <h2>Simulations</h2>
-    <div class="blurb">Real-time physics, engineering, and management sims.</div>
-    <p class="essay">The simulation catalog is what sets this hub apart from a generic game directory. Floodline models California flood defense with levees, pumps, and real storm hydrographs. Bonneville Spillway Operator balances grid demand, salmon passage, and total dissolved gas at a real dam. Eclipse Predictor renders solar eclipse paths on a 3D globe with sub-arcsecond ephemeris accuracy. Tower (SkyStack), Metropolis 2K, Apoapsis, Biosphere Blue, and Doctrine round out management, city-building, orbital mechanics, and geopolitical sims — all built by a practicing engineer who documents the real formulas behind each model.</p>
+  <section class="shelf" id="puzzles">
+    <div class="shelf-head">
+      <h2>Classic Puzzles</h2>
+      <p class="blurb">The most-played puzzle games on the web — free, no signup, mobile-friendly.</p>
+    </div>
     <div class="grid">
-    <a class="gcard" href="/apoapsis">
-      <div class="gname">Apoapsis</div>
-      <div class="gsub">3D rocket flight sim</div>
+    <a class="gcard has-thumb" href="/solitaire">
+      <img class="gthumb" src="/thumbs/solitaire.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Solitaire</div>
+        <div class="gsub">Klondike — the classic card game</div>
+      </div>
     </a>
-    <a class="gcard" href="/biosphereblue">
-      <div class="gname">Biosphere Blue</div>
-      <div class="gsub">Planet-scale geosim</div>
+    <a class="gcard has-thumb" href="/wordform">
+      <img class="gthumb" src="/thumbs/wordform.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Wordform<span class="daily-badge">Daily</span></div>
+        <div class="gsub">Daily 5-letter word puzzle</div>
+      </div>
     </a>
-    <a class="gcard" href="/bonnevillespillwayoperator">
-      <div class="gname">Bonneville Spillway</div>
-      <div class="gsub">Columbia River dam operator<br><span class="demo-badge">Demo — full version on itch.io</span></div>
+    <a class="gcard has-thumb" href="/drift">
+      <img class="gthumb" src="/thumbs/drift.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Drift<span class="daily-badge">Daily</span></div>
+        <div class="gsub">Daily word ladder — original</div>
+      </div>
     </a>
-    <a class="gcard" href="/cliffwalkers">
-      <div class="gname">Cliffwalkers</div>
-      <div class="gsub">Save the wee folk</div>
+    <a class="gcard has-thumb" href="/sudoku">
+      <img class="gthumb" src="/thumbs/sudoku.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Sudoku<span class="daily-badge">Daily</span></div>
+        <div class="gsub">Place 1–9, easy to expert</div>
+      </div>
     </a>
-    <a class="gcard" href="/doctrine">
-      <div class="gname">Doctrine</div>
-      <div class="gsub">Geopolitical sim, 1990–2050</div>
+    <a class="gcard has-thumb" href="/mahjong">
+      <img class="gthumb" src="/thumbs/mahjong.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Mahjong</div>
+        <div class="gsub">Solitaire tile matching</div>
+      </div>
     </a>
-    <a class="gcard" href="/eclipsepredictor">
-      <div class="gname">Eclipse Predictor</div>
-      <div class="gsub">3D solar eclipse paths on globe (1900–2200)</div>
+    <a class="gcard has-thumb" href="/chess">
+      <img class="gthumb" src="/thumbs/chess.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Chess</div>
+        <div class="gsub">The royal game</div>
+      </div>
     </a>
-    <a class="gcard" href="/floodline">
-      <div class="gname">Floodline</div>
-      <div class="gsub">California flood defense<br><span class="demo-badge">Demo — full version on itch.io</span></div>
+    <a class="gcard has-thumb" href="/2048">
+      <img class="gthumb" src="/thumbs/2048.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">2048</div>
+        <div class="gsub">Slide &amp; merge tiles</div>
+      </div>
     </a>
-    <a class="gcard" href="/metropolis2k">
-      <div class="gname">Metropolis 2K</div>
-      <div class="gsub">City-building sim with districts &amp; bonds</div>
+    <a class="gcard has-thumb" href="/minesweeper">
+      <img class="gthumb" src="/thumbs/minesweeper.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Minesweeper<span class="daily-badge">Daily</span></div>
+        <div class="gsub">Find the mines — no-guess boards, daily challenge, hex &amp; knight variants</div>
+      </div>
     </a>
-    <a class="gcard" href="/tower">
-      <div class="gname">Tower</div>
-      <div class="gsub">High-rise operations (SKYSTACK)<br><span class="demo-badge">Demo — full version on itch.io</span></div>
+    <a class="gcard has-thumb" href="/abacus">
+      <img class="gthumb" src="/thumbs/abacus.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Abacus</div>
+        <div class="gsub">Soroban calculator with Arabic &amp; Roman numerals</div>
+      </div>
     </a>
-    <a class="gcard" href="/hellcat">
-      <div class="gname">Hellcat</div>
-      <div class="gsub">WWII carrier flight sim with real aerodynamics</div>
+    <a class="gcard has-thumb" href="/lovedwords/">
+      <img class="gthumb" src="/thumbs/lovedwords.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">LovedWords</div>
+        <div class="gsub">First-words flashcards with your photos &amp; voice</div>
+      </div>
+    </a>
+    <a class="gcard has-thumb" href="/tictactoe">
+      <img class="gthumb" src="/thumbs/tictactoe.webp" width="480" height="300" loading="lazy" decoding="async" alt="">
+      <div class="gbody">
+        <div class="gname">Tic-Tac-Toe</div>
+        <div class="gsub">Noughts and crosses with a genuinely unbeatable AI</div>
+      </div>
     </a>
     </div>
   </section>
   <div class="ad-slot ad-slot--pending" style="margin:32px 0" aria-hidden="true"></div>
 
+  <div class="below">
+  <article class="editorial">
+    <h2>What is Board Gaming Hub?</h2>
+    <p>Board Gaming Hub is a free collection of browser games built and maintained by one person, Michael Flynn, a licensed civil engineer who works on dams and flood hydrology. Every game is a single HTML file: open the page and play, with no account and no install. Game pages cover the rules and strategy, and the most-played games also explain how that particular version works, including what the computer opponent does and which rule variants were chosen.</p>
+    <p><b>The originals are the reason the site exists.</b> <a href="/tidelands">Tidelands</a> is a Bronze Age maritime trade game whose scoring was rebalanced after 1,000-game simulation runs. <a href="/bisque">Bisque</a> is a battle for a bay, <a href="/agora">Agora</a> is Mediterranean trade, <a href="/aresia">Aresia</a> colonizes Mars, <a href="/odyssey">Odyssey</a> sails the wine-dark sea, <a href="/convergence">Convergence</a> pits rival civilizations against a shared economy, and <a href="/doctrine">Doctrine</a> is a geopolitical simulation running from 1990 to 2050. None of them exist anywhere else.</p>
+    <p><b>The classics are here because people play them every day.</b> <a href="/solitaire">Solitaire</a>, <a href="/sudoku">Sudoku</a>, <a href="/mahjong">Mahjong</a>, <a href="/minesweeper">Minesweeper</a>, <a href="/chess">Chess</a> and <a href="/go">Go</a> sit next to two original daily word puzzles, <a href="/wordform">Wordform</a> and <a href="/drift">Drift</a>, and four games that are thousands of years old: <a href="/ur">the Royal Game of Ur</a>, <a href="/senet">Senet</a>, <a href="/pentegrammai">Pente Grammai</a> and <a href="/mancala">Mancala</a>.</p>
+    <p><b>The simulations use real engineering.</b> <a href="/floodline">Floodline</a> and <a href="/bonnevillespillwayoperator">Bonneville Spillway</a> come from the author's day job in flood and dam work, and <a href="/eclipsepredictor">Eclipse Predictor</a> computes eclipse paths from 1900 to 2200 with the open-source astronomy-engine library.</p>
+    <p>The site is free and supported by Google ads. Many of the games also have Android versions; see the <a href="/apps">app list</a>.</p>
+      <h2 style="margin-top:30px">About the collections</h2>
+    <h3>Simulations</h3>
+    <p>The simulation catalog is what sets this hub apart from a generic game directory. Floodline models California flood defense with levees, pumps, and real storm hydrographs. Bonneville Spillway Operator balances grid demand, salmon passage, and total dissolved gas at a real dam. Eclipse Predictor renders solar eclipse paths on a 3D globe with sub-arcsecond ephemeris accuracy. Tower (SkyStack), Metropolis 2K, Apoapsis, Biosphere Blue, and Doctrine round out management, city-building, orbital mechanics, and geopolitical sims — all built by a practicing engineer who documents the real formulas behind each model.</p>
+    <h3>Board Games</h3>
+    <p>Alongside Chess, Go, Backgammon, Othello, and Mancala sit original strategy designs: Agora (Mediterranean trade), Aresia (Mars colonization), Bisque (naval area control), Convergence (rival civilizations), Odyssey (wine-dark sea voyages), and more. Ancient games Senet, Ur, and Pente Grammai are included because their rules are short but their decision trees are not. Each page includes how-to-play notes and strategy FAQs so you can learn the game without leaving the site.</p>
+    <h3>Classic Puzzles</h3>
+    <p>This section collects the puzzles people actually return to: Klondike solitaire, Sudoku grids from easy through expert, Mahjong tile matching, Minesweeper, and 2048. Wordform and Drift are original daily word games — one hidden five-letter word per day on Wordform, one word-ladder chain on Drift — both designed for sharing results without spoilers. Every title runs in a single HTML file with no account and no install.</p>
+  </article>
+  <section class="recent">
+    <h2>Recently updated</h2>
+    <ul>
+      <li><a href="/othello">Othello</a> <span>2026-11-12</span></li>
+      <li><a href="/tidelands">Tidelands</a> <span>2026-10-01</span></li>
+      <li><a href="/solitaire">Solitaire</a> <span>2026-09-29</span></li>
+      <li><a href="/lovedwords/">LovedWords</a> <span>2026-09-29</span></li>
+      <li><a href="/apoapsis">Apoapsis</a> <span>2026-09-29</span></li>
+      <li><a href="/biosphereblue">Biosphere Blue</a> <span>2026-09-29</span></li>
+    </ul>
+  </section>
+  </div>
+<script>
+(function () {
+  var urls = ["/solitaire","/wordform","/drift","/sudoku","/mahjong","/chess","/2048","/minesweeper","/abacus","/tictactoe","/agora","/aresia","/backgammon","/bisque","/convergence","/go","/mancala","/odyssey","/othello","/pentegrammai","/senet","/tidelands","/pax/","/ur","/ultimatetictactoe","/apoapsis","/biosphereblue","/bonnevillespillwayoperator","/doctrine","/eclipsepredictor","/floodline","/metropolis2k","/hellcat"];
+  var b = document.getElementById('randomGame');
+  if (b) b.addEventListener('click', function () { location.href = urls[Math.floor(Math.random() * urls.length)]; });
+})();
+</script>
+
   <p class="disclosure">
     This site is supported by Google AdSense advertisements. Advertisers do not influence game design or content.
     Google and its partners use cookies to serve ads based on prior visits to this and other sites; see the
-    <a href="/privacy">privacy notice</a> for opt-out details.
+    <a href="/privacy" style="color:#8098a8">privacy notice</a> for opt-out details.
   </p>
 
   <footer>

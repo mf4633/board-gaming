@@ -510,6 +510,13 @@
     Cache-Control = "public, max-age=2592000"
 
 # Must follow /*.png — on overlapping matches Netlify lets the later rule win.
+# Homepage gameplay thumbnails. Not immutable: the filenames are not hashed
+# and get overwritten when the screenshots are retaken.
+[[headers]]
+  for = "/thumbs/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
 [[headers]]
   for = "/og/*"
   [headers.values]
