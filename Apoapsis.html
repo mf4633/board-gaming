@@ -266,6 +266,7 @@ body.touch .help-btn { top: 52px; left: auto; right: 8px; }
 (function () {
   var h = location.hostname, ua = navigator.userAgent || '';
   if (h !== 'boardgaminghub.com' && h !== 'www.boardgaminghub.com') return;
+  if (/[?&]noads\b/.test(location.search)) return; // ad-free link for game directories (antgames.ai)
   if (window.Capacitor || / BoardGamingHubTV\//.test(ua) || /; wv\)/.test(ua)) return;
   var s = document.createElement('script');
   s.async = true;
@@ -487,6 +488,7 @@ var PART_SCALE = 0.12;
 
 /* ===== STATE ===== */
 var gameState = 'builder';
+var DIRECTORY_MODE = /[?&]noads\b/.test(location.search); // ad-free, quick-start link for game directories
 var rocket = { parts: [] };
 var selectedPart = -1;
 var partIdCounter = 0;
@@ -3309,6 +3311,12 @@ function handleInput() {
 }
 document.addEventListener('keydown', function(e) {
   keys[e.key.toLowerCase()] = true;
+  // Directory mode (?noads): Space/Enter launch from the builder and return from the result screen.
+  if (DIRECTORY_MODE && (e.key === ' ' || e.key === 'Enter') && gameState !== 'flight') {
+    e.preventDefault();
+    if (gameState === 'builder') startFlight(); else backToBuilder();
+    return;
+  }
   if (gameState !== 'flight') return;
   if (e.key === ' ') { e.preventDefault(); doStage(sim); }
   if (e.key === '.') {
@@ -3380,6 +3388,7 @@ function dismissTutorial() {
   try { localStorage.setItem('apoapsis_tutorial_seen', '1'); } catch(e) {}
 }
 function maybeShowTutorial() {
+  if (DIRECTORY_MODE) return;
   try {
     if (!localStorage.getItem('apoapsis_tutorial_seen')) {
       document.getElementById('tutorialOverlay').classList.add('show');
